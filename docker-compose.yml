@@ -1,0 +1,24 @@
+# PostgreSQL 16 + pgvector (CHARTER.md §7, ADR-009). 로컬 전용.
+# 사용: cp .env.example .env && docker compose up -d
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: deleted-code-search-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-dcs}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dcs}
+      POSTGRES_DB: ${POSTGRES_DB:-deleted_code_search}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./docker/initdb:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-dcs} -d ${POSTGRES_DB:-deleted_code_search}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pgdata:

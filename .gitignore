@@ -1,0 +1,43 @@
+# 비밀 (§8.4) — .env.example만 커밋
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Jupyter (실험은 notebooks/에, 출력은 커밋하지 않음)
+.ipynb_checkpoints/
+
+# 클론한 저장소·추출 결과·DB 덤프 (대용량, 로컬 전용)
+repos/
+data/
+*.parquet
+*.db
+*.sqlite
+
+# 라벨 검증 데이터는 커밋한다 (datasets/labeled_500.jsonl)
+datasets/export/*.jsonl
+datasets/export/*.parquet
+
+# Node (web/)
+node_modules/
+web/dist/
+*.log
+
+# 에디터·OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

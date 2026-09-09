@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "deleted-code-search"
+version = "0.0.1"
+description = "오픈소스에서 삭제된 코드만 모아, 왜 지워졌는지와 대신 무엇이 들어갔는지를 함께 검색하는 엔진"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.12"
+# 런타임 의존성은 각 담당 이슈에서 추가한다 (CHARTER.md §7 스택: pygit2, tree-sitter, tree-sitter-python,
+# psycopg, pgvector, scikit-learn, fastapi ...). 골격 단계에서는 비워 둔다.
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+  "ruff>=0.6",
+  "pytest>=8",
+]
+
+[tool.setuptools.packages.find]
+include = ["pipeline*", "classify*", "search*"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+extend-exclude = ["web", "notebooks", "repos", "data"]
+
+[tool.ruff.lint]
+# E/W pycodestyle, F pyflakes, I isort, UP pyupgrade, B bugbear, ANN 타입 힌트(public 함수 필수, §8.4)
+select = ["E", "W", "F", "I", "UP", "B", "ANN"]
+ignore = ["ANN401"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["ANN"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

@@ -1,0 +1,5 @@
+# 팀원 3명이 모두 Windows/macOS 혼용 가능성 → 저장소는 LF로 통일 (ruff format·diff 노이즈 방지)
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.parquet binary
