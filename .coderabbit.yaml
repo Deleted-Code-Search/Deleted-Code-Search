@@ -1,0 +1,28 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+#
+# CodeRabbit 자동 리뷰 설정 (CHARTER.md §8.2 — 모든 변경은 PR + 최소 1명 리뷰).
+# CodeRabbit은 사람 리뷰어를 대체하지 않는다. 사람 리뷰 1명은 그대로 필수.
+# 키 이름은 위 스키마(schema.v2.json) 기준. 바꾸기 전에 스키마부터 확인할 것.
+
+language: "ko-KR"
+
+reviews:
+  # quiet / chill / assertive 중 chill — 중요한 지적만, 사소한 트집은 줄인다
+  profile: "chill"
+
+  # 리뷰가 스킵됐다는 상태 메시지를 PR 댓글에 남기지 않는다 (문서 PR 노이즈 방지)
+  review_status: false
+
+  # 문서는 자동 리뷰 대상에서 제외. 헌장·상태 문서는 팀 합의 산출물이라
+  # 코드 리뷰 봇의 지적 대상이 아니고, 갱신이 잦아 노이즈만 커진다.
+  path_filters:
+    - "!CHARTER.md"
+    - "!STATUS.md"
+    - "!docs/**"
+
+  auto_review:
+    enabled: true
+    # 기본 브랜치(main) 외에 리뷰할 브랜치. main은 기본값으로 이미 포함되지만
+    # 대상 브랜치가 main뿐임을 명시적으로 남긴다. 값은 정규식으로 해석된다.
+    base_branches:
+      - "main"
