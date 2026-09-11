@@ -112,3 +112,5 @@ flask 0.27, graphify 0.00, screenshot-to-code 0.00.
 2. celery 라이선스 수동 확인
 3. 2주차 게이트 1: 확정된 저장소로 이유 회수율(EXPLICIT+INFERRED ≥ 60%) 측정 → §4.3 ⑥ 기준 재조정
 4. 재조정 결과를 이 문서 v2와 CHARTER §4.3에 반영
+
+→ 1·2는 `docs/repo_final20.md`(#21)에서 처리했다. celery는 BSD-3-Clause로 확인해 포함.
