@@ -49,9 +49,14 @@ from pipeline.select_repos import (
 # 이슈 참조 1건마다 API 1회가 들어간다. 참조가 20개 달린 PR 도 있어 상한을 둔다.
 MAX_ISSUES_PER_COMMIT = 5
 MAX_REVIEW_COMMENTS = 50
+# 리뷰 코멘트는 파일로 거르기 **전에** 넉넉히 받아야 한다 (fetch_review_comments 주석 참고).
+MAX_REVIEW_PAGES = 2
 
 # GitHub 가 이슈를 닫는 키워드 (close/fix/resolve 의 변화형). 이 참조는 "확실한 연관"으로 본다.
-CLOSING_REF_RE = re.compile(r"\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s*:?\s+#(\d+)\b", re.I)
+CLOSING_WORDS = r"(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)"
+CLOSING_REF_RE = re.compile(rf"\b{CLOSING_WORDS}\s*:?\s+#(\d+)\b", re.I)
+# 참조 바로 앞이 닫기 키워드인가. `#12` 외의 형식(GH-12, owner/repo#12, URL)에도 쓴다.
+CLOSING_PREFIX_RE = re.compile(rf"\b{CLOSING_WORDS}\s*:?\s+$", re.I)
 # 앞에 단어문자·슬래시·#가 붙지 않은 #번호만. `owner/repo#1`, `##1` 을 걸러낸다.
 PLAIN_REF_RE = re.compile(r"(?<![\w/#-])#(\d+)\b")
 # `GH-1234` / `GH#1234` / `GH 1234`. pandas 가 이 형식만 쓴다 — 아래 "GH- 형식" 주석 참고.
@@ -61,10 +66,25 @@ ISSUE_URL_RE = re.compile(r"https?://github\.com/([\w.-]+)/([\w.-]+)/(?:issues|p
 CODE_FENCE_RE = re.compile(r"```.*?```", re.DOTALL)
 INLINE_CODE_RE = re.compile(r"`[^`\n]*`")
 
+# GitHubClient 는 한도 소진(403)·과다 요청(429)을 재시도한 뒤 "HTTP 403: {url}" 로 올린다.
+RATE_LIMIT_STATUS = frozenset({403, 429})
+HTTP_STATUS_RE = re.compile(r"HTTP (\d{3})")
+
 
 # --------------------------------------------------------------------------------------
 # 이슈 참조 파싱 (순수 함수 — 테스트 대상)
 # --------------------------------------------------------------------------------------
+
+
+def is_rate_limit_error(error: Exception) -> bool:
+    """GitHubClient 가 올린 RuntimeError 가 한도 소진인가.
+
+    GitHubClient(select_repos, 성제 담당)는 403/429 를 재시도한 뒤 네트워크 오류와 같은
+    RuntimeError 로 올린다. 그 파일에 전용 예외를 넣는 게 맞지만 담당 영역 밖이라,
+    여기서 메시지의 상태 코드로 가른다. 포맷이 바뀌면 테스트가 먼저 깨지게 해 뒀다.
+    """
+    match = HTTP_STATUS_RE.search(str(error))
+    return bool(match) and int(match.group(1)) in RATE_LIMIT_STATUS
 
 
 @dataclass(frozen=True, order=True)
@@ -86,13 +106,20 @@ def strip_code(text: str) -> str:
 
 
 def extract_issue_references(
-    text: str | None, repo: str = "", exclude: Iterable[int] = ()
+    text: str | None,
+    repo: str = "",
+    exclude: Iterable[int] = (),
+    *,
+    strip_markers: bool = False,
 ) -> tuple[IssueRef, ...]:
     """본문에서 같은 저장소의 이슈 참조를 뽑는다.
 
     회수율 ①: `#12` 뿐 아니라 `fixes #12`, `owner/repo#12`, 이슈 URL, `GH-12` 까지 읽는다.
     정밀도: 다른 저장소 참조(`django/django#1`)와 코드 블록 안의 `#숫자` 는 버린다.
     `exclude` 에는 PR 자기 번호를 넣는다 (자기 자신은 이유의 근거가 아니다).
+
+    `strip_markers` 는 **커밋 메시지에만** 켠다. 첫 줄의 머지·스쿼시 PR 번호를 지우는
+    처리인데, PR 제목·본문에 켜면 `Follow-up to (#42)` 의 `#42` 까지 날아간다.
 
     GH- 형식을 넣은 이유:
         pandas 최근 PR 3건을 실제로 돌려 보니 본문에 `#숫자`가 한 번도 없고 `GH-66165` 만
@@ -106,18 +133,31 @@ def extract_issue_references(
     own_repo = repo.strip().lower()
     closing: set[int] = set()
     plain: set[int] = set()
-    cleaned = strip_code(strip_pr_markers(text))
+    cleaned = strip_code(strip_pr_markers(text) if strip_markers else text)
+
+    def add(number: int, *, is_closing: bool) -> None:
+        (closing if is_closing else plain).add(number)
+
+    def closing_before(match: re.Match[str]) -> bool:
+        """참조 바로 앞이 `Fixes ` 같은 닫기 키워드인가.
+
+        `#12` 는 CLOSING_REF_RE 가 한 번에 잡지만 `GH-12`·`owner/repo#12`·URL 은 형식이
+        달라 따로 본다. 닫기 참조를 놓치면 정렬에서 뒤로 밀려 max_issues 에 잘린다.
+        """
+        return bool(
+            CLOSING_PREFIX_RE.search(match.string[max(0, match.start() - 24) : match.start()])
+        )
 
     def take_url(match: re.Match[str]) -> str:
         owner, name, number = match.group(1), match.group(2), match.group(3)
         if own_repo and f"{owner}/{name}".lower() == own_repo:
-            plain.add(int(number))
+            add(int(number), is_closing=closing_before(match))
         return " "
 
     def take_cross(match: re.Match[str]) -> str:
         target, number = match.group(1).lower(), match.group(2)
         if own_repo and target == own_repo:
-            plain.add(int(number))
+            add(int(number), is_closing=closing_before(match))
         return " "
 
     # 처리한 참조는 공백으로 지운다. 남겨 두면 PLAIN_REF_RE 가 다시 잡는다.
@@ -126,7 +166,8 @@ def extract_issue_references(
 
     closing.update(int(match.group(1)) for match in CLOSING_REF_RE.finditer(cleaned))
     plain.update(int(match.group(1)) for match in PLAIN_REF_RE.finditer(cleaned))
-    plain.update(int(match.group(1)) for match in GH_REF_RE.finditer(cleaned))
+    for match in GH_REF_RE.finditer(cleaned):
+        add(int(match.group(1)), is_closing=closing_before(match))
 
     closing -= excluded
     plain -= excluded | closing
@@ -241,6 +282,8 @@ class AttachmentReport:
     with_any: int = 0
     api_calls: int = 0
     cache_hits: int = 0
+    stopped_reason: str = ""
+    """비어 있지 않으면 표본을 다 돌기 전에 멈춘 것. 비율을 전체 표본 값으로 읽으면 안 된다."""
 
     def add(self, context: CommitContext) -> None:
         self.total += 1
@@ -265,11 +308,12 @@ class AttachmentReport:
             "any_rate": round(self._ratio(self.with_any), 4),
             "api_calls": self.api_calls,
             "cache_hits": self.cache_hits,
+            "stopped_reason": self.stopped_reason,
         }
 
     def format_lines(self) -> list[str]:
         data = self.as_dict()
-        return [
+        lines = [
             f"표본 {data['total']}건",
             f"  PR 붙음      {data['with_pr']:>4} ({data['pr_rate']:.1%})",
             f"  이슈 붙음    {data['with_issue']:>4} ({data['issue_rate']:.1%})",
@@ -277,6 +321,9 @@ class AttachmentReport:
             f"  하나라도     {data['with_any']:>4} ({data['any_rate']:.1%})",
             f"  API {data['api_calls']}회 / 캐시 {data['cache_hits']}회",
         ]
+        if self.stopped_reason:
+            lines.append(f"  ** 중단: {self.stopped_reason} — 위 비율은 돌린 만큼의 값이다 **")
+        return lines
 
 
 # --------------------------------------------------------------------------------------
@@ -337,11 +384,17 @@ class ContextCollector:
 
         회수율 ③: 파일 코멘트가 하나도 없으면 PR 전체 코멘트로 되돌아간다. 리뷰어가
         다른 파일 줄에 "이건 왜 지웠나" 를 적는 일이 흔해서, 빈손보다 낫다.
+
+        상한을 거르기 **전**이 아니라 **후**에 거는 이유:
+            paginate 는 `max_items` 를 채우면 멈춘다. 예전처럼 `max_items=50` 으로 부르면
+            첫 페이지 50건에서 끊겨, 51번째에 있던 대상 파일 코멘트를 영영 못 본다.
+            그 상태로 파일 필터가 빈손이 되면 폴백이 무관한 50건을 통째로 돌려준다.
+            그래서 두 페이지를 먼저 받고, 파일로 거른 뒤, 남은 것에 상한을 건다.
         """
         raw = self.client.paginate(
             f"/repos/{repo}/pulls/{pr_number}/comments",
-            max_items=self.max_review_comments,
-            max_pages=2,
+            max_items=MAX_REVIEW_PAGES * 100,
+            max_pages=MAX_REVIEW_PAGES,
         )
         parsed = [
             ReviewComment(
@@ -353,10 +406,11 @@ class ContextCollector:
             for item in raw
             if (item.get("body") or "").strip()
         ]
-        if not file_path:
-            return tuple(parsed)
-        on_file = tuple(comment for comment in parsed if comment.path == file_path)
-        return on_file or tuple(parsed)
+        if file_path:
+            on_file = [comment for comment in parsed if comment.path == file_path]
+            if on_file:
+                return tuple(on_file[: self.max_review_comments])
+        return tuple(parsed[: self.max_review_comments])
 
     def collect(
         self,
@@ -386,7 +440,8 @@ class ContextCollector:
                 exclude.append(context.pr_number)
 
         refs = merge_refs(
-            extract_issue_references(commit_message, repo, exclude),
+            # 머지·스쿼시 마커 제거는 커밋 메시지에만. PR 제목·본문에 걸면 참조가 날아간다.
+            extract_issue_references(commit_message, repo, exclude, strip_markers=True),
             extract_issue_references(context.pr_title, repo, exclude),
             extract_issue_references(context.pr_body, repo, exclude),
         )
@@ -424,6 +479,8 @@ class CommitTarget:
     commit_sha: str
     file_path: str | None = None
     commit_message: str | None = None
+    record: dict[str, Any] | None = None
+    """#5 가 준 원본 JSONL 레코드. 출력에서 그대로 돌려주려고 들고 있는다."""
 
 
 def parse_targets(lines: Iterable[str]) -> list[CommitTarget]:
@@ -447,9 +504,25 @@ def parse_targets(lines: Iterable[str]) -> list[CommitTarget]:
                 commit_sha=sha,
                 file_path=record.get("file_path"),
                 commit_message=record.get("commit_message"),
+                record=record,
             )
         )
     return targets
+
+
+def build_output_record(target: CommitTarget, context: CommitContext) -> dict[str, Any]:
+    """출력 한 줄. #5 가 준 레코드를 그대로 두고 `context` 만 채워 넣는다.
+
+    원본을 버리면 `deleted_hunk`·`file_path` 가 사라져 §4.4 레코드를 다시 조립할 수 없다.
+    한 커밋에 삭제 파일이 여럿이면 `file_path` 없이는 어느 줄이 어느 파일인지도 모른다.
+    """
+    record = dict(target.record or {})
+    record["repo"] = context.repo
+    record["commit_sha"] = context.commit_sha
+    if target.file_path is not None:
+        record.setdefault("file_path", target.file_path)
+    record["context"] = context.to_schema_context()
+    return record
 
 
 def sample_targets(client: GitHubClient, repo: str, count: int) -> list[CommitTarget]:
@@ -483,9 +556,14 @@ def run_targets(
 ) -> tuple[list[CommitContext], AttachmentReport]:
     """표본 전체에 맥락 결합을 돌리고 붙는 비율을 센다.
 
-    커밋 하나가 실패해도 멈추지 않는다. 한도 소진·일시적 오류로 20건 중 19건을 잃으면
-    다시 돌릴 때 그만큼 한도를 또 쓴다 (select_repos 가 저장소 단위로 쓰는 것과 같은 보호).
-    실패한 건은 맥락 없이 기록돼 비율에 정직하게 반영된다.
+    네트워크 오류 한 건에 멈추지 않는다. 20건 중 19건을 잃으면 다시 돌릴 때 그만큼 한도를
+    또 쓴다 (select_repos 가 저장소 단위로 쓰는 것과 같은 보호). 실패한 건은 맥락 없이
+    기록돼 비율에 정직하게 반영된다.
+
+    단, 한도 소진은 다르게 다룬다. 그대로 두면 남은 커밋이 전부 "맥락 없음"으로 기록돼
+    JSONL 에 멀쩡한 결과처럼 남고, 이유 회수율이 실제보다 낮게 나온다 (측정 실패를 측정
+    결과로 착각하게 된다). 그래서 그 자리에서 멈추고, 멈춘 대상은 아예 기록하지 않으며,
+    리포트에 이유를 남긴다. 그때까지 모은 것은 버리지 않는다.
     """
     contexts: list[CommitContext] = []
     report = AttachmentReport()
@@ -506,6 +584,12 @@ def run_targets(
                 )
             )
         except RuntimeError as error:
+            if is_rate_limit_error(error):
+                remaining = len(targets) - index + 1
+                report.stopped_reason = f"API 한도 소진 ({remaining}건 남기고 중단)"
+                if callable(log):
+                    log(f"[{index}/{len(targets)}] {report.stopped_reason}: {error}")
+                break
             context = CommitContext(
                 repo=target.repo,
                 commit_sha=target.commit_sha,
@@ -583,12 +667,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.out:
         args.out.parent.mkdir(parents=True, exist_ok=True)
         with args.out.open("w", encoding="utf-8") as handle:
-            for context in contexts:
-                record = {
-                    "repo": context.repo,
-                    "commit_sha": context.commit_sha,
-                    "context": context.to_schema_context(),
-                }
+            for target, context in zip(targets, contexts, strict=False):
+                record = build_output_record(target, context)
                 handle.write(json.dumps(record, ensure_ascii=False) + "\n")
         print(f"JSONL: {args.out} ({len(contexts)}건)")
 
@@ -596,7 +676,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(json.dumps(contexts[0].to_schema_context(), ensure_ascii=False, indent=2))
     for line in report.format_lines():
         print(line)
-    return 0
+    return 1 if report.stopped_reason else 0
 
 
 if __name__ == "__main__":

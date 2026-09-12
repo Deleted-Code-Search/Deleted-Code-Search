@@ -6,6 +6,7 @@
 import email.message
 import json
 import urllib.error
+import urllib.parse
 
 import pytest
 
@@ -73,6 +74,31 @@ def test_gh_prefixed_references_are_parsed(text):
     assert numbers(ctx.extract_issue_references(text, "pandas-dev/pandas")) == (66165,)
 
 
+@pytest.mark.parametrize(
+    "text",
+    [
+        "Fixes GH-12",
+        "closes GH#12",
+        "Resolved a/b#12",
+        "Fixes https://github.com/a/b/issues/12",
+        "fixes: #12",
+    ],
+)
+def test_closing_keyword_is_detected_in_every_reference_format(text):
+    """`#12` 외의 형식에도 닫기 키워드를 붙여야 한다.
+
+    안 붙이면 정렬에서 뒤로 밀려 max_issues 에 잘린다. pandas 가 `closes GH-12345` 를 쓴다.
+    """
+    assert ctx.extract_issue_references(text, "a/b") == (ctx.IssueRef(12, True),)
+
+
+def test_qualified_reference_without_closing_keyword_stays_plain():
+    assert ctx.extract_issue_references("see GH-12 and a/b#13", "a/b") == (
+        ctx.IssueRef(12, False),
+        ctx.IssueRef(13, False),
+    )
+
+
 def test_gh_prefix_does_not_match_words_containing_gh():
     assert ctx.extract_issue_references("high 5 through 3 nightly", "a/b") == ()
 
@@ -98,11 +124,35 @@ def test_references_inside_inline_code_are_ignored():
 
 def test_merge_commit_pr_number_is_not_an_issue():
     message = "Merge pull request #4321 from user/branch"
-    assert ctx.extract_issue_references(message, "a/b") == ()
+    assert ctx.extract_issue_references(message, "a/b", strip_markers=True) == ()
 
 
 def test_squash_suffix_pr_number_is_not_an_issue():
-    assert ctx.extract_issue_references("feat: add adapter (#5555)", "a/b") == ()
+    refs = ctx.extract_issue_references("feat: add adapter (#5555)", "a/b", strip_markers=True)
+    assert refs == ()
+
+
+def test_pr_title_keeps_parenthesised_reference():
+    """마커 제거는 커밋 메시지 전용. PR 제목에 걸면 `(#42)` 참조가 통째로 날아간다."""
+    assert numbers(ctx.extract_issue_references("Follow-up to (#42)", "a/b")) == (42,)
+
+
+def test_collect_finds_reference_in_pr_title_with_parentheses(tmp_path):
+    routes = {
+        "/repos/a/b/commits/sha1/pulls": [
+            {
+                "number": 100,
+                "title": "Follow-up to (#42)",
+                "body": "",
+                "merged_at": "2026-01-02T00:00:00Z",
+            }
+        ],
+        "/repos/a/b/issues/42": {"number": 42, "title": "original bug", "body": ""},
+        "/repos/a/b/pulls/100/comments": [],
+    }
+    result = make_collector(tmp_path, routes).collect("a/b", "sha1", commit_message="msg")
+
+    assert result.issue_numbers == (42,)
 
 
 def test_exclude_drops_pr_own_number():
@@ -375,6 +425,45 @@ def test_review_comments_fall_back_to_whole_pr_when_file_has_none(tmp_path):
     assert len(result.review_comments) == 2  # 빈손보다 PR 전체가 낫다
 
 
+def test_target_file_comment_on_second_page_is_found(tmp_path):
+    """상한을 파일 필터 **전**에 걸면 2페이지의 대상 파일 코멘트를 영영 못 본다.
+
+    paginate 는 max_items 를 채우면 다음 페이지를 요청하지 않는다. 예전처럼 max_items 를
+    50 으로 주면 첫 페이지 50건에서 끊기고, 폴백이 무관한 50건을 통째로 돌려줬다.
+    """
+    page1 = [{"body": f"noise {i}", "path": "other.py"} for i in range(100)]
+    page2 = [{"body": "왜 이 함수를 지웠나", "path": "src/net.py", "line": 7}]
+
+    def fetch(url, request_headers):
+        if "/pulls/100/comments" in url:
+            query = urllib.parse.parse_qs(urllib.parse.urlparse(url).query)
+            body = {1: page1, 2: page2}.get(int(query.get("page", ["1"])[0]), [])
+            return 200, {"x-ratelimit-remaining": "4999"}, json.dumps(body).encode()
+        return route_fetcher(FULL_ROUTES)(url, request_headers)
+
+    client = ctx.GitHubClient("t", tmp_path / "cache", fetcher=fetch)
+    result = ctx.ContextCollector(client).collect(
+        "a/b", "sha1", file_path="src/net.py", commit_message="msg"
+    )
+
+    assert [comment.body for comment in result.review_comments] == ["왜 이 함수를 지웠나"]
+
+
+def test_review_comments_are_capped_after_filtering(tmp_path):
+    many = [{"body": f"c{i}", "path": "src/net.py"} for i in range(120)]
+    routes = {
+        "/repos/a/b/commits/sha1/pulls": [
+            {"number": 100, "title": "t", "body": "", "merged_at": "2026-01-02T00:00:00Z"}
+        ],
+        "/repos/a/b/pulls/100/comments": many,
+    }
+    result = make_collector(tmp_path, routes).collect(
+        "a/b", "sha1", file_path="src/net.py", commit_message="msg"
+    )
+
+    assert len(result.review_comments) == ctx.MAX_REVIEW_COMMENTS
+
+
 def test_blank_review_comments_are_dropped(tmp_path):
     routes = {
         "/repos/a/b/commits/sha1/pulls": [
@@ -467,6 +556,104 @@ def test_attachment_report_counts_and_rates(tmp_path):
 
 def test_attachment_report_handles_empty_sample():
     assert ctx.AttachmentReport().as_dict()["any_rate"] == 0.0
+
+
+@pytest.mark.parametrize(
+    ("message", "expected"),
+    [
+        ("HTTP 403: https://api.github.com/x", True),
+        ("HTTP 429: https://api.github.com/x", True),
+        ("HTTP 404: https://api.github.com/x", False),
+        ("네트워크 오류: https://api.github.com/x", False),
+    ],
+)
+def test_rate_limit_error_is_recognised_by_status(message, expected):
+    """GitHubClient 의 메시지 포맷이 바뀌면 이 테스트가 먼저 깨져야 한다."""
+    assert ctx.is_rate_limit_error(RuntimeError(message)) is expected
+
+
+def test_rate_limit_stops_the_batch_instead_of_recording_empty_contexts(tmp_path):
+    """한도 소진을 개별 실패로 묻으면 남은 커밋이 전부 "맥락 없음"으로 기록된다.
+
+    그 JSONL 은 멀쩡한 결과처럼 보이고 이유 회수율이 실제보다 낮게 나온다.
+    """
+    seen = []
+
+    def fetch(url, request_headers):
+        if "sha_boom" in url:
+            raise _http_error(403)
+        seen.append(url)
+        return route_fetcher(FULL_ROUTES)(url, request_headers)
+
+    client = ctx.GitHubClient("t", tmp_path / "cache", fetcher=fetch, sleep=lambda _: None)
+    collector = ctx.ContextCollector(client)
+    targets = [
+        ctx.CommitTarget("a/b", "sha1", commit_message="msg"),
+        ctx.CommitTarget("a/b", "sha_boom", commit_message="msg"),
+        ctx.CommitTarget("a/b", "sha1", commit_message="msg"),
+    ]
+    contexts, report = ctx.run_targets(collector, targets)
+
+    assert len(contexts) == 1  # 한도에 걸린 건과 그 뒤는 기록하지 않는다
+    assert report.total == 1
+    assert "한도 소진" in report.stopped_reason
+    assert "2건 남기고" in report.stopped_reason
+    assert any("중단" in line for line in report.format_lines())
+
+
+def test_network_error_is_still_isolated_per_commit(tmp_path):
+    """네트워크 오류는 배치를 멈추지 않는다 (한도 소진과 구분)."""
+
+    def fetch(url, request_headers):
+        if "boom" in url:
+            raise urllib.error.URLError("network down")
+        return route_fetcher(FULL_ROUTES)(url, request_headers)
+
+    client = ctx.GitHubClient("t", tmp_path / "cache", fetcher=fetch, sleep=lambda _: None)
+    contexts, report = ctx.run_targets(
+        ctx.ContextCollector(client),
+        [
+            ctx.CommitTarget("a/b", "boom", commit_message="msg"),
+            ctx.CommitTarget("a/b", "sha1", commit_message="msg"),
+        ],
+    )
+
+    assert len(contexts) == 2
+    assert report.stopped_reason == ""
+
+
+def test_output_record_keeps_original_pipeline_fields():
+    """#5 레코드를 그대로 두고 context 만 얹는다. 버리면 §4.4 레코드를 못 만든다."""
+    target = ctx.CommitTarget(
+        repo="a/b",
+        commit_sha="s1",
+        file_path="src/net.py",
+        record={"repo": "a/b", "commit_sha": "s1", "file_path": "src/net.py", "deleted_hunk": "-x"},
+    )
+    context = ctx.CommitContext(repo="a/b", commit_sha="s1", commit_message="msg", pr_number=7)
+    record = ctx.build_output_record(target, context)
+
+    assert record["deleted_hunk"] == "-x"
+    assert record["file_path"] == "src/net.py"
+    assert record["context"]["pr_number"] == 7
+
+
+def test_output_record_without_original_still_has_identity():
+    target = ctx.CommitTarget(repo="a/b", commit_sha="s1")
+    context = ctx.CommitContext(repo="a/b", commit_sha="s1")
+    record = ctx.build_output_record(target, context)
+
+    assert record["repo"] == "a/b"
+    assert record["commit_sha"] == "s1"
+    assert "context" in record
+
+
+def test_parse_targets_keeps_the_whole_record():
+    line = json.dumps({"repo": "a/b", "commit_sha": "s1", "deleted_hunk": "-x", "extra": 1})
+    target = ctx.parse_targets([line])[0]
+
+    assert target.record["deleted_hunk"] == "-x"
+    assert target.record["extra"] == 1
 
 
 def test_one_failing_commit_does_not_abort_the_batch(tmp_path):
