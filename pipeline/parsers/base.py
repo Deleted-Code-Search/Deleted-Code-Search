@@ -6,8 +6,10 @@ CHARTER.md §4.2 "파서 계층"에서 확정된 계약:
 
 이 모듈은 그 계약이 쓰는 자료형 `Function`만 정의한다. 언어별 어댑터(`PythonAdapter` 등)는
 별도 클래스로 구현하고 `extract_functions(self, source_text: str) -> list[Function]` 메서드를
-제공한다. 공통 추상 클래스·Protocol 같은 새 공개 구조는 CHARTER에 없으므로 이 파일에 임의로
-추가하지 않는다 — 필요하다고 판단되면 §13 절차(이슈 → 회의 → ADR → CHARTER 갱신)를 먼저 거친다.
+제공한다. 이 시그니처가 곧 공개 API 규약이다 — 어댑터를 새로 추가할 때 이 메서드 이름·인자·
+반환 타입을 그대로 지켜야 CHARTER §4.2와 어긋나지 않는다. 공통 추상 클래스·Protocol 같은 새
+공개 구조는 CHARTER에 없으므로 이 파일에 임의로 추가하지 않는다 — 필요하다고 판단되면 §13
+절차(이슈 → 회의 → ADR → CHARTER 갱신)를 먼저 거친다.
 
 ## 사용법
     adapter = PythonAdapter()
@@ -42,7 +44,20 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True)
 class Function:
-    """소스에서 추출한 함수 하나. 필드는 CHARTER.md §4.2 그대로 — 임의로 늘리지 않는다."""
+    """소스에서 추출한 함수 하나. 필드는 CHARTER.md §4.2 그대로 — 임의로 늘리지 않는다.
+
+    각 필드의 정확한 의미(라인 번호 규칙, 데코레이터·콜론 포함 여부 등)는 위 모듈
+    독스트링의 "Function 필드" 절이 기준이다. 아래는 그 요약이다.
+
+    Attributes:
+        name: 함수/메서드 이름. 클래스 한정자(`Class.method`)는 붙이지 않는다.
+        start_line: 함수 시작 줄 번호. 1-indexed. 데코레이터가 있으면 그 첫 줄부터다.
+        end_line: 함수 끝 줄 번호. 1-indexed, inclusive(이 줄까지 포함).
+        body: start_line~end_line 원문 그대로(데코레이터·시그니처·콜론·본문 전체 포함).
+            변수명·리터럴을 치환한 정규화 본문은 포함하지 않는다(범위 밖).
+        signature: `def`/`async def`부터 매개변수·반환 타입 애너테이션과 끝의 `:`까지.
+            데코레이터는 포함하지 않는다.
+    """
 
     name: str
     start_line: int

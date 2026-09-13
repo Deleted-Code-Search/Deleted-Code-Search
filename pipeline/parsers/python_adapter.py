@@ -22,12 +22,31 @@ _LANGUAGE = ts.Language(tspython.language())
 
 
 class PythonAdapter:
-    """tree-sitter-python 기반 Python 함수 추출기."""
+    """tree-sitter-python 기반 Python 함수 추출기.
+
+    `pipeline/parsers/base.py`에 정의된 공개 계약
+    (`extract_functions(source_text) -> list[Function]`)을 구현하는 언어 어댑터다.
+    """
 
     def __init__(self) -> None:
+        """tree-sitter Python 파서를 준비한다."""
         self._parser = ts.Parser(_LANGUAGE)
 
     def extract_functions(self, source_text: str) -> list[Function]:
+        """`source_text`에서 함수 정의를 모두 찾아 소스 등장 순서대로 반환한다.
+
+        모듈 최상위 함수, 클래스 메서드, 중첩 함수, `async def`, 데코레이터가 붙은 함수를
+        모두 대상으로 한다.
+
+        라인 번호는 1-indexed, inclusive이며 데코레이터가 있으면 그 첫 줄부터 포함한다.
+        `body`는 원본 소스를 줄 단위로 그대로 잘라 붙인 것(들여쓰기 포함)이고, `signature`는
+        `def`/`async def`부터 끝의 `:`까지이며 데코레이터는 포함하지 않는다. 필드별 정확한
+        규칙은 `pipeline/parsers/base.py`의 `Function` 독스트링을 따른다.
+
+        구문 오류가 있는 소스에도 예외를 던지지 않는다: 오류와 겹치는 함수(와 그 안의 중첩
+        함수)는 결과에서 제외하고, 오류와 무관한 나머지 함수는 부분 결과로 반환한다. 빈
+        문자열이거나 공백만 있으면 빈 리스트를 반환한다.
+        """
         if not source_text or not source_text.strip():
             return []
         source_bytes = source_text.encode("utf-8")
@@ -63,6 +82,7 @@ def _walk_children(
 
 
 def _function_definition_child(node: ts.Node) -> ts.Node | None:
+    """`decorated_definition` 노드의 직계 자식 중 실제 `function_definition`을 찾는다."""
     for child in node.children:
         if child.type == "function_definition":
             return child
