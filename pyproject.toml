@@ -11,7 +11,10 @@ license = "MIT"
 requires-python = ">=3.12"
 # 런타임 의존성은 각 담당 이슈에서 추가한다 (CHARTER.md §7 스택: pygit2, tree-sitter, tree-sitter-python,
 # psycopg, pgvector, scikit-learn, fastapi ...). 골격 단계에서는 비워 둔다.
-dependencies = []
+dependencies = [
+  "tree-sitter>=0.23,<0.24",
+  "tree-sitter-python>=0.23,<0.24",
+]
 
 [project.optional-dependencies]
 dev = [
