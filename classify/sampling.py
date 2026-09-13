@@ -103,6 +103,48 @@ def load_records(lines: Iterable[str]) -> list[dict[str, Any]]:
     return records
 
 
+def record_id_of(record: dict[str, Any]) -> str:
+    """레코드의 라벨 키. 공용 레코드 파일과 개인 빈 틀이 **같은 값**을 쓰게 하는 단일 경로.
+
+    두 곳에서 따로 꺼내면 값이 갈린다. 실제로 한쪽은 `record.get("id")`, 다른 쪽은
+    `str(record.get("id", ""))` 였고, `id` 가 없는 레코드에서 `None` 과 `""` 로 어긋났다.
+    """
+    raw = record.get(RECORD_ID_SOURCE)
+    return "" if raw is None else str(raw).strip()
+
+
+def find_id_problems(records: Sequence[dict[str, Any]]) -> list[str]:
+    """`id` 계약 위반을 사람이 읽을 문장으로. 비어 있으면 문제 없음.
+
+    왜 미리 막나:
+        `id` 는 라벨과 레코드를 잇는 유일 키다 (가이드 §7.2). 비어 있으면 두 파일의 키가
+        어긋나고, 빈 값이 여러 건이면 서로 다른 레코드가 같은 키를 갖는다. 그 상태로
+        라벨링을 마치면 #34 병합에서 라벨이 엉뚱한 레코드에 붙는데, 그때는 아무 에러도
+        나지 않아 게이트 1 숫자를 끝까지 믿게 된다. 라벨링 전에 멈추는 편이 훨씬 싸다.
+    """
+    problems: list[str] = []
+    blank = [index for index, record in enumerate(records) if not record_id_of(record)]
+    if blank:
+        shown = ", ".join(str(index) for index in blank[:5])
+        more = f" 외 {len(blank) - 5}건" if len(blank) > 5 else ""
+        problems.append(f"`{RECORD_ID_SOURCE}` 가 비어 있다: {len(blank)}건 (줄 {shown}{more})")
+
+    seen: dict[str, int] = {}
+    duplicated: list[str] = []
+    for record in records:
+        key = record_id_of(record)
+        if not key:
+            continue
+        seen[key] = seen.get(key, 0) + 1
+        if seen[key] == 2:
+            duplicated.append(key)
+    if duplicated:
+        shown = ", ".join(duplicated[:3])
+        more = f" 외 {len(duplicated) - 3}개" if len(duplicated) > 3 else ""
+        problems.append(f"`{RECORD_ID_SOURCE}` 가 중복된다: {len(duplicated)}개 ({shown}{more})")
+    return problems
+
+
 def is_eligible(record: dict[str, Any]) -> bool:
     """예비 라벨 대상인가.
 
@@ -190,7 +232,7 @@ def stratified_sample(
     rng = random.Random(seed)
     picked: list[dict[str, Any]] = []
     for repo in sorted(quota):  # 정렬해야 시드가 같을 때 뽑는 순서도 같다
-        pool = sorted(by_repo[repo], key=lambda record: str(record.get("id", "")))
+        pool = sorted(by_repo[repo], key=record_id_of)
         picked.extend(rng.sample(pool, quota[repo]))
 
     rng.shuffle(picked)
@@ -210,7 +252,7 @@ def build_labeling_record(
     화이트리스트로 만든다. 원본에서 `reason.*` 를 지우는 방식이면 #5 가 필드를 추가했을 때
     조용히 새어 나간다. 담을 것을 나열하는 편이 안전하다.
     """
-    out: dict[str, Any] = {"record_id": record.get(RECORD_ID_SOURCE)}
+    out: dict[str, Any] = {"record_id": record_id_of(record)}
     out.update({key: record.get(key) for key in LABELER_FIELDS})
 
     replacement = record.get("replacement") or {}
@@ -288,10 +330,24 @@ def label_rows_by_labeler(assignments: Sequence[Assignment]) -> dict[str, list[d
 # --------------------------------------------------------------------------------------
 
 
-def write_jsonl(path: Path, rows: Iterable[dict[str, Any]]) -> int:
+def output_paths(out_dir: Path) -> list[Path]:
+    """이 실행이 쓰게 될 파일 전부. 미리 확인하려고 한 곳에 모아 둔다."""
+    return [
+        out_dir / RECORDS_FILENAME,
+        *(out_dir / LABEL_FILENAME_TEMPLATE.format(labeler=labeler) for labeler in LABELERS),
+    ]
+
+
+def write_jsonl(path: Path, rows: Iterable[dict[str, Any]], *, overwrite: bool = False) -> int:
+    """JSONL 한 파일. 기본은 **배타적 생성**이라 이미 있으면 FileExistsError 로 멈춘다.
+
+    `"w"` 로 열면 여는 순간 내용이 날아간다. 이 파일들에는 사람이 몇 시간 들여 채운 라벨이
+    들어 있을 수 있어(가이드 §8.1 기준 1인 약 6.7시간, 3인 20시간), 덮어쓰기는 `--force`
+    로만 허용한다. 미리 검사해도 검사와 쓰기 사이에 생길 수 있으므로 모드로도 막는다.
+    """
     path.parent.mkdir(parents=True, exist_ok=True)
     count = 0
-    with path.open("w", encoding="utf-8") as handle:
+    with path.open("w" if overwrite else "x", encoding="utf-8") as handle:
         for row in rows:
             handle.write(json.dumps(row, ensure_ascii=False) + "\n")
             count += 1
@@ -334,6 +390,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="이슈 본문·PR 라벨도 라벨러에게 보여준다 (#24 확정 전까지는 꺼 둔다)",
     )
     parser.add_argument("--dry-run", action="store_true", help="파일을 쓰지 않고 요약만")
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="기존 출력 파일을 덮어쓴다. 사람이 채운 라벨이 사라지므로 마지막 수단",
+    )
     return parser
 
 
@@ -357,9 +418,29 @@ def main(argv: Sequence[str] | None = None) -> int:
             file=sys.stderr,
         )
 
+    problems = find_id_problems(eligible)
+    if problems:
+        print("`id` 가 라벨 키 계약(가이드 §7.2)을 지키지 않는다:", file=sys.stderr)
+        for problem in problems:
+            print(f"  - {problem}", file=sys.stderr)
+        print("라벨링을 시작한 뒤에는 되돌릴 수 없어 여기서 멈춘다.", file=sys.stderr)
+        return 2
+
+    # 파일을 하나라도 쓰기 전에 전부 확인한다. 중간까지 쓰고 멈추면 더 헷갈린다.
+    existing = [path for path in output_paths(args.out_dir) if path.exists()]
+    if existing and not (args.force or args.dry_run):
+        print("이미 있는 파일을 덮어쓰려 한다:", file=sys.stderr)
+        for path in existing:
+            print(f"  - {path}", file=sys.stderr)
+        print(
+            "사람이 채운 라벨이 들어 있을 수 있다 (1인 약 6.7시간, 가이드 §8.1).\n"
+            "정말 새로 만들려면 --force. 라벨을 살리려면 --out-dir 를 다른 곳으로.",
+            file=sys.stderr,
+        )
+        return 2
+
     sample = stratified_sample(eligible, args.size, args.seed)
-    record_ids = [str(record.get("id", "")) for record in sample]
-    assignments = assign_blocks(record_ids)
+    assignments = assign_blocks([record_id_of(record) for record in sample])
 
     for line in summarize(sample, assignments):
         print(line)
@@ -369,19 +450,25 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 0
 
     records_path = args.out_dir / RECORDS_FILENAME
-    written = write_jsonl(
-        records_path,
-        (
-            build_labeling_record(record, with_extra_context=args.with_extra_context)
-            for record in sample
-        ),
-    )
-    print(f"레코드: {records_path} ({written}건)")
+    try:
+        written = write_jsonl(
+            records_path,
+            (
+                build_labeling_record(record, with_extra_context=args.with_extra_context)
+                for record in sample
+            ),
+            overwrite=args.force,
+        )
+        print(f"레코드: {records_path} ({written}건)")
 
-    for labeler, rows in label_rows_by_labeler(assignments).items():
-        path = args.out_dir / LABEL_FILENAME_TEMPLATE.format(labeler=labeler)
-        count = write_jsonl(path, rows)
-        print(f"빈 틀: {path} ({count}건)")
+        for labeler, rows in label_rows_by_labeler(assignments).items():
+            path = args.out_dir / LABEL_FILENAME_TEMPLATE.format(labeler=labeler)
+            count = write_jsonl(path, rows, overwrite=args.force)
+            print(f"빈 틀: {path} ({count}건)")
+    except FileExistsError as error:
+        # 위 검사와 쓰기 사이에 누가 만든 경우. 배타적 생성 모드가 여기서 막는다.
+        print(f"쓰는 도중 파일이 생겼다: {error.filename}. --force 로만 덮어쓴다.", file=sys.stderr)
+        return 2
     return 0
 
 

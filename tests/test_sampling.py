@@ -379,6 +379,151 @@ def test_cli_is_reproducible_across_runs(tmp_path, input_file):
     ).read_text("utf-8")
 
 
+# --------------------------------------------------------------------------------------
+# 기존 라벨 보호 (사람이 채운 값을 덮어쓰지 않는다)
+# --------------------------------------------------------------------------------------
+
+
+def fill_one_label(path):
+    """사람이 라벨 한 건을 채운 상태를 만든다."""
+    rows = [json.loads(line) for line in path.read_text("utf-8").splitlines()]
+    rows[0]["reason_label"] = "BUG"
+    rows[0]["evidence_text"] = "사람이 3분 들여 쓴 근거"
+    path.write_text(
+        "\n".join(json.dumps(row, ensure_ascii=False) for row in rows), encoding="utf-8"
+    )
+
+
+def test_rerun_refuses_to_overwrite_existing_label_files(tmp_path, input_file):
+    """재실행 한 번으로 3인 20시간이 날아가면 안 된다 (가이드 §8.1)."""
+    out_dir = tmp_path / "labels"
+    assert sampling.main(["--input", str(input_file), "--out-dir", str(out_dir)]) == 0
+
+    label_path = out_dir / sampling.LABEL_FILENAME_TEMPLATE.format(labeler="hs")
+    fill_one_label(label_path)
+
+    exit_code = sampling.main(
+        ["--input", str(input_file), "--out-dir", str(out_dir), "--seed", "999"]
+    )
+
+    assert exit_code == 2
+    kept = json.loads(label_path.read_text("utf-8").splitlines()[0])
+    assert kept["reason_label"] == "BUG"
+    assert kept["evidence_text"] == "사람이 3분 들여 쓴 근거"
+
+
+def test_force_allows_deliberate_overwrite(tmp_path, input_file):
+    out_dir = tmp_path / "labels"
+    sampling.main(["--input", str(input_file), "--out-dir", str(out_dir)])
+    fill_one_label(out_dir / sampling.LABEL_FILENAME_TEMPLATE.format(labeler="hs"))
+
+    exit_code = sampling.main(["--input", str(input_file), "--out-dir", str(out_dir), "--force"])
+
+    assert exit_code == 0
+    first = json.loads(
+        (out_dir / sampling.LABEL_FILENAME_TEMPLATE.format(labeler="hs"))
+        .read_text("utf-8")
+        .splitlines()[0]
+    )
+    assert first["reason_label"] is None
+
+
+def test_refusal_happens_before_any_file_is_touched(tmp_path, input_file):
+    """레코드 파일만 있어도 멈춘다. 반쯤 쓰고 멈추면 더 헷갈린다."""
+    out_dir = tmp_path / "labels"
+    sampling.main(["--input", str(input_file), "--out-dir", str(out_dir)])
+    for labeler in sampling.LABELERS:
+        (out_dir / sampling.LABEL_FILENAME_TEMPLATE.format(labeler=labeler)).unlink()
+    records_path = out_dir / sampling.RECORDS_FILENAME
+    before = records_path.read_text("utf-8")
+
+    assert sampling.main(["--input", str(input_file), "--out-dir", str(out_dir)]) == 2
+    assert records_path.read_text("utf-8") == before
+    assert not (out_dir / sampling.LABEL_FILENAME_TEMPLATE.format(labeler="hs")).exists()
+
+
+def test_dry_run_is_allowed_even_when_outputs_exist(tmp_path, input_file):
+    out_dir = tmp_path / "labels"
+    sampling.main(["--input", str(input_file), "--out-dir", str(out_dir)])
+
+    assert sampling.main(["--input", str(input_file), "--out-dir", str(out_dir), "--dry-run"]) == 0
+
+
+def test_write_jsonl_refuses_existing_file_by_default(tmp_path):
+    path = tmp_path / "x.jsonl"
+    sampling.write_jsonl(path, [{"a": 1}])
+
+    with pytest.raises(FileExistsError):
+        sampling.write_jsonl(path, [{"a": 2}])
+
+    assert sampling.write_jsonl(path, [{"a": 2}], overwrite=True) == 1
+
+
+# --------------------------------------------------------------------------------------
+# id 계약 (라벨 가이드 §7.2 — 라벨과 레코드를 잇는 유일 키)
+# --------------------------------------------------------------------------------------
+
+
+def test_record_id_is_read_through_one_path():
+    """공용 레코드 파일과 개인 빈 틀이 같은 값을 써야 한다."""
+    record = make_record(1, id="uuid-1")
+
+    assert sampling.build_labeling_record(record)["record_id"] == sampling.record_id_of(record)
+
+
+@pytest.mark.parametrize("bad", [{"id": None}, {"id": ""}, {"id": "   "}])
+def test_blank_ids_are_reported(bad):
+    problems = sampling.find_id_problems([make_record(1) | bad])
+
+    assert problems
+    assert "비어 있다" in problems[0]
+
+
+def test_missing_id_key_is_reported():
+    record = make_record(1)
+    del record["id"]
+
+    assert sampling.find_id_problems([record])
+
+
+def test_duplicate_ids_are_reported():
+    records = [make_record(1, id="same"), make_record(2, id="same")]
+    problems = sampling.find_id_problems(records)
+
+    assert any("중복" in problem for problem in problems)
+
+
+def test_valid_ids_have_no_problems():
+    assert sampling.find_id_problems([make_record(i) for i in range(5)]) == []
+
+
+def test_cli_stops_when_ids_are_missing(tmp_path):
+    """라벨링을 시작한 뒤에는 되돌릴 수 없으므로 추출 전에 멈춘다."""
+    records = [make_record(i) for i in range(5)]
+    for record in records:
+        del record["id"]
+    path = tmp_path / "bad.jsonl"
+    path.write_text(
+        "\n".join(json.dumps(record, ensure_ascii=False) for record in records), encoding="utf-8"
+    )
+    out_dir = tmp_path / "labels"
+
+    assert sampling.main(["--input", str(path), "--out-dir", str(out_dir)]) == 2
+    assert not out_dir.exists()
+
+
+def test_cli_stops_when_ids_collide(tmp_path):
+    records = [make_record(i, id="dup") for i in range(5)]
+    path = tmp_path / "dup.jsonl"
+    path.write_text(
+        "\n".join(json.dumps(record, ensure_ascii=False) for record in records), encoding="utf-8"
+    )
+    out_dir = tmp_path / "labels"
+
+    assert sampling.main(["--input", str(path), "--out-dir", str(out_dir)]) == 2
+    assert not out_dir.exists()
+
+
 def test_cli_reports_when_nothing_is_eligible(tmp_path, capsys):
     path = tmp_path / "empty.jsonl"
     path.write_text(json.dumps(make_record(1, deletion_kind="PARTIAL")), encoding="utf-8")
