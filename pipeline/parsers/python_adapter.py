@@ -122,10 +122,17 @@ def _build_function(
 def _colon_before_body(header: ts.Node, body_node: ts.Node) -> ts.Node:
     """`function_definition`의 직계 자식 중 body(block) 바로 앞 `:` 토큰을 찾는다.
 
-    tree-sitter-python 문법에서 `function_definition`의 마지막 두 자식은 항상
-    `: block` 순서다. has_error 노드는 이미 걸러졌으므로 이 가정이 깨지지 않는다.
+    body 바로 앞 자식이 곧 `:`라고 가정하지 않는다 — 함수 본문 첫 줄이 독립된 `#` 주석이면
+    tree-sitter-python이 그 주석을 `block` 밖, `:`와 `block` 사이에 형제 노드로 끼워 넣는다
+    (Issue #5 E2E, psf/requests `add_password` 재현: `def`/`identifier`/`parameters`/`:`/
+    `comment`/`block` 순서). 그래서 body보다 앞쪽 자식들을 역순으로 훑어 **가장 가까운**
+    `:`를 signature 종료 지점으로 삼는다 — 이 함수의 목적이 그거다. 전체 자식 중 첫 `:`를
+    고르지 않는 이유: 매개변수 기본값 등에 `:`가 더 나올 일은 없지만(타입 애너테이션 콜론은
+    `parameters` 서브트리 안에 있어 여기 안 섞인다), "가장 가까운"이 의도를 더 정확히 담는다.
     """
     children = header.children
-    colon = children[children.index(body_node) - 1]
-    assert colon.type == ":"  # 문법이 바뀌면 여기서 먼저 드러나야 한다
-    return colon
+    body_index = children.index(body_node)
+    for child in reversed(children[:body_index]):
+        if child.type == ":":
+            return child
+    raise AssertionError(f"function_definition에 body 앞 ':' 토큰이 없다: {header}")

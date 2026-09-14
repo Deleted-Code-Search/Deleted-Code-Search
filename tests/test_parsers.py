@@ -157,6 +157,51 @@ def test_functions_are_returned_in_source_order():
 
 
 # --------------------------------------------------------------------------------------
+# 회귀: 함수 본문 첫 줄이 독립된 주석인 경우 (Issue #5 E2E, psf/requests `add_password` 재현)
+#
+# 함수 본문 첫 줄이 `#` 주석 하나뿐이면 tree-sitter-python이 그 주석을 `block`(본문) 밖,
+# `:`와 `block` 사이에 형제 노드로 끼워 넣는다. "body 바로 앞 자식이 곧 `:`"라고 가정하던
+# _colon_before_body가 이 경우 AssertionError를 던졌다(psf/requests 152번째 커밋에서 재현).
+# --------------------------------------------------------------------------------------
+
+
+def test_leading_comment_as_first_body_line_does_not_crash():
+    src = source(
+        "def add_password(self):",
+        "    # uri could be a single URI or a sequence",
+        "    return 1",
+    )
+    functions = PythonAdapter().extract_functions(src)
+
+    assert len(functions) == 1
+    fn = functions[0]
+    assert fn.name == "add_password"
+    assert fn.start_line == 1
+    assert fn.end_line == 3
+    assert fn.signature == "def add_password(self):"
+    assert fn.body == src
+
+
+def test_leading_comment_as_first_body_line_in_decorated_async_function():
+    """async·데코레이터 조합에서도 같은 문제가 없는지 확인하는 대표 케이스 하나."""
+    src = source(
+        "@deco",
+        "async def fetch(url: str) -> None:",
+        "    # fetch and discard the result",
+        "    await get(url)",
+    )
+    functions = PythonAdapter().extract_functions(src)
+
+    assert len(functions) == 1
+    fn = functions[0]
+    assert fn.name == "fetch"
+    assert fn.start_line == 1  # 데코레이터 포함
+    assert fn.end_line == 4
+    assert fn.signature == "async def fetch(url: str) -> None:"
+    assert fn.body == src
+
+
+# --------------------------------------------------------------------------------------
 # 구문 오류 정책 (완료 조건: 구문 오류 소스에서도 안정적 동작)
 # --------------------------------------------------------------------------------------
 
