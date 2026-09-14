@@ -23,7 +23,7 @@ dev = [
 ]
 
 [tool.setuptools.packages.find]
-include = ["pipeline*", "classify*", "search*"]
+include = ["pipeline*", "classify*", "search*", "eval*", "tools*"]
 
 [tool.ruff]
 target-version = "py312"
