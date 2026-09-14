@@ -471,3 +471,92 @@ def test_merged_file_input_keeps_discussed_final(tmp_path):
 
     assert inputs.problems == []
     assert [r.recovered for r in report.recovery.tiers] == [1, 1, 1]
+
+
+# --------------------------------------------------------------------------------------
+# 병합 파일 검증 (PR #38 리뷰)
+# --------------------------------------------------------------------------------------
+
+
+def merged_row(record_id="r1", labelers=("sj", "jh")):
+    """2인 라벨이 든 병합 1줄. labelers 에 같은 사람을 두 번 넣으면 중복 라벨이 된다."""
+    return {
+        "record_id": record_id,
+        "batch": "pre200",
+        "split": None,
+        "labels": [label_row(record_id, labeler) for labeler in labelers],
+        "final": None,
+        "guide_version": "v1",
+    }
+
+
+def discussed_final(reason="BUG", grade="EXPLICIT"):
+    return {
+        "reason_label": reason,
+        "evidence_grade": grade,
+        "confidence": 1.0,
+        "method": "DISCUSSED",
+        "note": "토론 확정",
+    }
+
+
+def test_merged_final_with_undefined_values_stops_measurement(tmp_path):
+    """final 의 오타가 통과하면 회수율에는 들어가고 이유 분포에서는 조용히 빠진다."""
+    path = tmp_path / "labeled_500.jsonl"
+    rows = [
+        {**merged_row("r1"), "final": discussed_final()},
+        {**merged_row("r2"), "final": discussed_final(reason="bug ")},
+        {**merged_row("r3"), "final": discussed_final(grade="EXPLICT")},
+    ]
+    write_jsonl(path, rows)
+
+    problems = gate1.load_inputs([path]).problems
+
+    assert len(problems) == 2
+    assert any(":2 final: reason_label='bug '" in p for p in problems)
+    assert any(":3 final: evidence_grade='EXPLICT'" in p for p in problems)
+    assert gate1.main([str(path)]) == 2
+
+
+def test_merged_row_without_final_is_valid(tmp_path):
+    """토론 전 레코드는 final 이 비어 있는 게 정상이다."""
+    path = tmp_path / "labeled_500.jsonl"
+    write_jsonl(path, [merged_row("r1")])
+
+    assert gate1.load_inputs([path]).problems == []
+
+
+def test_duplicate_labeler_inside_merged_row_stops(tmp_path):
+    path = tmp_path / "labeled_500.jsonl"
+    write_jsonl(path, [merged_row("r1", labelers=("sj", "sj"))])
+
+    problems = gate1.load_inputs([path]).problems
+
+    assert any(":1 labels[1]" in p and "중복" in p for p in problems)
+    assert gate1.main([str(path)]) == 2
+
+
+def test_same_record_twice_in_merged_file_stops(tmp_path):
+    path = tmp_path / "labeled_500.jsonl"
+    write_jsonl(path, [merged_row("r1"), merged_row("r1")])
+
+    problems = gate1.load_inputs([path]).problems
+
+    assert len(problems) == 2  # 2번째 줄의 sj, jh
+    assert all(":2 labels[" in p and "중복" in p for p in problems)
+
+
+def test_personal_files_with_merged_file_are_not_duplicates(tmp_path):
+    """재병합: 개인 라벨 + 토론 확정이 든 병합 파일.
+
+    같은 (record_id, labeler) 가 양쪽에 있는 것이 정상이다."""
+    write_jsonl(tmp_path / "sj_pre200.jsonl", [label_row("r1", "sj")])
+    write_jsonl(tmp_path / "jh_pre200.jsonl", [label_row("r1", "jh")])
+    write_jsonl(tmp_path / "labeled_500.jsonl", [{**merged_row("r1"), "final": discussed_final()}])
+
+    inputs = gate1.load_inputs(
+        [tmp_path / "sj_pre200.jsonl", tmp_path / "jh_pre200.jsonl", tmp_path / "labeled_500.jsonl"]
+    )
+
+    assert inputs.problems == []
+    assert len(inputs.merged) == 1

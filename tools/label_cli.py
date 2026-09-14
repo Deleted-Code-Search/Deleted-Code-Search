@@ -326,25 +326,84 @@ def _clock_text(seconds: float) -> str:
 # --------------------------------------------------------------------------------------
 
 
+# 저장 순번을 담는 옆 파일. labeled_at 은 초 단위라 빠르게 라벨하면 두 건이 같은 시각을 갖고,
+# 그러면 :u 가 "마지막으로 저장한 건"을 가릴 수 없다. 순번을 라벨 줄 안에 넣으면 가이드 §7.2
+# 스키마가 바뀌므로(§10.3 v3 변경) 라벨 파일 옆에 따로 둔다.
+ORDER_SUFFIX = ".order.json"
+
+
+class LabelFileError(ValueError):
+    """라벨 파일을 읽을 수 없다. 메시지에 파일과 실제 줄 번호가 들어 있다."""
+
+
+def _replace_atomically(path: Path, text: str) -> None:
+    """임시 파일에 다 쓴 뒤 교체한다. 쓰는 도중 꺼져도 기존 파일은 온전하다."""
+    temporary = path.with_name(path.name + ".tmp")
+    with temporary.open("w", encoding="utf-8", newline="\n") as handle:
+        handle.write(text)
+    os.replace(temporary, path)
+
+
+def _load_order(path: Path) -> dict[str, int]:
+    """순번 파일이 없거나 깨졌으면 빈 사전.
+
+    순번은 :u 의 보조 정렬 키일 뿐이라, 없어도 라벨은 잃지 않는다."""
+    if not path.is_file():
+        return {}
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return {}
+    if not isinstance(data, dict):
+        return {}
+    return {
+        str(key): value
+        for key, value in data.items()
+        if isinstance(value, int) and not isinstance(value, bool)
+    }
+
+
 @dataclass
 class LabelFile:
     """개인 라벨 파일 (가이드 §7.1). #33 이 만든 빈 틀을 채운다."""
 
     path: Path
     rows: list[dict[str, Any]] = field(default_factory=list)
+    order: dict[str, int] = field(default_factory=dict)
+    """record_id → 저장 순번 (저장할 때마다 1씩 커진다). `ORDER_SUFFIX` 파일에 영속화한다."""
+
+    @property
+    def order_path(self) -> Path:
+        return self.path.with_name(self.path.name + ORDER_SUFFIX)
 
     @classmethod
     def load(cls, path: Path) -> LabelFile:
-        text = path.read_text(encoding="utf-8")
-        return cls(path, [json.loads(line) for line in text.splitlines() if line.strip()])
+        rows: list[dict[str, Any]] = []
+        for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+            if not line.strip():
+                continue
+            try:
+                row = json.loads(line)
+            except json.JSONDecodeError as error:
+                raise LabelFileError(
+                    f"{path}:{line_number}: JSON 이 아니다 ({error.msg})"
+                ) from None
+            if not isinstance(row, dict):
+                raise LabelFileError(
+                    f"{path}:{line_number}: 한 줄은 JSON 객체여야 한다 ({type(row).__name__})"
+                )
+            rows.append(row)
+        label_file = cls(path, rows)
+        label_file.order = _load_order(label_file.order_path)
+        return label_file
 
     def save(self) -> None:
-        """임시 파일에 다 쓴 뒤 교체한다. 쓰는 도중 꺼져도 기존 파일은 온전하다."""
-        temporary = self.path.with_name(self.path.name + ".tmp")
-        with temporary.open("w", encoding="utf-8", newline="\n") as handle:
-            for row in self.rows:
-                handle.write(json.dumps(row, ensure_ascii=False) + "\n")
-        os.replace(temporary, self.path)
+        rows = "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in self.rows)
+        _replace_atomically(self.path, rows)
+        _replace_atomically(self.order_path, json.dumps(self.order, ensure_ascii=False) + "\n")
+
+    def mark_saved(self, record_id: str) -> None:
+        self.order[record_id] = max(self.order.values(), default=0) + 1
 
     def next_unlabeled(self) -> int | None:
         """이미 라벨한 record_id 는 건너뛴다 — 중단 후 재개가 이것으로 된다."""
@@ -365,6 +424,11 @@ def load_records(path: Path) -> tuple[dict[str, dict[str, Any]], list[str]]:
             row = json.loads(line)
         except json.JSONDecodeError as error:
             problems.append(f"{path}:{line_number}: JSON 이 아니다 ({error.msg})")
+            continue
+        if not isinstance(row, dict):
+            problems.append(
+                f"{path}:{line_number}: 한 줄은 JSON 객체여야 한다 ({type(row).__name__})"
+            )
             continue
         view = labeler_view(row)
         record_id = view["record_id"]
@@ -529,20 +593,22 @@ class LabelSession:
         return " · ".join(parts)
 
     def previous_index(self, current: int) -> int | None:
-        """이번 실행에서 저장한 순서를 거슬러 간다. 없으면 파일에서 가장 최근에 라벨한 줄.
+        """이번 실행에서 저장한 순서를 거슬러 간다. 없으면 파일에서 가장 최근에 저장한 줄.
 
         labeled_at 은 같은 사람이 같은 기계에서 쓴 ISO 8601 시각이라 문자열 순서가 시간 순서다.
+        다만 초 단위라 같은 초에 저장한 건끼리는 동률이고, 그때는 영속화한 저장 순번으로 가린다.
+        순번이 없는 줄(순번 파일 도입 전, 손으로 고친 줄)은 0 으로 보고 줄 순서로 가린다.
         """
         while self.history:
             candidate = self.history.pop()
             if candidate != current:
                 return candidate
         stamped = [
-            (row.get("labeled_at") or "", index)
+            (row.get("labeled_at") or "", self.file.order.get(str(row.get("record_id")), 0), index)
             for index, row in enumerate(self.file.rows)
             if index != current and is_filled(row)
         ]
-        return max(stamped)[1] if stamped else None
+        return max(stamped)[2] if stamped else None
 
     def save(self, index: int, label: dict[str, Any]) -> None:
         row = self.file.rows[index]
@@ -554,6 +620,7 @@ class LabelSession:
             "guide_version": GUIDE_VERSION,
         }
         self.file.rows[index] = {key: filled.get(key) for key in LABEL_FIELDS}
+        self.file.mark_saved(row["record_id"])
         self.file.save()
         if index in self.history:
             self.history.remove(index)
@@ -770,8 +837,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     records, problems = load_records(records_path)
     try:
         label_file = LabelFile.load(label_path)
-    except json.JSONDecodeError as error:
-        print(f"{label_path}: JSON 이 아니다 ({error.msg}, 줄 {error.lineno})", file=sys.stderr)
+    except LabelFileError as error:
+        print(error, file=sys.stderr)
         return 2
     problems += find_label_file_problems(label_file.rows, args.labeler, records.keys())
     if problems:

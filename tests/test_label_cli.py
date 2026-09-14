@@ -1,6 +1,7 @@
 """라벨링 CLI 테스트 (이슈 #37). 사람 입력은 스크립트로 흉내 낸다."""
 
 import json
+from datetime import datetime, timedelta, timezone
 
 import pytest
 
@@ -91,7 +92,7 @@ class Script:
         return self.answers.pop(0)
 
 
-def run_session(workspace, answers, clock=lambda: 0.0):
+def run_session(workspace, answers, clock=lambda: 0.0, now=None):
     records_path, label_path = workspace
     records, problems = label_cli.load_records(records_path)
     assert problems == []
@@ -103,6 +104,7 @@ def run_session(workspace, answers, clock=lambda: 0.0):
         ask=Script(answers, transcript),
         say=transcript.append,
         clock=clock,
+        **({"now": now} if now else {}),
     )
     session.run()
     return "\n".join(transcript), read_rows(label_path)
@@ -396,6 +398,51 @@ def test_undo_with_nothing_to_undo_stays_on_current(workspace):
     assert rows[0]["reason_label"] == "BUG"
 
 
+SAME_SECOND = datetime(2026, 9, 22, 14, 3, 11, tzinfo=timezone(timedelta(hours=9)))
+RELABEL_PERF = ["2", "i", "0.8", "캐시 제거 후 결과가 같다", "", "", "", "y"]
+
+
+def test_undo_breaks_same_second_tie_by_persisted_save_order(workspace):
+    """PR #38 리뷰: 같은 초에 저장한 건끼리 labeled_at 이 같으면 :u 가 줄 번호가 큰 쪽을 골랐다.
+
+    1회차: rec-000, rec-001 저장 → rec-001 수정(:u) 중 한 번 더 :u → rec-000 을 다시 저장.
+           세 번 모두 같은 초. 마지막 저장은 rec-000 이다.
+    2회차: 새 실행이라 history 가 비어 있다 → 파일에서 고른다. rec-000 이 열려야 한다.
+           (예전 코드는 동률을 줄 번호로 가려 rec-001 을 열었다)
+    """
+    first = explicit_bug(0) + explicit_bug(1) + [":u", ":u"] + RELABEL_PERF
+    _, after_first = run_session(workspace, first, now=lambda: SAME_SECOND)
+    assert after_first[0]["labeled_at"] == after_first[1]["labeled_at"]  # 동률 재현
+    assert after_first[0]["reason_label"] == "PERF"
+
+    _, rows = run_session(workspace, [":u", "8", "no-context", "y"], now=lambda: SAME_SECOND)
+
+    assert rows[0]["reason_label"] == "UNK"  # 마지막으로 저장한 rec-000 을 고쳤다
+    assert rows[1]["reason_label"] == "BUG"
+    assert not labels.is_filled(rows[2])
+
+
+def test_save_order_is_persisted_next_to_the_label_file_not_inside_it(workspace):
+    """순번을 라벨 줄에 넣으면 가이드 §7.2 스키마가 바뀐다. 옆 파일에 둔다."""
+    _, label_path = workspace
+    _, rows = run_session(workspace, explicit_bug(0) + explicit_bug(1), now=lambda: SAME_SECOND)
+
+    order = json.loads((label_path.parent / "sj_pre200.jsonl.order.json").read_text("utf-8"))
+    assert order == {"rec-000": 1, "rec-001": 2}
+    assert all(list(row) == list(label_cli.LABEL_FIELDS) for row in rows)
+
+
+def test_missing_order_file_falls_back_to_line_order(workspace):
+    """순번 파일이 없어도(도입 전 파일) 멈추지 않는다. 동률이면 줄 순서로 가린다."""
+    _, label_path = workspace
+    run_session(workspace, explicit_bug(0) + explicit_bug(1), now=lambda: SAME_SECOND)
+    (label_path.parent / "sj_pre200.jsonl.order.json").unlink()
+
+    _, rows = run_session(workspace, [":u", "8", "no-context", "y"], now=lambda: SAME_SECOND)
+
+    assert [row["reason_label"] for row in rows[:2]] == ["BUG", "UNK"]
+
+
 def test_progress_line_counts_and_averages(workspace):
     ticks = iter(range(0, 10_000, 30))
     output, _ = run_session(workspace, explicit_bug(0), clock=lambda: float(next(ticks)))
@@ -424,6 +471,38 @@ def test_label_file_problems_are_found():
     assert any("rec-999" in problem for problem in problems)
     assert any("jh" in problem for problem in problems)
     assert any("8종·3등급 밖" in problem for problem in problems)
+
+
+def test_label_file_line_that_is_not_an_object_reports_the_real_line(tmp_path):
+    """빈 줄을 건너뛰어도 줄 번호는 파일의 실제 줄이다 (3번째 줄)."""
+    path = tmp_path / "sj_pre200.jsonl"
+    row = json.dumps(sampling.empty_label_row("rec-000", "sj"))
+    path.write_text(f"{row}\n\n[]\n", encoding="utf-8")
+
+    with pytest.raises(label_cli.LabelFileError, match=r":3: 한 줄은 JSON 객체여야 한다 \(list\)"):
+        label_cli.LabelFile.load(path)
+
+
+def test_records_line_that_is_not_an_object_is_reported(tmp_path):
+    path = tmp_path / sampling.RECORDS_FILENAME
+    record = json.dumps(sampling.build_labeling_record(make_record(0)))
+    path.write_text(f"null\n{record}\n", encoding="utf-8")
+
+    records, problems = label_cli.load_records(path)
+
+    assert list(records) == ["rec-000"]
+    assert len(problems) == 1
+    assert ":1: 한 줄은 JSON 객체여야 한다 (NoneType)" in problems[0]
+
+
+def test_main_reports_non_object_label_line_with_location(workspace, capsys):
+    records_path, label_path = workspace
+    label_path.write_text('"just a string"\n', encoding="utf-8")
+
+    code = label_cli.main(["--labeler", "sj", "--labels-dir", str(records_path.parent)])
+
+    assert code == 2
+    assert f"{label_path}:1: 한 줄은 JSON 객체여야 한다 (str)" in capsys.readouterr().err
 
 
 def test_main_refuses_missing_template(tmp_path):

@@ -328,6 +328,35 @@ def check_label(row: dict[str, Any], where: str) -> list[str]:
     return problems
 
 
+def check_final(final: object, where: str) -> list[str]:
+    """병합 파일의 확정 라벨(`final`) 검사. 비어 있으면(토론 전) 검사할 것이 없다."""
+    if not final:
+        return []
+    if not isinstance(final, dict):
+        return [f"{where}: final 은 JSON 객체여야 한다 ({type(final).__name__})"]
+    problems: list[str] = []
+    reason = final.get("reason_label")
+    grade = final.get("evidence_grade")
+    if reason not in labels.REASON_LABELS:
+        problems.append(f"{where}: reason_label={reason!r} ({'|'.join(labels.REASON_LABELS)})")
+    if grade not in labels.EVIDENCE_GRADES:
+        problems.append(f"{where}: evidence_grade={grade!r} ({'|'.join(labels.EVIDENCE_GRADES)})")
+    if grade == "INFERRED":
+        problems.extend(_check_inferred_confidence(final.get("confidence"), where))
+    return problems
+
+
+def _note_duplicate(
+    seen: dict[tuple[str, str], str], key: tuple[str, str], where: str, problems: list[str]
+) -> None:
+    """같은 사람의 같은 레코드가 두 번이면 labels.pair_labels 가 그 레코드를 3인 라벨로 보고
+    kappa 에서 조용히 빼거나, 같은 라벨러끼리의 쌍으로 센다."""
+    if key in seen:
+        problems.append(f"{where}: {key[1]} 의 record_id {key[0]} 가 {seen[key]} 에도 있다 (중복)")
+    else:
+        seen[key] = where
+
+
 def _check_inferred_confidence(value: object, where: str) -> list[str]:
     confidence = _as_float(value)
     if confidence is None or not 0.0 <= confidence <= 1.0:
@@ -353,7 +382,10 @@ def load_inputs(paths: Sequence[Path], batch: str = BATCH) -> Inputs:
     result = Inputs()
     personal: dict[str, list[dict[str, Any]]] = {labeler: [] for labeler in LABELERS}
     existing: list[dict[str, Any]] = []
-    seen: dict[tuple[str, str], str] = {}
+    # 중복은 출처별로 센다. 개인 라벨 + 병합 파일을 함께 넣는 재병합에서는 같은 쌍이 양쪽에
+    # 있는 것이 정상이다.
+    seen_personal: dict[tuple[str, str], str] = {}
+    seen_merged: dict[tuple[str, str], str] = {}
 
     for path in paths:
         for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
@@ -366,28 +398,23 @@ def load_inputs(paths: Sequence[Path], batch: str = BATCH) -> Inputs:
                 result.problems.append(f"{where}: JSON 이 아니다 ({error.msg})")
                 continue
 
+            # 게이트 판정에 쓰이는 숫자라 잘못된 입력을 조용히 통과시키지 않고 측정을 멈춘다.
             if "labels" in row:
                 existing.append(row)
+                record_id = str(row.get("record_id"))
                 for index, label in enumerate(row.get("labels") or []):
-                    result.problems.extend(check_label(label, f"{where} labels[{index}]"))
-                final = row.get("final") or {}
-                if final.get("evidence_grade") == "INFERRED":
-                    result.problems.extend(
-                        _check_inferred_confidence(final.get("confidence"), f"{where} final")
-                    )
+                    label_where = f"{where} labels[{index}]"
+                    result.problems.extend(check_label(label, label_where))
+                    key = (record_id, str(label.get("labeler")))
+                    _note_duplicate(seen_merged, key, label_where, result.problems)
+                result.problems.extend(check_final(row.get("final"), f"{where} final"))
                 continue
 
             if not labels.is_filled(row):
                 continue  # #33 빈 틀. 아직 사람이 안 채웠다
             result.problems.extend(check_label(row, where))
             key = (str(row.get("record_id")), str(row.get("labeler")))
-            if key in seen:
-                # 같은 사람의 같은 레코드가 두 줄이면 labels.pair_labels 가 그 레코드를 3인 라벨로
-                # 보고 kappa 에서 조용히 뺀다.
-                result.problems.append(
-                    f"{where}: {key[1]} 의 record_id {key[0]} 가 {seen[key]} 에도 있다 (중복)"
-                )
-            seen[key] = where
+            _note_duplicate(seen_personal, key, where, result.problems)
             personal.setdefault(str(row.get("labeler")), []).append(row)
 
     if any(personal.values()):
