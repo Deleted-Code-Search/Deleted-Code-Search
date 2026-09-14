@@ -27,6 +27,9 @@ pip install -e ".[dev]"
 pytest && ruff check .
 ```
 
+## 라벨링
+`python -m tools.label_cli --labeler sj` (본인 이니셜 `sj`/`jh`/`hs`)로 시작한다. #33이 만든 `datasets/labels/pre200_records.jsonl`의 레코드를 한 건씩 맥락 → 삭제 코드 → 대체 코드 순서로 보여 주고(분류기 출력 `reason.*`는 보여 주지 않는다), 이유 8종·근거 등급·근거·신뢰도·note를 물어 본인 파일 `datasets/labels/sj_pre200.jsonl`의 빈 줄을 [라벨 가이드](docs/labeling_guide.md) §7.2 형식으로 채운다. 잘못된 값은 입력 단계에서 거절한다. 건마다 저장하므로 아무 때나 `:q`로 끄고 다시 실행하면 남은 건부터 이어지고, `:u`는 직전 건 수정, `:r`은 지금 건을 처음부터 다시 입력한다. 라벨이 모이면 `python -m eval.gate1 datasets/labels/*_pre200.jsonl`로 게이트 1 숫자를 낸다 ([docs/evaluation.md](docs/evaluation.md) "게이트 1 측정 방법").
+
 ## 개발 규칙 (요약, 자세한 건 CHARTER.md §8)
 - `main` 직접 푸시 금지. 이슈 하나 = 브랜치 하나 = PR 하나, 리뷰 1명 필수
 - 브랜치 이름 `{type}/{이슈번호}-{설명}-{이니셜}`, 커밋 메시지는 "왜"를 쓰고 `Refs #이슈`
