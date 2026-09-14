@@ -284,6 +284,8 @@ class AttachmentReport:
     cache_hits: int = 0
     stopped_reason: str = ""
     """비어 있지 않으면 표본을 다 돌기 전에 멈춘 것. 비율을 전체 표본 값으로 읽으면 안 된다."""
+    skipped: dict[str, int] = field(default_factory=dict)
+    """건너뛴 조회 종류별 횟수. 실패를 조용히 삼키면 무엇을 잃었는지 모른다 (#50)."""
 
     def add(self, context: CommitContext) -> None:
         self.total += 1
@@ -309,6 +311,7 @@ class AttachmentReport:
             "api_calls": self.api_calls,
             "cache_hits": self.cache_hits,
             "stopped_reason": self.stopped_reason,
+            "skipped": dict(self.skipped),
         }
 
     def format_lines(self) -> list[str]:
@@ -321,6 +324,9 @@ class AttachmentReport:
             f"  하나라도     {data['with_any']:>4} ({data['any_rate']:.1%})",
             f"  API {data['api_calls']}회 / 캐시 {data['cache_hits']}회",
         ]
+        if self.skipped:
+            detail = ", ".join(f"{kind} {count}회" for kind, count in sorted(self.skipped.items()))
+            lines.append(f"  건너뛴 조회: {detail} (그 조각만 빠지고 나머지 맥락은 남았다)")
         if self.stopped_reason:
             lines.append(f"  ** 중단: {self.stopped_reason} — 위 비율은 돌린 만큼의 값이다 **")
         return lines
@@ -339,9 +345,46 @@ class ContextCollector:
     max_issues: int = MAX_ISSUES_PER_COMMIT
     max_review_comments: int = MAX_REVIEW_COMMENTS
     seen_shas: set[str] = field(default_factory=set)
+    skipped: dict[str, int] = field(default_factory=dict)
+    """건너뛴 조회 종류별 횟수. 조용히 삼키면 무엇을 잃었는지 모른다 — 아래 주석 참고."""
+
+    def _tolerate(self, kind: str, error: RuntimeError) -> None:
+        """조회 하나가 실패했을 때 그 조각만 포기한다. 단 한도 소진은 올려보낸다.
+
+        왜 삼키나:
+            조회 하나가 실패하면 `collect` 전체가 터지고, `run_targets` 가 빈 맥락을 기록해
+            **이미 찾아 둔 PR 제목·본문까지 같이 버려졌다.** 삭제된 이슈(410)에서 실제로
+            일어났고, httpx 표본 50건 중 21건(42%)이 이것 때문에 날아갔다 (#47, #50).
+            이슈를 활발히 참조하는 저장소일수록 삭제된 이슈도 많아, 이유가 잘 적힌 저장소가
+            더 손해를 보는 구조였다.
+
+        왜 한도 소진만 예외인가:
+            한도가 바닥난 뒤 조용히 넘어가면 남은 커밋이 전부 "맥락 없음" 으로 기록돼
+            회수율이 거짓으로 낮아진다. 측정 실패를 측정 결과로 착각하게 되는 같은 종류의
+            사고다 (#33 에서 넣은 보호).
+        """
+        if is_rate_limit_error(error):
+            raise error
+        self.skipped[kind] = self.skipped.get(kind, 0) + 1
+
+    def get_json(self, kind: str, path: str) -> Any:
+        """실패를 견디는 단건 조회. 실패하면 None 이고 그 사실이 `skipped` 에 남는다."""
+        try:
+            return self.client.get_json(path, allow_404=True)
+        except RuntimeError as error:
+            self._tolerate(kind, error)
+            return None
+
+    def paginate(self, kind: str, path: str, **kwargs: Any) -> list[Any]:
+        """실패를 견디는 페이지 조회. 실패하면 빈 목록."""
+        try:
+            return self.client.paginate(path, **kwargs)
+        except RuntimeError as error:
+            self._tolerate(kind, error)
+            return []
 
     def fetch_commit_message(self, repo: str, commit_sha: str) -> str:
-        commit = self.client.get_json(f"/repos/{repo}/commits/{commit_sha}", allow_404=True)
+        commit = self.get_json("commit", f"/repos/{repo}/commits/{commit_sha}")
         return ((commit or {}).get("commit") or {}).get("message") or ""
 
     def find_pull_request(
@@ -352,7 +395,7 @@ class ContextCollector:
         열린 PR 은 아직 기본 브랜치에 들어오지 않았으므로 이 삭제의 경로가 아니다.
         여러 개면 가장 먼저 머지된 것을 원본으로 본다 (뒤의 것은 백포트·체리픽).
         """
-        pulls = self.client.get_json(f"/repos/{repo}/commits/{commit_sha}/pulls", allow_404=True)
+        pulls = self.get_json("pr", f"/repos/{repo}/commits/{commit_sha}/pulls")
         merged = [pull for pull in (pulls or []) if pull.get("merged_at")]
         if merged:
             return min(
@@ -362,7 +405,7 @@ class ContextCollector:
         number = pr_number_from_message(commit_message)
         if number is None:
             return None
-        pull = self.client.get_json(f"/repos/{repo}/pulls/{number}", allow_404=True)
+        pull = self.get_json("pr", f"/repos/{repo}/pulls/{number}")
         return pull if pull and pull.get("merged_at") else None
 
     def fetch_issue(self, repo: str, number: int) -> dict[str, Any] | None:
@@ -371,8 +414,11 @@ class ContextCollector:
         정밀도: `/issues/{n}` 는 PR 도 돌려준다 (GitHub 에서 PR 은 이슈의 특수형).
         `pull_request` 키가 있으면 이슈가 아니므로 버린다. 이걸 안 하면 "관련 PR 번호"가
         이슈로 둔갑해 issue_titles 에 PR 제목이 섞인다.
+
+        삭제된 이슈는 404 가 아니라 **410 Gone** 이다. 그래서 `allow_404` 로는 안 걸리고
+        예외가 되어 커밋 전체를 날렸다 (#50). 이제 그 이슈만 건너뛴다.
         """
-        issue = self.client.get_json(f"/repos/{repo}/issues/{number}", allow_404=True)
+        issue = self.get_json("issue", f"/repos/{repo}/issues/{number}")
         if not issue or issue.get("pull_request"):
             return None
         return issue
@@ -391,7 +437,8 @@ class ContextCollector:
             그 상태로 파일 필터가 빈손이 되면 폴백이 무관한 50건을 통째로 돌려준다.
             그래서 두 페이지를 먼저 받고, 파일로 거른 뒤, 남은 것에 상한을 건다.
         """
-        raw = self.client.paginate(
+        raw = self.paginate(
+            "review",
             f"/repos/{repo}/pulls/{pr_number}/comments",
             max_items=MAX_REVIEW_PAGES * 100,
             max_pages=MAX_REVIEW_PAGES,
@@ -602,6 +649,7 @@ def run_targets(
             log(f"[{index}/{len(targets)}] {target.commit_sha[:10]} {marks}")
     report.api_calls = collector.client.api_calls
     report.cache_hits = collector.client.cache_hits
+    report.skipped = dict(collector.skipped)
     return contexts, report
 
 
