@@ -135,6 +135,48 @@ def test_parse_file_diffs_skips_pure_new_file():
     assert files == {}
 
 
+def test_parse_file_diffs_strips_trailing_tab_from_path_containing_space():
+    """경로에 공백이 있으면 git이 `--- `/`+++ ` 헤더 줄 끝에 탭 하나를 덧붙인다(고전
+    unified diff의 `path\\tdate` 필드 구분자 관례 — 실제 git으로 재현해서 확인함:
+    `eval/gemini-2.0-flash copy.py` 같은 경로에서 헤더가 `--- a/eval/gemini-2.0-flash
+    copy.py\\t`로 나온다). 그 탭 하나만 제거해야 한다 — 파일명 "안"의 공백은 그대로
+    남아야 한다. 수정 전에는 이 탭이 file_path에 그대로 남아 이후 `git show
+    <parent_sha>:<file_path>`가 "path does not exist"로 실패했다(실제 운영 재현,
+    browser-use 저장소에서 저장소 전체 extraction 실패로 이어짐)."""
+    diff = (
+        "diff --git a/eval/gemini-2.0-flash copy.py b/eval/gemini-2.0-flash copy.py\n"
+        "index c2119dc..e69de29 100644\n"
+        "--- a/eval/gemini-2.0-flash copy.py\t\n"
+        "+++ b/eval/gemini-2.0-flash copy.py\t\n"
+        "@@ -1,2 +0,0 @@\n"
+        "-def foo():\n"
+        "-    return 1\n"
+    )
+    files = extract_module.parse_file_diffs(diff)
+
+    assert set(files) == {"eval/gemini-2.0-flash copy.py"}  # 탭 없음, 내부 공백은 보존
+    assert files["eval/gemini-2.0-flash copy.py"].deleted_lines == {
+        1: "def foo():",
+        2: "    return 1",
+    }
+
+
+def test_parse_file_diffs_plain_path_without_space_is_unaffected():
+    """공백이 없는 평범한 경로는 애초에 탭이 안 붙는다(재현 확인) — 이번 수정으로
+    동작이 바뀌면 안 된다."""
+    diff = (
+        "diff --git a/src/example.py b/src/example.py\n"
+        "index aaa..bbb 100644\n"
+        "--- a/src/example.py\n"
+        "+++ b/src/example.py\n"
+        "@@ -1 +0,0 @@\n"
+        "-x = 1\n"
+    )
+    files = extract_module.parse_file_diffs(diff)
+
+    assert set(files) == {"src/example.py"}
+
+
 def test_parse_file_diffs_hunk_content_starting_with_dashes_is_not_mistaken_for_header():
     """헝크 안에서 지워지는/추가되는 소스 줄이 "-- x --"/"++ x ++"처럼 시작하면, diff
     접두사가 붙어 "--- x --"/"+++ x ++"가 된다 — 파일 헤더 줄과 구별이 안 돼 이 파일의
@@ -179,6 +221,24 @@ class TestExtractDeletions:
         assert record.deleted_hunk == "def foo():\n    return 1"
         assert record.repo == _REPO
         assert record.file_path == "a.py"
+
+    def test_full_function_deletion_in_file_path_containing_space(self, tmp_path: Path):
+        """실제 운영 재현: 경로에 공백이 있으면 diff 헤더에 탭이 붙어(git 재현 확인),
+        수정 전에는 parent source 조회(`git show <parent_sha>:<file_path>`)가
+        "path does not exist"로 실패해 이 파일에서 아무 record도 못 뽑았다."""
+        repo = _init_repo(tmp_path / "repo")
+        _write(repo, "eval/gemini-2.0-flash copy.py", "def foo():\n    return 1\n")
+        _commit_all(repo, "add file with space in name")
+        _write(repo, "eval/gemini-2.0-flash copy.py", "")
+        _commit_all(repo, "delete foo")
+
+        records = extract_module.extract_deletions(repo, _REPO, _last_commit_pair(repo))
+
+        assert len(records) == 1
+        record = records[0]
+        assert record.function_name == "foo"
+        assert record.deletion_kind == "FULL_FUNCTION"
+        assert record.file_path == "eval/gemini-2.0-flash copy.py"  # 탭 없음, 공백 보존
 
     def test_partial_function_deletion(self, tmp_path: Path):
         repo = _init_repo(tmp_path / "repo")

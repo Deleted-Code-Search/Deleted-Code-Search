@@ -202,10 +202,21 @@ def _read_parent_file(repo_path: str | Path, parent_sha: str, file_path: str) ->
 
 
 def _old_path(spec: str) -> str | None:
-    """`--- a/<path>` 줄의 `<path>` 부분. 신규 파일(`--- /dev/null`)이면 None."""
+    """`--- a/<path>` 줄의 `<path>` 부분. 신규 파일(`--- /dev/null`)이면 None.
+
+    경로에 공백이 섞여 있으면 git이 헤더 줄 끝에 탭 하나를 덧붙인다(고전 unified diff의
+    `path\\tdate` 필드 구분자 관례 — 직접 재현해서 확인: 공백 없는 경로엔 안 붙고, 공백이
+    있으면 정확히 탭 1개만 붙는다). 그 탭 하나만 제거한다 — `.rstrip()`을 쓰지 않는 이유는
+    경로 "안"의 공백(`gemini-2.0-flash copy.py`처럼 파일명의 일부)이나, 이론상 파일명이
+    실제로 공백으로 끝나는 경우까지 건드리면 안 되기 때문이다. 딱 이 탭 하나만 git이 붙인
+    메타데이터고, 나머지는 전부 실제 경로다.
+    """
     if spec == "/dev/null":
         return None
-    return spec[2:] if spec.startswith("a/") else spec
+    path = spec[2:] if spec.startswith("a/") else spec
+    if path.endswith("\t"):
+        path = path[:-1]
+    return path
 
 
 def parse_file_diffs(diff_text: str) -> dict[str, _FileDiff]:
