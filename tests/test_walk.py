@@ -6,12 +6,19 @@
 from __future__ import annotations
 
 import os
+import shutil
 import subprocess
 from pathlib import Path
 
 import pytest
 
 from pipeline.walk import CommitPair, LogEntry, parse_git_log, to_commit_pairs, walk_commits
+
+# subprocess.run(["git", "--version"]) 대신 shutil.which를 쓴다 — git 실행 파일 자체가
+# 없으면 subprocess.run이 FileNotFoundError를 던져서 skip 마커가 적용되기 전에 테스트
+# 수집(collection) 자체가 실패할 수 있다 (CodeRabbit 리뷰).
+_GIT_MISSING = shutil.which("git") is None
+requires_git = pytest.mark.skipif(_GIT_MISSING, reason="git CLI가 필요하다")
 
 _GIT_ENV = {
     "GIT_AUTHOR_NAME": "Test",
@@ -99,10 +106,7 @@ def test_to_commit_pairs_deduplicates_by_sha():
 # --------------------------------------------------------------------------------------
 
 
-@pytest.mark.skipif(
-    subprocess.run(["git", "--version"], capture_output=True).returncode != 0,
-    reason="git CLI가 필요하다",
-)
+@requires_git
 class TestWalkCommitsOnRealRepo:
     def test_linear_history_order_and_root_exclusion(self, tmp_path: Path):
         repo = _init_repo(tmp_path / "linear")

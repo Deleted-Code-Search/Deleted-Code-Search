@@ -98,11 +98,23 @@ def repo_dir(repos_dir: str | Path, repo: str) -> Path:
 
 
 def is_git_repo(path: Path) -> bool:
-    """`path`가 git 저장소(작업 트리)인가. 존재하지 않거나 디렉터리가 아니면 False."""
+    """`path`가 git 저장소의 작업 트리 **루트**인가. 존재하지 않거나 디렉터리가 아니면 False.
+
+    `git rev-parse --git-dir` 성공 여부만 보지 않는다 — git은 `.git`을 찾을 때까지 상위로
+    올라가므로, git 저장소 안의 평범한 하위 디렉터리(예: `<repo>/nested/`)도 그것만으로는
+    True가 나온다. `clone()`의 재사용 판정이 그 하위 디렉터리를 저장소 자체로 착각하면
+    엉뚱한(상위) 저장소를 기준으로 shallow·origin을 확인하게 된다. `--show-toplevel`로 실제
+    작업 트리 루트를 구해 `path` 자신과 일치할 때만 True로 판정한다.
+    """
     if not path.is_dir():
         return False
-    result = _run_git(["-C", str(path), "rev-parse", "--git-dir"], check=False)
-    return result.returncode == 0
+    result = _run_git(["-C", str(path), "rev-parse", "--show-toplevel"], check=False)
+    if result.returncode != 0:
+        return False
+    toplevel = result.stdout.strip()
+    if not toplevel:
+        return False
+    return Path(toplevel).resolve() == path.resolve()
 
 
 def is_shallow_clone(path: Path) -> bool:

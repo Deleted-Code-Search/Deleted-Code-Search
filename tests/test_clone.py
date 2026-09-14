@@ -63,7 +63,10 @@ def _force_rmtree(path: Path) -> None:
     shutil.rmtree(path, onexc=_on_rmtree_error)
 
 
-_GIT_MISSING = subprocess.run(["git", "--version"], capture_output=True).returncode != 0
+# subprocess.run(["git", "--version"]) 대신 shutil.which를 쓴다 — git 실행 파일 자체가
+# 없으면 subprocess.run이 FileNotFoundError를 던져서 skip 마커가 적용되기 전에 테스트
+# 수집(collection) 자체가 실패할 수 있다 (CodeRabbit 리뷰).
+_GIT_MISSING = shutil.which("git") is None
 requires_git = pytest.mark.skipif(_GIT_MISSING, reason="git CLI가 필요하다")
 
 
@@ -119,6 +122,36 @@ def test_repo_dir_rejects_backslash_in_segment(tmp_path: Path):
 def test_repo_dir_normal_input_still_nests_under_repos_dir(tmp_path: Path):
     result = clone_module.repo_dir(tmp_path, "acme/widgets")
     assert result == tmp_path / "acme" / "widgets"
+
+
+# --------------------------------------------------------------------------------------
+# is_git_repo: 저장소 "루트"만 True (nested 하위 디렉터리 오인 방지, CodeRabbit 리뷰)
+#
+# `git rev-parse --git-dir`만 보던 이전 구현은 git이 상위로 올라가 `.git`을 찾는 동작
+# 때문에, 저장소 안의 평범한 하위 디렉터리도 True로 잘못 판정했다(재현 확인됨).
+# --------------------------------------------------------------------------------------
+
+
+@requires_git
+class TestIsGitRepo:
+    def test_repo_root_is_true(self, tmp_path: Path):
+        repo = _init_source_repo(tmp_path / "repo")
+        assert clone_module.is_git_repo(repo) is True
+
+    def test_nested_directory_inside_repo_is_false(self, tmp_path: Path):
+        repo = _init_source_repo(tmp_path / "repo")
+        nested = repo / "nested"
+        nested.mkdir()
+
+        assert clone_module.is_git_repo(nested) is False
+
+    def test_plain_non_git_directory_is_false(self, tmp_path: Path):
+        plain = tmp_path / "plain"
+        plain.mkdir()
+        assert clone_module.is_git_repo(plain) is False
+
+    def test_nonexistent_path_is_false(self, tmp_path: Path):
+        assert clone_module.is_git_repo(tmp_path / "does-not-exist") is False
 
 
 # --------------------------------------------------------------------------------------

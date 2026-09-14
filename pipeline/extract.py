@@ -213,11 +213,17 @@ def parse_file_diffs(diff_text: str) -> dict[str, _FileDiff]:
 
     삭제 줄이 하나도 없는 파일(순수 신규 파일 포함)은 결과에 없다 — 그런 파일에서는
     어차피 `DeletedFunction` record가 나올 수 없다.
+
+    `--- `/`+++ `는 파일 헤더에서만 그렇게 해석한다. 헝크(`@@ ... @@`) 안에서 지워지거나
+    추가되는 소스 줄 자체가 "-- x --"/"++ x ++"처럼 시작하면, diff 접두사 하나가 붙어
+    "--- x --"/"+++ x ++"가 돼 파일 헤더 줄과 구별이 안 된다 — `in_hunk`로 헝크 진입
+    여부를 추적해, 헝크 안에서는 `--- `/`+++ `도 무조건 삭제/추가 내용으로 취급한다.
     """
     files: dict[str, _FileDiff] = {}
     current_path: str | None = None
     current: _FileDiff | None = None
     old_cursor = 0
+    in_hunk = False  # `@@ ... @@` 이후 다음 `diff --git `까지 True
 
     def flush() -> None:
         if current_path is not None and current is not None and current.deleted_lines:
@@ -228,12 +234,13 @@ def parse_file_diffs(diff_text: str) -> dict[str, _FileDiff]:
             flush()
             current_path = None
             current = None
+            in_hunk = False
             continue
-        if line.startswith("--- "):
+        if not in_hunk and line.startswith("--- "):
             current_path = _old_path(line[4:])
             current = _FileDiff() if current_path is not None else None
             continue
-        if line.startswith("+++ "):
+        if not in_hunk and line.startswith("+++ "):
             continue  # 파일 식별은 옛(부모) 경로로만 한다 — 모듈 독스트링 참고
         if line.startswith("\\"):
             continue  # "\ No newline at end of file" 등 메타 줄
@@ -242,6 +249,7 @@ def parse_file_diffs(diff_text: str) -> dict[str, _FileDiff]:
         header = _HUNK_HEADER_RE.match(line)
         if header:
             old_cursor = int(header.group(1))
+            in_hunk = True
             continue
         if line.startswith("-"):
             current.deleted_lines[old_cursor] = line[1:]

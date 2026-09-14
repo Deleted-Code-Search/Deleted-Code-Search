@@ -10,6 +10,7 @@ from __future__ import annotations
 import dataclasses
 import json
 import os
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -85,7 +86,10 @@ def _sample_records(count: int = 3) -> list[extract_module.DeletedFunction]:
     ]
 
 
-_GIT_MISSING = subprocess.run(["git", "--version"], capture_output=True).returncode != 0
+# subprocess.run(["git", "--version"]) 대신 shutil.which를 쓴다 — git 실행 파일 자체가
+# 없으면 subprocess.run이 FileNotFoundError를 던져서 skip 마커가 적용되기 전에 테스트
+# 수집(collection) 자체가 실패할 수 있다 (CodeRabbit 리뷰).
+_GIT_MISSING = shutil.which("git") is None
 requires_git = pytest.mark.skipif(_GIT_MISSING, reason="git CLI가 필요하다")
 
 
@@ -129,6 +133,27 @@ def test_parse_file_diffs_skips_pure_new_file():
     diff = "diff --git a/a.py b/a.py\n--- /dev/null\n+++ b/a.py\n@@ -0,0 +1 @@\n+x = 1\n"
     files = extract_module.parse_file_diffs(diff)
     assert files == {}
+
+
+def test_parse_file_diffs_hunk_content_starting_with_dashes_is_not_mistaken_for_header():
+    """헝크 안에서 지워지는/추가되는 소스 줄이 "-- x --"/"++ x ++"처럼 시작하면, diff
+    접두사가 붙어 "--- x --"/"+++ x ++"가 된다 — 파일 헤더 줄과 구별이 안 돼 이 파일의
+    삭제 레코드가 통째로 사라지던 문제였다(CodeRabbit 리뷰). 수정 전에는 이 입력에
+    대해 parse_file_diffs()가 {}를 반환했다(재현 확인됨)."""
+    diff = (
+        "diff --git a/a.py b/a.py\n"
+        "index e1e92b7..96c22d6 100644\n"
+        "--- a/a.py\n"
+        "+++ b/a.py\n"
+        "@@ -3 +3 @@ def foo():\n"
+        "--- section --\n"
+        "+++ replacement ++\n"
+    )
+    files = extract_module.parse_file_diffs(diff)
+
+    assert set(files) == {"a.py"}
+    assert files["a.py"].deleted_lines == {3: "-- section --"}
+    assert files["a.py"].added_lines == ["++ replacement ++"]
 
 
 # --------------------------------------------------------------------------------------
