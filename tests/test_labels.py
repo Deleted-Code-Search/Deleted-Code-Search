@@ -500,6 +500,78 @@ def test_cli_rerun_preserves_discussed_final(tmp_path, labels_dir):
     assert after["r2"]["final"]["note"] == "토론 결과"
 
 
+# --------------------------------------------------------------------------------------
+# 라벨 값 검증 (§4.2 ③ 8종 / 근거 3등급)
+# --------------------------------------------------------------------------------------
+
+
+def test_undefined_label_inflates_kappa():
+    """왜 막아야 하는지 — p_e 가 선언된 클래스만 세므로 정의되지 않은 값이 kappa 를 부풀린다."""
+    typo = [("BUGG", "BUGG")] * 4 + [("BUG", "PERF")] * 3 + [("PERF", "BUG")] * 3
+    valid = [("DEAD", "DEAD")] * 4 + [("BUG", "PERF")] * 3 + [("PERF", "BUG")] * 3
+
+    inflated, _, _ = labels.cohens_kappa(typo, labels.REASON_LABELS)
+    correct, _, _ = labels.cohens_kappa(valid, labels.REASON_LABELS)
+
+    assert inflated > correct + 0.15  # 같은 일치 패턴인데 kappa 가 훨씬 높다
+
+
+@pytest.mark.parametrize("bad", ["BUGG", "bug", "BUG ", "", None])
+def test_bad_reason_label_is_reported(bad):
+    personal = {"sj": [label_row("r1", "sj", reason=bad)], "jh": [], "hs": []}
+    problems = labels.find_label_problems(personal)
+
+    # 빈 값·None 은 아직 라벨 안 한 줄이라 여기서는 걸리지 않는다 (is_filled 가 거른다)
+    if bad in ("", None):
+        assert problems == []
+    else:
+        assert len(problems) == 1
+        assert "reason_label" in problems[0]
+
+
+def test_bad_evidence_grade_is_reported():
+    personal = {"sj": [label_row("r1", "sj", grade="EXPLICT")], "jh": [], "hs": []}
+    problems = labels.find_label_problems(personal)
+
+    assert len(problems) == 1
+    assert "evidence_grade" in problems[0]
+    assert "EXPLICT" in problems[0]
+
+
+def test_label_problem_message_points_at_the_line():
+    personal = {
+        "sj": [label_row("r1", "sj"), label_row("r2", "sj", reason="TYPO")],
+        "jh": [],
+        "hs": [],
+    }
+    problems = labels.find_label_problems(personal)
+
+    assert "sj 2번째 줄" in problems[0]
+
+
+def test_valid_labels_have_no_problems():
+    personal = {
+        "sj": [label_row("r1", "sj", reason=reason) for reason in labels.REASON_LABELS],
+        "jh": [label_row("r2", "jh", grade=grade) for grade in labels.EVIDENCE_GRADES],
+        "hs": [empty_row("r3", "hs")],
+    }
+    assert labels.find_label_problems(personal) == []
+
+
+def test_cli_stops_on_undefined_label_and_writes_nothing(tmp_path, labels_dir):
+    """틀린 kappa 를 내느니 멈춘다 — 게이트 1 판정에 쓰는 값이다."""
+    path = labels_dir / labels.LABEL_FILENAME_TEMPLATE.format(labeler="sj")
+    rows = [json.loads(line) for line in path.read_text("utf-8").splitlines()]
+    rows[0]["reason_label"] = "BUGG"
+    path.write_text(
+        "\n".join(json.dumps(row, ensure_ascii=False) for row in rows), encoding="utf-8"
+    )
+
+    out = tmp_path / "merged.jsonl"
+    assert labels.main(["--labels-dir", str(labels_dir), "--out", str(out)]) == 2
+    assert not out.exists()
+
+
 def test_cli_stops_when_nothing_is_labelled(tmp_path):
     directory = tmp_path / "empty"
     directory.mkdir()

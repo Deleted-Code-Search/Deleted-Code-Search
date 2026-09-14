@@ -93,6 +93,37 @@ def has_tag(row: dict[str, Any], tag: str) -> bool:
     return tag in (row.get("note") or "")
 
 
+def find_label_problems(personal: dict[str, list[dict[str, Any]]]) -> list[str]:
+    """§4.2 ③ 8종·근거 3등급에 없는 값을 찾는다. 비어 있으면 문제 없음.
+
+    왜 경고가 아니라 중단인가:
+        `cohens_kappa` 는 `p_o` 를 모든 쌍으로, `p_e` 를 **선언된 클래스로만** 계산한다.
+        정의되지 않은 값이 섞이면 그 값은 `p_e` 에 기여하지 못해 `p_e` 가 실제보다 낮게
+        잡히고, kappa 가 부풀려진다. 10건 중 4건이 오타인 경우로 재 보니 0.091 이 나와야 할
+        자리에 0.268 이 나왔다. §10.2 목표(≥0.7)와 §8.4 대응 분기(0.7 / 0.6)를 잘못된 쪽으로
+        넘길 수 있는 크기다. 경고만 띄우고 집계하면 그 숫자가 그대로 리포트에 실린다.
+
+    라벨 파일은 사람이 텍스트 에디터로 채우는 JSONL 이라(가이드 §8.2) 오타·대소문자·공백이
+    충분히 난다. 게이트 1 판정에 쓰는 값이므로 틀린 값을 내느니 멈추는 편이 낫다.
+    """
+    problems: list[str] = []
+    for labeler in LABELERS:
+        for line_number, row in enumerate(personal.get(labeler, []), start=1):
+            if not is_filled(row):
+                continue
+            checks = (
+                ("reason_label", row.get("reason_label"), REASON_LABELS),
+                ("evidence_grade", row.get("evidence_grade"), EVIDENCE_GRADES),
+            )
+            for field_name, value, allowed in checks:
+                if value not in allowed:
+                    problems.append(
+                        f"{labeler} {line_number}번째 줄: {field_name}={value!r} 은 "
+                        f"허용값이 아니다 ({'|'.join(allowed)})"
+                    )
+    return problems
+
+
 # --------------------------------------------------------------------------------------
 # 병합 (가이드 §7.3)
 # --------------------------------------------------------------------------------------
@@ -543,6 +574,19 @@ def main(argv: Sequence[str] | None = None) -> int:
     if not any(filled.values()):
         print("라벨된 줄이 없다. 사람이 채운 뒤 다시 돌려라.", file=sys.stderr)
         return 1
+
+    problems = find_label_problems(personal)
+    if problems:
+        print("정의되지 않은 라벨 값이 있다 (§4.2 ③ 이유 8종 / 근거 3등급):", file=sys.stderr)
+        for problem in problems[:10]:
+            print(f"  - {problem}", file=sys.stderr)
+        if len(problems) > 10:
+            print(f"  ... 외 {len(problems) - 10}건", file=sys.stderr)
+        print(
+            "그대로 세면 p_e 가 낮게 잡혀 kappa 가 실제보다 높게 나온다. 값을 고치고 다시 돌려라.",
+            file=sys.stderr,
+        )
+        return 2
 
     out_path = args.out or Path("datasets") / MERGED_FILENAME
     existing = read_jsonl(out_path)
