@@ -601,6 +601,127 @@ def test_rate_limit_stops_the_batch_instead_of_recording_empty_contexts(tmp_path
     assert any("중단" in line for line in report.format_lines())
 
 
+# --------------------------------------------------------------------------------------
+# 부분 실패 허용 (#50) — 조회 하나가 죽어도 나머지 맥락은 남는다
+# --------------------------------------------------------------------------------------
+
+
+def _fetcher_failing_on(fragment, code):
+    """`fragment` 가 든 URL 만 실패시키고 나머지는 FULL_ROUTES 대로."""
+
+    def fetch(url, request_headers):
+        if fragment in url:
+            raise _http_error(code)
+        return route_fetcher(FULL_ROUTES)(url, request_headers)
+
+    return fetch
+
+
+@pytest.mark.parametrize("code", [410, 451, 500, 502])
+def test_issue_failure_keeps_the_pull_request(tmp_path, code):
+    """삭제된 이슈는 404 가 아니라 410 이다. 그 한 건 때문에 PR 을 잃으면 안 된다.
+
+    실측에서 httpx 표본 50건 중 21건(42%)이 이 경로로 날아갔다 (#47).
+    """
+    client = ctx.GitHubClient(
+        "t",
+        tmp_path / "cache",
+        fetcher=_fetcher_failing_on("/issues/42", code),
+        sleep=lambda _: None,
+    )
+    collector = ctx.ContextCollector(client)
+    result = collector.collect("a/b", "sha1", commit_message="remove retry helper")
+
+    assert result.pr_number == 100
+    assert result.pr_title == MERGED_PR["title"]
+    assert result.has_any_context is True
+    assert collector.skipped["issue"] >= 1
+
+
+def test_issue_failure_still_collects_other_issues(tmp_path):
+    """한 이슈가 죽어도 같은 커밋의 다른 이슈는 살린다."""
+    client = ctx.GitHubClient(
+        "t",
+        tmp_path / "cache",
+        fetcher=_fetcher_failing_on("/issues/42", 410),
+        sleep=lambda _: None,
+    )
+    result = ctx.ContextCollector(client).collect("a/b", "sha1", commit_message="msg")
+
+    assert result.issue_numbers == (43,)
+    assert result.issue_titles == ("Flaky test",)
+
+
+def test_review_comment_failure_keeps_pr_and_issues(tmp_path):
+    client = ctx.GitHubClient(
+        "t",
+        tmp_path / "cache",
+        fetcher=_fetcher_failing_on("/pulls/100/comments", 500),
+        sleep=lambda _: None,
+    )
+    collector = ctx.ContextCollector(client)
+    result = collector.collect("a/b", "sha1", commit_message="msg")
+
+    assert result.pr_number == 100
+    assert result.issue_numbers == (42, 43)
+    assert result.review_comments == ()
+    assert collector.skipped["review"] >= 1
+
+
+def test_commit_message_failure_still_finds_the_pr(tmp_path):
+    def fetch(url, request_headers):
+        # 커밋 단건 조회만 실패시킨다 (`/commits/sha1/pulls` 는 살려 둔다)
+        if url.endswith("/commits/sha1"):
+            raise _http_error(500)
+        return route_fetcher(FULL_ROUTES)(url, request_headers)
+
+    client = ctx.GitHubClient("t", tmp_path / "cache", fetcher=fetch, sleep=lambda _: None)
+    collector = ctx.ContextCollector(client)
+    result = collector.collect("a/b", "sha1")  # commit_message 를 주지 않아 조회한다
+
+    assert result.commit_message == ""
+    assert result.pr_number == 100
+    assert collector.skipped["commit"] >= 1
+
+
+def test_rate_limit_still_stops_even_though_failures_are_tolerated(tmp_path):
+    """한도 소진까지 삼키면 남은 커밋이 전부 "맥락 없음"이 된다 (#33 보호 유지)."""
+    client = ctx.GitHubClient(
+        "t",
+        tmp_path / "cache",
+        fetcher=_fetcher_failing_on("/issues/42", 403),
+        sleep=lambda _: None,
+    )
+    collector = ctx.ContextCollector(client)
+    contexts, report = ctx.run_targets(
+        collector,
+        [
+            ctx.CommitTarget("a/b", "sha1", commit_message="msg"),
+            ctx.CommitTarget("a/b", "sha1", commit_message="msg"),
+        ],
+    )
+
+    assert contexts == []
+    assert "한도 소진" in report.stopped_reason
+    assert "issue" not in collector.skipped  # 삼키지 않고 올려보냈다
+
+
+def test_skipped_counts_reach_the_report(tmp_path):
+    """조용히 삼키면 무엇을 잃었는지 모른다 — 리포트에 보여야 한다."""
+    client = ctx.GitHubClient(
+        "t",
+        tmp_path / "cache",
+        fetcher=_fetcher_failing_on("/issues/42", 410),
+        sleep=lambda _: None,
+    )
+    _, report = ctx.run_targets(
+        ctx.ContextCollector(client), [ctx.CommitTarget("a/b", "sha1", commit_message="msg")]
+    )
+
+    assert report.as_dict()["skipped"]["issue"] >= 1
+    assert any("건너뛴 조회" in line for line in report.format_lines())
+
+
 def test_network_error_is_still_isolated_per_commit(tmp_path):
     """네트워크 오류는 배치를 멈추지 않는다 (한도 소진과 구분)."""
 
