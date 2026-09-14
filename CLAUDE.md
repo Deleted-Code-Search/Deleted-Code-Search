@@ -40,7 +40,7 @@ ruff format --check .       # 자동 수정: ruff format .
 |---|---|---|
 | 파이프라인·파서·필터·DB 스키마 | 재헌 (jh) | `pipeline/` (context.py 제외) |
 | 맥락 결합·대체 코드·분류·검색 | 희수 (hs) | `pipeline/context.py`, `classify/`, `search/` |
-| 저장소 선정·대시보드·웹·평가·문서 | 성제 (sj) | `web/`, `docs/`, `datasets/export/`, 평가 스크립트 |
+| 저장소 선정·대시보드·웹·평가·라벨링 도구·문서 | 성제 (sj) | `web/`, `docs/`, `datasets/export/`, `eval/`(평가·게이트 판정), `tools/`(라벨링 CLI 등) |
 
 다른 팀원 영역의 파일을 수정할 땐 **인터페이스만** 건드리고, PR 본문에 그 사실을 명시한다. 인터페이스 파일: `pipeline/parsers/base.py`, `DeletionRecord` 스키마, API 스펙.
 
