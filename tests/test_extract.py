@@ -199,6 +199,67 @@ def test_parse_file_diffs_hunk_content_starting_with_dashes_is_not_mistaken_for_
 
 
 # --------------------------------------------------------------------------------------
+# _parse_added_line_ranges: 이동 탐지(Issue #52 B-1 수정)가 쓰는 added-side 실제 줄 범위.
+# parse_file_diffs와 달리 새(자식) 경로를 보고, 순수 신규 파일 섹션도 버리지 않는다.
+# --------------------------------------------------------------------------------------
+
+
+def test_parse_added_line_ranges_includes_pure_new_file():
+    """parse_file_diffs는 순수 신규 파일을 버리지만(위 skips_pure_new_file 테스트),
+    _parse_added_line_ranges는 정확히 이 케이스(이동의 목적지 파일)를 잡아야 한다."""
+    diff = "diff --git a/a.py b/a.py\n--- /dev/null\n+++ b/a.py\n@@ -0,0 +1 @@\n+x = 1\n"
+    assert extract_module._parse_added_line_ranges(diff) == {"a.py": [(1, 1)]}
+
+
+def test_parse_added_line_ranges_ignores_pure_deletion():
+    diff = (
+        "diff --git a/a.py b/a.py\n"
+        "--- a/a.py\n"
+        "+++ /dev/null\n"
+        "@@ -1,2 +0,0 @@\n"
+        "-def foo():\n"
+        "-    return 1\n"
+    )
+    assert extract_module._parse_added_line_ranges(diff) == {}
+
+
+def test_parse_added_line_ranges_uses_new_path_not_old_path():
+    """옛 경로와 새 경로가 다르면(--no-renames가 쪼갠 이동), 새 경로에 범위가 잡혀야 한다."""
+    diff = (
+        "diff --git a/old/a.py b/old/a.py\n--- a/old/a.py\n+++ /dev/null\n"
+        "@@ -1,2 +0,0 @@\n-def foo():\n-    return 1\n"
+        "diff --git a/new/a.py b/new/a.py\n--- /dev/null\n+++ b/new/a.py\n"
+        "@@ -0,0 +1,2 @@\n+def foo():\n+    return 1\n"
+    )
+    assert extract_module._parse_added_line_ranges(diff) == {"new/a.py": [(1, 2)]}
+
+
+def test_parse_added_line_ranges_covers_multiple_paths():
+    diff = (
+        "diff --git a/a.py b/a.py\n--- a/a.py\n+++ b/a.py\n@@ -1 +1,2 @@\n-x = 1\n+x = 2\n+y = 3\n"
+        "diff --git a/b.py b/b.py\n--- /dev/null\n+++ b/b.py\n@@ -0,0 +1 @@\n+z = 1\n"
+    )
+    assert extract_module._parse_added_line_ranges(diff) == {"a.py": [(1, 2)], "b.py": [(1, 1)]}
+
+
+def test_parse_added_line_ranges_accumulates_multiple_hunks_in_one_file():
+    """한 파일 안에 서로 떨어진 헝크가 여럿이면 범위도 여럿(합치지 않고 각자 보존)."""
+    diff = (
+        "diff --git a/a.py b/a.py\n"
+        "--- a/a.py\n"
+        "+++ b/a.py\n"
+        "@@ -1 +1,2 @@\n-x = 1\n+x = 2\n+y = 3\n"
+        "@@ -10 +11,2 @@\n-p = 1\n+p = 2\n+q = 3\n"
+    )
+    assert extract_module._parse_added_line_ranges(diff) == {"a.py": [(1, 2), (11, 12)]}
+
+
+def test_parse_added_line_ranges_returns_empty_for_no_additions():
+    diff = "diff --git a/a.py b/a.py\n--- a/a.py\n+++ b/a.py\n@@ -1 +0,0 @@\n-x = 1\n"
+    assert extract_module._parse_added_line_ranges(diff) == {}
+
+
+# --------------------------------------------------------------------------------------
 # extract_deletions: 실제 git 저장소
 # --------------------------------------------------------------------------------------
 
@@ -430,6 +491,86 @@ class TestExtractDeletions:
 
 
 # --------------------------------------------------------------------------------------
+# collect_added_functions: 이동 탐지(Issue #52)가 쓰는 added-side 함수 후보
+# --------------------------------------------------------------------------------------
+
+
+@requires_git
+class TestCollectAddedFunctions:
+    def test_captures_functions_from_pure_new_file(self, tmp_path: Path):
+        """--no-renames diff가 이동을 옛 경로 삭제 + 새 경로 신규 파일로 쪼개도(parse_file_diffs
+        가 놓치는 바로 그 섹션), 목적지 경로의 함수를 확보해야 한다."""
+        repo = _init_repo(tmp_path / "repo")
+        _write(repo, "old/a.py", "def foo():\n    return 1\n")
+        _commit_all(repo, "add foo")
+        (repo / "old" / "a.py").unlink()
+        _write(repo, "new/a.py", "def foo():\n    return 2\n\n\ndef bar():\n    return 3\n")
+        _commit_all(repo, "move old/a.py to new/a.py, add bar")
+
+        added = extract_module.collect_added_functions(repo, _last_commit_pair(repo))
+
+        assert set(added) == {"new/a.py"}
+        assert {f.name for f in added["new/a.py"]} == {"foo", "bar"}
+
+    def test_includes_same_path_new_function_but_not_untouched_existing_one(self, tmp_path: Path):
+        """같은 경로에 새로 추가된 함수는 후보에 넣는다 — "다른 경로"만 남기는 건
+        filter.py(호출자) 몫이다. 하지만 그 파일에 원래 있던, 이번 커밋에서 전혀 손
+        안 댄 함수(`foo`, 텍스트가 부모/자식에서 완전히 동일)는 후보가 아니어야 한다
+        (Issue #52 B-1 수정 — added line과 안 겹치는 함수는 후보에서 뺀다)."""
+        repo = _init_repo(tmp_path / "repo")
+        _write(repo, "a.py", "def foo():\n    return 1\n")
+        _commit_all(repo, "add foo")
+        _write(repo, "a.py", "def foo():\n    return 1\n\n\ndef bar():\n    return 2\n")
+        _commit_all(repo, "add bar to same file")
+
+        added = extract_module.collect_added_functions(repo, _last_commit_pair(repo))
+
+        assert set(added) == {"a.py"}
+        assert {f.name for f in added["a.py"]} == {"bar"}  # foo는 손 안 댔으므로 제외
+
+    def test_empty_when_commit_only_deletes(self, tmp_path: Path):
+        repo = _init_repo(tmp_path / "repo")
+        _write(repo, "a.py", "def foo():\n    return 1\n")
+        _commit_all(repo, "add foo")
+        _write(repo, "a.py", "")
+        _commit_all(repo, "delete foo, add nothing")
+
+        added = extract_module.collect_added_functions(repo, _last_commit_pair(repo))
+
+        assert added == {}
+
+    def test_b1_untouched_function_in_partially_edited_file_is_not_a_candidate(
+        self, tmp_path: Path
+    ):
+        """Issue #52 B-1 회귀: x.py는 이번 커밋에서 `helper`만 고치고 `check`는 전혀 안
+        건드린다. y.py의 `check`(x.py의 `check`와 완전히 동일한, 흔한 이름의 짧은 함수)는
+        정말로 삭제될 뿐이다. `helper`가 고쳐졌다고 해서 x.py의 손 안 댄 `check`까지
+        added candidate가 되면 안 된다 — 코드 리뷰 BLOCKER 재현 케이스."""
+        repo = _init_repo(tmp_path / "repo")
+        _write(
+            repo,
+            "x.py",
+            "def check():\n    return None\n\n\ndef helper():\n    a = 1\n    b = 2\n"
+            "    return a + b\n",
+        )
+        _write(repo, "y.py", "def check():\n    return None\n")
+        _commit_all(repo, "add x.py and y.py")
+        _write(
+            repo,
+            "x.py",
+            "def check():\n    return None\n\n\ndef helper():  # x\n    a = 1  # x\n"
+            "    b = 2  # x\n    c = 3  # x\n    return a + b + c  # x\n",
+        )
+        _write(repo, "y.py", "")
+        _commit_all(repo, "edit helper in x.py (unrelated), delete check() from y.py")
+
+        added = extract_module.collect_added_functions(repo, _last_commit_pair(repo))
+
+        assert set(added) == {"x.py"}  # y.py는 삭제만 있어 후보가 없다
+        assert {f.name for f in added["x.py"]} == {"helper"}  # check는 후보가 아니다
+
+
+# --------------------------------------------------------------------------------------
 # extract_repo: 저장소 하나를 순차로 끝까지 훑는다
 # --------------------------------------------------------------------------------------
 
@@ -449,7 +590,10 @@ def test_extract_repo_processes_all_walk_commits_sequentially(tmp_path: Path):
 
     records = extract_module.extract_repo(repo, _REPO, "main")
 
-    # 커밋별로 개별 extract_deletions를 호출한 것과 결과·순서가 같아야 한다.
+    # 커밋별로 개별 extract_deletions를 호출한 것과 결과·순서가 같아야 한다 — 이 두 커밋
+    # 다 이동 후보(같은 커밋에 추가된 함수)가 전혀 없어서(둘 다 그냥 삭제만 함) 필터가
+    # 아무것도 걸러내지 않는 케이스다. 이동이 실제로 걸러지는 케이스는 아래
+    # test_extract_repo_excludes_moved_function_but_keeps_ordinary_deletion 참고.
     expected = [
         record
         for commit in all_commits
@@ -464,6 +608,37 @@ def test_extract_repo_does_not_guess_ref(tmp_path: Path):
     """`extract_repo`가 `ref`를 요구하는지(기본값이 없는지) — clone.py/walk.py와 같은 원칙."""
     with pytest.raises(TypeError):
         extract_module.extract_repo(tmp_path, _REPO)  # type: ignore[call-arg]
+
+
+@requires_git
+def test_extract_repo_excludes_moved_function_but_keeps_ordinary_deletion(tmp_path: Path):
+    """`extract_repo`가 `pipeline.filter.exclude_moved()`(Issue #52, NOISE_MOVE)를 실제로
+    거쳐야 한다는 통합 회귀 테스트. `find_moved`/`exclude_moved`/`collect_added_functions`
+    를 직접 부르는 기존 단위·컴포넌트 테스트는 전부 통과하면서도, `extract_repo`가 그
+    함수들을 실제로 연결하지 않는 배선 버그(2라운드 전 상태 — `extract_deletions` 결과를
+    필터 없이 그대로 누적)는 하나도 못 잡았다. 이 테스트는 `find_moved`를 모킹해 "호출은
+    됐다"만 보는 게 아니라, 실제 작은 git 저장소를 `extract_repo`로 끝까지 돌려 최종
+    결과에서 이동한 함수가 정말 사라지는지 본다.
+
+    같은 커밋에서 두 가지가 동시에 일어난다:
+    - `old/pkg/a.py`의 `moved_func`가 `new/pkg/a.py`로 그대로 이동(순수 신규 파일
+      이동, `--no-renames`가 옛 경로 삭제 + 새 경로 신규 파일로 쪼개는 케이스) — 이동
+      이므로 최종 결과에서 빠져야 한다.
+    - `c.py`의 `real_delete`는 대체 없이 그냥 삭제된다 — 이동이 아니므로 남아야 한다.
+    """
+    repo = _init_repo(tmp_path / "repo")
+    _write(repo, "old/pkg/a.py", "def moved_func():\n    return 1\n")
+    _write(repo, "c.py", "def real_delete():\n    return 2\n")
+    _commit_all(repo, "add moved_func and real_delete")
+    (repo / "old" / "pkg" / "a.py").unlink()
+    _write(repo, "new/pkg/a.py", "def moved_func():\n    return 1\n")
+    _write(repo, "c.py", "")
+    _commit_all(repo, "move a.py to new/pkg, delete real_delete")
+
+    records = extract_module.extract_repo(repo, _REPO, "main")
+
+    assert [r.function_name for r in records] == ["real_delete"]  # moved_func는 제외됐다
+    assert records[0].file_path == "c.py"
 
 
 # --------------------------------------------------------------------------------------

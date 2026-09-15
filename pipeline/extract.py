@@ -59,7 +59,7 @@ git diff 읽기:
 좌표계라서 그대로 비교할 수 있다.
 
 pygit2 대신 git CLI를 쓴다 — walk.py·clone.py와 같은 이유(CHARTER §7, 새 네이티브
-의존성 회피). `_run_git_diff`/`_read_parent_file`은 그 두 모듈의 자체 subprocess
+의존성 회피). `_run_git_diff`/`_read_file_at`은 그 두 모듈의 자체 subprocess
 헬퍼와 같은 패턴을 반복한다 — 모듈 간 `_`-prefix 함수를 서로 import하지 않는 이
 저장소 관례를 그대로 따른다.
 
@@ -93,8 +93,35 @@ JSONL 저장 (내부 모델과 외부 계약 분리):
 누적한다. `ref`는 clone.py·walk.py와 같은 이유로 호출자가 명시한다 — default branch를
 이 함수가 추측하지 않는다. 병렬화·재시도는 넣지 않는다(4주차 범위).
 
-범위 밖: 필터(§4.2②, `filter.py`), 맥락 결합(`context.py`), 분류, DB 적재, 병렬화·
-재시도 큐(4주차), 출력 경로/파일명 정책.
+`collect_added_functions(repo_path, commit)`: 이동 탐지 필터(§4.2②, Issue #52)가 쓰는
+added-side 함수 후보를 모은다. `parse_file_diffs`는 옛(부모) 경로로만 섹션을 식별하고
+순수 신규 파일 섹션(옛 경로 `/dev/null`)은 버리므로(위 "git diff 읽기" 참고) — 정확히
+"파일 이동" 케이스(`--no-renames`가 옛 경로 삭제 섹션과 새 경로 신규 섹션으로 쪼갬)에서
+목적지 파일을 놓친다. 그래서 `_parse_added_line_ranges()`는 같은 diff 텍스트를 독립적
+으로 다시 훑어 **자식(새) 경로별 실제 added-line 범위**를 모은다 — `parse_file_diffs`의
+기존 반환 형태·동작은 건드리지 않는다(그 함수를 쓰는 기존 테스트·호출부는 그대로).
+
+후보 판정(Issue #52 B-1 수정, 코드 리뷰에서 발견된 버그의 수정): 경로별로 그 시점
+(`commit_sha`) 파일 전체를 `git show`로 읽어 `PythonAdapter`로 함수 목록을 뽑되,
+**그 함수의 `[start_line, end_line]`이 그 경로의 added-line 범위와 하나라도 겹칠 때만**
+후보에 넣는다. 한 줄 전체가 아니라 "겹치는" 조건이라 함수 전체가 added line일 필요는
+없다. 예전 구현은 "그 파일에 추가 줄이 하나라도 있으면 파일 전체 함수를 후보로" 삼았는데,
+그러면 이번 커밋에서 **전혀 손대지 않은, 그 파일에 원래 있던 함수**까지 후보가 돼
+다른 파일의 무관한 진짜 삭제가 우연히 비슷하다는 이유로 이동 오판될 수 있었다(§10.1
+정밀도 목표와 충돌, "오탐보다 미탐이 낫다" 원칙 — `docs/filter_rules.md` 참고). 순수
+신규 파일·이동 목적지는 함수 전체가 added line이라 이 조건이 자연히 통과된다. 같은
+경로 후보 중 "제자리 수정"과 "같은 파일 안 이동"을 가르는 것은 `collect_same_file_hunks()`
++ 호출자(`filter.py`)의 몫이다.
+
+`collect_same_file_hunks(repo_path, commit)`: 옛 경로 == 새 경로로 남은(제자리 수정)
+파일마다 그 헝크(`Hunk`: old_start/old_count/new_start/new_count) 목록을 준다 —
+same-position 판정(팀 추가 결정, Issue #52)의 재료. 부모 함수 범위와 겹치는 헝크의
+`new_start`가 곧 "제자리 수정이라면 자식 파일에서 있어야 할 위치"다(`Hunk` 독스트링
+참고). 리네임 조각(옛/새 경로가 다르거나 한쪽이 없음)은 담지 않는다 — 순수 이동·신규
+파일에는 "제자리"라는 개념이 없고, 다른 경로는 항상 이동 후보이기 때문이다.
+
+범위 밖: 이동 판정 로직 자체(정규화·유사도 계산·same-position 판정 적용, `filter.py`),
+맥락 결합(`context.py`), 분류, DB 적재, 병렬화·재시도 큐(4주차), 출력 경로/파일명 정책.
 """
 
 from __future__ import annotations
@@ -108,6 +135,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from pipeline.parsers.base import Function
 from pipeline.parsers.python_adapter import PythonAdapter
 from pipeline.walk import CommitPair, walk_commits
 
@@ -115,9 +143,12 @@ from pipeline.walk import CommitPair, walk_commits
 # clone.py와 같은 이유.
 _GIT_ENV = {**os.environ, "GIT_TERMINAL_PROMPT": "0", "GIT_PAGER": "cat"}
 
-# "@@ -old[,count] +new[,count] @@ ..." — old 시작 줄 번호만 있으면 된다(삭제 줄
-# 커서를 여기서 seed한다). 뒤에 붙는 컨텍스트(`def foo(x):` 등)는 무시한다.
-_HUNK_HEADER_RE = re.compile(r"^@@ -(\d+)(?:,\d+)? \+\d+(?:,\d+)? @@")
+# "@@ -old_start[,old_count] +new_start[,new_count] @@ ..." — count 생략 시 1
+# (unified diff 관례). `parse_file_diffs`는 group(1)(old_start)만 쓴다 — group 2~4
+# (old_count·new_start·new_count)는 added-line 범위(_parse_added_line_ranges)와
+# same-position 판정(_parse_same_file_hunks)에서 쓴다. 뒤에 붙는 컨텍스트
+# (`def foo(x):` 등)는 무시한다.
+_HUNK_HEADER_RE = re.compile(r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@")
 
 _ADAPTER = PythonAdapter()
 
@@ -145,6 +176,24 @@ class DeletedFunction:
     added_hunk_same_file: str
     author_date: str
     commit_message: str
+
+
+@dataclass(frozen=True)
+class Hunk:
+    """diff 헝크 하나의 위치 정보. same-position 판정(`filter.py`, Issue #52)이 쓴다.
+
+    `old_start`/`new_start`는 각각 부모·자식 파일 기준 1-indexed 시작 줄, `old_count`/
+    `new_count`는 그 헝크가 차지하는 줄 수(0이면 그쪽엔 줄이 없다 — 순수 삽입이면
+    `old_count == 0`, 순수 삭제면 `new_count == 0`). `new_start`는 git이 이미 그 앞의
+    모든 헝크의 순증감을 반영해 계산해 준 값이라, 이 헝크보다 **앞쪽**의 무관한
+    삽입·삭제가 있어도 별도로 오프셋을 누적 계산할 필요가 없다 — 그게 이 타입을 쓰는
+    이유다.
+    """
+
+    old_start: int
+    old_count: int
+    new_start: int
+    new_count: int
 
 
 @dataclass
@@ -181,7 +230,9 @@ def _run_git_diff(repo_path: str | Path, parent_sha: str, commit_sha: str) -> st
     return result.stdout
 
 
-def _read_parent_file(repo_path: str | Path, parent_sha: str, file_path: str) -> str:
+def _read_file_at(repo_path: str | Path, sha: str, file_path: str) -> str:
+    """`git show <sha>:<file_path>`. 부모 커밋 원문(`extract_deletions`)과 자식 커밋
+    원문(`collect_added_functions`, Issue #52) 양쪽에 쓴다 — `sha`가 무엇이든 상관없다."""
     result = subprocess.run(
         [
             "git",
@@ -190,7 +241,7 @@ def _read_parent_file(repo_path: str | Path, parent_sha: str, file_path: str) ->
             "-C",
             str(repo_path),
             "show",
-            f"{parent_sha}:{file_path}",
+            f"{sha}:{file_path}",
         ],
         capture_output=True,
         text=True,
@@ -214,6 +265,20 @@ def _old_path(spec: str) -> str | None:
     if spec == "/dev/null":
         return None
     path = spec[2:] if spec.startswith("a/") else spec
+    if path.endswith("\t"):
+        path = path[:-1]
+    return path
+
+
+def _new_path(spec: str) -> str | None:
+    """`+++ b/<path>` 줄의 `<path>` 부분. 파일이 삭제됐으면(`+++ /dev/null`) None.
+
+    `_old_path`와 대칭. 탭 처리 규칙도 동일하다(모듈 독스트링 "git diff 읽기" 참고) —
+    `_parse_added_line_ranges()`가 이동 목적지 경로를 얻는 데 쓴다.
+    """
+    if spec == "/dev/null":
+        return None
+    path = spec[2:] if spec.startswith("b/") else spec
     if path.endswith("\t"):
         path = path[:-1]
     return path
@@ -275,6 +340,107 @@ def parse_file_diffs(diff_text: str) -> dict[str, _FileDiff]:
     return files
 
 
+def _parse_added_line_ranges(diff_text: str) -> dict[str, list[tuple[int, int]]]:
+    """diff에서 실제로 추가된 줄의 **자식(새) 경로**별 `(start, end)`(inclusive) 범위 목록.
+
+    Issue #52 B-1 수정: 이동 후보(`collect_added_functions`)를 "그 파일에 줄이 하나라도
+    추가됐으면 파일 전체 함수"가 아니라 **실제 added line과 겹치는 함수**로만 제한하는
+    데 쓴다. 옛(부모) 경로는 보지 않는다 — 순수 신규 파일(옛 경로 없음)·제자리 수정(옛
+    경로==새 경로)·이동 목적지(옛 경로 다름) 구분 없이 "이 새 경로에 실제로 추가된 줄이
+    어디부터 어디까지인가"만 본다. `new_count == 0`인 헝크(순수 삭제 — 그 자리에 아무
+    새 줄도 안 남음)는 범위에 넣지 않는다. `parse_file_diffs`의 기존 동작·반환 형태는
+    이 함수와 무관하게 그대로 유지된다(같은 diff 텍스트를 독립적으로 다시 훑음).
+
+    같은 파일 안에서 지워지거나 추가되는 소스 줄이 "-- x --"/"++ x ++"처럼 시작해 헤더
+    줄과 헷갈릴 수 있는 문제는 `parse_file_diffs`와 같은 `in_hunk` 가드로 막는다.
+    """
+    result: dict[str, list[tuple[int, int]]] = {}
+    current_new_path: str | None = None
+    ranges: list[tuple[int, int]] = []
+    in_hunk = False
+
+    def flush() -> None:
+        if current_new_path is not None and ranges:
+            result[current_new_path] = list(ranges)
+
+    for line in diff_text.splitlines():
+        if line.startswith("diff --git "):
+            flush()
+            current_new_path = None
+            ranges = []
+            in_hunk = False
+            continue
+        if not in_hunk and line.startswith("+++ "):
+            current_new_path = _new_path(line[4:])
+            continue
+        if not in_hunk and line.startswith("--- "):
+            continue  # 옛 경로는 여기서 관심 없다 — 새 경로만 본다
+        if line.startswith("\\"):
+            continue
+        match = _HUNK_HEADER_RE.match(line)
+        if match:
+            in_hunk = True
+            new_start = int(match.group(3))
+            new_count = int(match.group(4)) if match.group(4) is not None else 1
+            if new_count > 0:
+                ranges.append((new_start, new_start + new_count - 1))
+            continue
+
+    flush()
+    return result
+
+
+def _overlaps(a_start: int, a_end: int, b_start: int, b_end: int) -> bool:
+    return a_start <= b_end and b_start <= a_end
+
+
+def _parse_same_file_hunks(diff_text: str) -> dict[str, list[Hunk]]:
+    """옛 경로와 새 경로가 같은(제자리 수정) 파일 섹션의 헝크를 경로별로 모은다.
+
+    이동 탐지의 same-position 판정(`filter.py`, Issue #52)에 쓴다. 옛/새 경로가 다르거나
+    (`--no-renames`가 쪼갠 리네임 조각) 어느 한쪽이 없는(신규 파일/파일 전체 삭제) 섹션은
+    담지 않는다 — "제자리"라는 개념 자체가 그런 섹션엔 없다(다른 경로는 항상 이동 후보,
+    §4.2②). `parse_file_diffs`/`_parse_added_line_ranges`와 마찬가지로 같은 diff 텍스트를
+    독립적으로 다시 훑는다.
+    """
+    result: dict[str, list[Hunk]] = {}
+    old_path: str | None = None
+    new_path: str | None = None
+    hunks: list[Hunk] = []
+    in_hunk = False
+
+    def flush() -> None:
+        if old_path is not None and new_path is not None and old_path == new_path and hunks:
+            result[old_path] = list(hunks)
+
+    for line in diff_text.splitlines():
+        if line.startswith("diff --git "):
+            flush()
+            old_path = None
+            new_path = None
+            hunks = []
+            in_hunk = False
+            continue
+        if not in_hunk and line.startswith("--- "):
+            old_path = _old_path(line[4:])
+            continue
+        if not in_hunk and line.startswith("+++ "):
+            new_path = _new_path(line[4:])
+            continue
+        if line.startswith("\\"):
+            continue
+        match = _HUNK_HEADER_RE.match(line)
+        if match:
+            in_hunk = True
+            old_count = int(match.group(2)) if match.group(2) is not None else 1
+            new_count = int(match.group(4)) if match.group(4) is not None else 1
+            hunks.append(Hunk(int(match.group(1)), old_count, int(match.group(3)), new_count))
+            continue
+
+    flush()
+    return result
+
+
 def _build_records(
     repo: str, commit: CommitPair, file_path: str, source: str, file_diff: _FileDiff
 ) -> list[DeletedFunction]:
@@ -326,22 +492,76 @@ def extract_deletions(
 
     records: list[DeletedFunction] = []
     for file_path, file_diff in file_diffs.items():
-        source = _read_parent_file(repo_path, commit.parent_sha, file_path)
+        source = _read_file_at(repo_path, commit.parent_sha, file_path)
         records.extend(_build_records(repo, commit, file_path, source, file_diff))
     return records
+
+
+def collect_added_functions(repo_path: str | Path, commit: CommitPair) -> dict[str, list[Function]]:
+    """`commit`에서, 실제 added line과 겹치는 함수만 자식(새) 경로별로 모은다.
+
+    이동 탐지 필터(§4.2②, `filter.py`, Issue #52)가 "같은 커밋에 실제로 추가된 함수"
+    후보를 얻는 데 쓴다. 후보 판정 기준(Issue #52 B-1 수정, 모듈 독스트링
+    "collect_added_functions" 절 참고): 함수의 `[start_line, end_line]`이 그 경로의
+    added-line 범위(`_parse_added_line_ranges`) 중 **하나라도** 겹치면 후보다 — 함수
+    전체가 added line일 필요는 없다. 부모 커밋부터 이미 있었고 이번 diff의 added line과
+    전혀 안 겹치는 함수(이번 커밋에서 손 안 댐)는 후보에 넣지 않는다. 순수 신규 파일·
+    이동 목적지는 함수 전체가 added line이라 자연히 후보가 된다. 같은 경로의 후보 중
+    "제자리 수정"과 "같은 파일 안에서의 이동"을 가르는 것은 이 함수가 아니라
+    `collect_same_file_hunks()` + 호출자(`filter.py`)의 몫이다.
+    """
+    diff_text = _run_git_diff(repo_path, commit.parent_sha, commit.commit_sha)
+    added_functions: dict[str, list[Function]] = {}
+    for path, ranges in _parse_added_line_ranges(diff_text).items():
+        source = _read_file_at(repo_path, commit.commit_sha, path)
+        touched = [
+            function
+            for function in _ADAPTER.extract_functions(source)
+            if any(_overlaps(function.start_line, function.end_line, lo, hi) for lo, hi in ranges)
+        ]
+        if touched:
+            added_functions[path] = touched
+    return added_functions
+
+
+def collect_same_file_hunks(repo_path: str | Path, commit: CommitPair) -> dict[str, list[Hunk]]:
+    """`commit`에서 제자리 수정(옛 경로 == 새 경로)으로 남은 파일마다 그 헝크 목록.
+
+    이동 탐지의 same-position 판정(§4.2②, `filter.py`, Issue #52)이 쓴다 — 삭제된
+    함수의 부모 줄 범위와 헝크의 `old_start`~`old_start+old_count-1`이 겹치면, 그
+    헝크의 `new_start`~`new_start+new_count-1`이 "이 함수가 제자리에서 수정됐다면
+    자식 파일에서 있어야 할 범위"다. `Hunk` 독스트링 참고 — 헝크보다 앞쪽의 무관한
+    삽입·삭제로 인한 줄 번호 밀림은 `new_start`에 이미 반영돼 있어 따로 계산할 게 없다.
+    """
+    diff_text = _run_git_diff(repo_path, commit.parent_sha, commit.commit_sha)
+    return _parse_same_file_hunks(diff_text)
 
 
 def extract_repo(repo_path: str | Path, repo: str, ref: str) -> list[DeletedFunction]:
     """저장소 하나를 처음부터 끝까지 순차로 훑는다 (Issue #5 "저장소 1개 끝까지 통과").
 
-    `walk_commits(repo_path, ref)`가 내놓는 `CommitPair`마다 `extract_deletions()`를
-    그대로 돌려 결과를 순서대로 누적한다. `ref`는 walk.py와 같은 이유로 호출자가
-    명시한다 — default branch를 이 함수가 추측하지 않는다. 병렬화·재시도는 넣지
-    않는다(4주차 범위, 모듈 독스트링 참고).
+    `walk_commits(repo_path, ref)`가 내놓는 `CommitPair`마다 `extract_deletions()`로
+    삭제를 뽑고, 같은 커밋의 `collect_added_functions()`·`collect_same_file_hunks()`를
+    구해 `filter.exclude_moved()`로 이동(NOISE_MOVE, §4.2②, Issue #52)을 걸러낸 뒤
+    순서대로 누적한다 — 커밋 하나 안에서만 후보를 매칭해야 하므로(`find_moved`의 "호출자가
+    이미 그 커밋 하나로 좁혀서 줘야 한다" 계약, `filter.py` 참고) 커밋별로 따로 호출한다.
+    `ref`는 walk.py와 같은 이유로 호출자가 명시한다 — default branch를 이 함수가
+    추측하지 않는다. 병렬화·재시도는 넣지 않는다(4주차 범위, 모듈 독스트링 참고).
+
+    `filter.py`를 함수 안에서(모듈 최상단이 아니라) import한다 — `filter.py`가 이미
+    `from pipeline.extract import DeletedFunction, Hunk`로 이 모듈을 가져다 쓰므로,
+    최상단에서 서로 가져오면 순환 import가 된다(둘 다 아직 다 안 만들어진 상태로 서로를
+    참조하려 들어서 `ImportError`가 난다). 함수 호출 시점까지 미루면 양쪽 모듈이 이미
+    완전히 로드된 뒤라 문제없다.
     """
+    from pipeline.filter import exclude_moved
+
     records: list[DeletedFunction] = []
     for commit in walk_commits(repo_path, ref):
-        records.extend(extract_deletions(repo_path, repo, commit))
+        deletions = extract_deletions(repo_path, repo, commit)
+        added = collect_added_functions(repo_path, commit)
+        hunks = collect_same_file_hunks(repo_path, commit)
+        records.extend(exclude_moved(deletions, added, hunks))
     return records
 
 
