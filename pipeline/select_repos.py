@@ -12,8 +12,19 @@
 왜 permissive 라이선스만인가 (ADR-007):
     데이터셋에 코드 스니펫을 재배포하므로 MIT / Apache-2.0 / BSD 계열만 후보로 둔다.
 
+선정 기준 v2 (#56, `--history-per-year` 를 주면 켜진다):
+    최근 1년 PR 경유 비율만으로는 저장소 시작 연도 차이를 못 거른다.
+    2026-09-14 사전 탐색(docs/evaluation.md)에서 2011년 시작 requests 는 초기 구간
+    PR 연결이 50% 였고, FULL_FUNCTION 은 그 구간에 몰려 있었다. 그래서 두 값을 더 잰다.
+      - 최초 커밋 연도 (기본 브랜치의 가장 오래된 커밋, GitHub API)
+      - 히스토리 전체의 연도별 층화 PR 연결 비율과, 채굴 구간(window)만의 비율
+    최초 커밋이 2015년 이전이면 제외하지 않고 `recent_only` 플래그를 세운다.
+    채굴 구간을 2015년 이후로 좁힌다는 뜻이다. 2020년 이후 시작 저장소를 거르는 규칙은 없다.
+    `score_v2` 는 가중치를 그대로 두고 PR 비율·규모에 채굴 구간 값을 쓴다.
+
 실행:
     python -m pipeline.select_repos --out docs/repo_candidates.csv
+    python -m pipeline.select_repos --repos psf/requests encode/httpx --history-per-year 5
 
     GITHUB_TOKEN 은 .env 에서만 읽는다 (§8.4). API 응답은 캐시 디렉터리에 저장하고
     재실행 때는 캐시를 먼저 본다 (§7 한도 5,000회/시간).
@@ -42,6 +53,8 @@ from typing import Any
 API_ROOT = "https://api.github.com"
 API_VERSION = "2022-11-28"
 USER_AGENT = "deleted-code-search-repo-selector"
+# GitHub 가 간헐적으로 내는 서버 오류. 같은 URL 을 다시 부르면 대개 200 이 온다 (2026-09-15 확인).
+RETRYABLE_SERVER_ERRORS = frozenset({500, 502, 503, 504})
 
 # §4.3 ②, ADR-007. GitHub 는 spdx_id 를 "MIT", "Apache-2.0" 처럼 준다.
 PERMISSIVE_SPDX = frozenset(
@@ -60,6 +73,12 @@ PERMISSIVE_SPDX = frozenset(
 MIN_COMMITS = 1000  # §4.3 ⑤
 PR_RATIO_GATE = 0.70  # §4.3 ③
 DEFAULT_SINCE_DAYS = 365  # §4.3 ③ "최근 1년"
+
+# 선정 기준 v2 (#56). 최초 커밋이 이 연도보다 이르면 채굴 구간을 이 연도부터로 좁힌다.
+# 제외하지는 않는다.
+RECENT_ONLY_BEFORE_YEAR = 2015
+DEFAULT_HISTORY_PER_YEAR = 5  # 연도별 PR 연결 표본 수. 0 이면 v2 평가를 끈다
+HISTORY_PAGE_SIZE = 100  # 연도별 커밋 목록은 첫 페이지(최대 100개)에서 고르게 뽑는다
 
 # 점수 가중치. 합이 1.0 이 되게 유지한다 (바꾸면 docs 의 선정 근거도 같이 고친다).
 W_PR_RATIO = 0.5
@@ -95,6 +114,24 @@ CSV_COLUMNS = (
     "pr_gate_pass",
     "selection_status",
     "exclude_reason",
+)
+
+# 선정 기준 v2 (#56) 열. v2 값이 있을 때만 CSV 에 쓴다.
+# v1 실행(docs/repo_selection.md 재현 명령)의 CSV 형식은 그대로 유지된다.
+CSV_COLUMNS_V2 = (
+    *CSV_COLUMNS,
+    "license_manual",
+    "first_commit_date",
+    "first_commit_year",
+    "recent_only",
+    "mining_since_year",
+    "window_commits",
+    "history_pr_ratio",
+    "window_pr_ratio",
+    "history_sampled",
+    "window_sampled",
+    "pr_by_year",
+    "score_v2",
 )
 
 ISSUE_REF_RE = re.compile(r"#(\d+)")
@@ -273,6 +310,10 @@ class GitHubClient:
                     raise RuntimeError(f"404: {url}") from error
                 if error.code in (403, 429) and attempt < 3 and self._wait_for_reset(error_headers):
                     continue
+                if error.code in RETRYABLE_SERVER_ERRORS and attempt < 3:
+                    self.log(f"서버 오류 {error.code}, {2**attempt}초 뒤 재시도: {url}")
+                    self.sleep(2**attempt)
+                    continue
                 raise RuntimeError(f"HTTP {error.code}: {url}") from error
             except urllib.error.URLError as error:
                 if attempt < 3:
@@ -409,6 +450,76 @@ def scale_score(commits: int) -> float:
     return min(1.0, ratio)
 
 
+def mining_window(
+    first_commit_year: int, cutoff_year: int = RECENT_ONLY_BEFORE_YEAR
+) -> tuple[bool, int]:
+    """(recent_only, 채굴 시작 연도).
+
+    최초 커밋이 cutoff 이전이면 제외하지 않고 채굴 구간만 cutoff 부터로 좁힌다.
+    늦게 시작한 저장소(2020년 이후 포함)는 전체 구간을 그대로 쓴다. 거르는 규칙이 없다.
+    """
+    if first_commit_year < cutoff_year:
+        return True, cutoff_year
+    return False, first_commit_year
+
+
+def spread_pick[T](items: Sequence[T], k: int) -> list[T]:
+    """목록에서 k개를 앞·중간·뒤로 고르게 뽑는다. 결정적이라 캐시 재실행 결과가 같다."""
+    if k <= 0 or not items:
+        return []
+    if len(items) <= k:
+        return list(items)
+    if k == 1:
+        return [items[len(items) // 2]]
+    step = (len(items) - 1) / (k - 1)
+    return [items[int(round(index * step))] for index in range(k)]
+
+
+def history_ratios(
+    by_year: dict[int, Sequence[CommitSample]], since_year: int
+) -> tuple[float | None, float | None, int, int]:
+    """(전체 PR 연결 비율, 채굴 구간 PR 연결 비율, 전체 표본 수, 구간 표본 수).
+
+    연도마다 같은 수를 뽑으므로 커밋이 몰린 해가 비율을 끌고 가지 않는다 (연도 층화).
+    표본이 없으면 비율은 None.
+    """
+    everything = [sample for year in sorted(by_year) for sample in by_year[year]]
+    window = [sample for year in sorted(by_year) if year >= since_year for sample in by_year[year]]
+
+    def ratio(samples: Sequence[CommitSample]) -> float | None:
+        if not samples:
+            return None
+        return sum(1 for sample in samples if sample.via_pr) / len(samples)
+
+    return ratio(everything), ratio(window), len(everything), len(window)
+
+
+def format_pr_by_year(by_year: dict[int, Sequence[CommitSample]]) -> str:
+    """CSV 용 연도별 요약. "2011:0/5|2012:2/5" (PR 연결 수/표본 수). 표본 0인 해는 뺀다."""
+    parts = []
+    for year in sorted(by_year):
+        samples = by_year[year]
+        if samples:
+            linked = sum(1 for sample in samples if sample.via_pr)
+            parts.append(f"{year}:{linked}/{len(samples)}")
+    return "|".join(parts)
+
+
+def parse_license_overrides(values: Sequence[str] | None) -> dict[str, str]:
+    """`owner/name=SPDX` 목록을 dict 로 바꾼다.
+
+    사람이 LICENSE 파일을 직접 확인한 값만 넘긴다. GitHub 탐지기가 NOASSERTION 을 내는
+    저장소(celery 등, docs/repo_final20.md §3.1) 때문에 있다.
+    """
+    overrides: dict[str, str] = {}
+    for value in values or ():
+        repo, sep, spdx = value.partition("=")
+        if not sep or "/" not in repo or not repo.strip() or not spdx.strip():
+            raise ValueError(f"--license-override 형식은 owner/name=SPDX 다: {value!r}")
+        overrides[repo.strip()] = spdx.strip()
+    return overrides
+
+
 def score_candidate(pr_ratio: float, issue_ref_ratio: float, commits: int) -> float:
     """선정 점수 (0.0 ~ 1.0). 별 수는 의도적으로 넣지 않는다 (ADR-006)."""
     weighted = (
@@ -437,6 +548,19 @@ class RepoRow:
     size_kb: int | None = None
     sampled_commits: int = 0
     exclude_reason: str = ""
+    # 선정 기준 v2 (#56)
+    license_manual: bool = False
+    first_commit_date: str = ""
+    first_commit_year: int | None = None
+    recent_only: bool | None = None
+    mining_since_year: int | None = None
+    window_commits: int | None = None
+    history_pr_ratio: float | None = None
+    window_pr_ratio: float | None = None
+    history_sampled: int = 0
+    window_sampled: int = 0
+    pr_by_year: str = ""
+    score_v2: float | None = None
 
     @property
     def selected(self) -> bool:
@@ -449,6 +573,9 @@ class RepoRow:
     def to_csv_row(self) -> dict[str, Any]:
         def num(value: float | None, digits: int) -> str:
             return "" if value is None else f"{value:.{digits}f}"
+
+        def opt(value: int | None) -> int | str:
+            return "" if value is None else value
 
         return {
             "repo": self.repo,
@@ -464,6 +591,18 @@ class RepoRow:
             "pr_gate_pass": "true" if self.pr_gate_pass else "false",
             "selection_status": "CANDIDATE" if self.selected else "EXCLUDED",
             "exclude_reason": self.exclude_reason,
+            "license_manual": "true" if self.license_manual else "",
+            "first_commit_date": self.first_commit_date,
+            "first_commit_year": opt(self.first_commit_year),
+            "recent_only": "" if self.recent_only is None else str(self.recent_only).lower(),
+            "mining_since_year": opt(self.mining_since_year),
+            "window_commits": opt(self.window_commits),
+            "history_pr_ratio": num(self.history_pr_ratio, 3),
+            "window_pr_ratio": num(self.window_pr_ratio, 3),
+            "history_sampled": self.history_sampled or "",
+            "window_sampled": self.window_sampled or "",
+            "pr_by_year": self.pr_by_year,
+            "score_v2": num(self.score_v2, 4),
         }
 
 
@@ -531,6 +670,95 @@ def collect_commit_samples(
     return samples
 
 
+def fetch_first_commit_date(client: GitHubClient, repo: str, total_commits: int) -> str:
+    """기본 브랜치에서 가장 오래된 커밋의 author date (ISO). 없으면 "".
+
+    커밋 목록은 최신순이라 `per_page=1` 의 마지막 페이지(= 총 커밋 수)가 가장 오래된 커밋이다.
+    저장소 생성일(`created_at`)은 이관된 저장소에서 실제 시작보다 늦어서 쓰지 않는다.
+    """
+    if total_commits <= 0:
+        return ""
+    body = client.get_json(f"/repos/{repo}/commits", {"per_page": 1, "page": total_commits})
+    if not body:
+        return ""
+    return ((body[-1].get("commit") or {}).get("author") or {}).get("date") or ""
+
+
+def count_commits_since(client: GitHubClient, repo: str, since: str) -> int:
+    """`since` 이후 기본 브랜치 커밋 수 (Link 헤더의 마지막 페이지)."""
+    head = client.get(f"/repos/{repo}/commits", {"since": since, "per_page": 1})
+    if head is None:
+        return 0
+    return commit_count_from_link(head.headers.get("link"), len(head.body or []))
+
+
+def collect_year_samples(
+    client: GitHubClient, repo: str, year: int, per_year: int
+) -> list[CommitSample]:
+    """한 해의 커밋에서 병합·봇을 뺀 뒤 `per_year` 개를 고르게 뽑아 PR 연결을 판정한다.
+
+    그 해 커밋 목록의 첫 페이지(최신 100개)만 본다. 연도당 호출을 1 + per_year 회로 묶는
+    근사다. 커밋이 100개를 넘는 해는 그 해 후반부 쪽으로 치우친다 (docs/evaluation.md 기록).
+    """
+    params = {
+        "since": f"{year}-01-01T00:00:00Z",
+        "until": f"{year + 1}-01-01T00:00:00Z",
+        "per_page": HISTORY_PAGE_SIZE,
+    }
+    commits = client.get_json(f"/repos/{repo}/commits", params) or []
+    human = [
+        commit
+        for commit in commits
+        if len(commit.get("parents") or []) <= 1 and not is_bot_commit(commit)
+    ]
+    samples: list[CommitSample] = []
+    for commit in spread_pick(human, per_year):
+        sha = commit.get("sha", "")
+        message = (commit.get("commit") or {}).get("message", "")
+        pulls = client.get_json(f"/repos/{repo}/commits/{sha}/pulls", allow_404=True) or []
+        samples.append(summarize_commit(sha, message, pulls))
+    return samples
+
+
+def evaluate_history(
+    client: GitHubClient,
+    row: RepoRow,
+    *,
+    per_year: int,
+    cutoff_year: int = RECENT_ONLY_BEFORE_YEAR,
+    current_year: int | None = None,
+) -> None:
+    """선정 기준 v2 (#56) 값을 `row` 에 채운다.
+
+    `row.commits` 와 `row.issue_ref_ratio` 가 먼저 계산돼 있어야 한다.
+    최초 커밋을 못 읽으면 v2 값은 비워 둔다 (score_v2 = None).
+    """
+    first_date = fetch_first_commit_date(client, row.repo, row.commits or 0)
+    if not first_date:
+        return
+    first_year = int(first_date[:4])
+    last_year = current_year if current_year is not None else datetime.now(UTC).year
+    row.first_commit_date = first_date[:10]
+    row.first_commit_year = first_year
+    row.recent_only, row.mining_since_year = mining_window(first_year, cutoff_year)
+    if row.recent_only:
+        since = f"{row.mining_since_year}-01-01T00:00:00Z"
+        row.window_commits = count_commits_since(client, row.repo, since)
+    else:
+        row.window_commits = row.commits
+    by_year = {
+        year: collect_year_samples(client, row.repo, year, per_year)
+        for year in range(first_year, last_year + 1)
+    }
+    ratios = history_ratios(by_year, row.mining_since_year)
+    row.history_pr_ratio, row.window_pr_ratio, row.history_sampled, row.window_sampled = ratios
+    row.pr_by_year = format_pr_by_year(by_year)
+    if row.window_pr_ratio is not None and row.issue_ref_ratio is not None:
+        row.score_v2 = score_candidate(
+            row.window_pr_ratio, row.issue_ref_ratio, row.window_commits or 0
+        )
+
+
 def evaluate_repo(
     client: GitHubClient,
     full_name: str,
@@ -539,14 +767,26 @@ def evaluate_repo(
     sample_size: int,
     item: dict[str, Any] | None = None,
     enforce_pr_gate: bool = False,
+    history_per_year: int = 0,
+    recent_only_before: int = RECENT_ONLY_BEFORE_YEAR,
+    current_year: int | None = None,
+    license_override: str | None = None,
 ) -> RepoRow:
-    """저장소 하나를 §4.3 기준으로 평가한다. 비싼 호출은 앞 기준을 통과한 뒤에만 한다."""
+    """저장소 하나를 §4.3 기준으로 평가한다. 비싼 호출은 앞 기준을 통과한 뒤에만 한다.
+
+    `history_per_year` > 0 이면 선정 기준 v2 (#56) 값도 잰다.
+    `license_override` 는 사람이 LICENSE 파일을 직접 확인한 SPDX 값이다
+    (CSV `license_manual`=true 로 남는다).
+    """
     if item is None:
         item = client.get_json(f"/repos/{full_name}", allow_404=True)
         if item is None:
             return RepoRow(repo=full_name, exclude_reason="NOT_FOUND")
 
     row = _row_from_repo_item(full_name, item)
+    if license_override:
+        row.license_id = license_override
+        row.license_manual = True
 
     if item.get("archived"):
         row.exclude_reason = "ARCHIVED"
@@ -579,6 +819,14 @@ def evaluate_repo(
 
     row.pr_ratio, row.issue_ref_ratio = compute_ratios(samples)
     row.score = score_candidate(row.pr_ratio, row.issue_ref_ratio, row.commits)
+    if history_per_year > 0:
+        evaluate_history(
+            client,
+            row,
+            per_year=history_per_year,
+            cutoff_year=recent_only_before,
+            current_year=current_year,
+        )
     if enforce_pr_gate and not row.pr_gate_pass:
         row.exclude_reason = f"PR_RATIO_BELOW_GATE:{row.pr_ratio:.3f}"
     return row
@@ -609,19 +857,28 @@ def search_repositories(
     return items[:max_candidates]
 
 
-def sort_rows(rows: Sequence[RepoRow]) -> list[RepoRow]:
-    """후보는 점수 내림차순, 제외된 저장소는 뒤에 이름순으로."""
-    candidates = sorted(
-        (row for row in rows if row.selected), key=lambda row: (-(row.score or 0.0), row.repo)
-    )
+def sort_rows(rows: Sequence[RepoRow], *, by_score_v2: bool = False) -> list[RepoRow]:
+    """후보는 점수 내림차순, 제외된 저장소는 뒤에 이름순으로.
+
+    `by_score_v2` 면 `score_v2` 로 정렬한다. v2 값이 없는 후보는 후보 중 맨 뒤로 간다.
+    """
+
+    def key(row: RepoRow) -> tuple[float, str]:
+        value = row.score_v2 if by_score_v2 else row.score
+        return (-(value if value is not None else -1.0), row.repo)
+
+    candidates = sorted((row for row in rows if row.selected), key=key)
     excluded = sorted((row for row in rows if not row.selected), key=lambda row: row.repo)
     return [*candidates, *excluded]
 
 
-def write_csv(rows: Sequence[RepoRow], out_path: Path) -> None:
+def write_csv(rows: Sequence[RepoRow], out_path: Path, *, with_history: bool = False) -> None:
+    """CSV 로 쓴다. v2 평가를 켰거나 라이선스를 수동 확인한 행이 있으면 v2 열까지 쓴다."""
+    use_v2 = with_history or any(row.license_manual for row in rows)
+    columns = CSV_COLUMNS_V2 if use_v2 else CSV_COLUMNS
     out_path.parent.mkdir(parents=True, exist_ok=True)
     with out_path.open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=list(CSV_COLUMNS))
+        writer = csv.DictWriter(handle, fieldnames=list(columns), extrasaction="ignore")
         writer.writeheader()
         for row in rows:
             writer.writerow(row.to_csv_row())
@@ -653,6 +910,31 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--refresh", action="store_true", help="캐시를 무시하고 다시 호출")
     parser.add_argument("--no-seeds", action="store_true", help="§4.3 초기 후보 예시를 빼고 평가")
     parser.add_argument(
+        "--repos",
+        nargs="+",
+        default=None,
+        help="검색 대신 이 저장소들만 평가 (초기 후보 예시도 더하지 않는다)",
+    )
+    parser.add_argument(
+        "--history-per-year",
+        type=int,
+        default=0,
+        help="선정 기준 v2 (#56): 연도별 PR 연결 표본 수. 0 이면 끔 (권장 5)",
+    )
+    parser.add_argument(
+        "--recent-only-before",
+        type=int,
+        default=RECENT_ONLY_BEFORE_YEAR,
+        help="최초 커밋이 이 연도보다 이르면 recent_only 플래그 (제외하지 않음)",
+    )
+    parser.add_argument(
+        "--license-override",
+        action="append",
+        default=None,
+        metavar="OWNER/NAME=SPDX",
+        help="사람이 LICENSE 를 직접 확인한 라이선스로 덮어쓴다 (반복 가능)",
+    )
+    parser.add_argument(
         "--enforce-pr-gate",
         action="store_true",
         help="PR 경유 비율이 게이트(0.70) 미만이면 후보에서 제외 (기본: 표시만)",
@@ -681,18 +963,28 @@ def main(argv: Sequence[str] | None = None) -> int:
     def log(message: str) -> None:
         print(message, file=sys.stderr)
 
+    try:
+        overrides = parse_license_overrides(args.license_override)
+    except ValueError as error:
+        print(str(error), file=sys.stderr)
+        return 2
+
     client = GitHubClient(token, resolve_cache_dir(args.cache_dir), refresh=args.refresh, log=log)
     since = since_iso(args.since_days)
-    query = args.query or build_query(args.min_stars)
 
-    log(f"검색: {query}")
-    items = search_repositories(client, query, args.max_candidates)
-    log(f"검색 결과 {len(items)}개")
-
-    targets: list[tuple[str, dict[str, Any] | None]] = [(item["full_name"], item) for item in items]
-    seen = {name for name, _ in targets}
-    if not args.no_seeds:
-        targets.extend((name, None) for name in CHARTER_SEED_REPOS if name not in seen)
+    targets: list[tuple[str, dict[str, Any] | None]]
+    if args.repos:
+        targets = [(name, None) for name in args.repos]
+        log(f"지정 저장소 {len(targets)}개 평가 (검색·초기 후보 예시 생략)")
+    else:
+        query = args.query or build_query(args.min_stars)
+        log(f"검색: {query}")
+        items = search_repositories(client, query, args.max_candidates)
+        log(f"검색 결과 {len(items)}개")
+        targets = [(item["full_name"], item) for item in items]
+        seen = {name for name, _ in targets}
+        if not args.no_seeds:
+            targets.extend((name, None) for name in CHARTER_SEED_REPOS if name not in seen)
 
     rows: list[RepoRow] = []
     for index, (name, item) in enumerate(targets, start=1):
@@ -704,6 +996,9 @@ def main(argv: Sequence[str] | None = None) -> int:
                 sample_size=args.commit_sample,
                 item=item,
                 enforce_pr_gate=args.enforce_pr_gate,
+                history_per_year=args.history_per_year,
+                recent_only_before=args.recent_only_before,
+                license_override=overrides.get(name),
             )
         except RuntimeError as error:  # 저장소 하나 때문에 전체가 멈추지 않게
             log(f"[{index}/{len(targets)}] {name} 실패: {error}")
@@ -712,20 +1007,30 @@ def main(argv: Sequence[str] | None = None) -> int:
         verdict = f"제외 {row.exclude_reason}" if row.exclude_reason else f"점수 {row.score:.4f}"
         log(f"[{index}/{len(targets)}] {name} {verdict}")
 
-    ordered = sort_rows(rows)
-    write_csv(ordered, args.out)
+    by_v2 = args.history_per_year > 0
+    ordered = sort_rows(rows, by_score_v2=by_v2)
+    write_csv(ordered, args.out, with_history=by_v2)
 
     candidates = [row for row in ordered if row.selected]
     log(f"API 호출 {client.api_calls}회 / 캐시 적중 {client.cache_hits}회")
     print(f"CSV: {args.out} (후보 {len(candidates)} / 전체 {len(ordered)})")
-    print(f"상위 {min(args.top, len(candidates))}개 (점수순, §4.3 PR 게이트 70%):")
+    label = "score_v2" if by_v2 else "점수"
+    print(f"상위 {min(args.top, len(candidates))}개 ({label}순, §4.3 PR 게이트 70%):")
     for rank, row in enumerate(candidates[: args.top], start=1):
         gate = "PR-OK" if row.pr_gate_pass else "PR-LOW"
-        print(
+        line = (
             f"{rank:>3}. {row.repo:<40} score={row.score:.4f} "
             f"pr={row.pr_ratio:.2f} issue={row.issue_ref_ratio:.2f} "
             f"commits={row.commits} {gate}"
         )
+        if by_v2:
+            v2 = "-" if row.score_v2 is None else f"{row.score_v2:.4f}"
+            window = "-" if row.window_pr_ratio is None else f"{row.window_pr_ratio:.2f}"
+            line += (
+                f" | first={row.first_commit_year} recent_only={row.recent_only} "
+                f"window_pr={window} score_v2={v2}"
+            )
+        print(line)
     return 0
 
 
