@@ -5,6 +5,7 @@ CHARTER §17 "초기 저장소 20개 목록"의 확정본. `repo_candidates.csv`
 
 - 확정일: 2026-09-11 / 이슈 #21
 - 이 목록은 2주차 채굴(#5)과 게이트 1 이유 회수율 측정(#7)의 입력이다. **게이트 1 결과로 바뀔 수 있다** (§5).
+- **2026-09-15 선정 기준 v2로 재평가했다 (#56).** 목록 구성은 바꾸지 않고 순위만 다시 냈다 → §7. 기준과 근거는 `docs/evaluation.md` "2026-09-15 — 저장소 선정 기준 v2" 절.
 
 ## 1. 목록
 
@@ -192,3 +193,80 @@ CSV 점수 순. 이번 판단(§2)과 PR 게이트를 적용해 건너뛴 저장
 
 건너뛴 것: `headroomlabs-ai/headroom`(CSV 26위, 2026-01 생성 — §2.1), `MemPalace/mempalace`(2026-04 — §2.1),
 `public-apis`·`awesome-llm-apps`·`PayloadsAllTheThings`(목록·예제 모음 — §2.2), `sqlalchemy`·`flask`·`MetaGPT`·`graphify`·`screenshot-to-code`(PR 게이트 미달).
+
+## 7. 선정 기준 v2 재평가 (2026-09-15, #56)
+
+기준·근거·한계는 `docs/evaluation.md` "2026-09-15 — 저장소 선정 기준 v2" 절에 있다. 여기는 결과만 적는다.
+원본은 `docs/repo_final20_v2.csv`다.
+
+**무엇이 바뀌었나.**
+- 최초 커밋 날짜(기본 브랜치의 가장 오래된 커밋)를 잰다.
+- PR 연결 비율을 최근 1년이 아니라 **연도별 표본**(연 5건, 병합·봇 제외)으로 히스토리 전체와 채굴 구간에서 따로 잰다.
+- 최초 커밋이 2015년 이전이면 `recent_only`: 채굴 구간을 2015년부터로 좁힌다. **제외하지 않는다.**
+- `score_v2 = 0.5 × 채굴 구간 PR 연결 비율 + 0.3 × issue_ref_ratio + 0.2 × 규모(채굴 구간 커밋 수)`. 가중치는 v1과 같다.
+- **목록(20개 구성)은 바꾸지 않았다.** 교체는 게이트 1 결과를 보고 정한다 (§5).
+
+재현:
+```bash
+python -m pipeline.select_repos \
+  --repos apache/superset django/django scikit-learn/scikit-learn pydantic/pydantic vllm-project/vllm \
+          pandas-dev/pandas unslothai/unsloth huggingface/transformers home-assistant/core celery/celery \
+          keras-team/keras langchain-ai/langchain crewAIInc/crewAI psf/requests unclecode/crawl4ai \
+          docling-project/docling mem0ai/mem0 commaai/openpilot browser-use/browser-use encode/httpx \
+  --history-per-year 5 --license-override celery/celery=BSD-3-Clause \
+  --out docs/repo_final20_v2.csv --top 20
+```
+
+### 7.1 순위
+
+`v1`은 §1 표의 순위다. `score`는 이번 실행에서 v1 공식으로 다시 계산한 값이라 §1의 점수와 다를 수 있다
+(최근 1년 창이 2026-09-10 → 2026-09-15로 옮겨졌다). 괄호 안은 표본 수다.
+
+| v2 | v1 | 저장소 | 최초 커밋 | recent_only | 채굴 구간 커밋 | PR 연결 (전체) | PR 연결 (채굴 구간) | score | score_v2 |
+|---:|---:|---|---|:---:|---:|---:|---:|---:|---:|
+| 1 | 5 | `vllm-project/vllm` | 2023-08-31 | | 21,078 | 1.000 (20) | 1.000 (20) | 0.8858 | 0.8858 |
+| 2 | 1 | `apache/superset` | 2015-09-18 | | 22,812 | 0.933 (60) | 0.933 (60) | 0.8699 | 0.8365 |
+| 3 | 9 | `home-assistant/core` | 2014-10-22 | ✓ | 116,400 | 0.923 (65) | 1.000 (60) | 0.8100 | 0.8100 |
+| 4 | 2 | `django/django` | 2005-07-13 | ✓ | 15,367 | 0.500 (110) | 0.867 (60) | 0.8683 | 0.7930 |
+| 5 | 8 | `huggingface/transformers` | 2018-11-02 | | 23,928 | 0.978 (45) | 0.978 (45) | 0.7923 | 0.7812 |
+| 6 | 4 | `pydantic/pydantic` | 2017-05-05 | | 5,733 | 0.860 (50) | 0.860 (50) | 0.8393 | 0.7693 |
+| 7 | 12 | `langchain-ai/langchain` | 2022-10-27 | | 16,744 | 1.000 (25) | 1.000 (25) | 0.7341 | 0.7341 |
+| 8 | 3 | `scikit-learn/scikit-learn` | 2010-01-05 | ✓ | 16,028 | 0.824 (85) | 0.983 (60) | 0.7803 | 0.7335 |
+| 9 | 6 | `pandas-dev/pandas` | 2010-01-10 | ✓ | 27,868 | 0.765 (85) | 0.933 (60) | 0.7571 | 0.7068 |
+| 10 | 16 | `docling-project/docling` | 2024-07-17 | | 1,415 | 1.000 (15) | 1.000 (15) | 0.6977 | 0.6977 |
+| 11 | 17 | `mem0ai/mem0` | 2023-06-20 | | 2,624 | 0.950 (20) | 0.950 (20) | 0.6793 | 0.6543 |
+| 12 | 11 | `keras-team/keras` | 2015-03-30 | | 12,701 | 0.683 (60) | 0.683 (60) | 0.7999 | 0.6416 |
+| 13 | 10 | `celery/celery` | 2009-04-28 | ✓ | 4,734 | 0.600 (90) | 0.767 (60) | 0.7721 | 0.6028 |
+| 14 | 14 | `psf/requests` | 2011-02-13 | ✓ | 2,740 | 0.775 (80) | 0.833 (60) | 0.7256 | 0.5982 |
+| 15 | 19 | `browser-use/browser-use` | 2024-11-01 | | 10,279 | 0.867 (15) | 0.867 (15) | 0.6591 | 0.5925 |
+| 16 | 13 | `crewAIInc/crewAI` | 2023-11-09 | | 2,850 | 0.700 (20) | 0.700 (20) | 0.7235 | 0.5735 |
+| 17 | 15 | `unclecode/crawl4ai` | 2024-05-09 | | 1,651 | 0.667 (15) | 0.667 (15) | 0.7256 | 0.5590 |
+| 18 | 20 | `encode/httpx` | 2019-04-04 | | 1,523 | 1.000 (36) | 1.000 (36) | 0.5215 | 0.5215 |
+| 19 | 7 | `unslothai/unsloth` | 2024-04-20 | | 8,370 | 0.333 (15) | 0.333 (15) | 0.8386 | 0.5053 |
+| 20 | 18 | `commaai/openpilot` | 2017-07-29 | | 17,698 | 0.300 (50) | 0.300 (50) | 0.6769 | 0.3269 |
+
+- celery는 GitHub 라이선스가 NOASSERTION이라 §3.1의 수동 확인값(BSD-3-Clause)을 `--license-override`로 넣었다 (CSV `license_manual`=true).
+- 이번 실행의 최근 1년 `pr_ratio`는 20개 모두 1.000이다.
+
+### 7.2 요약
+
+| 구분 | 저장소 |
+|---|---|
+| `recent_only` (최초 커밋 2015년 이전) — 6개 | home-assistant (2014), django (2005), scikit-learn (2010), pandas (2010), celery (2009), requests (2011) |
+| 2020년 이후 시작 — 8개, 모두 후보 유지 | vllm, langchain, docling, mem0, browser-use, crewAI, crawl4ai, unsloth |
+| 채굴 구간 PR 연결 0.70 미만 — 4개 | keras 0.683, crawl4ai 0.667, unsloth 0.333, openpilot 0.300 |
+| 순위 5칸 이상 상승 | home-assistant 9→3, langchain 12→7, docling 16→10, mem0 17→11 |
+| 순위 5칸 이상 하락 | scikit-learn 3→8, unsloth 7→19 |
+
+연도별 표본에서 PR 연결이 0건인 해가 이어지는 저장소 (CSV `pr_by_year`):
+- `django/django` 2005–2012: 40건 중 0건 (2013부터 연결이 나타남)
+- `commaai/openpilot` 2017–2023: 35건 중 0건, 2024–2026: 15건 중 15건
+- `unslothai/unsloth` 2024–2025: 10건 중 0건, 2026: 5건 중 5건
+
+### 7.3 확인하지 않은 것
+
+- **최초 커밋 날짜가 §1의 "생성" 연월보다 늦은 저장소가 8개다**: vllm (2023-02 → 2023-08-31), superset (2015-07 → 2015-09-18),
+  home-assistant (2013-09 → 2014-10-22), transformers (2018-10 → 2018-11-02), unsloth (2023-11 → 2024-04-20),
+  openpilot (2016-11 → 2017-07-29), browser-use (2024-10 → 2024-11-01), crewAI (2023-10 → 2023-11-09).
+  원인은 확인하지 않았다. 이 8개 중 2015년 경계를 넘나드는 저장소는 없어 `recent_only` 판정은 바뀌지 않는다.
+- `recent_only`의 채굴 구간 제한은 아직 채굴 파이프라인(#5)에 반영되지 않았다. 지금 파이프라인은 전체 히스토리를 돈다.

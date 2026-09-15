@@ -6,7 +6,7 @@
 | 지표 | 방법 | 목표 | 최신 값 | 측정일 |
 |---|---|---|---|---|
 | 이유 회수율 (게이트 1) | 예비 라벨 200건, **3구간** (EXPLICIT만 / +INFERRED ≥ 0.5 / +INFERRED ≥ 0.8) — `eval/gate1.py`, 아래 "게이트 1 측정 방법" | ≥ 60% (3구간 판정이 같을 때 확정) | — | — |
-| 필터 정밀도 | 수동 100건 | ≥ 85% | — | — |
+| 필터 정밀도 | 수동 **200건** (CHARTER §10.1: 필터 통과 100건 + 제외 100건 무작위 추출, 3인 독립 판정 후 다수결) | ≥ 90%, kappa ≥ 0.7 | — | — |
 | 분류 정확도 (게이트 2) | 수동 라벨 500건, 기준선 A/B 대비 | ≥ 80% & 기준선 우위 | — | — |
 | 라벨 일치도 | 쌍별 Cohen's kappa (2인 중복 라벨 건) | 보고, < 0.6 이면 §11 대응 | — | — |
 | 검색 관련성 (확장) | Precision@10 | 보고 | — | — |
@@ -237,3 +237,74 @@ PR이 연결된 FULL_FUNCTION 레코드를 저장소별로 10건씩 사람이 �
 개별 함수의 삭제 이유가 없는 경우가 많았다. FULL_FUNCTION은 2011-2017에 집중되어, 데이터가 많은 구간과
 이유가 기록된 구간이 어긋난다. encode/httpx는 2019년 시작으로 PR 본문에 삭제 함수명이 직접 언급되는 사례가 있었다.
 §4.3의 PR 문화 기준은 최근 1년만 보므로(`docs/repo_selection.md` §2 "최근 1년 커밋 표본 30건") 이 차이를 걸러내지 못한다.
+
+### 2026-09-15 — 저장소 선정 기준 v2 (#56)
+
+**왜 이 절이 필요한가.** 게이트 1은 확정 20개로 이유 회수율을 잰다. 어떤 저장소를 어느 구간으로 채굴하느냐가
+그 회수율의 전제다. 그래서 기준을 바꾼 근거를 게이트 1 판정 전에 남긴다.
+
+**배경 — 2026-09-14 사전 탐색(#47, 위 절)에서 본 것.**
+- `psf/requests`의 FULL_FUNCTION 레코드는 2011–2013에 1,742건, 2014–2017에 1,009건, 2018–2026에 256건이다. 2011–2017에 몰려 있다.
+- 같은 구간 표본 커밋의 PR 연결은 2011–2013 50.0%, 2014–2017 91.1%, 2018–2026 92.3%다.
+- PR이 연결된 FULL_FUNCTION 10건을 읽었을 때 이유가 읽힌 비율은 requests 약 30%, httpx(2019년 시작) 약 60%였다.
+- 데이터가 많은 구간과 이유가 기록된 구간이 어긋난다. §4.3 ③ PR 문화 기준은 "최근 1년 PR 경유 비율"이라 이 차이를 걸러내지 못한다.
+  ADR-006(PR 문화 기준)에 저장소 시작 연도가 빠져 있었다.
+
+**근거의 한계.** 30% / 60%는 저장소당 표본 10건, 판정자 1인의 값이고 위 사전 탐색 절 스스로 "게이트 1 판정에 쓰지 않는다"고 적었다.
+기준 v2는 그 관찰을 반영한 **가설**이다. 타당성은 게이트 1의 저장소별 회수율로 다시 확인한다 (`docs/repo_final20.md` §5 ①).
+
+**기준 비교.**
+
+| 항목 | v1 (#1) | v2 (#56) |
+|---|---|---|
+| 시작 연도 | 보지 않음 | 최초 커밋 날짜 (기본 브랜치의 가장 오래된 커밋) |
+| PR 연결 비율 | 최근 1년 커밋 표본 30건 | 연도별 표본 5건씩(병합·봇 제외). 히스토리 전체와 채굴 구간을 따로 |
+| 2015년 이전 시작 | 구분 없음 | `recent_only` 플래그. 채굴 구간을 2015년부터로 좁힌다. **제외하지 않는다** |
+| 2020년 이후 시작 | 구분 없음 | 거르는 규칙 없음. 후보 유지 |
+| 점수 | 0.5 × PR(최근 1년) + 0.3 × 이슈 참조 + 0.2 × 규모(전체 커밋) | 0.5 × PR(채굴 구간) + 0.3 × 이슈 참조(최근 1년, v1과 같음) + 0.2 × 규모(채굴 구간 커밋) |
+
+**설계 판단.**
+- **제외가 아니라 플래그.** 2015년 이전 시작 저장소를 제외하면 §4.3 초기 후보 예시인 django·pandas·scikit-learn·celery·requests가 한꺼번에 빠진다
+  (결과에서 `recent_only`는 6개). 플래그는 채굴 구간만 좁히고, 되돌리기 쉽다.
+- **2020년 이후 시작도 유지.** PR 템플릿이 강제되는 시기라 회수율이 더 높을 가능성이 있다. 필터가 붙은 뒤 별도로 측정한다.
+- **연도 층화.** 연도마다 같은 수를 뽑아, 커밋이 몰린 해가 비율을 끌고 가지 않게 했다.
+- **v1 점수와 CSV 형식은 그대로 둔다.** `score_v2`와 v2 열은 `--history-per-year`를 줬을 때만 계산·기록한다.
+
+**측정 방법과 한계.**
+- 최초 커밋: `GET /repos/{repo}/commits?per_page=1`의 Link 헤더 마지막 페이지(= 총 커밋 수)가 가장 오래된 커밋이다. 그 커밋의 author date를 쓴다.
+- 연도별 표본: 그 해 커밋 목록의 **첫 페이지(최신 100개)**에서 병합·봇을 뺀 뒤 5개를 고르게 뽑는다. 커밋이 100개를 넘는 해는 그 해 후반부로 치우친다.
+- **"FULL_FUNCTION이 나올 만한 구간"은 근사다.** 삭제 레코드 없이는 어느 커밋에서 FULL_FUNCTION이 나올지 알 수 없어, 연도별 일반 커밋의 PR 연결로 잰다.
+  삭제 커밋만의 PR 연결 비율과는 다를 수 있다.
+- 표본 수가 작다. 연 5건이라 2023년 이후 시작 저장소는 채굴 구간 표본이 15–20건이다.
+- 이슈 참조 비율은 v1의 최근 1년 값을 그대로 쓴다. 연도별로 재지 않았다.
+- API가 준 최초 커밋 날짜가 `docs/repo_final20.md` §1의 "생성" 연월보다 늦은 저장소가 8개다. 원인은 확인하지 않았다.
+  2015년 경계를 넘나드는 저장소는 없어 `recent_only` 판정에는 영향이 없다 (`docs/repo_final20.md` §7.3).
+- GitHub `/commits/{sha}/pulls`가 간헐적으로 HTTP 500을 낸다. 첫 실행에서 20개 중 18개가 이 오류 한 번으로 평가가 끝났다.
+  같은 URL을 다시 부르면 200이 와서, `GitHubClient`가 500·502·503·504를 1·2·4초 간격으로 최대 3회 재시도하게 했다.
+  두 번째 실행에서 재시도 40회가 모두 복구됐다.
+
+**결과.** 확정 20개 모두 평가됐다 (API 호출 1,204회, 캐시 적중 670회). 순위 표는 `docs/repo_final20.md` §7.1, 원본은 `docs/repo_final20_v2.csv`.
+
+| 구분 | 수 | 저장소 |
+|---|---:|---|
+| `recent_only` | 6 | home-assistant, django, scikit-learn, pandas, celery, requests |
+| 2020년 이후 시작 (후보 유지) | 8 | vllm, langchain, docling, mem0, browser-use, crewAI, crawl4ai, unsloth |
+| 채굴 구간 PR 연결 < 0.70 | 4 | keras 0.683, crawl4ai 0.667, unsloth 0.333, openpilot 0.300 |
+| 순위 5칸 이상 상승 | 4 | home-assistant 9→3, langchain 12→7, docling 16→10, mem0 17→11 |
+| 순위 5칸 이상 하락 | 2 | scikit-learn 3→8, unsloth 7→19 |
+
+재현:
+```bash
+python -m pipeline.select_repos \
+  --repos apache/superset django/django scikit-learn/scikit-learn pydantic/pydantic vllm-project/vllm \
+          pandas-dev/pandas unslothai/unsloth huggingface/transformers home-assistant/core celery/celery \
+          keras-team/keras langchain-ai/langchain crewAIInc/crewAI psf/requests unclecode/crawl4ai \
+          docling-project/docling mem0ai/mem0 commaai/openpilot browser-use/browser-use encode/httpx \
+  --history-per-year 5 --license-override celery/celery=BSD-3-Clause \
+  --out docs/repo_final20_v2.csv --top 20
+```
+
+**이 절에서 정하지 않은 것.**
+- 20개 구성 변경. 게이트 1 결과를 보고 정한다 (`docs/repo_final20.md` §5).
+- CHARTER §4.3 ③과 ADR-006 갱신. 선정 기준 변경이라 §13 절차(이슈 → 회의 → ADR → CHARTER)를 따로 거쳐야 한다.
+- 채굴 파이프라인(#5)에 `recent_only` 구간 제한 반영. 지금 파이프라인은 전체 히스토리를 돈다.
