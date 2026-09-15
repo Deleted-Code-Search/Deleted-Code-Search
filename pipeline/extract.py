@@ -540,14 +540,28 @@ def collect_same_file_hunks(repo_path: str | Path, commit: CommitPair) -> dict[s
 def extract_repo(repo_path: str | Path, repo: str, ref: str) -> list[DeletedFunction]:
     """저장소 하나를 처음부터 끝까지 순차로 훑는다 (Issue #5 "저장소 1개 끝까지 통과").
 
-    `walk_commits(repo_path, ref)`가 내놓는 `CommitPair`마다 `extract_deletions()`를
-    그대로 돌려 결과를 순서대로 누적한다. `ref`는 walk.py와 같은 이유로 호출자가
-    명시한다 — default branch를 이 함수가 추측하지 않는다. 병렬화·재시도는 넣지
-    않는다(4주차 범위, 모듈 독스트링 참고).
+    `walk_commits(repo_path, ref)`가 내놓는 `CommitPair`마다 `extract_deletions()`로
+    삭제를 뽑고, 같은 커밋의 `collect_added_functions()`·`collect_same_file_hunks()`를
+    구해 `filter.exclude_moved()`로 이동(NOISE_MOVE, §4.2②, Issue #52)을 걸러낸 뒤
+    순서대로 누적한다 — 커밋 하나 안에서만 후보를 매칭해야 하므로(`find_moved`의 "호출자가
+    이미 그 커밋 하나로 좁혀서 줘야 한다" 계약, `filter.py` 참고) 커밋별로 따로 호출한다.
+    `ref`는 walk.py와 같은 이유로 호출자가 명시한다 — default branch를 이 함수가
+    추측하지 않는다. 병렬화·재시도는 넣지 않는다(4주차 범위, 모듈 독스트링 참고).
+
+    `filter.py`를 함수 안에서(모듈 최상단이 아니라) import한다 — `filter.py`가 이미
+    `from pipeline.extract import DeletedFunction, Hunk`로 이 모듈을 가져다 쓰므로,
+    최상단에서 서로 가져오면 순환 import가 된다(둘 다 아직 다 안 만들어진 상태로 서로를
+    참조하려 들어서 `ImportError`가 난다). 함수 호출 시점까지 미루면 양쪽 모듈이 이미
+    완전히 로드된 뒤라 문제없다.
     """
+    from pipeline.filter import exclude_moved
+
     records: list[DeletedFunction] = []
     for commit in walk_commits(repo_path, ref):
-        records.extend(extract_deletions(repo_path, repo, commit))
+        deletions = extract_deletions(repo_path, repo, commit)
+        added = collect_added_functions(repo_path, commit)
+        hunks = collect_same_file_hunks(repo_path, commit)
+        records.extend(exclude_moved(deletions, added, hunks))
     return records
 
 

@@ -590,7 +590,10 @@ def test_extract_repo_processes_all_walk_commits_sequentially(tmp_path: Path):
 
     records = extract_module.extract_repo(repo, _REPO, "main")
 
-    # 커밋별로 개별 extract_deletions를 호출한 것과 결과·순서가 같아야 한다.
+    # 커밋별로 개별 extract_deletions를 호출한 것과 결과·순서가 같아야 한다 — 이 두 커밋
+    # 다 이동 후보(같은 커밋에 추가된 함수)가 전혀 없어서(둘 다 그냥 삭제만 함) 필터가
+    # 아무것도 걸러내지 않는 케이스다. 이동이 실제로 걸러지는 케이스는 아래
+    # test_extract_repo_excludes_moved_function_but_keeps_ordinary_deletion 참고.
     expected = [
         record
         for commit in all_commits
@@ -605,6 +608,37 @@ def test_extract_repo_does_not_guess_ref(tmp_path: Path):
     """`extract_repo`가 `ref`를 요구하는지(기본값이 없는지) — clone.py/walk.py와 같은 원칙."""
     with pytest.raises(TypeError):
         extract_module.extract_repo(tmp_path, _REPO)  # type: ignore[call-arg]
+
+
+@requires_git
+def test_extract_repo_excludes_moved_function_but_keeps_ordinary_deletion(tmp_path: Path):
+    """`extract_repo`가 `pipeline.filter.exclude_moved()`(Issue #52, NOISE_MOVE)를 실제로
+    거쳐야 한다는 통합 회귀 테스트. `find_moved`/`exclude_moved`/`collect_added_functions`
+    를 직접 부르는 기존 단위·컴포넌트 테스트는 전부 통과하면서도, `extract_repo`가 그
+    함수들을 실제로 연결하지 않는 배선 버그(2라운드 전 상태 — `extract_deletions` 결과를
+    필터 없이 그대로 누적)는 하나도 못 잡았다. 이 테스트는 `find_moved`를 모킹해 "호출은
+    됐다"만 보는 게 아니라, 실제 작은 git 저장소를 `extract_repo`로 끝까지 돌려 최종
+    결과에서 이동한 함수가 정말 사라지는지 본다.
+
+    같은 커밋에서 두 가지가 동시에 일어난다:
+    - `old/pkg/a.py`의 `moved_func`가 `new/pkg/a.py`로 그대로 이동(순수 신규 파일
+      이동, `--no-renames`가 옛 경로 삭제 + 새 경로 신규 파일로 쪼개는 케이스) — 이동
+      이므로 최종 결과에서 빠져야 한다.
+    - `c.py`의 `real_delete`는 대체 없이 그냥 삭제된다 — 이동이 아니므로 남아야 한다.
+    """
+    repo = _init_repo(tmp_path / "repo")
+    _write(repo, "old/pkg/a.py", "def moved_func():\n    return 1\n")
+    _write(repo, "c.py", "def real_delete():\n    return 2\n")
+    _commit_all(repo, "add moved_func and real_delete")
+    (repo / "old" / "pkg" / "a.py").unlink()
+    _write(repo, "new/pkg/a.py", "def moved_func():\n    return 1\n")
+    _write(repo, "c.py", "")
+    _commit_all(repo, "move a.py to new/pkg, delete real_delete")
+
+    records = extract_module.extract_repo(repo, _REPO, "main")
+
+    assert [r.function_name for r in records] == ["real_delete"]  # moved_func는 제외됐다
+    assert records[0].file_path == "c.py"
 
 
 # --------------------------------------------------------------------------------------

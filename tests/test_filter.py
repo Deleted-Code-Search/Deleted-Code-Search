@@ -750,19 +750,36 @@ def test_d_greedy_matching_does_not_reuse_candidates_across_independent_groups()
 
 
 def test_e_greedy_matching_is_deterministic_regardless_of_input_order():
-    """동일 유사도(tie)인 pair가 있어도, deleted 입력 순서(`deletions` 리스트 순서)가
-    바뀌어도 결과가 같아야 한다."""
-    body = "def helper():\n    return 1\n"
-    d1 = _deleted("a/mod1.py", body, function_name="helper")
-    d2 = _deleted("b/mod2.py", body, function_name="helper")
-    added_forward = {"c/mod3.py": [_function("helper", body)]}
-    added_reversed = {"c/mod3.py": list(reversed(added_forward["c/mod3.py"]))}
+    """동일 유사도(tie)인 pair가 여럿이어도, 입력 순서를 바꾸면(1) deletions 리스트
+    순서, (2) added dict의 key 순서, (3) 그 안 각 파일의 함수 리스트 내부 순서 — 결과는
+    항상 같아야 한다.
 
-    forward = filter_module.find_moved([d1, d2], added_forward, {})
-    reversed_order = filter_module.find_moved([d2, d1], added_reversed, {})
+    candidate가 1개뿐이면 `reversed()`가 no-op이라 이 순서 독립성을 실제로 검증하지
+    못한다(코드 리뷰 지적) — 그래서 deleted 4개(전부 동일 본문, exact match라 전부
+    동점) : candidate 3개(두 파일에 나눠, 그중 한 파일엔 2개)로 구성해 여러 pair가
+    실제로 경쟁하게 만든다. 후보가 3개뿐이라 deleted 4개 중 1개는 항상 KEPT여야 한다."""
+    body = "def helper():\n    return 1\n"
+    d1 = _deleted("a/d1.py", body, function_name="helper")
+    d2 = _deleted("b/d2.py", body, function_name="helper")
+    d3 = _deleted("c/d3.py", body, function_name="helper")
+    d4 = _deleted("d/d4.py", body, function_name="helper")
+    deletions = [d1, d2, d3, d4]
+
+    c1 = _function("helper", body, start_line=1)
+    c2 = _function("helper", body, start_line=10)
+    c3 = _function("helper", body, start_line=1)
+    added_forward = {"p/mod1.py": [c1, c2], "q/mod2.py": [c3]}
+
+    # (1) deletions 순서, (2) dict key 순서, (3) p/mod1.py 리스트 내부 순서를 전부 뒤집는다.
+    deletions_reversed = list(reversed(deletions))
+    added_reversed = {"q/mod2.py": [c3], "p/mod1.py": [c2, c1]}
+
+    forward = filter_module.find_moved(deletions, added_forward, {})
+    reversed_order = filter_module.find_moved(deletions_reversed, added_reversed, {})
 
     assert forward == reversed_order
-    assert filter_module._record_key(d1) in forward  # 두 경우 모두 같은 쪽(d1)이 매칭된다
+    assert len(forward) == 3  # candidate가 3개뿐이라 deleted 4개 중 정확히 1개는 KEPT
+    assert filter_module._record_key(d4) not in forward  # 두 경우 모두 같은 쪽(d4)이 KEPT
 
 
 # --------------------------------------------------------------------------------------
