@@ -325,6 +325,51 @@ def test_corrupt_cache_falls_back_to_asking_again(tmp_path):
     assert len(calls) == 2
 
 
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {"model": "m", "text": {"oops": 1}},  # 유효 JSON, text 가 dict
+        {"model": "m", "text": 42},
+        {"model": "m", "text": None},
+        {"model": "m"},  # text 자체가 없음
+        ["not", "a", "dict"],
+    ],
+)
+def test_cache_with_non_string_text_is_treated_as_a_miss(tmp_path, payload):
+    """유효 JSON 이어도 text 가 문자열이 아니면 parse_answer 가 터져 배치 전체가 죽는다."""
+    calls = []
+    cache = tmp_path / "llm"
+    baseline = bl.LlmBaseline(fake_caller("BUG|근거", record_calls=calls), cache_dir=cache)
+    baseline.predict(record("m"))
+    for path in cache.glob("*.json"):
+        path.write_text(json.dumps(payload), encoding="utf-8")
+
+    again = bl.LlmBaseline(fake_caller("BUG|근거", record_calls=calls), cache_dir=cache)
+    prediction = again.predict(record("m"))  # 예외 없이 다시 물어야 한다
+
+    assert prediction.predicted_label == "BUG"
+    assert len(calls) == 2
+
+
+def test_cache_write_failure_keeps_the_api_answer(tmp_path, monkeypatch, capsys):
+    """이미 돈을 주고 받은 답이다. 디스크 문제로 UNK 로 만들면 결과와 비용을 함께 잃는다."""
+    from pathlib import Path
+
+    baseline = bl.LlmBaseline(fake_caller("BUG|정상 응답"), cache_dir=tmp_path / "llm")
+    monkeypatch.setattr(Path, "write_text", _raise_disk_full)
+
+    prediction = baseline.predict(record("m"))
+
+    assert prediction.predicted_label == "BUG"
+    assert prediction.evidence == ("정상 응답",)
+    assert baseline.failures.get("캐시 쓰기") == 1
+    assert "호출 실패" not in baseline.failures  # 원인을 잘못 기록하지 않는다
+
+
+def _raise_disk_full(*args, **kwargs):
+    raise OSError("disk full")
+
+
 def test_predict_all_keeps_record_order():
     baseline = bl.LlmBaseline(fake_caller("BUG|x"))
     records = [record("m", record_id=f"r{i}") for i in range(3)]
@@ -349,6 +394,35 @@ def test_llm_cli_dry_run_needs_no_api_key(tmp_path, capsys, monkeypatch):
 
     assert bl.main(["--input", str(source), "--env-file", str(tmp_path / "none"), "--dry-run"]) == 0
     assert "분류 체계" in capsys.readouterr().out
+
+
+@pytest.mark.parametrize("limit", ["-1", "-100"])
+def test_negative_limit_is_rejected(tmp_path, limit, capsys):
+    """`records[:-1]` 이 되어 마지막 하나만 빼고 전부 유료 호출한다. 정반대 동작이다."""
+    source = tmp_path / "records.jsonl"
+    source.write_text(
+        "\n".join(json.dumps(record("m", record_id=f"r{i}")) for i in range(10)), encoding="utf-8"
+    )
+
+    exit_code = bl.main(
+        ["--input", str(source), "--env-file", str(tmp_path / "none"), "--limit", limit]
+    )
+
+    assert exit_code == 2
+    assert "0 이상" in capsys.readouterr().err
+
+
+def test_zero_limit_means_everything(tmp_path, capsys):
+    source = tmp_path / "records.jsonl"
+    source.write_text(
+        "\n".join(json.dumps(record("m", record_id=f"r{i}")) for i in range(3)), encoding="utf-8"
+    )
+
+    bl.main(
+        ["--input", str(source), "--env-file", str(tmp_path / "none"), "--limit", "0", "--dry-run"]
+    )
+
+    assert "3건 대상" in capsys.readouterr().err
 
 
 def test_llm_cli_stops_without_api_key(tmp_path, monkeypatch):

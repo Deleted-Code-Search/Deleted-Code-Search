@@ -172,25 +172,51 @@ class LlmBaseline:
         digest = hashlib.sha256(key.encode("utf-8")).hexdigest()[:32]
         return self.cache_dir / f"{digest}.json"
 
-    def _ask(self, prompt: str) -> tuple[str, bool]:
-        """(응답 텍스트, 캐시였나)."""
-        path = self._cache_path(prompt)
-        if path is not None and path.is_file():
-            try:
-                self.cache_hits += 1
-                return json.loads(path.read_text(encoding="utf-8"))["text"], True
-            except (OSError, json.JSONDecodeError, KeyError):
-                self.cache_hits -= 1  # 깨진 캐시는 없는 셈 치고 다시 묻는다
+    def _read_cache(self, path: Path) -> str | None:
+        """캐시된 응답 텍스트. 없거나 쓸 수 없는 형태면 None (다시 묻는다).
 
-        self.calls += 1
-        text = self.caller(SYSTEM_PROMPT, prompt, self.model)
-        if path is not None:
+        유효한 JSON 이어도 `text` 가 문자열이 아닐 수 있다 (손상·형식 변경). 그대로 넘기면
+        `parse_answer` 의 문자열 연산에서 AttributeError 가 나고, 그건 `predict` 의 except 에
+        걸리지 않아 배치 전체가 죽는다. 형태까지 확인하고서야 캐시로 인정한다.
+        """
+        if not path.is_file():
+            return None
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return None
+        text = payload.get("text") if isinstance(payload, dict) else None
+        return text if isinstance(text, str) else None
+
+    def _write_cache(self, path: Path, text: str) -> None:
+        """응답을 캐시에 남긴다. 실패해도 응답 자체는 버리지 않는다.
+
+        이미 API 를 불러 받은 답이다. 디스크 문제로 그것을 UNK 로 만들면 돈을 쓰고도 결과를
+        잃고, 실패 통계에도 "호출 실패" 로 잘못 기록돼 모델이 불안정한 것처럼 보인다.
+        """
+        try:
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(
                 json.dumps({"model": self.model, "text": text}, ensure_ascii=False),
                 encoding="utf-8",
             )
-        return text, False
+        except OSError as error:
+            self.failures["캐시 쓰기"] = self.failures.get("캐시 쓰기", 0) + 1
+            print(f"캐시를 남기지 못했다 (응답은 그대로 쓴다): {error}", file=sys.stderr)
+
+    def _ask(self, prompt: str) -> str:
+        path = self._cache_path(prompt)
+        if path is not None:
+            cached = self._read_cache(path)
+            if cached is not None:
+                self.cache_hits += 1
+                return cached
+
+        self.calls += 1
+        text = self.caller(SYSTEM_PROMPT, prompt, self.model)
+        if path is not None:
+            self._write_cache(path, text)
+        return text
 
     def predict(self, record: dict[str, Any]) -> Prediction:
         """레코드 하나를 분류한다. 호출이 실패해도 예측을 돌려준다 (사유를 남기고 UNK)."""
@@ -198,7 +224,7 @@ class LlmBaseline:
         version = f"{self.prompt_version}/{self.model}"
 
         try:
-            text, _ = self._ask(prompt)
+            text = self._ask(prompt)
         except (urllib.error.URLError, OSError, ValueError) as error:
             self.failures["호출 실패"] = self.failures.get("호출 실패", 0) + 1
             return Prediction(
@@ -253,6 +279,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         for line in args.input.read_text(encoding="utf-8").splitlines()
         if line.strip()
     ]
+    # 음수를 그대로 슬라이스하면 records[:-1] 이 되어 "앞 N건만" 의 정반대가 된다.
+    # 마지막 한 건만 빼고 전부 유료 호출하는 셈이라, 비용을 아끼려는 옵션이 비용을 쓴다.
+    if args.limit < 0:
+        print("--limit 는 0 이상이어야 한다 (0 이면 전체).", file=sys.stderr)
+        return 2
     if args.limit:
         records = records[: args.limit]
     if not records:
