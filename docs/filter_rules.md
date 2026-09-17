@@ -1,6 +1,6 @@
 # 필터 규칙
 
-버전: v0.4. 담당: 재헌. 규칙 변경 시 이 문서의 버전을 올리고, `DeletionRecord.filter_rule_version`에 반영하며, PR에 테스트와 정밀도 재측정 결과를 첨부한다. 재측정은 수동 200건 (통과 100 + 제외 100)이다 (CHARTER.md §8.4, §10.1).
+버전: v0.5. 담당: 재헌. 규칙 변경 시 이 문서의 버전을 올리고, `DeletionRecord.filter_rule_version`에 반영하며, PR에 테스트와 정밀도 재측정 결과를 첨부한다. 재측정은 수동 200건 (통과 100 + 제외 100)이다 (CHARTER.md §8.4, §10.1).
 
 NOISE_MOVE의 정규화·유사도·후보 범위는 ADR-014(`docs/adr/014-move-detection-rules.md`)가 최종 기준이다. 이 문서는 ADR-014의 결정을 요약해 필터 규칙 전체(다른 노이즈 유형 포함)와 나란히 두고, ADR-014가 정하지 않고 #52 구현에서 결정한 세부사항(같은 위치 판정 방법, 1:1 매칭 알고리즘, 실제 added-line 겹침 조건)을 함께 기록한다. ADR-014와 이 문서가 어긋나면 ADR-014가 옳다 — 이 문서를 고친다.
 
@@ -12,6 +12,7 @@ NOISE_MOVE의 정규화·유사도·후보 범위는 ADR-014(`docs/adr/014-move-
 | NOISE_FORMAT | 포맷·주석·독스트링만 변경 | 미구현 |
 | NOISE_BULK | 파일 전체 삭제 + "remove/delete directory/module" 계열 메시지 + 함수 100개 이상 | 미구현 |
 | NOISE_GENERATED | 마이그레이션·자동 생성·vendored 경로 패턴 | 미구현 |
+| NOISE_TRIVIAL | PARTIAL 레코드 중 `deleted_body`가 **4줄 이하**(빈 줄 포함)인 것. 5줄 이상 PARTIAL만 유지한다. FULL_FUNCTION은 대상이 아니다 (ADR-015) | 미구현 (#63) |
 
 테스트 코드 삭제는 제외하지 않고 `is_test_code` 플래그로 구분한다.
 
@@ -170,6 +171,33 @@ diff 헝크(`git diff --unified=0`의 `@@ -old_start,old_count +new_start,new_co
 - 이 판정은 Issue #52(NOISE_MOVE)에 한정된 것이고, 범용 parent→child 줄 번호 매핑 프레임워크가
   아니다 — 다른 필터·단계가 줄 번호 매핑이 필요하면 별도로 설계해야 한다.
 
+## NOISE_TRIVIAL — PARTIAL 최소 줄 수 (ADR-015)
+
+`docs/adr/015-partial-min-lines.md`가 최종 기준이다. 이 절은 요약이다.
+
+**규칙.**
+- 대상: `deletion_kind == PARTIAL` 레코드만. FULL_FUNCTION은 줄 수와 무관하게 이 규칙에서 제외되지 않는다.
+- 줄 수: `deleted_body`(내부 필드 `deleted_hunk`)의 줄 수. **빈 줄을 포함한다** — 2026-09-17 실측과 같은 기준이다.
+- **5줄 이상 → 유지, 4줄 이하 → `NOISE_TRIVIAL`.**
+
+**근거 (2026-09-17 `pydantic/pydantic` 실측, 필터 적용 후 PARTIAL 19,690건).**
+
+| 삭제 줄 수 | 건수 | 비율 |
+|---|---:|---:|
+| 1줄 | 10,326 | 52.4% |
+| 2-4줄 | 6,423 | 32.6% |
+| 5-9줄 | 1,834 | 9.3% |
+| 10줄 이상 | 1,107 | 5.6% |
+
+5줄 이상 PARTIAL 2,941건은 FULL_FUNCTION 3,001건과 비슷한 규모다. `psf/requests`(PARTIAL 4,755건)도 1줄 49.1%, 2-4줄 32.7%로 같은 분포였다.
+
+**구현(#63)에서 정할 것.**
+- 제외 방식: 지금 JSONL에는 `filter_status` 필드가 없고 NOISE_MOVE는 레코드를 빼는 방식이다. NOISE_TRIVIAL도 같은 방식으로 뺄지, `filter_status`를 기록할지.
+- NOISE_MOVE와 함께 적용할 때의 순서. NOISE_MOVE는 FULL_FUNCTION만 대상이라 결과가 겹치지 않는다.
+- 경계 테스트: 4줄 → NOISE_TRIVIAL, 5줄 → 유지, 빈 줄만으로 5줄이 되는 경우의 동작 고정.
+
+**한계.** 5줄이라는 값은 게이트 1 라벨링에서 재검토할 수 있다. 5-9줄 구간에서 UNK 비율이 높게 나오면 기준을 올린다.
+
 ## 변경 이력
 | 버전 | 날짜 | 변경 | 정밀도 |
 |---|---|---|---|
@@ -178,3 +206,4 @@ diff 헝크(`git diff --unified=0`의 `@@ -old_start,old_count +new_start,new_co
 | v0.2 | 2026-09-15 | NOISE_MOVE 최초 구현(Issue #52): 정규화·유사도·20% 줄 수 프리필터(원본 줄 수 기준, 이후 v0.4에서 정규화 줄 수 기준으로 수정) + same-position(헝크 매핑) 판정 | 실측 전 |
 | v0.3 | 2026-09-15 | 코드 리뷰 BLOCKER/HIGH 수정(Issue #52): added 후보를 "실제 added line과 겹치는 함수"로 제한(B-1), 1:1 greedy 매칭 도입(H-1), "오탐보다 미탐" 최우선 원칙 명시(ADR-014 예정) | 실측 전 |
 | v0.4 | 2026-09-15 | ADR-014 정합(팀장 결정 — ADR-014를 최종 기준으로 코드 수정): placeholder를 VAR/STR/NUM 3종으로 분리(기존 LIT 통합 폐기), 중첩 함수 선언 이름만 VAR로 치환(본문은 재귀 정규화 유지), 정규화 결과를 줄 목록(list[str])으로 변경, 1차 거르기 기준을 원본 줄 수에서 **정규화 줄 수**로 수정, `SequenceMatcher`를 문자열 전체 대신 **줄 목록**으로 비교하고 `autojunk=False` 명시, 정규화 본문 0줄 함수 제외 가드 추가. bool/None/복소수 placeholder 분류는 팀장 최종 확인 완료(bool/None 미치환, 복소수 NUM) — ADR-014 본문 반영은 팀장이 별도 진행 | 실측 전 |
+| v0.5 | 2026-09-17 | NOISE_TRIVIAL 규칙 명세 (ADR-015, #62): PARTIAL 중 `deleted_body` 4줄 이하(빈 줄 포함) 제외. 명세와 버전 표기만 — 구현·테스트·`filter_rule_version` 반영·정밀도 재측정은 #63 | — (#63에서 재측정) |
