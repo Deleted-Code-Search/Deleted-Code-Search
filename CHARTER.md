@@ -174,7 +174,7 @@
 - 포맷·주석·독스트링만 변경
 - 파일 전체 삭제이면서 커밋 메시지에 "remove/delete directory/module" 계열 + 함수 100개 이상 (프로젝트 구조 변경)
 - 생성 코드(마이그레이션, 자동 생성 파일, vendored 코드) — 경로 패턴으로 제외
-- 사소한 부분 삭제: PARTIAL 중 `deleted_body`가 4줄 이하(빈 줄 포함)인 것 → `NOISE_TRIVIAL` (ADR-015). PARTIAL은 5줄 이상만 데이터셋·라벨링 대상
+- 사소한 부분 삭제: PARTIAL 중 `deleted_body`가 4줄 이하(빈 줄 포함)인 것 → `NOISE_TRIVIAL` (ADR-015). 데이터셋 추출에는 PARTIAL 5줄 이상만 포함한다. 라벨링 대상은 가이드 v1대로 FULL_FUNCTION만 (ADR-015)
 - 테스트 코드 삭제는 별도 플래그로 보존 (제외하지 않되 구분)
 
 필터 규칙은 `filter_rules.md`에 버전 관리하고, 변경 시 정밀도를 재측정한다.

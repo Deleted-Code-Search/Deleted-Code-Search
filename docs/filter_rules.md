@@ -12,7 +12,7 @@ NOISE_MOVE의 정규화·유사도·후보 범위는 ADR-014(`docs/adr/014-move-
 | NOISE_FORMAT | 포맷·주석·독스트링만 변경 | 미구현 |
 | NOISE_BULK | 파일 전체 삭제 + "remove/delete directory/module" 계열 메시지 + 함수 100개 이상 | 미구현 |
 | NOISE_GENERATED | 마이그레이션·자동 생성·vendored 경로 패턴 | 미구현 |
-| NOISE_TRIVIAL | PARTIAL 레코드 중 `deleted_body`가 **4줄 이하**(빈 줄 포함)인 것. 5줄 이상 PARTIAL만 유지한다. FULL_FUNCTION은 대상이 아니다 (ADR-015) | 미구현 (#63) |
+| NOISE_TRIVIAL | PARTIAL 레코드 중 `deleted_body`가 **4줄 이하**(빈 줄 포함)인 것. 5줄 이상 PARTIAL만 데이터셋에 유지한다. FULL_FUNCTION은 대상이 아니다. 라벨링 대상 범위는 바꾸지 않는다 (ADR-015) | 미구현 (#63) |
 
 테스트 코드 삭제는 제외하지 않고 `is_test_code` 플래그로 구분한다.
 
@@ -191,12 +191,18 @@ diff 헝크(`git diff --unified=0`의 `@@ -old_start,old_count +new_start,new_co
 
 5줄 이상 PARTIAL 2,941건은 FULL_FUNCTION 3,001건과 비슷한 규모다. `psf/requests`(PARTIAL 4,755건)도 1줄 49.1%, 2-4줄 32.7%로 같은 분포였다.
 
+**적용 범위.** 데이터셋 추출에만 적용한다. 라벨링 입력(`classify/sampling.py`)은 ADR-015와 무관하게 `docs/labeling_guide.md` v1대로 FULL_FUNCTION만 대상이다.
+
+**계약 분리.**
+- `pipeline/extract.py`의 중간 추출 JSONL(`to_json_dict`·`write_jsonl`)은 **최종 데이터셋 계약이 아니다.** 이 JSONL에는 `filter_status`·`filter_rule_version` 필드가 없다.
+- `filter_status`와 `filter_rule_version`을 **어느 단계에서 부여할지**, `NOISE_TRIVIAL` 레코드를 **각 단계에서 보존할지 제거할지**는 #63에서 정한다.
+
 **구현(#63)에서 정할 것.**
-- 제외 방식: 지금 JSONL에는 `filter_status` 필드가 없고 NOISE_MOVE는 레코드를 빼는 방식이다. NOISE_TRIVIAL도 같은 방식으로 뺄지, `filter_status`를 기록할지.
+- 위 "계약 분리"의 두 항목.
 - NOISE_MOVE와 함께 적용할 때의 순서. NOISE_MOVE는 FULL_FUNCTION만 대상이라 결과가 겹치지 않는다.
 - 경계 테스트: 4줄 → NOISE_TRIVIAL, 5줄 → 유지, 빈 줄만으로 5줄이 되는 경우의 동작 고정.
 
-**한계.** 5줄이라는 값은 게이트 1 라벨링에서 재검토할 수 있다. 5-9줄 구간에서 UNK 비율이 높게 나오면 기준을 올린다.
+**한계.** 5줄이라는 값은 다시 볼 수 있다. 게이트 1 라벨링은 FULL_FUNCTION만 다루므로 이 값을 직접 검증하지 않는다. 라벨링에 PARTIAL을 포함할지 정할 때 함께 재검토한다.
 
 ## 변경 이력
 | 버전 | 날짜 | 변경 | 정밀도 |
