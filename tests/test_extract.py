@@ -799,3 +799,27 @@ def test_context_parse_targets_reads_write_jsonl_output_file(tmp_path: Path):
     assert len(targets) == 1
     assert targets[0].repo == _REPO
     assert targets[0].record["function_name"] == "foo"
+
+
+def test_record_id_is_deterministic():
+    """같은 레코드는 언제 뽑아도 같은 id 여야 라벨이 안 떨어져 나간다 (가이드 §7.2, §11-16)."""
+    args = ("a/b", "sha1", "src/x.py", "f", 10)
+    assert extract_module.make_record_id(*args) == extract_module.make_record_id(*args)
+
+
+def test_record_id_differs_per_function_instance():
+    """한 파일에 같은 이름 함수가 여럿이면 start_line 으로 갈린다."""
+    ids = {
+        extract_module.make_record_id("a/b", "sha1", "src/x.py", "__init__", line)
+        for line in (10, 50)
+    }
+    assert len(ids) == 2
+
+
+def test_record_id_namespace_is_pinned():
+    """네임스페이스가 바뀌면 기존 라벨이 전부 무효가 된다. 값을 고정한다."""
+    assert str(extract_module.RECORD_ID_NAMESPACE) == "6f4c2b18-1c3a-5e7d-9a0b-2d8e4f1a7c63"
+    assert (
+        extract_module.make_record_id("a/b", "sha1", "src/x.py", "f", 10)
+        == "6b4203d5-ced6-5848-971f-0746dbf7723e"
+    )

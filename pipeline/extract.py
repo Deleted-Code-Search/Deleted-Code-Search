@@ -130,6 +130,7 @@ import json
 import os
 import re
 import subprocess
+import uuid
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -151,6 +152,24 @@ _GIT_ENV = {**os.environ, "GIT_TERMINAL_PROMPT": "0", "GIT_PAGER": "cat"}
 _HUNK_HEADER_RE = re.compile(r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@")
 
 _ADAPTER = PythonAdapter()
+
+# §4.4 `DeletionRecord.id` 를 만드는 규칙. **이 값을 바꾸면 기존 라벨이 전부 떨어져 나간다.**
+#
+# uuid4(랜덤) 대신 uuid5(결정적)인 이유: 같은 레코드는 누가 언제 다시 뽑아도 같은 id 여야
+# 한다. 라벨 가이드 §7.2 가 `record_id` 를 라벨과 레코드를 잇는 유일 키로 쓰고, §11-16 이
+# 예비 200건을 본 500건에 포함한다고 했다. 랜덤이면 재추출할 때마다 값이 달라져 둘 다 깨진다.
+#
+# 키는 (repo, commit_sha, file_path, function_name, start_line) 이다. 한 파일에 같은 이름
+# 함수가 여럿 있어도(`__init__` 등) start_line 으로 갈린다.
+RECORD_ID_NAMESPACE = uuid.UUID("6f4c2b18-1c3a-5e7d-9a0b-2d8e4f1a7c63")
+
+
+def make_record_id(
+    repo: str, commit_sha: str, file_path: str, function_name: str, start_line: int
+) -> str:
+    """§4.4 `id`. 같은 함수 삭제는 언제 뽑아도 같은 값이다 (위 주석 참고)."""
+    key = f"{repo}|{commit_sha}|{file_path}|{function_name}|{start_line}"
+    return str(uuid.uuid5(RECORD_ID_NAMESPACE, key))
 
 
 @dataclass(frozen=True)
