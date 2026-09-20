@@ -41,3 +41,7 @@ web/dist/
 .idea/
 .DS_Store
 Thumbs.db
+
+# 라벨링 CLI 가 만드는 옆 파일 (:u 보조 정렬용, 없어도 라벨은 잃지 않는다)
+datasets/labels/*.order.json
+datasets/labels/*.tmp
