@@ -337,7 +337,9 @@ def check_final(final: object, where: str) -> list[str]:
     problems: list[str] = []
     reason = final.get("reason_label")
     grade = final.get("evidence_grade")
-    if reason not in labels.REASON_LABELS:
+    # GATE1_RULE(#76)은 두 라벨러의 reason_label 이 갈리면 final.reason_label 을 null 로 둔다
+    reason_may_be_null = final.get("method") == "GATE1_RULE" and reason is None
+    if reason not in labels.REASON_LABELS and not reason_may_be_null:
         problems.append(f"{where}: reason_label={reason!r} ({'|'.join(labels.REASON_LABELS)})")
     if grade not in labels.EVIDENCE_GRADES:
         problems.append(f"{where}: evidence_grade={grade!r} ({'|'.join(labels.EVIDENCE_GRADES)})")
