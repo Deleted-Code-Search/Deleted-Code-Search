@@ -92,6 +92,42 @@ def _check_confidence_is_a_number(row: dict[str, Any], where: str) -> list[str]:
     return []
 
 
+def _check_confidence_matches_grade(row: dict[str, Any], where: str) -> list[str]:
+    """EXPLICIT 은 confidence 1.0, UNKNOWN 은 confidence 0.0 으로 고정이다 (가이드 §6.1, §6.3).
+
+    병합이 두 값의 min 을 쓰므로, 잘못 적힌 EXPLICIT/UNKNOWN confidence 를 여기서 막지 않으면
+    게이트 1 회수율 구간 판정이 틀린 값으로 바뀔 수 있다. 숫자인지는 `_check_confidence_is_a_number`
+    가 이미 보므로, 여기서는 숫자일 때만 고정값과 비교한다.
+    """
+    grade = row.get("evidence_grade")
+    fixed = {"EXPLICIT": 1.0, "UNKNOWN": 0.0}.get(grade)
+    if fixed is None:
+        return []
+    confidence = row.get("confidence")
+    if isinstance(confidence, bool) or not isinstance(confidence, int | float):
+        return []
+    if confidence != fixed:
+        return [
+            f"{where}: evidence_grade={grade} 인데 confidence={confidence!r} "
+            f"— {fixed} 로 고정이다 (가이드 §6.1/§6.3)"
+        ]
+    return []
+
+
+def _check_labeler_matches_file(
+    row: dict[str, Any], expected_labeler: str, where: str
+) -> list[str]:
+    """이 줄의 `labeler`가 파일명이 기대하는 라벨러와 같은지 본다.
+
+    파일을 잘못 복사했거나 다른 사람 파일에 줄이 잘못 들어갔을 때, grouping 이 엉뚱한 라벨러
+    이름으로 2인 쌍을 계산하지 않도록 로딩 단계에서 막는다.
+    """
+    actual = row.get("labeler")
+    if actual != expected_labeler:
+        return [f"{where}: labeler={actual!r} — 이 파일은 {expected_labeler!r} 라벨만 있어야 한다"]
+    return []
+
+
 def find_pairing_problems(personal: dict[str, list[dict[str, Any]]]) -> list[str]:
     """`record_id` 마다 정확히 2인이 라벨했는지 본다.
 
@@ -156,6 +192,8 @@ def load_personal(
                 continue  # #33 빈 틀. 아직 사람이 안 채웠다
             problems.extend(check_label(row, where))
             problems.extend(_check_confidence_is_a_number(row, where))
+            problems.extend(_check_confidence_matches_grade(row, where))
+            problems.extend(_check_labeler_matches_file(row, labeler, where))
             personal[labeler].append(row)
 
     problems.extend(find_pairing_problems(personal))

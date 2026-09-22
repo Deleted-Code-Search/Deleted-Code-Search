@@ -399,6 +399,37 @@ def test_load_personal_reports_missing_file(tmp_path):
     assert any("파일이 없다" in p for p in problems)
 
 
+@pytest.mark.parametrize(
+    ("grade", "wrong_confidence"),
+    [("EXPLICIT", 0.9), ("UNKNOWN", 0.3)],
+)
+def test_load_personal_rejects_confidence_not_fixed_for_grade(tmp_path, grade, wrong_confidence):
+    """EXPLICIT 은 confidence 1.0, UNKNOWN 은 confidence 0.0 으로 고정이다 (가이드 §6.1, §6.3).
+
+    병합이 min 을 쓰므로, 잘못된 고정값이 조용히 통과하면 게이트 1 회수율이 틀어질 수 있다.
+    """
+    row = label_row("r1", "sj", grade)
+    row["confidence"] = wrong_confidence
+    write_jsonl(tmp_path / "sj_pre200.jsonl", [row])
+    write_jsonl(tmp_path / "jh_pre200.jsonl", [label_row("r1", "jh", grade)])
+    (tmp_path / "hs_pre200.jsonl").write_text("", encoding="utf-8")
+
+    _, problems = gate1_merge.load_personal(tmp_path)
+
+    assert any("고정" in p and "confidence" in p for p in problems)
+
+
+def test_load_personal_reports_labeler_mismatched_with_file(tmp_path):
+    """sj_pre200.jsonl 파일에 labeler="jh" 인 줄이 섞이면 grouping 이 엉뚱한 짝을 만든다."""
+    write_jsonl(tmp_path / "sj_pre200.jsonl", [label_row("r1", "jh")])
+    write_jsonl(tmp_path / "jh_pre200.jsonl", [label_row("r1", "jh")])
+    (tmp_path / "hs_pre200.jsonl").write_text("", encoding="utf-8")
+
+    _, problems = gate1_merge.load_personal(tmp_path)
+
+    assert any("labeler" in p and "'sj'" in p for p in problems)
+
+
 def test_load_personal_reports_non_numeric_confidence(tmp_path):
     row = label_row("r1", "sj", "EXPLICIT")
     row["confidence"] = "높음"  # 손으로 고친 흔적
