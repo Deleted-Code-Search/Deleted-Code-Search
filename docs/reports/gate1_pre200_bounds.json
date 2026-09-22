@@ -1,0 +1,92 @@
+{
+  "generated_at": "2026-09-22T14:24:46+09:00",
+  "input": "datasets\\labels\\gate1_pre200_merged.jsonl",
+  "rules": {
+    "lower": "약한 등급 채택 (#76), confidence = min",
+    "upper": "강한 등급 채택 (UNKNOWN < INFERRED < EXPLICIT), confidence = 채택된 등급을 준 라벨의 값, 여럿이면 max",
+    "thresholds": {
+      "proceed": 0.6,
+      "tighten": 0.4
+    }
+  },
+  "excluded_no_grade": 0,
+  "grade_disagreements": {
+    "E↔I": 44,
+    "E↔U": 20,
+    "I↔U": 24
+  },
+  "lower_matches_gate1": true,
+  "gate1_recovered": [
+    75,
+    147,
+    88
+  ],
+  "tiers": [
+    {
+      "key": "explicit_only",
+      "title": "EXPLICIT만",
+      "resolved": 200,
+      "lower": {
+        "recovered": 75,
+        "rate": 0.375,
+        "verdict": "대체 코드 중심으로 축 이동"
+      },
+      "upper": {
+        "recovered": 139,
+        "rate": 0.695,
+        "verdict": "진행"
+      },
+      "same_verdict": false,
+      "diff_types": {
+        "E↔I": 44,
+        "E↔U": 20,
+        "I↔U": 0,
+        "I↔I(신뢰도)": 0
+      }
+    },
+    {
+      "key": "inferred_min",
+      "title": "EXPLICIT + INFERRED(conf ≥ 0.5)",
+      "resolved": 200,
+      "lower": {
+        "recovered": 147,
+        "rate": 0.735,
+        "verdict": "진행"
+      },
+      "upper": {
+        "recovered": 191,
+        "rate": 0.955,
+        "verdict": "진행"
+      },
+      "same_verdict": true,
+      "diff_types": {
+        "E↔I": 0,
+        "E↔U": 20,
+        "I↔U": 24,
+        "I↔I(신뢰도)": 0
+      }
+    },
+    {
+      "key": "inferred_strong",
+      "title": "EXPLICIT + INFERRED(conf ≥ 0.8)",
+      "resolved": 200,
+      "lower": {
+        "recovered": 88,
+        "rate": 0.44,
+        "verdict": "저장소 기준 강화"
+      },
+      "upper": {
+        "recovered": 144,
+        "rate": 0.72,
+        "verdict": "진행"
+      },
+      "same_verdict": false,
+      "diff_types": {
+        "E↔I": 31,
+        "E↔U": 20,
+        "I↔U": 2,
+        "I↔I(신뢰도)": 3
+      }
+    }
+  ]
+}

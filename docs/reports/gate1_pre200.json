@@ -1,0 +1,402 @@
+{
+  "generated_at": "2026-09-22T14:12:15+09:00",
+  "inputs": [
+    "datasets\\labels\\gate1_pre200_merged.jsonl"
+  ],
+  "batch": "pre200",
+  "constants": {
+    "INFERRED_MIN_CONFIDENCE": 0.5,
+    "INFERRED_STRONG_CONFIDENCE": 0.8,
+    "GATE1_PROCEED": 0.6,
+    "GATE1_TIGHTEN": 0.4,
+    "KAPPA_RISK": 0.6
+  },
+  "records": 200,
+  "labels": 400,
+  "recovery": {
+    "name": "전체",
+    "resolved": 200,
+    "unresolved": 0,
+    "decision": "판정 갈림 — 회의 필요",
+    "tiers": [
+      {
+        "key": "explicit_only",
+        "title": "EXPLICIT만",
+        "min_inferred_confidence": null,
+        "recovered": 75,
+        "resolved": 200,
+        "rate": 0.375,
+        "verdict": "대체 코드 중심으로 축 이동"
+      },
+      {
+        "key": "inferred_min",
+        "title": "EXPLICIT + INFERRED(conf ≥ 0.5)",
+        "min_inferred_confidence": 0.5,
+        "recovered": 147,
+        "resolved": 200,
+        "rate": 0.735,
+        "verdict": "진행"
+      },
+      {
+        "key": "inferred_strong",
+        "title": "EXPLICIT + INFERRED(conf ≥ 0.8)",
+        "min_inferred_confidence": 0.8,
+        "recovered": 88,
+        "resolved": 200,
+        "rate": 0.44,
+        "verdict": "저장소 기준 강화"
+      }
+    ]
+  },
+  "per_repo": [
+    {
+      "name": "pydantic/pydantic",
+      "resolved": 200,
+      "unresolved": 0,
+      "decision": "판정 갈림 — 회의 필요",
+      "tiers": [
+        {
+          "key": "explicit_only",
+          "title": "EXPLICIT만",
+          "min_inferred_confidence": null,
+          "recovered": 75,
+          "resolved": 200,
+          "rate": 0.375,
+          "verdict": "대체 코드 중심으로 축 이동"
+        },
+        {
+          "key": "inferred_min",
+          "title": "EXPLICIT + INFERRED(conf ≥ 0.5)",
+          "min_inferred_confidence": 0.5,
+          "recovered": 147,
+          "resolved": 200,
+          "rate": 0.735,
+          "verdict": "진행"
+        },
+        {
+          "key": "inferred_strong",
+          "title": "EXPLICIT + INFERRED(conf ≥ 0.8)",
+          "min_inferred_confidence": 0.8,
+          "recovered": 88,
+          "resolved": 200,
+          "rate": 0.44,
+          "verdict": "저장소 기준 강화"
+        }
+      ]
+    }
+  ],
+  "inferred_below_min": 0,
+  "distribution": {
+    "labels": {
+      "total": 400,
+      "by_reason": {
+        "BUG": 36,
+        "PERF": 6,
+        "SEC": 1,
+        "LIB": 40,
+        "DEAD": 75,
+        "DESIGN": 139,
+        "FEAT": 41,
+        "UNK": 62
+      },
+      "by_grade": {
+        "EXPLICIT": 214,
+        "INFERRED": 124,
+        "UNKNOWN": 62
+      },
+      "crosstab": {
+        "BUG": {
+          "EXPLICIT": 25,
+          "INFERRED": 11,
+          "UNKNOWN": 0
+        },
+        "PERF": {
+          "EXPLICIT": 6,
+          "INFERRED": 0,
+          "UNKNOWN": 0
+        },
+        "SEC": {
+          "EXPLICIT": 1,
+          "INFERRED": 0,
+          "UNKNOWN": 0
+        },
+        "LIB": {
+          "EXPLICIT": 20,
+          "INFERRED": 20,
+          "UNKNOWN": 0
+        },
+        "DEAD": {
+          "EXPLICIT": 46,
+          "INFERRED": 29,
+          "UNKNOWN": 0
+        },
+        "DESIGN": {
+          "EXPLICIT": 77,
+          "INFERRED": 62,
+          "UNKNOWN": 0
+        },
+        "FEAT": {
+          "EXPLICIT": 39,
+          "INFERRED": 2,
+          "UNKNOWN": 0
+        },
+        "UNK": {
+          "EXPLICIT": 0,
+          "INFERRED": 0,
+          "UNKNOWN": 62
+        }
+      }
+    },
+    "records": {
+      "total": 102,
+      "by_reason": {
+        "BUG": 13,
+        "PERF": 1,
+        "SEC": 0,
+        "LIB": 9,
+        "DEAD": 23,
+        "DESIGN": 37,
+        "FEAT": 10,
+        "UNK": 9
+      },
+      "by_grade": {
+        "EXPLICIT": 46,
+        "INFERRED": 47,
+        "UNKNOWN": 9
+      },
+      "crosstab": {
+        "BUG": {
+          "EXPLICIT": 7,
+          "INFERRED": 6,
+          "UNKNOWN": 0
+        },
+        "PERF": {
+          "EXPLICIT": 1,
+          "INFERRED": 0,
+          "UNKNOWN": 0
+        },
+        "SEC": {
+          "EXPLICIT": 0,
+          "INFERRED": 0,
+          "UNKNOWN": 0
+        },
+        "LIB": {
+          "EXPLICIT": 3,
+          "INFERRED": 6,
+          "UNKNOWN": 0
+        },
+        "DEAD": {
+          "EXPLICIT": 7,
+          "INFERRED": 16,
+          "UNKNOWN": 0
+        },
+        "DESIGN": {
+          "EXPLICIT": 18,
+          "INFERRED": 19,
+          "UNKNOWN": 0
+        },
+        "FEAT": {
+          "EXPLICIT": 10,
+          "INFERRED": 0,
+          "UNKNOWN": 0
+        },
+        "UNK": {
+          "EXPLICIT": 0,
+          "INFERRED": 0,
+          "UNKNOWN": 9
+        }
+      }
+    }
+  },
+  "agreement": {
+    "reason_label": {
+      "mean_kappa": 0.3893917243937592,
+      "pairs": [
+        {
+          "pair": [
+            "hs",
+            "jh"
+          ],
+          "total": 66,
+          "agreed": 38,
+          "kappa": 0.44016964556195093,
+          "p_o": 0.5757575757575758,
+          "p_e": 0.24219467401285585,
+          "confusions": [
+            [
+              "DESIGN",
+              "UNK",
+              12
+            ],
+            [
+              "DEAD",
+              "UNK",
+              7
+            ],
+            [
+              "DEAD",
+              "DESIGN",
+              2
+            ]
+          ]
+        },
+        {
+          "pair": [
+            "hs",
+            "sj"
+          ],
+          "total": 66,
+          "agreed": 27,
+          "kappa": 0.2834075723830735,
+          "p_o": 0.4090909090909091,
+          "p_e": 0.1753902662993572,
+          "confusions": [
+            [
+              "DESIGN",
+              "UNK",
+              9
+            ],
+            [
+              "DESIGN",
+              "LIB",
+              7
+            ],
+            [
+              "DEAD",
+              "FEAT",
+              6
+            ]
+          ]
+        },
+        {
+          "pair": [
+            "jh",
+            "sj"
+          ],
+          "total": 67,
+          "agreed": 37,
+          "kappa": 0.4445979552362531,
+          "p_o": 0.5522388059701493,
+          "p_e": 0.19380708398306973,
+          "confusions": [
+            [
+              "DESIGN",
+              "FEAT",
+              6
+            ],
+            [
+              "DESIGN",
+              "LIB",
+              6
+            ],
+            [
+              "BUG",
+              "DESIGN",
+              4
+            ]
+          ]
+        }
+      ]
+    },
+    "evidence_grade": {
+      "mean_kappa": 0.2612357272387618,
+      "pairs": [
+        {
+          "pair": [
+            "hs",
+            "jh"
+          ],
+          "total": 66,
+          "agreed": 28,
+          "kappa": 0.1678832116788321,
+          "p_o": 0.42424242424242425,
+          "p_e": 0.3080808080808081,
+          "confusions": [
+            [
+              "EXPLICIT",
+              "INFERRED",
+              17
+            ],
+            [
+              "INFERRED",
+              "UNKNOWN",
+              15
+            ],
+            [
+              "EXPLICIT",
+              "UNKNOWN",
+              6
+            ]
+          ]
+        },
+        {
+          "pair": [
+            "hs",
+            "sj"
+          ],
+          "total": 66,
+          "agreed": 42,
+          "kappa": 0.4,
+          "p_o": 0.6363636363636364,
+          "p_e": 0.39393939393939387,
+          "confusions": [
+            [
+              "EXPLICIT",
+              "UNKNOWN",
+              10
+            ],
+            [
+              "EXPLICIT",
+              "INFERRED",
+              8
+            ],
+            [
+              "INFERRED",
+              "UNKNOWN",
+              6
+            ]
+          ]
+        },
+        {
+          "pair": [
+            "jh",
+            "sj"
+          ],
+          "total": 67,
+          "agreed": 42,
+          "kappa": 0.2158239700374533,
+          "p_o": 0.6268656716417911,
+          "p_e": 0.524170193807084,
+          "confusions": [
+            [
+              "EXPLICIT",
+              "INFERRED",
+              19
+            ],
+            [
+              "EXPLICIT",
+              "UNKNOWN",
+              3
+            ],
+            [
+              "INFERRED",
+              "UNKNOWN",
+              3
+            ]
+          ]
+        }
+      ]
+    }
+  },
+  "warnings": [
+    "판정 갈림 — 회의 필요: EXPLICIT만 → 대체 코드 중심으로 축 이동 / EXPLICIT + INFERRED(conf ≥ 0.5) → 진행 / EXPLICIT + INFERRED(conf ≥ 0.8) → 저장소 기준 강화. 판정은 사람이 게이트 회의에서 정한다",
+    "reason_label hs + jh: kappa 0.440 < 0.6 — CHARTER §11 라벨 품질 리스크. 대응: 라벨 가이드 개정(§5 보강), 애매 클래스 병합 검토(DESIGN/FEAT 등, 병합은 §13 절차)",
+    "reason_label hs + sj: kappa 0.283 < 0.6 — CHARTER §11 라벨 품질 리스크. 대응: 라벨 가이드 개정(§5 보강), 애매 클래스 병합 검토(DESIGN/FEAT 등, 병합은 §13 절차)",
+    "reason_label jh + sj: kappa 0.445 < 0.6 — CHARTER §11 라벨 품질 리스크. 대응: 라벨 가이드 개정(§5 보강), 애매 클래스 병합 검토(DESIGN/FEAT 등, 병합은 §13 절차)",
+    "reason_label 평균 kappa 0.389 < 0.6 — CHARTER §11. 대응: 라벨 가이드 개정(§5 보강), 애매 클래스 병합 검토(DESIGN/FEAT 등, 병합은 §13 절차)",
+    "evidence_grade hs + jh: kappa 0.168 < 0.6 — CHARTER §11 라벨 품질 리스크. 대응: 라벨 가이드 개정(§5 보강), 애매 클래스 병합 검토(DESIGN/FEAT 등, 병합은 §13 절차)",
+    "evidence_grade hs + sj: kappa 0.400 < 0.6 — CHARTER §11 라벨 품질 리스크. 대응: 라벨 가이드 개정(§5 보강), 애매 클래스 병합 검토(DESIGN/FEAT 등, 병합은 §13 절차)",
+    "evidence_grade jh + sj: kappa 0.216 < 0.6 — CHARTER §11 라벨 품질 리스크. 대응: 라벨 가이드 개정(§5 보강), 애매 클래스 병합 검토(DESIGN/FEAT 등, 병합은 §13 절차)",
+    "evidence_grade 평균 kappa 0.261 < 0.6 — CHARTER §11. 대응: 라벨 가이드 개정(§5 보강), 애매 클래스 병합 검토(DESIGN/FEAT 등, 병합은 §13 절차)"
+  ]
+}
