@@ -31,12 +31,19 @@ deleted_hunk: 해당 함수에 배정된 삭제 줄을 부모 파일 줄 번호 
 문자열. 헝크 경계 마커는 넣지 않는다 — "무엇이 지워졌나"만 필요하고 원본 재구성이
 목적이 아니다.
 
-added_hunk_same_file: 함수 단위가 아니라 **커밋 내 그 파일** 단위다. CHARTER §4.2①
+added_hunks_same_file: 함수 단위가 아니라 **커밋 내 그 파일** 단위다. CHARTER §4.2①
 필드명 자체가 "같은 파일"이지 "같은 위치"가 아니다. ±N줄 근접도로 특정 함수와 매칭시켜
 대체 코드 후보를 뽑는 정교한 작업은 "맥락 결합"(`context.py`, 희수 담당,
-`replacement.match_method/confidence`)의 몫이고, 여기서는 그 원재료(파일 전체의 추가
-줄)만 만든다. 같은 파일에서 나온 모든 record가 이 값을 동일하게 공유한다. 추가 줄이
-없으면 `""`.
+`replacement.match_method/confidence`, #67)의 몫이고, 여기서는 그 원재료만 만든다 —
+그 파일의 추가 헝크(`AddedHunk`) 목록, diff 순서 그대로. 헝크마다 헤더 좌표
+(old_start/old_count/new_start/new_count)를 함께 남기는 이유는 #67의 SAME_LOCATION
+판정에 삭제 위치와 추가 위치의 거리가 필요하기 때문이다(Issue #102 — 이전 필드
+`added_hunk_same_file`은 추가 줄을 문자열 하나로 이어붙여 좌표와 헝크 경계를 잃었다).
+`new_count == 0`인 순수 삭제 헝크는 넣지 않는다 — 추가된 줄이 없고, 삭제 위치는
+`deleted_hunk`의 부모 좌표가 이미 가지고 있다. 같은 파일에서 나온 모든 record가 이
+값을 동일하게 공유한다. 추가 헝크가 없으면 빈 tuple(JSONL에선 `[]`).
+이전 문자열 값은 `"\\n".join(h.added_body for h in added_hunks_same_file)`로 정확히
+복원된다(`tests/test_extract.py`가 고정). 그래서 두 형태를 함께 저장하지 않는다.
 
 git diff 읽기:
     git -c core.quotepath=false -C <repo> diff --no-color --no-renames --unified=0
@@ -76,8 +83,10 @@ JSONL 저장 (내부 모델과 외부 계약 분리):
 
     `to_json_dict()`가 내보내는 키: `repo`, `commit_sha`, `parent_sha`, `file_path`,
     `function_name`, `start_line`, `end_line`, `deletion_kind`, `deleted_body`,
-    `added_hunk_same_file`, `author_date`, `commit_message`, `id`, `function_signature`,
-    `is_test_code`, `source_url` (Issue #75). 이 단계에서 알 수 없는 §4.4 필드
+    `added_hunks_same_file`, `author_date`, `commit_message`, `id`, `function_signature`,
+    `is_test_code`, `source_url` (Issue #75). `added_hunks_same_file`은 헝크마다
+    `old_start`·`old_count`·`new_start`·`new_count`·`added_body` 5개 키를 가진 객체의
+    JSON list다(Issue #102). 이 단계에서 알 수 없는 §4.4 필드
     (`repo_license`, `context`, `replacement`, `reason`, `embedding` 등)는 `None`이나
     빈 값으로 채워 넣지 않는다 — 아직 없는 값을 있는 것처럼 보이게 하지 않는다는 뜻이고,
     그 필드들은 각자 담당 단계(필터·맥락 결합·분류·임베딩)에서 채운다.
@@ -166,10 +175,9 @@ from pipeline.walk import CommitPair, walk_commits
 _GIT_ENV = {**os.environ, "GIT_TERMINAL_PROMPT": "0", "GIT_PAGER": "cat"}
 
 # "@@ -old_start[,old_count] +new_start[,new_count] @@ ..." — count 생략 시 1
-# (unified diff 관례). `parse_file_diffs`는 group(1)(old_start)만 쓴다 — group 2~4
-# (old_count·new_start·new_count)는 added-line 범위(_parse_added_line_ranges)와
-# same-position 판정(_parse_same_file_hunks)에서 쓴다. 뒤에 붙는 컨텍스트
-# (`def foo(x):` 등)는 무시한다.
+# (unified diff 관례). 네 값 모두 `parse_file_diffs`(삭제 줄 커서와 `AddedHunk`),
+# added-line 범위(_parse_added_line_ranges), same-position 판정(_parse_same_file_hunks)
+# 에서 쓴다. 뒤에 붙는 컨텍스트(`def foo(x):` 등)는 무시한다.
 _HUNK_HEADER_RE = re.compile(r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@")
 
 _ADAPTER = PythonAdapter()
@@ -212,6 +220,30 @@ def _is_test_code(file_path: str) -> bool:
 
 
 @dataclass(frozen=True)
+class AddedHunk:
+    """추가 줄이 있는 diff 헝크 하나 (Issue #102). `DeletedFunction.added_hunks_same_file`의 원소.
+
+    이동 탐지용 `Hunk`와 별개 타입이다 — `Hunk`는 `filter.py`의 same-position 판정
+    인터페이스라 건드리지 않고, 이쪽은 대체 코드 매칭(#67)의 원재료다.
+
+    좌표는 헝크 헤더 값 그대로다(count 생략 시 1). `old_start`/`new_start`는 부모·자식
+    파일 기준 1-indexed. `new_count`는 항상 1 이상이다(순수 삭제 헝크는 만들지 않는다).
+    `old_count == 0`(순수 삽입)이면 unified diff 관례상 `old_start`는 삽입 위치의 **바로
+    앞** 부모 줄이다(파일 맨 앞이면 0).
+
+    added_body: 그 헝크의 추가 줄을 `+` 없이 `"\\n"`으로 이어붙인 값. 빈 줄 하나만
+    추가한 헝크는 `""`이면서 `new_count == 1`이다 — 헝크가 있는지는 `added_body`가
+    아니라 `new_count`로 판단한다.
+    """
+
+    old_start: int
+    old_count: int
+    new_start: int
+    new_count: int
+    added_body: str
+
+
+@dataclass(frozen=True)
 class DeletedFunction:
     """커밋 하나에서 함수 하나가 삭제된 기록. record 단위 = 함수 (모듈 독스트링 참고).
 
@@ -231,7 +263,7 @@ class DeletedFunction:
     end_line: int
     deletion_kind: str  # "FULL_FUNCTION" | "PARTIAL" — §4.4 DeletionRecord와 이름을 맞춘다
     deleted_hunk: str
-    added_hunk_same_file: str
+    added_hunks_same_file: tuple[AddedHunk, ...]  # 파일 단위, diff 순서 (Issue #102)
     author_date: str
     commit_message: str
     id: str  # §4.4 `id`. `make_record_id()`로만 만든다 (Issue #75)
@@ -285,7 +317,7 @@ class _FileDiff:
     """diff 한 파일 섹션을 파싱한 중간 결과 (모듈 내부용)."""
 
     deleted_lines: dict[int, str] = field(default_factory=dict)  # 부모 파일 줄 번호 -> 텍스트
-    added_lines: list[str] = field(default_factory=list)  # 등장 순서
+    added_hunks: list[AddedHunk] = field(default_factory=list)  # diff 순서, new_count > 0만
 
 
 def _run_git_diff(repo_path: str | Path, parent_sha: str, commit_sha: str) -> str:
@@ -378,14 +410,25 @@ def parse_file_diffs(diff_text: str) -> dict[str, _FileDiff]:
     추가되는 소스 줄 자체가 "-- x --"/"++ x ++"처럼 시작하면, diff 접두사 하나가 붙어
     "--- x --"/"+++ x ++"가 돼 파일 헤더 줄과 구별이 안 된다 — `in_hunk`로 헝크 진입
     여부를 추적해, 헝크 안에서는 `--- `/`+++ `도 무조건 삭제/추가 내용으로 취급한다.
+
+    추가 줄은 헝크 단위 `AddedHunk`로 모은다(Issue #102). 헤더의 네 값을 그대로 남기고
+    (count 생략 시 1), `new_count == 0`인 순수 삭제 헝크는 넣지 않는다.
     """
     files: dict[str, _FileDiff] = {}
     current_path: str | None = None
     current: _FileDiff | None = None
     old_cursor = 0
     in_hunk = False  # `@@ ... @@` 이후 다음 `diff --git `까지 True
+    # 지금 읽는 헝크의 (old_start, old_count, new_start, new_count)와 그 추가 줄
+    hunk_header: tuple[int, int, int, int] | None = None
+    hunk_added: list[str] = []
+
+    def finish_hunk() -> None:
+        if current is not None and hunk_header is not None and hunk_header[3] > 0:
+            current.added_hunks.append(AddedHunk(*hunk_header, "\n".join(hunk_added)))
 
     def flush() -> None:
+        finish_hunk()
         if current_path is not None and current is not None and current.deleted_lines:
             files[current_path] = current
 
@@ -395,6 +438,8 @@ def parse_file_diffs(diff_text: str) -> dict[str, _FileDiff]:
             current_path = None
             current = None
             in_hunk = False
+            hunk_header = None
+            hunk_added = []
             continue
         if not in_hunk and line.startswith("--- "):
             current_path = _old_path(line[4:])
@@ -408,7 +453,14 @@ def parse_file_diffs(diff_text: str) -> dict[str, _FileDiff]:
             continue  # 신규 파일 섹션이거나 아직 파일 헤더 전
         header = _HUNK_HEADER_RE.match(line)
         if header:
-            old_cursor = int(header.group(1))
+            finish_hunk()
+            old_start = int(header.group(1))
+            old_count = int(header.group(2)) if header.group(2) is not None else 1
+            new_start = int(header.group(3))
+            new_count = int(header.group(4)) if header.group(4) is not None else 1
+            hunk_header = (old_start, old_count, new_start, new_count)
+            hunk_added = []
+            old_cursor = old_start
             in_hunk = True
             continue
         if line.startswith("-"):
@@ -416,7 +468,7 @@ def parse_file_diffs(diff_text: str) -> dict[str, _FileDiff]:
             old_cursor += 1
             continue
         if line.startswith("+"):
-            current.added_lines.append(line[1:])
+            hunk_added.append(line[1:])
             continue
         # --unified=0이라 컨텍스트(공백 시작) 줄은 없어야 하지만, 있어도 무시한다.
 
@@ -529,7 +581,7 @@ def _build_records(
     repo: str, commit: CommitPair, file_path: str, source: str, file_diff: _FileDiff
 ) -> list[DeletedFunction]:
     """파일 하나의 삭제 줄을 부모 소스의 함수 범위에 귀속시켜 함수별 `DeletedFunction`을 만든다."""
-    added_hunk_same_file = "\n".join(file_diff.added_lines)
+    added_hunks_same_file = tuple(file_diff.added_hunks)
     records: list[DeletedFunction] = []
     for function in _ADAPTER.extract_functions(source):
         attributed = {
@@ -555,7 +607,7 @@ def _build_records(
                 end_line=function.end_line,
                 deletion_kind=deletion_kind,
                 deleted_hunk=deleted_hunk,
-                added_hunk_same_file=added_hunk_same_file,
+                added_hunks_same_file=added_hunks_same_file,
                 author_date=commit.author_date,
                 commit_message=commit.commit_message,
                 id=make_record_id(
@@ -674,6 +726,17 @@ def extract_repo(repo_path: str | Path, repo: str, ref: str) -> list[DeletedFunc
     return records
 
 
+def _added_hunk_to_json(hunk: AddedHunk) -> dict[str, Any]:
+    """`AddedHunk` 하나를 JSON 객체로. 키는 필드 5개 그대로다 (Issue #102)."""
+    return {
+        "old_start": hunk.old_start,
+        "old_count": hunk.old_count,
+        "new_start": hunk.new_start,
+        "new_count": hunk.new_count,
+        "added_body": hunk.added_body,
+    }
+
+
 def to_json_dict(record: DeletedFunction) -> dict[str, Any]:
     """`DeletedFunction` 하나를 JSONL 한 줄로 내보낼 dict로 바꾼다.
 
@@ -692,7 +755,7 @@ def to_json_dict(record: DeletedFunction) -> dict[str, Any]:
         "end_line": record.end_line,
         "deletion_kind": record.deletion_kind,
         "deleted_body": record.deleted_hunk,
-        "added_hunk_same_file": record.added_hunk_same_file,
+        "added_hunks_same_file": [_added_hunk_to_json(h) for h in record.added_hunks_same_file],
         "author_date": record.author_date,
         "commit_message": record.commit_message,
         "id": record.id,

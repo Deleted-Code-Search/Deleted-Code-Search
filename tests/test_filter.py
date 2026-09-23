@@ -56,7 +56,7 @@ def _deleted(
         end_line=end_line,
         deletion_kind=deletion_kind,
         deleted_hunk=body,
-        added_hunk_same_file="",
+        added_hunks_same_file=(),
         author_date="2026-01-01T00:00:00+00:00",
         commit_message="delete",
         id=extract_module.make_record_id(_REPO, commit_sha, file_path, function_name, start_line),
