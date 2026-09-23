@@ -11,6 +11,8 @@ import urllib.parse
 import pytest
 
 from pipeline import context as ctx
+from pipeline import extract as extract_module
+from tests.test_extract import _REPO, _commit_all, _init_repo, _last_commit_pair, _write
 
 # --------------------------------------------------------------------------------------
 # 이슈 참조 파싱 (§4.2 맥락 결합 — "#번호, fixes #, closes #")
@@ -944,6 +946,138 @@ def test_child_source_without_that_function_falls_back_to_the_safe_rule():
     record = _record(added_hunks_same_file=_hunks(TRUNCATED_HUNK))
 
     assert ctx.match_replacement(record, child_source="x = 1\n").code is None
+
+
+def _hunk_at(old_start, old_count, body):
+    """삭제 자리 판정에 쓰는 부모 좌표를 직접 준 헝크."""
+    return {
+        "old_start": old_start,
+        "old_count": old_count,
+        "new_start": old_start,
+        "new_count": len(body.splitlines()),
+        "added_body": body,
+    }
+
+
+WRAP_DELETED = (
+    "def wrap_val(value, handler):\n"
+    "    if isinstance(value, source):\n"
+    "        return value\n"
+    "    return handler(value)\n"
+)
+# 이름만 다르고 구조가 삭제된 것과 똑같은 형제 - 정규화하면 삭제된 함수와 구별이 안 된다.
+WRAP_FAR_SIBLING = (
+    "def wrap_val(v, h):\n    if isinstance(v, source):\n        return v\n    return h(v)\nX = 1\n"
+)
+# 삭제 자리에 들어온 진짜 대체 - 구조가 조금 달라 유사도로는 밀린다.
+WRAP_AT_SITE = (
+    "def wrap_val(v, h):\n"
+    "    if isinstance(v, other):\n"
+    "        return str(v)\n"
+    "    return h(v)\n"
+    "Y = 2\n"
+)
+
+
+def test_position_beats_body_similarity_among_same_name_siblings():
+    """같은 이름 형제 중 하나를 고를 때 위치가 먼저다 (#107).
+
+    유사도는 식별자를 `VAR` 로 지운 뒤 비교해서, 형제를 가르는 이름이 같아 보인다.
+    예비 200건의 `networks.py::wrap_val` 이 이 형태였다 - 유사도는 `_BaseUrl` 쪽 다른
+    클래스 메서드를, 위치는 삭제 자리의 `_BaseMultiHostUrl` 쪽을 골랐다.
+    """
+    record = _record(
+        function_name="wrap_val",
+        deleted_body=WRAP_DELETED,
+        start_line=421,
+        end_line=424,
+        added_hunks_same_file=[
+            _hunk_at(257, 9, WRAP_FAR_SIBLING),
+            _hunk_at(419, 6, WRAP_AT_SITE),
+        ],
+    )
+    result = ctx.match_replacement(record)
+
+    assert "str(v)" in result.code
+    # 위치로 하나로 좁혀졌으니 모호함이 없다 - 후보가 처음부터 하나였던 것과 같다.
+    assert result.confidence == ctx.SAME_NAME_CONFIDENCE
+
+
+def test_several_candidates_at_the_site_still_fall_back_to_similarity():
+    """삭제 자리에 같은 이름이 둘 이상 걸치면 위치로 못 가른다 - 유사도, 신뢰도 낮춤."""
+    record = _record(
+        function_name="wrap_val",
+        deleted_body=WRAP_DELETED,
+        start_line=421,
+        end_line=424,
+        added_hunks_same_file=[
+            _hunk_at(420, 3, WRAP_FAR_SIBLING),
+            _hunk_at(423, 3, WRAP_AT_SITE),
+        ],
+    )
+    result = ctx.match_replacement(record)
+
+    assert result.confidence == ctx.AMBIGUOUS_NAME_CONFIDENCE
+    assert "return h(v)" in result.code
+
+
+def test_similarity_compares_tokens_not_whole_lines():
+    """줄을 통째로 비교하면 한 줄짜리 스텁은 시그니처가 조금만 달라도 0 이 된다 (#107).
+
+    예비 200건 `_decorators_v1.py::__call__` 이 이 형태였다 - 삭제된 것과 시그니처가
+    같은 후보도 0.000 이라, 선택이 줄 번호 순서로 정해지고 있었다.
+    """
+    deleted = "def __call__(self, value, *, values) -> Any:\n    ...\n"
+    same = ctx._added_functions("def __call__(self, value, *, values) -> Any: ...\n")[0]
+    other = ctx._added_functions("def __call__(self, value) -> Any: ...\n")[0]
+
+    assert ctx._similarity(deleted, same) > 0.8
+    assert ctx._similarity(deleted, same) > ctx._similarity(deleted, other)
+
+
+@pytest.mark.parametrize(
+    ("hunk", "expected"),
+    [
+        ({"old_start": 118, "old_count": 24}, True),  # 제자리 교체 - 삭제 범위와 겹친다
+        ({"old_start": 130, "old_count": 0}, True),  # 순수 추가 - 130 뒤에 끼워 넣었다
+        ({"old_start": 300, "old_count": 5}, False),  # 딴 자리
+        ({"old_count": 5}, False),  # 좌표 없음 - 모르는 것
+    ],
+)
+def test_deletion_site_uses_parent_coordinates(hunk, expected):
+    assert ctx._at_deletion_site(hunk, 118, 141) is expected
+
+
+def test_record_without_line_numbers_is_never_at_the_site():
+    """옛 형식·픽스처처럼 삭제 위치가 없으면 위치를 모른다 - 유사도로 떨어진다."""
+    assert ctx._at_deletion_site({"old_start": 1, "old_count": 3}, None, None) is False
+
+
+def test_repo_path_recovers_a_function_the_hunk_cut_off(tmp_path):
+    """실제 git 저장소로 끝까지: 추출 -> 자식 파일 원문 -> 함수 전체 (#107).
+
+    시그니처와 첫 줄만 고친 수정이라 헝크에는 `return` 이 없다. 원문 없이는 본문을
+    채우지 않고(잘린 본문을 내보내지 않는다), 클론 경로를 주면 전체를 되찾는다.
+    """
+    repo = _init_repo(tmp_path / "repo")
+    _write(repo, "m.py", "def parse(raw):\n    items = raw.split(',')\n    return items\n")
+    _commit_all(repo, "v1")
+    _write(repo, "m.py", "def parse(raw, sep=','):\n    items = raw.split(sep)\n    return items\n")
+    sha = _commit_all(repo, "v2")
+    deletions = extract_module.extract_deletions(repo, _REPO, _last_commit_pair(repo))
+    record = extract_module.to_json_dict(next(r for r in deletions if r.function_name == "parse"))
+
+    assert ctx.match_replacement(record).code is None
+
+    source = ctx.read_child_source(repo, sha, "m.py")
+    code = ctx.match_replacement(record, child_source=source).code
+    assert code.startswith("def parse(raw, sep=','):")
+    assert code.rstrip().endswith("return items")
+
+
+def test_unreadable_child_file_is_none_not_a_crash(tmp_path):
+    """파일이 그 커밋에서 통째로 지워졌거나 경로가 틀리면 원문이 없다 - 보수적 경로로 간다."""
+    assert ctx.read_child_source(tmp_path, "deadbeef", "missing.py") is None
 
 
 def test_flat_field_alone_never_fills_code():
