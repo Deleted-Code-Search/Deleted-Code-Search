@@ -5,6 +5,10 @@
     찾고, 커밋 메시지와 PR 본문의 이슈 참조를 풀어 제목·본문을 가져오고, 삭제된 파일에
     달린 PR 리뷰 코멘트를 모은다. §4.1 흐름도의 [맥락 결합] 단계다.
 
+    §4.4 `replacement`(대체 코드) 도 같은 단계에서 채운다 (Issue #67). 삭제된 함수의 일을
+    무엇이 이어받았는지를 같은 커밋의 추가 줄에서 찾는다 — 네트워크를 타지 않는 순수
+    분석이라 위 수집과 성격이 다르지만, §4.2 ③ 이 둘을 같은 "맥락 결합" 단계로 묶는다.
+
 왜 이 단계가 프로젝트의 급소인가:
     삭제 이유는 코드가 아니라 이 텍스트들에 적혀 있다. 여기서 붙는 텍스트의 양이 곧
     이유 회수율(§15)이고, 2주차 게이트 1(EXPLICIT+INFERRED ≥ 60%)의 상한을 정한다.
@@ -27,6 +31,7 @@
 from __future__ import annotations
 
 import argparse
+import difflib
 import json
 import os
 import re
@@ -36,6 +41,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from pipeline.parsers.base import Function
+from pipeline.parsers.python_adapter import PythonAdapter
 from pipeline.select_repos import (
     MERGE_TITLE_RE,
     SQUASH_SUFFIX_RE,
@@ -514,6 +521,139 @@ class ContextCollector:
 
 
 # --------------------------------------------------------------------------------------
+# 대체 코드 매칭 (§4.2 ③, §4.4 `replacement`, Issue #67)
+# --------------------------------------------------------------------------------------
+
+# §4.4 `replacement.match_method` enum. 이 셋 밖의 값을 쓰지 않는다 (§13).
+MATCH_SAME_LOCATION = "SAME_LOCATION"
+MATCH_CALLER_CHANGE = "CALLER_CHANGE"
+MATCH_NONE = "NONE"
+
+# 같은 이름 함수가 하나만 추가됐을 때. 1.0 이 아닌 이유는 `match_replacement` 독스트링 참고.
+SAME_NAME_CONFIDENCE = 0.9
+# 같은 이름 후보가 여럿이라 유사도로 고른 경우. 위치가 아니라 본문으로 고른 것이라 낮춘다.
+AMBIGUOUS_NAME_CONFIDENCE = 0.7
+
+# 추출 출력의 추가 줄 필드. 헝크 단위 새 이름이 있으면 그것을 쓰고, 없으면 옛 평탄한 문자열을
+# 읽는다 (2026-09-23 팀 확정). 예비 200건이 옛 형식으로 이미 뽑혀 있어 둘 다 읽어야 한다.
+ADDED_HUNKS_FIELD = "added_hunks_same_file"
+ADDED_HUNK_FIELD = "added_hunk_same_file"
+
+# 파서는 상태가 없어 하나만 만들어 쓴다 (`extract.py` 와 같은 방식).
+_ADAPTER = PythonAdapter()
+
+
+def added_hunk_text(record: dict[str, Any]) -> str | None:
+    """그 커밋·그 파일에서 추가된 줄 전체. 필드가 아예 없으면 `None`.
+
+    `None`(필드 없음)과 `""`(필드는 있고 추가 줄이 0개)를 **구별해서 돌려준다.** 앞은
+    "모른다", 뒤는 "대체가 없다"이고 둘은 다른 판정으로 간다. 라벨 가이드 §6.2.3 이
+    `replacement` 가 `null` 일 때 "수집되지 않은 것과 존재하지 않는 것을 이 필드로 구별할
+    수 없다"고 경고한 것이 이 구별을 잃었을 때 벌어지는 일이다.
+    """
+    hunks = record.get(ADDED_HUNKS_FIELD)
+    if hunks is not None:
+        return "\n".join(body for hunk in hunks if (body := (hunk or {}).get("added_body")))
+    flat = record.get(ADDED_HUNK_FIELD)
+    return flat if flat is None else str(flat)
+
+
+def _added_functions(text: str) -> list[Function]:
+    """추가 줄 텍스트에서 완결된 함수만 뽑는다.
+
+    이 텍스트는 diff 의 추가 줄만 이어 붙인 것이라 **온전한 파이썬 소스가 아니다.**
+    여기저기 흩어진 수정이면 들여쓰기가 끊겨 구문이 깨진다. tree-sitter 는 오류에
+    관대해서 깨진 자리를 건너뛰고 완결된 `function_definition` 만 돌려주므로, 그
+    성질에 기댄다 - 완결되지 않은 조각은 애초에 대체 코드 후보가 아니다.
+    """
+    try:
+        return list(_ADAPTER.extract_functions(text))
+    except Exception:  # noqa: BLE001 - 파서가 어떤 예외를 낼지는 어댑터 구현에 달렸다
+        return []
+
+
+def _similarity(deleted_body: str, candidate: Function) -> float:
+    """정규화 본문끼리의 유사도. 같은 이름 후보가 여럿일 때 고르는 데만 쓴다.
+
+    `filter.normalize_function_body` 를 그대로 쓴다 (ADR-014) - 변수명·리터럴을 치워야
+    "같은 일을 하는 코드"가 붙는다. `filter._move_similarity` 를 쓰지 않는 이유는 그쪽이
+    이동 판정용이라 0.9 미만을 `None` 으로 잘라 내기 때문이다. 대체 코드는 다시 쓰인
+    코드라 0.9 를 넘는 일이 드물어, 여기서는 자르지 않고 순위만 매긴다.
+    """
+    from pipeline.filter import normalize_function_body
+
+    return difflib.SequenceMatcher(
+        None, normalize_function_body(deleted_body), normalize_function_body(candidate.body)
+    ).ratio()
+
+
+@dataclass(frozen=True)
+class Replacement:
+    """§4.4 `DeletionRecord.replacement`. 삭제된 함수의 일을 무엇이 이어받았나."""
+
+    code: str | None
+    match_method: str | None
+    confidence: float
+
+    def to_schema_replacement(self) -> dict[str, Any]:
+        """§4.4 `replacement` 필드 그대로. 이름을 바꾸거나 늘리지 않는다 (§13)."""
+        return {
+            "code": self.code,
+            "match_method": self.match_method,
+            "confidence": self.confidence,
+        }
+
+
+#: 후보를 못 찾았거나 판정할 수 없을 때. `match_method` 가 `None` 인 것은 §4.4 enum 밖의
+#: 값을 지어내지 않겠다는 뜻이다 - `NONE` 은 "대체가 없다"는 **적극적 판정**이라 여기 쓸 수 없다.
+UNDETERMINED = Replacement(code=None, match_method=None, confidence=0.0)
+
+
+def match_replacement(record: dict[str, Any]) -> Replacement:
+    """레코드 하나의 대체 코드를 찾는다 (§4.2 ③ "삭제 위치 ±N줄 내 추가된 함수/블록").
+
+    **지금은 줄 번호가 없어 위치로 판정하지 못한다.** 추출 출력의 추가 줄 필드가 파일
+    단위로 평탄화돼 있어(`added_hunk_same_file`), 부모 파일의 `start_line` 과 이어 붙일
+    좌표가 남지 않는다. 헝크 단위 출력이 붙으면 그때 위치로 판정한다.
+
+    그래서 지금 판정하는 것은 두 경우뿐이다.
+
+    - **추가 줄이 하나도 없다** -> `NONE`. 그 커밋이 그 파일에 아무것도 안 넣었으므로
+      대체 코드가 없다는 것이 확실하다
+    - **삭제된 함수와 같은 이름의 함수가 추가됐다** -> `SAME_LOCATION`, 신뢰도
+      `SAME_NAME_CONFIDENCE`. 이동 필터(§4.2 ②)가 **"이 파일 다른 자리로 옮겨 간 것"을 이미
+      빼고 남긴 레코드**라(`filter.partition_moved`), 같은 커밋·같은 파일에 같은 이름이
+      다시 나타났다면 제자리 교체로 본다. 1.0 이 아닌 것은 잔여 가능성 때문이다 - 본문이
+      크게 다시 쓰이면서 자리도 옮긴 경우는 유사도 0.9 에 걸리지 않아 이동으로 안 잡히고
+      여기까지 온다
+
+    나머지(이름이 다른 함수가 추가됐거나, 추가는 있는데 완결된 함수가 없는 부분 수정)는
+    `UNDETERMINED` 로 둔다. 후보를 억지로 고르지 않는 이유는 그것이 게이트 1 숫자를
+    부풀리기 때문이다 - 라벨 가이드 §6.2.1 이 `replacement.code` 를 INFERRED 근거 ①(신뢰도
+    0.8~1.0 구간)로 쓰므로, 아닌 것을 채우면 **없는 근거로 회수율이 올라간다.**
+    """
+    text = added_hunk_text(record)
+    if text is None:
+        return UNDETERMINED
+    if not text.strip():
+        return Replacement(code=None, match_method=MATCH_NONE, confidence=0.0)
+
+    name = record.get("function_name")
+    same_name = [f for f in _added_functions(text) if f.name == name]
+    if not same_name:
+        return UNDETERMINED
+    if len(same_name) == 1:
+        return Replacement(same_name[0].body, MATCH_SAME_LOCATION, SAME_NAME_CONFIDENCE)
+
+    # 한 파일에 같은 이름 함수가 여럿 추가될 수 있다 (`__init__` 등). 어느 것이 이 함수를
+    # 이어받았는지는 위치 없이는 확정할 수 없어, 본문이 가장 가까운 것을 고르고 신뢰도를 낮춘다.
+    best = max(
+        same_name, key=lambda f: (_similarity(record.get("deleted_body") or "", f), -f.start_line)
+    )
+    return Replacement(best.body, MATCH_SAME_LOCATION, AMBIGUOUS_NAME_CONFIDENCE)
+
+
+# --------------------------------------------------------------------------------------
 # 입력 (#5 출력 연결 / 직접 표본)
 # --------------------------------------------------------------------------------------
 
@@ -569,6 +709,7 @@ def build_output_record(target: CommitTarget, context: CommitContext) -> dict[st
     if target.file_path is not None:
         record.setdefault("file_path", target.file_path)
     record["context"] = context.to_schema_context()
+    record["replacement"] = match_replacement(record).to_schema_replacement()
     return record
 
 

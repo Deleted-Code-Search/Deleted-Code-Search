@@ -797,3 +797,116 @@ def test_one_failing_commit_does_not_abort_the_batch(tmp_path):
     assert contexts[0].has_any_context is False
     assert contexts[1].pr_number == 100
     assert report.as_dict()["any_rate"] == 0.5
+
+
+# --------------------------------------------------------------------------------------
+# 대체 코드 매칭 (§4.4 replacement, Issue #67)
+# --------------------------------------------------------------------------------------
+
+DELETED_PARSE = "def parse(raw):\n    return raw.split(',')\n"
+
+
+def _record(**overrides):
+    record = {
+        "function_name": "parse",
+        "deleted_body": DELETED_PARSE,
+        "added_hunk_same_file": "",
+    }
+    record.update(overrides)
+    return record
+
+
+def test_no_added_lines_is_a_positive_none_verdict():
+    """추가 줄이 0개면 대체가 없다고 단정할 수 있다 — 판정 불가와 다르다."""
+    result = ctx.match_replacement(_record(added_hunk_same_file=""))
+
+    assert result.match_method == ctx.MATCH_NONE
+    assert result.code is None
+
+
+def test_missing_field_is_undetermined_not_none():
+    """필드 자체가 없으면 "모른다"다. `NONE`으로 적으면 없는 근거가 생긴다 (가이드 §6.2.3)."""
+    record = _record()
+    del record["added_hunk_same_file"]
+
+    assert ctx.match_replacement(record) == ctx.UNDETERMINED
+
+
+def test_same_name_addition_is_a_same_location_replacement():
+    added = "def parse(raw):\n    return [p.strip() for p in raw.split(',')]\n"
+    result = ctx.match_replacement(_record(added_hunk_same_file=added))
+
+    assert result.match_method == ctx.MATCH_SAME_LOCATION
+    assert result.confidence == ctx.SAME_NAME_CONFIDENCE
+    assert "p.strip()" in result.code
+
+
+def test_addition_under_another_name_is_left_undetermined():
+    """이름이 다른 후보를 고르려면 위치가 필요하다. 억지로 고르면 없는 근거가 생긴다."""
+    added = "def parse_all(raw):\n    return [p.strip() for p in raw.split(',')]\n"
+
+    assert ctx.match_replacement(_record(added_hunk_same_file=added)) == ctx.UNDETERMINED
+
+
+def test_partial_edits_without_a_whole_function_are_undetermined():
+    """흩어진 수정만 있으면 완결된 함수가 안 나온다 — 대체 코드 후보가 아니다."""
+    added = "    raw = raw.strip()\n        return None\n"
+
+    assert ctx.match_replacement(_record(added_hunk_same_file=added)) == ctx.UNDETERMINED
+
+
+def test_several_same_name_additions_pick_the_closest_body_with_lower_confidence():
+    """한 파일에 같은 이름이 여럿 추가될 수 있다 (`__init__` 등). 본문이 가까운 쪽을 고른다."""
+    added = (
+        "def parse(raw):\n    raise NotImplementedError\n\n\n"
+        "def parse(raw):\n    return raw.split(',')\n"
+    )
+    result = ctx.match_replacement(_record(added_hunk_same_file=added))
+
+    assert result.match_method == ctx.MATCH_SAME_LOCATION
+    assert result.confidence == ctx.AMBIGUOUS_NAME_CONFIDENCE
+    assert "raise NotImplementedError" not in result.code
+
+
+def test_new_hunk_field_wins_over_the_old_flat_field():
+    """새 형식이 있으면 그것을 쓴다 (2026-09-23 팀 확정). 예비 200건은 옛 형식이라 둘 다 읽는다."""
+    record = _record(
+        added_hunk_same_file="def parse(raw):\n    return 'old'\n",
+        added_hunks_same_file=[
+            {"old_start": 1, "old_count": 2, "new_start": 1, "new_count": 0, "added_body": ""},
+            {
+                "old_start": 5,
+                "old_count": 0,
+                "new_start": 4,
+                "new_count": 2,
+                "added_body": "def parse(raw):\n    return 'new'\n",
+            },
+        ],
+    )
+
+    assert "'new'" in ctx.match_replacement(record).code
+
+
+def test_empty_hunk_bodies_do_not_become_blank_lines():
+    """`new_count == 0` 헝크는 `added_body`가 비어 있다. 그냥 이으면 빈 줄이 끼어든다."""
+    record = _record(
+        added_hunks_same_file=[
+            {"old_start": 1, "old_count": 2, "new_start": 1, "new_count": 0, "added_body": ""},
+        ]
+    )
+
+    assert ctx.added_hunk_text(record) == ""
+    assert ctx.match_replacement(record).match_method == ctx.MATCH_NONE
+
+
+def test_output_record_carries_the_replacement_field():
+    """라벨러가 보는 `replacement`가 여기서 채워진다 (§4.4, sampling.LABELER_REPLACEMENT_FIELDS)."""
+    target = ctx.CommitTarget(
+        repo="a/b",
+        commit_sha="sha",
+        record=_record(added_hunk_same_file="def parse(raw):\n    return ()\n"),
+    )
+    built = ctx.build_output_record(target, ctx.CommitContext(repo="a/b", commit_sha="sha"))
+
+    assert set(built["replacement"]) == {"code", "match_method", "confidence"}
+    assert built["replacement"]["match_method"] == ctx.MATCH_SAME_LOCATION
