@@ -4,6 +4,8 @@
 """
 
 import json
+import pathlib
+import re
 
 import pytest
 
@@ -179,11 +181,40 @@ def test_labeling_record_never_contains_reason_or_embedding():
 
 
 def test_labeling_record_has_exactly_the_guide_fields():
+    """담는 키의 *구조*만 본다 - 화이트리스트를 되읽으므로 어떤 필드가 있어야 하는지는
+    보지 못한다. 그건 아래 테스트가 이름을 박아서 따로 본다 (#99)."""
     built = sampling.build_labeling_record(make_record(1))
 
     assert set(built) == {"record_id", *sampling.LABELER_FIELDS, "replacement", "context"}
     assert set(built["replacement"]) == set(sampling.LABELER_REPLACEMENT_FIELDS)
     assert set(built["context"]) == set(sampling.LABELER_CONTEXT_FIELDS)
+
+
+def test_labelers_can_see_the_numbers_that_evidence_locator_needs():
+    """가이드 §7.2 로케이터가 `pr:#10623#body` 형식이라 번호 없이는 채울 수 없다 (#99).
+
+    예비 200건에서 이 둘이 화이트리스트에서 빠져 있어, 라벨러가 커밋 메시지 끝의 `(#10623)`
+    에서 번호를 주워 썼고 출처와 로케이터가 어긋난 건이 나왔다 (PR #73). 상수를 비교하는
+    위 테스트는 화이트리스트를 그대로 되읽어서 이걸 못 잡는다 - 이름을 직접 박아 둔다.
+    """
+    context = sampling.build_labeling_record(make_record(1))["context"]
+
+    assert context["pr_number"] == 11
+    assert context["issue_numbers"] == [1]
+
+
+def test_guide_version_constant_matches_the_guide_document():
+    """문서 버전과 상수가 갈리면 라벨이 틀린 `guide_version` 을 달고 저장된다 (#99).
+
+    가이드 §10.3(재검토 범위)과 §8.4.2.1(버전이 같은 쌍만 그 버전 kappa 에)이 이 값에
+    기대므로, 갈려도 라벨링은 멀쩡히 돌아가고 집계만 조용히 틀린다. v1 -> v2 때 실제로
+    갈렸다. 사람이 기억하는 대신 여기서 깨지게 한다.
+    """
+    guide = pathlib.Path(__file__).resolve().parents[1] / "docs" / "labeling_guide.md"
+    documented = re.search(r"`guide_version:\s*(v\d+)`", guide.read_text(encoding="utf-8"))
+
+    assert documented is not None, "가이드 상단에서 `guide_version: vN` 을 찾지 못했다"
+    assert sampling.GUIDE_VERSION == documented.group(1)
 
 
 def test_unknown_pipeline_fields_do_not_leak_through():
