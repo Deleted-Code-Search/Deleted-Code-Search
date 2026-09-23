@@ -57,6 +57,10 @@ def _deleted(
         added_hunk_same_file="",
         author_date="2026-01-01T00:00:00+00:00",
         commit_message="delete",
+        id=extract_module.make_record_id(_REPO, commit_sha, file_path, function_name, start_line),
+        function_signature=f"def {function_name}():",
+        is_test_code=extract_module._is_test_code(file_path),
+        source_url=extract_module._source_url(_REPO, commit_sha),
     )
 
 
