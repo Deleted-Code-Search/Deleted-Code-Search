@@ -181,6 +181,8 @@ def test_labeling_record_never_contains_reason_or_embedding():
 
 
 def test_labeling_record_has_exactly_the_guide_fields():
+    """담는 키의 *구조*만 본다 - 화이트리스트를 되읽으므로 어떤 필드가 있어야 하는지는
+    보지 못한다. 그건 아래 테스트가 이름을 박아서 따로 본다 (#99)."""
     built = sampling.build_labeling_record(make_record(1))
 
     assert set(built) == {"record_id", *sampling.LABELER_FIELDS, "replacement", "context"}
