@@ -715,6 +715,7 @@ def test_extract_repo_with_excluded_preserves_moved_records_across_commits(tmp_p
 
 
 def test_extract_repo_with_excluded_does_not_guess_ref(tmp_path: Path):
+    """extract_repo_with_excluded는 ref를 추측하지 않으므로 ref 없이 호출하면 TypeError가 난다."""
     with pytest.raises(TypeError):
         extract_module.extract_repo_with_excluded(tmp_path, _REPO)  # type: ignore[call-arg]
 

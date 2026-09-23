@@ -916,6 +916,7 @@ def test_partition_moved_is_an_exact_partition_preserving_input_order():
 
 
 def test_partition_moved_empty_input():
+    """빈 입력이면 partition_moved는 kept·excluded 모두 빈 리스트를 반환한다."""
     assert filter_module.partition_moved([], {}, {}) == ([], [])
 
 
