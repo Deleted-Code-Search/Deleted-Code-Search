@@ -37,6 +37,10 @@ MODEL_VERSION = "m1"
 def record_text(record: dict[str, Any]) -> str:
     """모델이 보는 텍스트. 규칙이 보는 맥락 문장 전부 + 함수·파일 이름.
 
+    파일 이름은 규칙의 "이 함수를 가리키나" 판정에서는 뺐지만 (`rules.target_names`) 여기서는
+    둔다. 모델에는 어느 모듈에서 지워졌는지가 쓸모 있는 신호일 수 있고, 인용문이 아니라서
+    잘못 걸려도 EXPLICIT 을 만들지 않는다.
+
     삭제된 코드 본문은 넣지 않았다. 넣으면 근거 ⑥(가이드 §6.2.1 "삭제된 코드 자체")을 모델이
     배우는 셈인데, 모델이 본문에서 무엇을 보고 골랐는지는 인용할 수 없다. 넣을지는 val 로 본다.
     """
@@ -73,7 +77,13 @@ class ReasonModel:
                 ("clf", LogisticRegression(class_weight="balanced", max_iter=1000)),
             ]
         )
-        pipeline.fit([text for text, _label in pairs], [label for _text, label in pairs])
+        try:
+            pipeline.fit([text for text, _label in pairs], [label for _text, label in pairs])
+        except ValueError:
+            # 텍스트에 토큰이 하나도 없으면 TF-IDF 가 "empty vocabulary" 로 실패한다 (맥락이 전부
+            # 비었거나 한 글자 토큰뿐인 레코드). 위와 같은 이유로 멈추지 않고 모델 없이 간다.
+            self.pipeline = None
+            return self
         self.pipeline = pipeline
         return self
 

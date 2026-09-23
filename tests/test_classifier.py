@@ -81,17 +81,25 @@ def test_every_context_source_gets_its_locator():
             {"comment_id": None, "body": "Why was this still here?"},
         ],
     )
-    found = {(p.source, p.locator) for p in rules.passages(record)}
+    # 문장과 위치를 **묶어서** 본다. 위치 집합만 보면 제목·본문 로케이터가 뒤바뀌어도 통과한다.
+    found = {(p.text, p.source, p.locator) for p in rules.passages(record)}
 
     assert found == {
-        ("commit", "commit:message"),
-        ("pr", "pr:#12#title"),
-        ("pr", "pr:#12#body"),
-        ("issue", "issue:#7#title"),
-        ("issue", "issue:#7#body"),
-        ("review", "review:comment_99"),
-        ("review", "review:unknown"),
+        ("Remove the retry helper.", "commit", "commit:message"),
+        ("Drop legacy retry", "pr", "pr:#12#title"),
+        ("It raced on reconnect.", "pr", "pr:#12#body"),
+        ("Backoff races", "issue", "issue:#7#title"),
+        ("Two threads double the delay.", "issue", "issue:#7#body"),
+        ("Use urllib3 Retry instead.", "review", "review:comment_99"),
+        ("Why was this still here?", "review", "review:unknown"),
     }
+
+
+def test_issue_lists_of_different_lengths_are_not_paired():
+    """번호·제목 길이가 다르면 앞에서부터 짝을 짓지 않는다 - 제목이 엉뚱한 번호에 붙는다."""
+    record = make_record(issue_numbers=[7, 8], issue_titles=["Title that belongs to issue 8"])
+
+    assert rules.passages(record) == []
 
 
 def test_old_string_review_comments_still_read_as_unknown_locator():
@@ -143,6 +151,44 @@ def test_target_name_must_be_a_whole_word():
     """`parse` 가 `parser` 에 걸리면 "이 함수를 가리킨다" 가 거짓이 된다."""
     assert rules.mentions("drop parse_all", ("parse_all",))
     assert not rules.mentions("drop parse_all_items", ("parse_all",))
+
+
+def test_inline_code_stays_in_the_quote_and_a_backticked_name_is_seen():
+    """인라인 코드를 지우면 인용문이 원문과 달라지고, 백틱 안 함수 이름을 못 본다.
+
+    예비 200건에서 174건 중 63건의 인용문이 원문에 없었다 (``Support `Field(repr=False)` in``
+    이 ``Support   in`` 이 됐다). 함수 이름은 보통 백틱 안에 쓴다.
+    """
+    message = "Remove unused `legacy_backoff`."
+    result = clf.Classifier().classify(make_record(commit_message=message))
+
+    assert result.evidence_text == message
+    assert (result.label, result.evidence_grade) == ("DEAD", "EXPLICIT")
+
+
+def test_words_inside_inline_code_do_not_pick_the_label():
+    """`fix_headers` 같은 식별자 안의 `fix` 가 BUG 로 잡히면 안 된다."""
+    assert rules.find_reason_sentences(make_record(commit_message="Rename `fix_headers`.")) == []
+
+
+def test_file_name_is_not_a_target():
+    """함수만 지워졌고 파일은 남았다 - "삭제된 파일" 이 아니다 (가이드 §6.1.1 E2-(가)).
+
+    파일 이름을 대상으로 두었을 때 EXPLICIT 10건 중 9건이 파일 이름으로만 나왔고 틀렸다.
+    """
+    record = make_record(
+        function_name="dataclass",
+        file_path="pydantic/dataclasses.py",
+        commit_message="fix dataclasses and docs",
+    )
+
+    assert rules.target_names(record) == ("dataclass",)
+    assert clf.Classifier().classify(record).evidence_grade == "INFERRED"
+
+
+def test_dunder_names_are_not_targets():
+    """`__init__` 은 클래스마다 있어 이름만으로 어느 함수인지 가리키지 못한다."""
+    assert rules.target_names(make_record(function_name="__init__")) == ()
 
 
 def test_short_function_names_are_not_used_as_targets():
@@ -220,6 +266,84 @@ def test_replacement_confidence_caps_the_inferred_confidence():
     )
 
     assert clf.Classifier(model=trained_model()).classify(record).confidence == 0.7
+
+
+def test_replacement_confidence_above_the_cap_is_cut_to_0_9():
+    """INFERRED 는 1.0 을 쓰지 않는다 (가이드 §6.2.2). 대체 코드 신뢰도가 1.0 이어도 0.9 다."""
+    record = make_record(
+        replacement={
+            "code": "def backoff(): ...",
+            "match_method": "SAME_LOCATION",
+            "confidence": 1.0,
+        },
+    )
+
+    assert clf.Classifier(model=trained_model()).classify(record).confidence == 0.9
+
+
+def test_replacement_exactly_at_the_floor_is_still_inferred():
+    """0.5 는 하한 안쪽이다 - 0.5 미만부터 UNKNOWN (가이드 §6.2.2)."""
+    record = make_record(
+        replacement={
+            "code": "def backoff(): ...",
+            "match_method": "SAME_LOCATION",
+            "confidence": 0.5,
+        },
+    )
+    result = clf.Classifier(model=trained_model()).classify(record)
+
+    assert (result.evidence_grade, result.confidence) == ("INFERRED", 0.5)
+
+
+@pytest.mark.parametrize(
+    ("code", "confidence"),
+    [
+        ("def backoff(): ...", float("nan")),  # json.loads 가 NaN 을 받는다
+        ("def backoff(): ...", True),  # bool 은 int 라 1.0 이 된다
+        ("   \n  ", 0.9),  # 공백뿐인 코드
+    ],
+)
+def test_malformed_replacement_is_not_evidence(code, confidence):
+    """`min(0.9, nan)` 은 0.9 다 - 확인 없이 두면 근거 없는 0.9 가 새어 나간다."""
+    record = make_record(
+        replacement={"code": code, "match_method": "SAME_LOCATION", "confidence": confidence}
+    )
+
+    assert clf.Classifier(model=trained_model()).classify(record).label == "UNK"
+
+
+def test_replacement_with_no_signal_for_any_reason_is_unk_not_sec():
+    """대체 코드만 있고 규칙·모델·LLM 이 모두 0 이면 이유를 말할 신호가 없다.
+
+    확인하지 않으면 7종이 모두 0 인 동점에서 §11-1 첫 순위 SEC 가 0.9 로 나온다. 모델이
+    학습되지 않은 채(`--records` 에 라벨과 이어지는 건이 없을 때) 돌리면 실제로 그렇게 된다.
+    """
+    record = make_record(
+        replacement={
+            "code": "def backoff(): ...",
+            "match_method": "SAME_LOCATION",
+            "confidence": 0.9,
+        },
+    )
+    result = clf.Classifier().classify(record)
+
+    assert (result.label, result.evidence_grade, result.confidence) == ("UNK", "UNKNOWN", 0.0)
+
+
+def test_explicit_comes_only_from_a_sentence_of_the_chosen_label():
+    """함수를 이름으로 가리키는 문장이 있어도, 그 문장이 **다른 이유**를 말하면 EXPLICIT 이 아니다.
+
+    인용문이 고른 이유를 말해야 한다 (가이드 §6.1). 여기서는 DEAD 문장이 둘이라 DEAD 가
+    골라지는데, 함수 이름이 든 문장은 DESIGN 을 말한다.
+    """
+    record = make_record(
+        commit_message="Refactor legacy_backoff. Remove unused code. Drop obsolete helpers."
+    )
+    result = clf.Classifier().classify(record)
+
+    assert result.label == "DEAD"
+    assert result.evidence_grade == "INFERRED"
+    assert "legacy_backoff" not in result.evidence_text
 
 
 def test_replacement_below_the_inferred_floor_is_not_evidence():
@@ -300,6 +424,26 @@ def test_llm_writes_the_evidence_sentence_only_for_inferred_from_replacement():
 
     assert (result.label, result.evidence_text) == ("LIB", "urllib3 Retry 로 바꿨다")
     assert "LLM" in result.note
+
+
+def test_llm_never_replaces_an_explicit_quote():
+    """LLM 이 같은 이유를 골라도 EXPLICIT 인용문은 원문 그대로다 (가이드 §6.1, ADR-005)."""
+    record = make_record(commit_message="legacy_backoff is unused now.")
+    result = clf.Classifier(llm=fake_llm("DEAD|아무도 부르지 않는 함수라 지웠다")).classify(record)
+
+    assert result.evidence_grade == "EXPLICIT"
+    assert result.evidence_text == "legacy_backoff is unused now."
+
+
+def test_version_says_whether_and_which_llm_was_used():
+    """LLM 유무·모델이 다른 두 예측 파일이 같은 버전을 달면 가를 수 없다."""
+    with_llm = clf.Classifier(llm=fake_llm("DEAD|x"))
+
+    assert clf.Classifier().version == clf.CLASSIFIER_VERSION
+    assert with_llm.version == f"{clf.CLASSIFIER_VERSION}+llm:{with_llm.llm.runner.model}"
+    assert with_llm.classify(make_record(commit_message="Remove unused.")).version == (
+        with_llm.version
+    )
 
 
 def test_llm_failure_does_not_stop_classification():
@@ -391,6 +535,16 @@ def test_model_with_a_single_reason_stays_untrained_instead_of_crashing():
     assert model.predict_proba(records[0]) == {}
 
 
+def test_model_with_no_usable_tokens_stays_untrained_instead_of_crashing():
+    """맥락이 비었거나 한 글자 토큰뿐이면 TF-IDF 가 "empty vocabulary" 로 실패한다."""
+    records = [
+        make_record(f"t{i}", function_name="", file_path="", commit_message="") for i in range(2)
+    ]
+    model = ReasonModel().fit(records, ["DEAD", "BUG"])
+
+    assert not model.trained
+
+
 def test_only_settled_labels_are_used_for_training():
     """두 사람이 갈려 확정되지 않은 건을 한쪽 라벨로 채우면 그 사람 판단을 정답으로 배운다."""
     rows = [
@@ -424,4 +578,7 @@ def test_cli_runs_end_to_end_without_an_api_key(tmp_path, capsys):
     rows = [json.loads(line) for line in out_path.read_text(encoding="utf-8").splitlines()]
     assert code == 0
     assert [row["predicted_label"] for row in rows] == ["DEAD", "DESIGN", "UNK"]
-    assert "정확도를 말하지 않는다" in capsys.readouterr().out
+    printed = capsys.readouterr().out
+    assert "정확도를 말하지 않는다" in printed
+    # 읽은 라벨 수가 아니라 레코드와 실제로 이어진 수를 말해야 한다.
+    assert "레코드와 이어진 2건" in printed

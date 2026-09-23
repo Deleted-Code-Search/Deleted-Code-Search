@@ -23,12 +23,11 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Any
 
 from classify.baseline_keyword import classify_message
 from classify.baselines import UNKNOWN_LABEL, commit_message_of
-from pipeline.context import CLOSING_WORDS, strip_code
+from pipeline.context import CLOSING_WORDS, CODE_FENCE_RE, INLINE_CODE_RE
 
 # 규칙을 바꾸면 올린다. 분류기 버전 문자열에 들어간다.
 RULES_VERSION = "r1"
@@ -78,20 +77,27 @@ class ReasonSentence:
     label: str
     keywords: tuple[str, ...]
     names_target: bool
-    """삭제된 함수·파일을 이름으로 가리키나 - 가이드 §6.1.1 E2-(가)."""
+    """삭제된 함수를 이름으로 가리키나 - 가이드 §6.1.1 E2-(가). 파일 이름은 보지 않는다
+    (`target_names`)."""
 
 
 def split_sentences(text: str | None) -> list[str]:
-    """맥락 텍스트를 문장으로 쪼갠다. 코드 블록은 먼저 지운다.
+    """맥락 텍스트를 문장으로 쪼갠다. 코드 펜스(```` ``` ````)와 HTML 주석은 먼저 지운다.
 
-    코드 블록을 지우는 이유는 `pipeline.context.strip_code` 와 같다 - 코드 예시 안의 단어가
-    이유 키워드로 잡힌다. PR 본문에 재현 코드를 붙이는 일이 흔하다. HTML 주석(PR 템플릿
-    안내문)도 같은 이유로 먼저 지운다.
+    코드 펜스는 재현 코드라 문장이 아니고, 그 안의 단어가 이유 키워드로 잡힌다. HTML 주석은
+    PR 템플릿 안내문이라 작성자 글이 아니다. 둘 다 보통 제 줄에 따로 있어 지워도 문장이
+    이어 붙지 않는다.
+
+    **인라인 코드(`` `x` ``)는 지우지 않는다.** 문장이 곧 인용문이라 지우면 원문이 깨진다 -
+    예비 200건에서 174건 중 63건의 인용문이 원문에 없었다 (``Support `Field(repr=False)` in``
+    이 ``Support   in`` 이 됐다). 게다가 함수 이름은 보통 백틱 안에 쓴다. 지우면 "이 함수를
+    가리킨다" 를 못 본다. 인라인 코드는 라벨을 고를 때만 뺀다 (`find_reason_sentences`).
     """
     if not text:
         return []
+    cleaned = CODE_FENCE_RE.sub(" ", HTML_COMMENT_RE.sub(" ", text))
     sentences: list[str] = []
-    for piece in SENTENCE_BOUNDARY_RE.split(strip_code(HTML_COMMENT_RE.sub(" ", text))):
+    for piece in SENTENCE_BOUNDARY_RE.split(cleaned):
         sentence = piece.strip().lstrip(LEADING_MARKUP).strip()
         if len(sentence) >= MIN_SENTENCE_CHARS:
             sentences.append(sentence)
@@ -121,11 +127,14 @@ def passages(record: dict[str, Any]) -> list[Passage]:
     numbers = context.get("issue_numbers") or []
     titles = context.get("issue_titles") or []
     bodies = context.get("issue_bodies") or []
-    for index, number in enumerate(numbers):
-        if index < len(titles):
-            add(titles[index], "issue", f"issue:#{number}#title")
-        if index < len(bodies):
-            add(bodies[index], "issue", f"issue:#{number}#body")
+    # 길이가 번호 목록과 같을 때만 짝을 짓는다. 앞에서부터 짝을 지으면 하나가 빠진 목록에서
+    # 뒤쪽 제목이 모두 앞 번호에 붙는다.
+    if len(titles) == len(numbers):
+        for number, title in zip(numbers, titles, strict=True):
+            add(title, "issue", f"issue:#{number}#title")
+    if len(bodies) == len(numbers):
+        for number, body in zip(numbers, bodies, strict=True):
+            add(body, "issue", f"issue:#{number}#body")
 
     for comment in context.get("review_comments") or []:
         if isinstance(comment, dict):
@@ -139,19 +148,26 @@ def passages(record: dict[str, Any]) -> list[Passage]:
 
 
 def target_names(record: dict[str, Any]) -> tuple[str, ...]:
-    """이 레코드의 삭제 대상을 가리키는 이름들 - 함수 이름과 파일 이름.
+    """이 레코드의 삭제 대상을 가리키는 이름 - 함수 이름 하나.
 
-    가이드 §6.1.1 E2-(가)는 "삭제된 함수·클래스·파일을 이름이나 지시로" 가리키는 것이다.
+    가이드 §6.1.1 E2-(가)는 "**삭제된** 함수·클래스·파일을 이름이나 지시로" 가리키는 것이다.
     지시어("this helper")는 규칙으로 못 잡고, 이름만 본다.
+
+    **파일 이름은 쓰지 않는다.** 함수가 지워졌을 뿐 파일은 남아 있어 "삭제된 파일" 이 아니고,
+    `dataclasses`·`fields`·`generics` 같은 모듈 이름은 흔한 단어라 아무 문장에나 걸린다.
+    처음에 넣었더니 예비 200건의 EXPLICIT 10건 중 9건이 파일 이름으로만 나왔고, 내용도 틀렸다 -
+    `"fix dataclasses and docs"` 가 `dataclass` 함수의 EXPLICIT 1.0 근거가 됐다. EXPLICIT 은 가장
+    강한 주장이라 잘못 주는 것이 놓치는 것보다 나쁘다.
+
+    **던더 이름(`__init__` 등)도 쓰지 않는다.** 클래스마다 있어서 이름만으로는 어느 함수인지
+    가리키지 못한다.
     """
-    names = []
     function_name = (record.get("function_name") or "").strip()
-    if len(function_name.strip("_")) >= MIN_TARGET_NAME_CHARS:
-        names.append(function_name)
-    stem = Path(record.get("file_path") or "").stem
-    if len(stem) >= MIN_TARGET_NAME_CHARS and stem != "__init__":
-        names.append(stem)
-    return tuple(names)
+    if function_name.startswith("__") and function_name.endswith("__"):
+        return ()
+    if len(function_name.strip("_")) < MIN_TARGET_NAME_CHARS:
+        return ()
+    return (function_name,)
 
 
 def mentions(sentence: str, names: tuple[str, ...]) -> bool:
@@ -168,13 +184,15 @@ def find_reason_sentences(record: dict[str, Any]) -> list[ReasonSentence]:
     같은 커밋 메시지를 기준선 A 가 통째로 읽을 때와 문장 단위로 읽을 때 답이 다를 수 있다 -
     그 차이는 의도한 것이다. 이유가 어느 문장에 있는지가 근거 등급을 정한다.
 
-    이슈 닫기 참조는 라벨을 고를 때만 뺀다 (`CLOSING_REFERENCE_RE`). 인용문은 원문 그대로
-    둔다 - EXPLICIT 근거는 원문 인용이어야 한다 (가이드 §6.1).
+    이슈 닫기 참조와 인라인 코드는 라벨을 고를 때만 뺀다. 인라인 코드 안의 단어(`` `fix_x` ``
+    같은 식별자)가 키워드로 잡히면 안 되기 때문이다. 인용문과 이름 대조는 원문 그대로 한다 -
+    EXPLICIT 근거는 원문 인용이어야 하고 (가이드 §6.1), 함수 이름은 보통 백틱 안에 있다.
     """
     names = target_names(record)
     found: list[ReasonSentence] = []
     for passage in passages(record):
-        label, keywords = classify_message(CLOSING_REFERENCE_RE.sub(" ", passage.text))
+        for_label = INLINE_CODE_RE.sub(" ", CLOSING_REFERENCE_RE.sub(" ", passage.text))
+        label, keywords = classify_message(for_label)
         if label == UNKNOWN_LABEL:
             continue
         found.append(ReasonSentence(passage, label, keywords, mentions(passage.text, names)))

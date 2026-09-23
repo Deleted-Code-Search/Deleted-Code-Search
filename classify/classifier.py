@@ -36,12 +36,13 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 import sys
 import urllib.error
 from collections import Counter
 from collections.abc import Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any
 
@@ -223,8 +224,22 @@ class Classifier:
     model: ReasonModel = field(default_factory=ReasonModel)
     llm: LlmCandidate | None = None
 
+    @property
+    def version(self) -> str:
+        """분류기 버전. LLM 을 쓰면 모델 이름까지 넣는다.
+
+        LLM 유무·모델이 다른 두 예측 파일이 같은 버전 문자열을 달면 나중에 가를 수 없다.
+        기준선 B 가 `프롬프트/모델` 을 버전에 넣는 것과 같은 이유다.
+        """
+        if self.llm is None:
+            return CLASSIFIER_VERSION
+        return f"{CLASSIFIER_VERSION}+llm:{self.llm.runner.model}"
+
     def classify(self, record: dict[str, Any]) -> Classification:
         """레코드 하나. 순서는 모듈 독스트링 "근거가 먼저다"."""
+        return replace(self._classify(record), version=self.version)
+
+    def _classify(self, record: dict[str, Any]) -> Classification:
         record_id = record_id_of(record)
         sentences = find_reason_sentences(record)
         replacement = _usable_replacement(record)
@@ -236,6 +251,21 @@ class Classifier:
 
         candidate = self.llm.propose(record) if self.llm is not None else None
         scores = self._scores(record, sentences, candidate)
+        # 대체 코드는 있는데 규칙·모델·LLM 이 모두 0 이면 어느 이유인지 말할 신호가 없다.
+        # 그대로 두면 동점 규칙이 §11-1 첫 순위(SEC)를 0.9 로 고른다 - 모델이 학습되지 않은
+        # 채(`--records` 에 라벨과 이어지는 건이 없을 때) 돌리면 실제로 그렇게 된다.
+        if max(scores.values()) <= 0.0:
+            return Classification(
+                record_id,
+                UNKNOWN_LABEL,
+                UNKNOWN,
+                "",
+                "",
+                "",
+                0.0,
+                scores=scores,
+                note="대체 코드는 있으나 어느 이유인지 받칠 신호가 없다",
+            )
         backed = {sentence.label for sentence in sentences}
         label = max(
             scores, key=lambda reason: (scores[reason], reason in backed, -_priority(reason))
@@ -278,13 +308,17 @@ class Classifier:
         candidate: tuple[str, str] | None,
         scores: dict[str, float],
     ) -> Classification:
-        """고른 라벨의 가장 강한 근거로 등급을 정한다.
+        """고른 라벨을 **가장 직접 받치는** 근거로 등급을 정한다. 아래 순서대로 처음 맞는 것.
 
-        1. 그 라벨의 이유 문장이 삭제된 함수·파일을 이름으로 가리킨다 -> EXPLICIT (원문 인용)
+        1. 그 라벨의 이유 문장이 삭제된 함수를 이름으로 가리킨다 -> EXPLICIT (원문 인용)
         2. 그 라벨의 이유 문장은 있는데 이 함수까지 닿지 않는다 -> INFERRED (가이드 §6.1.1 E2)
         3. 대체 코드가 있다 -> INFERRED, 근거 ① (`diff:replacement`)
         4. 이유 문장은 있는데 키워드가 다른 이유를 가리켰고, 라벨은 모델·LLM 이 골랐다 ->
            INFERRED, 하한 0.5. 가장 약한 경우라 신뢰도를 올리지 않는다
+
+        2 가 3 보다 먼저인 것은 신뢰도 순서가 아니다 (2 는 0.6, 3 은 최대 0.9). 같은 라벨의 이유
+        문장은 **왜**를 말하고, 대체 코드는 무엇이 이어받았는지만 말해 어느 이유도 받치지 않는다.
+        고른 라벨의 근거로는 앞이 더 직접적이다.
 
         EXPLICIT 은 **같은 라벨**의 문장으로만 준다 - 인용문이 그 이유를 말해야 한다 (§6.1).
         """
@@ -350,15 +384,19 @@ class Classifier:
 def _usable_replacement(record: dict[str, Any]) -> tuple[str, float] | None:
     """근거 ① 로 쓸 수 있는 대체 코드와 그 신뢰도. 못 쓰면 `None`.
 
-    `code` 가 `null` 이면 근거 ① 을 쓸 수 없다 (가이드 §6.2.3). 신뢰도가 0.5 아래로 떨어지면
-    INFERRED 가 아니라 UNKNOWN 이다 (§6.2.2).
+    `code` 가 `null` 이거나 공백뿐이면 근거 ① 을 쓸 수 없다 (가이드 §6.2.3). 신뢰도가 0.5
+    아래로 떨어지면 INFERRED 가 아니라 UNKNOWN 이다 (§6.2.2).
+
+    신뢰도는 유한한 숫자만 믿는다. `json.loads` 는 `NaN` 을 받는데 `min(0.9, nan)` 은 0.9 이고,
+    `True` 는 int 라 1.0 이 된다 - 둘 다 근거 없는 0.9 로 새어 나간다.
     """
     replacement = record.get("replacement") or {}
     code = replacement.get("code")
-    if not code:
+    if not isinstance(code, str) or not code.strip():
         return None
     raw = replacement.get("confidence")
-    confidence = min(INFERRED_CONFIDENCE_CAP, float(raw) if isinstance(raw, int | float) else 0.0)
+    usable = isinstance(raw, int | float) and not isinstance(raw, bool) and math.isfinite(raw)
+    confidence = min(INFERRED_CONFIDENCE_CAP, float(raw)) if usable else 0.0
     return (code, confidence) if confidence >= INFERRED_FLOOR else None
 
 
@@ -464,8 +502,12 @@ def main(argv: Sequence[str] | None = None) -> int:
                 handle.write(json.dumps(result.to_dict(), ensure_ascii=False) + "\n")
         print(f"예측: {args.out} ({len(results)}건)", file=sys.stderr)
 
-    print(f"우리 방식 ({CLASSIFIER_VERSION}) - {len(results)}건")
-    print(f"  모델 학습: {'예' if model.trained else '아니오'} (확정 라벨 {len(labels)}건과 이음)")
+    print(f"우리 방식 ({classifier.version}) - {len(results)}건")
+    joined = sum(1 for record in records if record_id_of(record) in labels)
+    print(
+        f"  모델 학습: {'예' if model.trained else '아니오'}"
+        f" (확정 라벨 {len(labels)}건 중 레코드와 이어진 {joined}건, UNK 제외하고 학습)"
+    )
     print("  학습에 쓴 레코드도 예측에 들어간다. 이 분포로 정확도를 말하지 않는다 (#86).")
     for name, counter in (
         ("라벨", Counter(result.label for result in results)),
