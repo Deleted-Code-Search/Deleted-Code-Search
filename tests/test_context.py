@@ -1079,6 +1079,62 @@ def test_repo_path_recovers_a_function_the_hunk_cut_off(tmp_path):
     assert code.rstrip().endswith("return items")
 
 
+def _run_main_on_cut_function(tmp_path, monkeypatch, *extra_args):
+    """시그니처만 고친 커밋 하나를 추출해 `main --input --out` 으로 돌린 출력 한 줄.
+
+    GitHub 호출은 `run_targets` 에서 막는다 - 여기서 보려는 것은 맥락 수집이 아니라
+    `main` 이 `--repo-path` 를 `build_output_record` 까지 넘기는지다.
+    """
+    repo = _init_repo(tmp_path / "repo")
+    _write(repo, "m.py", "def parse(raw):\n    items = raw.split(',')\n    return items\n")
+    _commit_all(repo, "v1")
+    _write(repo, "m.py", "def parse(raw, sep=','):\n    items = raw.split(sep)\n    return items\n")
+    sha = _commit_all(repo, "v2")
+    deletions = extract_module.extract_deletions(repo, _REPO, _last_commit_pair(repo))
+    record = extract_module.to_json_dict(next(r for r in deletions if r.function_name == "parse"))
+    input_path, out_path = tmp_path / "in.jsonl", tmp_path / "out.jsonl"
+    input_path.write_text(json.dumps(record) + "\n", encoding="utf-8")
+
+    monkeypatch.setenv("GITHUB_TOKEN", "test")
+    monkeypatch.setattr(ctx, "load_env_file", lambda _path: None)
+    monkeypatch.setattr(
+        ctx,
+        "run_targets",
+        lambda collector, targets, log=None: (
+            [ctx.CommitContext(repo=target.repo, commit_sha=sha) for target in targets],
+            ctx.AttachmentReport(),
+        ),
+    )
+    args = ["--input", str(input_path), "--out", str(out_path)]
+    args += ["--cache-dir", str(tmp_path / "cache"), *extra_args]
+    assert ctx.main(args) == 0
+    return json.loads(out_path.read_text(encoding="utf-8")), repo
+
+
+def test_main_forwards_repo_path_to_the_replacement(tmp_path, monkeypatch):
+    """`--repo-path` 가 `main` 을 거쳐 실제로 대체 코드 본문까지 닿는다 (#107).
+
+    이 연결이 #107 의 본체다 - 원문을 안 넘기면 에러 없이 대체 코드가 크게 줄어든다
+    (예비 200건 39 -> 8). `read_child_source`·`match_replacement` 를 직접 부르는 테스트로는
+    `main` 이 인자를 빠뜨려도 통과하므로 CLI 를 끝까지 돌린다.
+    """
+    output, _repo = _run_main_on_cut_function(
+        tmp_path, monkeypatch, "--repo-path", str(tmp_path / "repo")
+    )
+
+    code = output["replacement"]["code"]
+    assert code.startswith("def parse(raw, sep=','):")
+    assert code.rstrip().endswith("return items")
+
+
+def test_main_without_repo_path_does_not_invent_the_cut_body(tmp_path, monkeypatch):
+    """원문 없이는 헝크에 잘린 함수를 채우지 않는다 - 같은 입력에서 위 테스트와 갈린다."""
+    output, _repo = _run_main_on_cut_function(tmp_path, monkeypatch)
+
+    assert output["replacement"]["code"] is None
+    assert output["replacement"]["match_method"] == ctx.MATCH_SAME_LOCATION
+
+
 def test_unreadable_child_file_is_none_not_a_crash(tmp_path):
     """파일이 그 커밋에서 통째로 지워졌거나 경로가 틀리면 원문이 없다 - 보수적 경로로 간다."""
     assert ctx.read_child_source(tmp_path, "deadbeef", "missing.py") is None
