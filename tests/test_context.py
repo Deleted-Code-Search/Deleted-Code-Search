@@ -273,23 +273,28 @@ def test_schema_context_has_exactly_charter_fields(tmp_path):
         "pr_number",
         "pr_title",
         "pr_body",
+        "pr_labels",
         "issue_numbers",
         "issue_titles",
+        "issue_bodies",
         "review_comments",
     }
     assert schema["issue_numbers"] == [42, 43]
-    assert schema["review_comments"] == ["why not use urllib3 Retry?", "unrelated nit"]
+    assert [comment["body"] for comment in schema["review_comments"]] == [
+        "why not use urllib3 Retry?",
+        "unrelated nit",
+    ]
 
 
-def test_labels_and_issue_bodies_are_collected_but_not_in_schema(tmp_path):
-    """스키마에 칸이 없는 값은 모으되 §4.4 매핑에는 넣지 않는다 (변경 제안 대상)."""
+def test_labels_and_issue_bodies_reach_the_schema(tmp_path):
+    """ADR-018 로 §4.4 에 들어왔다 (#24). 그전에는 모으기만 하고 버렸다."""
     collector = make_collector(tmp_path, FULL_ROUTES)
     result = collector.collect("a/b", "sha1", commit_message="msg")
 
     assert result.pr_labels == ("bug", "type: cleanup")
     assert result.issue_bodies == ("detail", "detail43")
-    assert "pr_labels" not in result.to_schema_context()
-    assert "issue_bodies" not in result.to_schema_context()
+    assert result.to_schema_context()["pr_labels"] == ["bug", "type: cleanup"]
+    assert result.to_schema_context()["issue_bodies"] == ["detail", "detail43"]
 
 
 def test_pr_number_referenced_in_body_is_not_counted_as_issue(tmp_path):
@@ -415,7 +420,9 @@ def test_review_comments_are_filtered_to_the_deleted_file(tmp_path):
     result = collector.collect("a/b", "sha1", file_path="src/net.py", commit_message="msg")
 
     assert [comment.path for comment in result.review_comments] == ["src/net.py"]
-    assert result.to_schema_context()["review_comments"] == ["why not use urllib3 Retry?"]
+    assert [c["body"] for c in result.to_schema_context()["review_comments"]] == [
+        "why not use urllib3 Retry?"
+    ]
 
 
 def test_review_comments_fall_back_to_whole_pr_when_file_has_none(tmp_path):
@@ -986,3 +993,85 @@ def test_output_record_carries_the_replacement_field():
 
     assert set(built["replacement"]) == {"code", "match_method", "confidence"}
     assert built["replacement"]["match_method"] == ctx.MATCH_SAME_LOCATION
+
+
+# 리뷰 코멘트 식별자·좌표 (ADR-018, Issue #70)
+# --------------------------------------------------------------------------------------
+
+
+def _raw_comment(**overrides):
+    raw = {
+        "id": 1234567,
+        "body": "이 헬퍼는 V2 에서 없어진다",
+        "path": "src/net.py",
+        "line": 42,
+        "side": "LEFT",
+        "user": {"login": "rev"},
+    }
+    raw.update(overrides)
+    return raw
+
+
+def test_comment_id_survives_into_the_schema():
+    """식별자가 없어 예비 200건에서 17건이 `review:unknown` 으로 남았다 (가이드 §7.2)."""
+    parsed = ctx._parse_review_comment(_raw_comment())
+
+    assert parsed.comment_id == 1234567
+    assert parsed.to_schema_comment()["comment_id"] == 1234567
+
+
+def test_side_tells_which_file_the_line_belongs_to():
+    """LEFT 는 부모(삭제 전) 파일, RIGHT 는 자식 파일. 없으면 줄 번호가 뜻을 잃는다."""
+    assert ctx._parse_review_comment(_raw_comment()).side == "LEFT"
+    assert ctx._parse_review_comment(_raw_comment(side="RIGHT")).side == "RIGHT"
+
+
+def test_outdated_comment_falls_back_to_the_original_line_and_says_so():
+    """GitHub 은 자리가 바뀌면 `line` 을 null 로 만들고 `original_line` 만 남긴다.
+
+    조용히 바꿔치기하면 과거 좌표를 현재 좌표로 오해한다. 그래서 표시를 남긴다.
+    """
+    parsed = ctx._parse_review_comment(_raw_comment(line=None, original_line=88))
+
+    assert parsed.line == 88
+    assert parsed.outdated is True
+
+
+def test_current_comment_is_not_marked_outdated():
+    parsed = ctx._parse_review_comment(_raw_comment(line=42, original_line=88))
+
+    assert (parsed.line, parsed.outdated) == (42, False)
+
+
+def test_comment_without_any_line_is_not_marked_outdated():
+    """줄이 아예 없는 코멘트(파일 단위 등)는 "자리가 밀린 것"이 아니다."""
+    parsed = ctx._parse_review_comment(_raw_comment(line=None))
+
+    assert parsed.line is None
+    assert parsed.outdated is False
+
+
+def test_missing_optional_fields_do_not_crash():
+    """side·user·path 가 없는 응답도 있다. 빈 값으로 두되 터지지는 않는다."""
+    parsed = ctx._parse_review_comment({"id": 1, "body": "  hi  "})
+
+    assert (parsed.body, parsed.side, parsed.author, parsed.path) == ("hi", "", "", "")
+
+
+def test_schema_comment_has_exactly_the_adr_fields():
+    """§4.4 `context.review_comments[]` 한 칸의 필드 (§13 — 임의 확장 금지)."""
+    schema = ctx._parse_review_comment(_raw_comment()).to_schema_comment()
+
+    assert set(schema) == {"comment_id", "body", "path", "line", "side", "outdated", "author"}
+
+
+def test_collected_comments_carry_ids_through_the_collector(tmp_path):
+    """수집 경로 끝까지 id 가 살아 있어야 라벨러가 로케이터를 쓸 수 있다."""
+    routes = dict(FULL_ROUTES)
+    routes["/repos/a/b/pulls/100/comments"] = [_raw_comment(id=777, path="src/net.py")]
+    result = make_collector(tmp_path, routes).collect(
+        "a/b", "sha1", file_path="src/net.py", commit_message="msg"
+    )
+
+    comment = result.to_schema_context()["review_comments"][0]
+    assert f"review:comment_{comment['comment_id']}" == "review:comment_777"

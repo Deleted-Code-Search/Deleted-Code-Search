@@ -5,7 +5,7 @@
 >
 > **Claude에게:** 이 문서는 팀의 합의 사항이다. 여기 정의된 범위·용어·설계 결정·협업 규칙을 따르고, 여기 없는 결정은 "미결정"으로 취급해 팀원에게 확인을 권한다. 범위를 임의로 확장하지 말고, 스키마·분류 체계·인터페이스를 바꾸는 제안은 반드시 "변경 제안"으로 표시한다.
 >
-> 버전: v1.16 / 작성일: 2026-09-23 / 다음 갱신: 마감 정확한 날짜 확인 후 (§9 일정 재조정)
+> 버전: v1.17 / 작성일: 2026-09-23 / 다음 갱신: 마감 정확한 날짜 확인 후 (§9 일정 재조정)
 
 ---
 
@@ -289,9 +289,18 @@ DeletionRecord
     pr_number: int | null
     pr_title: str | null
     pr_body: str | null
+    pr_labels: [str]             # 참고 정보. 근거 등급의 근거로 쓰지 않는다 (ADR-018)
     issue_numbers: [int]
     issue_titles: [str]
-    review_comments: [str]
+    issue_bodies: [str]
+    review_comments:             # 코멘트 1건 = 객체 1개 (ADR-018)
+      - comment_id: int | null   # GitHub 리뷰 코멘트 id. evidence_locator 의 근거
+        body: str
+        path: str
+        line: int | null         # 좌표계는 side 가 정한다. line 이 없으면 original_line
+        side: enum | null        # LEFT(부모 = 삭제 전 파일) | RIGHT(자식 = 삭제 후 파일)
+        outdated: bool           # line 이 null 이라 original_line 으로 되돌아갔나
+        author: str
   replacement:
     code: str | null
     match_method: enum         # SAME_LOCATION | CALLER_CHANGE | NONE
@@ -332,6 +341,7 @@ DeletionRecord
 | ADR-015 | PARTIAL 최소 줄 수 5줄 (2026-09-17): `deleted_body`가 4줄 이하인 PARTIAL은 `NOISE_TRIVIAL`로 제외 | 1~4줄 삭제는 함수를 다듬은 것이지 버린 것이 아니다. pydantic 실측에서 PARTIAL 중 1~4줄이 85.1%, 5줄 이상은 2,941건으로 FULL_FUNCTION 3,001건과 비슷한 규모 | PARTIAL 전부 포함, PARTIAL 전부 제외 |
 | ADR-016 | 게이트 2 정확도 기준 (2026-09-23): 테스트 100건 정확도 ≥ min(80%, H). H는 같은 100건의 사람 간 `reason_label` 단순 일치율. 기준선 대비 +10%p는 유지 | 분류기의 정답이 사람 라벨이다. 예비 200건의 쌍별 일치율이 40.9~57.6%라, 절대 80%는 분류기 성능이 아니라 라벨 일치도를 재는 기준이 된다. 80%를 상한으로 남겨 기준이 원래보다 엄격해지지 않게 한다 | 절대 80% 유지 + kappa ≥ 0.6 전제, 사람 간 일치율 단독(상한 없음), 기준선 대비만 |
 | ADR-017 | INFERRED 근거 범위를 6종으로 확장 (2026-09-23): 기존 ①대체 코드 ②호출자 변화 ③테스트 변화에 **④공개 표면 변화 ⑤같은 커밋의 동형 삭제 ⑥삭제된 코드 자체**를 추가하고, 6종을 닫힌 목록으로 고정. 주제적 근접성은 근거가 아니다 | 예비 200건에서 ①이 `replacement` 0/200으로 가용 0%였고, ②③은 라벨러가 보는 레코드에 필드가 없다. ①②③만 인정하면 명시가 아닌 모든 건이 UNKNOWN이 되어 회수율 저조를 데이터 탓으로 잘못 읽게 된다. ⑥의 `deleted_body`는 §4.4 스키마에 이미 있어 정합화에 가깝다. 닫힌 목록 6종이 열린 목록 3종보다 엄격하다 | ④⑤⑥ 삭제(→ I↔U 불일치가 그대로 남는다), 가이드에만 두기(→ CHARTER와 어긋난 채 방치), "구조적 신호"로만 규정(→ 해석이 갈려 kappa 0.261이 나왔다), INFERRED 폐지 2단계(→ ADR-004 3단계 표시가 무너진다) |
+| ADR-018 | §4.4 `context` 확장 (2026-09-23): 리뷰 코멘트를 본문 문자열에서 `{comment_id, body, path, line, side, outdated, author}` 객체로, `pr_labels`·`issue_bodies` 추가. `pr_labels` 는 **참고 정보이고 근거 등급의 근거가 아니다** | 리뷰 코멘트 식별자가 없어 예비 200건에서 `evidence_locator` 17건이 `review:unknown` 이었다 — 근거 원문을 다시 찾을 수 없으면 §8.3 확정 토론에서 불일치 조사가 안 되고, kappa 가 낮아도 원인을 못 짚는다(게이트 1에서 겪었다). 이슈 맥락 결합률이 36.5% 인데 그중 제목만 보고 있어 본문에만 이유가 적힌 건을 놓친다. `line` 은 `side` 없이는 어느 파일의 줄인지 모르고, GitHub 은 자리가 밀리면 `line` 을 null 로 만들어 `original_line` 만 남긴다 | 형제 배열로 id 만 추가(→ 두 배열의 순서 맞춤에 기대 조용히 어긋난다), `path`·`line` 제외(→ 이미 수집하는 값이라 추가 비용이 0), `pr_labels` 를 근거로 인정(→ ADR-017 닫힌 목록 6종에 없고 EXPLICIT 의 E1·E2 도 통과 못 한다. 인정하려면 ADR-017 을 다시 열어야 한다) |
 
 ---
 
@@ -802,3 +812,4 @@ STATUS.md는 덮어쓰지만 주간 로그는 쌓인다. 최종 보고서와 발
 | v1.14 | 2026-09-23 | ADR-016 게이트 2 정확도 기준을 min(80%, 사람 간 일치율)로 변경, 기준선 +10%p 유지 (§5, §9, §10.2). H 계산 시점(토론 확정 직후·분류기 실행 전)과 합의 102건↔테스트 100건 겹침 배제를 §10.2에 명시. §10.6 3번 P × A를 가정을 밝힌 추정으로 한정 (#91) | 성제 |
 | v1.15 | 2026-09-23 | ADR-017 INFERRED 근거 범위를 6종으로 확장 — §4.2 ③ INFERRED 설명에 근거 6종 표와 닫힌 목록·구조적 신호·주제적 근접성 금지 명시, §5 표 (#40) | 성제 |
 | v1.16 | 2026-09-23 | #102 added_hunk_same_file → added_hunks_same_file 헝크 구조 (§4.2①) | 재헌 |
+| v1.17 | 2026-09-23 | ADR-018 §4.4 `context` 확장 — 리뷰 코멘트를 객체 배열로(`comment_id`·`side`·`outdated` 추가), `pr_labels`·`issue_bodies` 추가. §5 표 (#70, #24) | 희수 |

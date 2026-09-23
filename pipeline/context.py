@@ -218,12 +218,66 @@ def pr_number_from_message(message: str) -> int | None:
 
 @dataclass(frozen=True)
 class ReviewComment:
-    """PR 리뷰의 인라인 코멘트 하나."""
+    """PR 리뷰의 인라인 코멘트 하나 (ADR-018).
+
+    `comment_id` 가 있어야 라벨러가 `evidence_locator` 를 채울 수 있다 (가이드 §7.2
+    `review:comment_1234567`). 예비 200건에서 이 값이 없어 17건이 `review:unknown` 으로
+    남았고, 확정 토론(§8.3)에서 "네가 본 문장이 어디 있냐" 를 맞춰 볼 수 없었다.
+
+    `line` 의 좌표계는 `side` 가 정한다 - 그래서 둘을 같이 들고 있어야 한다:
+        LEFT  = diff 왼쪽, 즉 **부모(삭제 전) 파일**의 줄 번호
+        RIGHT = diff 오른쪽, 즉 **자식(삭제 후) 파일**의 줄 번호
+    우리 대상은 삭제된 코드라 대부분 LEFT 다. `side` 없이 숫자만 두면 어느 파일의
+    몇 번째 줄인지 알 수 없다.
+
+    `outdated` 는 그 줄이 **지금도 유효한 위치인가**를 말한다. GitHub 은 코멘트가 달린
+    뒤 그 자리가 바뀌면 `line` 을 `null` 로 만들고 `original_line`(코멘트 당시 줄)만
+    남긴다. 이때 `line` 에 `original_line` 을 채우고 `outdated=True` 로 표시한다 -
+    값을 조용히 바꿔치기하면 과거 좌표를 현재 좌표로 오해하게 된다.
+    """
 
     body: str
+    comment_id: int | None = None
     path: str = ""
     line: int | None = None
+    side: str = ""
+    outdated: bool = False
     author: str = ""
+
+    def to_schema_comment(self) -> dict[str, Any]:
+        """§4.4 `context.review_comments[]` 한 칸 (ADR-018)."""
+        return {
+            "comment_id": self.comment_id,
+            "body": self.body,
+            "path": self.path,
+            "line": self.line,
+            "side": self.side,
+            "outdated": self.outdated,
+            "author": self.author,
+        }
+
+
+def _parse_review_comment(item: dict[str, Any]) -> ReviewComment:
+    """리뷰 코멘트 API 응답 한 건을 `ReviewComment` 로 (순수 함수 — 테스트 대상).
+
+    `line` 이 `None` 이면 코멘트가 달린 자리가 그 뒤로 바뀌었다는 뜻이라
+    `original_line`(코멘트 당시 줄)로 되돌아가고 `outdated` 를 세운다. `or` 가 아니라
+    `is None` 으로 가르는 이유는 0 을 유효한 값으로 두기 위해서다 - 줄 번호는 1부터라
+    지금은 차이가 없지만, `or` 로 쓰면 "값이 0" 과 "값이 없음" 이 같아진다.
+    """
+    line = item.get("line")
+    outdated = line is None
+    if outdated:
+        line = item.get("original_line")
+    return ReviewComment(
+        body=(item.get("body") or "").strip(),
+        comment_id=item.get("id"),
+        path=item.get("path") or "",
+        line=line,
+        side=item.get("side") or "",
+        outdated=outdated and line is not None,
+        author=(item.get("user") or {}).get("login") or "",
+    )
 
 
 @dataclass
@@ -239,8 +293,9 @@ class CommitContext:
     issue_refs: tuple[IssueRef, ...] = ()
     issue_titles: tuple[str, ...] = ()
     review_comments: tuple[ReviewComment, ...] = ()
-    # §4.4 에 칸이 없는 값. 분류(§4.2 ③)에 쓸모가 있어 모으기는 하되 스키마에는 넣지 않는다.
-    # 스키마에 추가할지는 §13 절차(이슈 → 회의 → ADR)로 정한다. PR 본문에 변경 제안으로 적었다.
+    # ADR-018 로 §4.4 `context` 에 들어왔다 (#24). `issue_bodies` 는 이슈 본문에만 이유가
+    # 적힌 건을 잡으려고, `pr_labels` 는 참고 정보로 - **등급 근거가 아니다.** 근거 6종
+    # 닫힌 목록(ADR-017)에 없고 EXPLICIT 의 E1·E2 도 통과하지 못한다.
     pr_labels: tuple[str, ...] = ()
     issue_bodies: tuple[str, ...] = ()
 
@@ -266,15 +321,21 @@ class CommitContext:
         return self.has_pr or self.has_issue or self.has_review
 
     def to_schema_context(self) -> dict[str, Any]:
-        """§4.4 `context` 필드 그대로. 필드를 늘리거나 이름을 바꾸지 않는다 (§13)."""
+        """§4.4 `context` 필드 그대로. 필드를 늘리거나 이름을 바꾸지 않는다 (§13).
+
+        `pr_labels`·`issue_bodies`·리뷰 코멘트 객체화는 ADR-018 로 §13 절차를 밟아
+        §4.4 에 들어왔다. 그 전에는 여기서 버려지던 값이다.
+        """
         return {
             "commit_message": self.commit_message,
             "pr_number": self.pr_number,
             "pr_title": self.pr_title,
             "pr_body": self.pr_body,
+            "pr_labels": list(self.pr_labels),
             "issue_numbers": list(self.issue_numbers),
             "issue_titles": list(self.issue_titles),
-            "review_comments": [comment.body for comment in self.review_comments],
+            "issue_bodies": list(self.issue_bodies),
+            "review_comments": [comment.to_schema_comment() for comment in self.review_comments],
         }
 
 
@@ -450,16 +511,7 @@ class ContextCollector:
             max_items=MAX_REVIEW_PAGES * 100,
             max_pages=MAX_REVIEW_PAGES,
         )
-        parsed = [
-            ReviewComment(
-                body=(item.get("body") or "").strip(),
-                path=item.get("path") or "",
-                line=item.get("line") or item.get("original_line"),
-                author=(item.get("user") or {}).get("login") or "",
-            )
-            for item in raw
-            if (item.get("body") or "").strip()
-        ]
+        parsed = [_parse_review_comment(item) for item in raw if (item.get("body") or "").strip()]
         if file_path:
             on_file = [comment for comment in parsed if comment.path == file_path]
             if on_file:
