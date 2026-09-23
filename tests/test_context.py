@@ -816,6 +816,20 @@ def _record(**overrides):
     return record
 
 
+def _hunks(*bodies):
+    """#102 형식의 헝크 목록. 좌표는 이 테스트들이 보지 않으므로 형태만 맞춘다."""
+    return [
+        {
+            "old_start": 10 * index + 1,
+            "old_count": 0,
+            "new_start": 10 * index + 1,
+            "new_count": len(body.splitlines()),
+            "added_body": body,
+        }
+        for index, body in enumerate(bodies)
+    ]
+
+
 def test_no_added_lines_is_a_positive_none_verdict():
     """추가 줄이 0개면 대체가 없다고 단정할 수 있다 — 판정 불가와 다르다."""
     result = ctx.match_replacement(_record(added_hunk_same_file=""))
@@ -834,7 +848,7 @@ def test_missing_field_is_undetermined_not_none():
 
 def test_same_name_addition_is_a_same_location_replacement():
     added = "def parse(raw):\n    return [p.strip() for p in raw.split(',')]\n"
-    result = ctx.match_replacement(_record(added_hunk_same_file=added))
+    result = ctx.match_replacement(_record(added_hunks_same_file=_hunks(added)))
 
     assert result.match_method == ctx.MATCH_SAME_LOCATION
     assert result.confidence == ctx.SAME_NAME_CONFIDENCE
@@ -845,43 +859,57 @@ def test_addition_under_another_name_is_left_undetermined():
     """이름이 다른 후보를 고르려면 위치가 필요하다. 억지로 고르면 없는 근거가 생긴다."""
     added = "def parse_all(raw):\n    return [p.strip() for p in raw.split(',')]\n"
 
-    assert ctx.match_replacement(_record(added_hunk_same_file=added)) == ctx.UNDETERMINED
+    assert ctx.match_replacement(_record(added_hunks_same_file=_hunks(added))) == ctx.UNDETERMINED
 
 
 def test_partial_edits_without_a_whole_function_are_undetermined():
     """흩어진 수정만 있으면 완결된 함수가 안 나온다 — 대체 코드 후보가 아니다."""
     added = "    raw = raw.strip()\n        return None\n"
 
-    assert ctx.match_replacement(_record(added_hunk_same_file=added)) == ctx.UNDETERMINED
+    assert ctx.match_replacement(_record(added_hunks_same_file=_hunks(added))) == ctx.UNDETERMINED
 
 
 def test_several_same_name_additions_pick_the_closest_body_with_lower_confidence():
     """한 파일에 같은 이름이 여럿 추가될 수 있다 (`__init__` 등). 본문이 가까운 쪽을 고른다."""
-    added = (
-        "def parse(raw):\n    raise NotImplementedError\n\n\n"
-        "def parse(raw):\n    return raw.split(',')\n"
+    hunks = _hunks(
+        "def parse(raw):\n    raise NotImplementedError\n",
+        "def parse(raw):\n    return raw.split(',')\n",
     )
-    result = ctx.match_replacement(_record(added_hunk_same_file=added))
+    result = ctx.match_replacement(_record(added_hunks_same_file=hunks))
 
     assert result.match_method == ctx.MATCH_SAME_LOCATION
     assert result.confidence == ctx.AMBIGUOUS_NAME_CONFIDENCE
     assert "raise NotImplementedError" not in result.code
 
 
+def test_candidates_never_span_two_hunks():
+    """서로 떨어진 헝크의 조각을 이어 붙이면 존재한 적 없는 함수가 만들어진다.
+
+    예비 200건에서 평탄한 문자열을 파싱했을 때 35건 중 5건(14%)이 이 형태였다.
+    아래는 그중 `any_schema` 를 줄인 것이다 - 시그니처 헝크와 무관한 한 줄이 붙어
+    자식 파일에 없는 코드가 `replacement.code` 로 나갔다.
+    """
+    hunks = _hunks(
+        "def parse(raw):\n    return dict_not_none(type='any')\n",
+        "    serialization: SerSchema\n",
+    )
+    result = ctx.match_replacement(_record(added_hunks_same_file=hunks))
+
+    assert "serialization" not in result.code
+
+
+def test_flat_field_alone_never_fills_code():
+    """옛 형식은 헝크 경계가 없어 후보를 안전하게 뽑을 수 없다 - `code` 를 채우지 않는다."""
+    added = "def parse(raw):\n    return [p.strip() for p in raw.split(',')]\n"
+
+    assert ctx.match_replacement(_record(added_hunk_same_file=added)) == ctx.UNDETERMINED
+
+
 def test_new_hunk_field_wins_over_the_old_flat_field():
-    """새 형식이 있으면 그것을 쓴다 (2026-09-23 팀 확정). 예비 200건은 옛 형식이라 둘 다 읽는다."""
+    """새 형식이 있으면 그것을 쓴다 (2026-09-23 팀 확정)."""
     record = _record(
         added_hunk_same_file="def parse(raw):\n    return 'old'\n",
-        added_hunks_same_file=[
-            {"old_start": 1, "old_count": 2, "new_start": 1, "new_count": 0, "added_body": ""},
-            {
-                "old_start": 5,
-                "old_count": 0,
-                "new_start": 4,
-                "new_count": 2,
-                "added_body": "def parse(raw):\n    return 'new'\n",
-            },
-        ],
+        added_hunks_same_file=_hunks("def parse(raw):\n    return 'new'\n"),
     )
 
     assert "'new'" in ctx.match_replacement(record).code
@@ -900,18 +928,7 @@ def test_a_blank_line_addition_is_not_dropped():
 
     본문이 비었다고 건너뛰면 그 줄이 사라져, 복원한 텍스트가 원본과 달라진다.
     """
-    record = _record(
-        added_hunks_same_file=[
-            {"old_start": 3, "old_count": 0, "new_start": 3, "new_count": 1, "added_body": ""},
-            {
-                "old_start": 9,
-                "old_count": 0,
-                "new_start": 10,
-                "new_count": 2,
-                "added_body": "def parse(raw):\n    return ()\n",
-            },
-        ]
-    )
+    record = _record(added_hunks_same_file=_hunks("", "def parse(raw):\n    return ()\n"))
 
     assert ctx.added_hunk_text(record).startswith("\n")
     assert ctx.match_replacement(record).match_method == ctx.MATCH_SAME_LOCATION
@@ -922,7 +939,7 @@ def test_output_record_carries_the_replacement_field():
     target = ctx.CommitTarget(
         repo="a/b",
         commit_sha="sha",
-        record=_record(added_hunk_same_file="def parse(raw):\n    return ()\n"),
+        record=_record(added_hunks_same_file=_hunks("def parse(raw):\n    return ()\n")),
     )
     built = ctx.build_output_record(target, ctx.CommitContext(repo="a/b", commit_sha="sha"))
 

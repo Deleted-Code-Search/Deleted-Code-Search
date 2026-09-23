@@ -564,6 +564,29 @@ def added_hunk_text(record: dict[str, Any]) -> str | None:
     return flat if flat is None else str(flat)
 
 
+def added_hunk_bodies(record: dict[str, Any]) -> list[str] | None:
+    """추가 줄을 **헝크별로 나눠서** 돌려준다. 옛 평탄한 필드만 있으면 `None`.
+
+    후보 함수를 뽑을 때는 반드시 이쪽을 쓴다. 파일 전체의 추가 줄을 이어 붙인 문자열을
+    파싱하면 **서로 떨어진 헝크의 조각이 붙어 어디에도 존재한 적 없는 함수가 만들어진다.**
+    예비 200건에서 실제로 35건 중 5건(14%)이 그랬다 - 예를 들어 `any_schema` 는 올바른
+    본문 뒤에 다른 헝크의 `serialization: SerSchema` 한 줄이 붙어, 자식 파일에 없는
+    코드가 `replacement.code` 로 나갔다.
+
+    조작된 본문은 이 프로젝트가 가장 피해야 할 산출물이다. 라벨 가이드 §6.2.1 이
+    `replacement.code` 를 INFERRED 근거 ①(신뢰도 0.8~1.0)로 쓰므로, 존재한 적 없는
+    코드를 채우면 **없는 근거로 회수율이 올라간다.**
+
+    헝크 하나 안의 추가 줄은 diff 상 연속된 실제 텍스트라 이 문제가 없다. 같은 200건을
+    헝크별로 파싱하면 35건 전부 자식 파일에 실제로 존재하는 함수가 나온다 (조작 0건,
+    잃은 건 0건).
+    """
+    hunks = record.get(ADDED_HUNKS_FIELD)
+    if hunks is None:
+        return None
+    return [(hunk or {}).get("added_body") or "" for hunk in hunks]
+
+
 def _added_functions(text: str) -> list[Function]:
     """추가 줄 텍스트에서 완결된 함수만 뽑는다.
 
@@ -618,14 +641,14 @@ UNDETERMINED = Replacement(code=None, match_method=None, confidence=0.0)
 def match_replacement(record: dict[str, Any]) -> Replacement:
     """레코드 하나의 대체 코드를 찾는다 (§4.2 ③ "삭제 위치 ±N줄 내 추가된 함수/블록").
 
-    **지금은 줄 번호가 없어 위치로 판정하지 못한다.** 추출 출력의 추가 줄 필드가 파일
-    단위로 평탄화돼 있어(`added_hunk_same_file`), 부모 파일의 `start_line` 과 이어 붙일
-    좌표가 남지 않는다. 헝크 단위 출력이 붙으면 그때 위치로 판정한다.
+    **지금은 줄 번호가 없어 위치로 판정하지 못한다.** 부모 파일의 `start_line` 과 추가
+    줄을 이어 붙일 좌표가 레코드에 없다. 헝크 좌표(#102)가 붙으면 그때 위치로 판정한다.
 
     그래서 지금 판정하는 것은 두 경우뿐이다.
 
     - **추가 줄이 하나도 없다** -> `NONE`. 그 커밋이 그 파일에 아무것도 안 넣었으므로
-      대체 코드가 없다는 것이 확실하다
+      대체 코드가 없다는 것이 확실하다. **이 판정은 옛 평탄한 필드로도 안전하다** -
+      비었는지만 보고 조각을 붙이지 않는다
     - **삭제된 함수와 같은 이름의 함수가 추가됐다** -> `SAME_LOCATION`, 신뢰도
       `SAME_NAME_CONFIDENCE`. 이동 필터(§4.2 ②)가 **"이 파일 다른 자리로 옮겨 간 것"을 이미
       빼고 남긴 레코드**라(`filter.partition_moved`), 같은 커밋·같은 파일에 같은 이름이
@@ -633,9 +656,14 @@ def match_replacement(record: dict[str, Any]) -> Replacement:
       크게 다시 쓰이면서 자리도 옮긴 경우는 유사도 0.9 에 걸리지 않아 이동으로 안 잡히고
       여기까지 온다
 
-    나머지(이름이 다른 함수가 추가됐거나, 추가는 있는데 완결된 함수가 없는 부분 수정)는
-    `UNDETERMINED` 로 둔다. 후보를 억지로 고르지 않는 이유는 그것이 게이트 1 숫자를
-    부풀리기 때문이다 - 라벨 가이드 §6.2.1 이 `replacement.code` 를 INFERRED 근거 ①(신뢰도
+    **후보는 헝크별 추가 줄에서만 뽑는다** (`added_hunk_bodies`). 옛 평탄한 필드
+    (`added_hunk_same_file`)밖에 없으면 `code` 를 채우지 않고 `UNDETERMINED` 로 둔다 -
+    헝크 경계가 없으면 서로 떨어진 조각이 붙어 존재한 적 없는 함수가 만들어진다
+    (예비 200건에서 14% 가 그랬다. `added_hunk_bodies` 독스트링 참고).
+
+    나머지(이름이 다른 함수가 추가됐거나, 추가는 있는데 완결된 함수가 없는 부분 수정)도
+    `UNDETERMINED` 다. 후보를 억지로 고르지 않는 이유는 그것이 게이트 1 숫자를 부풀리기
+    때문이다 - 라벨 가이드 §6.2.1 이 `replacement.code` 를 INFERRED 근거 ①(신뢰도
     0.8~1.0 구간)로 쓰므로, 아닌 것을 채우면 **없는 근거로 회수율이 올라간다.**
     """
     text = added_hunk_text(record)
@@ -644,8 +672,12 @@ def match_replacement(record: dict[str, Any]) -> Replacement:
     if not text.strip():
         return Replacement(code=None, match_method=MATCH_NONE, confidence=0.0)
 
+    bodies = added_hunk_bodies(record)
+    if bodies is None:
+        return UNDETERMINED
+
     name = record.get("function_name")
-    same_name = [f for f in _added_functions(text) if f.name == name]
+    same_name = [f for body in bodies for f in _added_functions(body) if f.name == name]
     if not same_name:
         return UNDETERMINED
     if len(same_name) == 1:
