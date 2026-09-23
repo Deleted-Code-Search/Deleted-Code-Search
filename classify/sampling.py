@@ -52,7 +52,11 @@ BLOCK_PAIRS: tuple[tuple[str, tuple[str, str]], ...] = (
 
 RECORDS_FILENAME = f"{BATCH}_records.jsonl"
 LABEL_FILENAME_TEMPLATE = "{labeler}_" + f"{BATCH}.jsonl"
-GUIDE_VERSION = "v1"
+# 라벨 줄의 `guide_version` 이 이 값에서 나온다 (`empty_label_row`, `classify/labels.py`).
+# 가이드 문서 상단의 `guide_version` 과 **항상 같아야 한다**: 가이드 §10.3 이 이 값으로 재검토
+# 범위를 특정하고, §8.4.2.1 이 버전이 같은 쌍만 그 버전 kappa 에 넣기 때문이다. 틀린 값이
+# 박히면 둘 다 조용히 깨진다 - 라벨은 그대로 남고 집계만 어긋난다.
+GUIDE_VERSION = "v2"
 
 # 라벨 파일의 `record_id` 는 §4.4 의 `DeletionRecord.id` 다 — 두 문서가 이름을 다르게 쓴다
 # (가이드 §7.2가 "record_id = DeletionRecord.id"로 연결해 둔다). 옮길 때 이름을 바꿔 준다.
@@ -73,8 +77,14 @@ LABELER_FIELDS: tuple[str, ...] = (
 LABELER_REPLACEMENT_FIELDS: tuple[str, ...] = ("code", "match_method")
 LABELER_CONTEXT_FIELDS: tuple[str, ...] = (
     "commit_message",
+    # 번호 2개는 §4.4 `context` 에 이미 있고 `to_schema_context()` 도 이미 내보낸다 - 여기서
+    # 빠져 있었을 뿐이다. 라벨러에게 보여주는 이유는 `evidence_locator` 다: 가이드 §7.2 가
+    # `pr:#10623#body` 형식을 요구하는데 번호가 없으면 커밋 메시지 끝의 `(#10623)` 에서 주워
+    # 쓰는 수밖에 없고, 스쿼시 머지가 아닌 커밋에는 그것도 없다.
+    "pr_number",
     "pr_title",
     "pr_body",
+    "issue_numbers",
     "issue_titles",
     "review_comments",
 )
