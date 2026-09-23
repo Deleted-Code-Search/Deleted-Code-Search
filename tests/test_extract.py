@@ -12,6 +12,7 @@ import json
 import os
 import shutil
 import subprocess
+from collections.abc import Iterable
 from pathlib import Path
 
 import pytest
@@ -78,7 +79,7 @@ def _sample_records(count: int = 3) -> list[extract_module.DeletedFunction]:
             end_line=2,
             deletion_kind="FULL_FUNCTION",
             deleted_hunk=f"def fn{i}():\n    return {i}",
-            added_hunk_same_file="",
+            added_hunks_same_file=(),
             author_date="2026-01-01T00:00:00+00:00",
             commit_message=f"delete fn{i}",
             id=extract_module.make_record_id(_REPO, f"c{i}", "a.py", f"fn{i}", 1),
@@ -117,7 +118,7 @@ def test_parse_file_diffs_splits_deleted_and_added_lines():
 
     assert set(files) == {"a.py"}
     assert files["a.py"].deleted_lines == {4: "    x = 1", 5: "    y = 2"}
-    assert files["a.py"].added_lines == ["    z = 3"]
+    assert files["a.py"].added_hunks == [extract_module.AddedHunk(4, 2, 3, 1, "    z = 3")]
 
 
 def test_parse_file_diffs_ignores_no_newline_marker():
@@ -199,7 +200,275 @@ def test_parse_file_diffs_hunk_content_starting_with_dashes_is_not_mistaken_for_
 
     assert set(files) == {"a.py"}
     assert files["a.py"].deleted_lines == {3: "-- section --"}
-    assert files["a.py"].added_lines == ["++ replacement ++"]
+    assert files["a.py"].added_hunks == [extract_module.AddedHunk(3, 1, 3, 1, "++ replacement ++")]
+
+
+# --------------------------------------------------------------------------------------
+# parse_file_diffs: added_hunks (Issue #102). 헝크 헤더 좌표 4개 + added_body를 헝크 단위로
+# 보존한다. new_count == 0(순수 삭제) 헝크는 넣지 않는다.
+# --------------------------------------------------------------------------------------
+
+_A = extract_module.AddedHunk
+
+
+def test_parse_file_diffs_keeps_each_added_hunk_in_diff_order():
+    diff = (
+        "diff --git a/a.py b/a.py\n"
+        "--- a/a.py\n"
+        "+++ b/a.py\n"
+        "@@ -2,2 +2,3 @@ def foo():\n"
+        "-    x = 1\n"
+        "-    y = 2\n"
+        "+    x = 10\n"
+        "+    y = 20\n"
+        "+    z = 30\n"
+        "@@ -9,0 +11,2 @@ def bar():\n"
+        "+    w = 4\n"
+        "+    return w\n"
+        "@@ -20,3 +23,1 @@ def baz():\n"
+        "-    a = 1\n"
+        "-    b = 2\n"
+        "-    c = 3\n"
+        "+    return 0\n"
+    )
+    files = extract_module.parse_file_diffs(diff)
+
+    assert files["a.py"].added_hunks == [
+        _A(2, 2, 2, 3, "    x = 10\n    y = 20\n    z = 30"),
+        _A(9, 0, 11, 2, "    w = 4\n    return w"),
+        _A(20, 3, 23, 1, "    return 0"),
+    ]
+
+
+def test_parse_file_diffs_omitted_hunk_counts_default_to_one():
+    """`@@ -3 +3 @@`처럼 count가 없으면 unified diff 관례대로 1이다."""
+    diff = (
+        "diff --git a/a.py b/a.py\n"
+        "--- a/a.py\n"
+        "+++ b/a.py\n"
+        "@@ -3 +3 @@ def foo():\n"
+        "-    return 1\n"
+        "+    return 2\n"
+    )
+    files = extract_module.parse_file_diffs(diff)
+
+    assert files["a.py"].added_hunks == [_A(3, 1, 3, 1, "    return 2")]
+
+
+def test_parse_file_diffs_excludes_pure_deletion_hunks():
+    """new_count == 0 헝크는 추가 줄이 없으므로 added_hunks에 없다. 삭제 줄 자체는
+    deleted_lines에 그대로 남는다. count 생략(`-10`) + 0(`+9,0`) 조합도 함께 본다."""
+    diff = (
+        "diff --git a/a.py b/a.py\n"
+        "--- a/a.py\n"
+        "+++ b/a.py\n"
+        "@@ -2,2 +1,0 @@\n"
+        "-def foo():\n"
+        "-    return 1\n"
+        "@@ -10 +9,0 @@\n"
+        "-x = 1\n"
+        "@@ -12 +10 @@\n"
+        "-y = 1\n"
+        "+y = 2\n"
+    )
+    files = extract_module.parse_file_diffs(diff)
+
+    deleted = files["a.py"].deleted_lines
+    assert deleted == {2: "def foo():", 3: "    return 1", 10: "x = 1", 12: "y = 1"}
+    assert files["a.py"].added_hunks == [_A(12, 1, 10, 1, "y = 2")]
+
+
+def test_parse_file_diffs_includes_pure_insertion_hunk():
+    """`-5,0 +6,2`(순수 삽입)는 포함한다 — 삭제는 같은 파일의 다른 헝크에 있다."""
+    diff = (
+        "diff --git a/a.py b/a.py\n"
+        "--- a/a.py\n"
+        "+++ b/a.py\n"
+        "@@ -2 +1,0 @@\n"
+        "-import os\n"
+        "@@ -5,0 +6,2 @@\n"
+        "+def new():\n"
+        "+    return 1\n"
+    )
+    files = extract_module.parse_file_diffs(diff)
+
+    assert files["a.py"].added_hunks == [_A(5, 0, 6, 2, "def new():\n    return 1")]
+
+
+def test_parse_file_diffs_includes_blank_line_hunk_with_empty_body():
+    """빈 줄 하나만 추가한 헝크는 added_body == ""이지만 new_count == 1이라 포함한다."""
+    diff = (
+        "diff --git a/a.py b/a.py\n"
+        "--- a/a.py\n"
+        "+++ b/a.py\n"
+        "@@ -4 +4 @@\n"
+        "-    return 1\n"
+        "+\n"
+        "@@ -8,0 +9,2 @@\n"
+        "+\n"
+        "+\n"
+    )
+    files = extract_module.parse_file_diffs(diff)
+
+    assert files["a.py"].added_hunks == [_A(4, 1, 4, 1, ""), _A(8, 0, 9, 2, "\n")]
+
+
+def test_parse_file_diffs_added_body_excludes_no_newline_marker():
+    diff = (
+        "diff --git a/a.py b/a.py\n"
+        "--- a/a.py\n"
+        "+++ b/a.py\n"
+        "@@ -3 +3,2 @@\n"
+        "-    return 1\n"
+        "\\ No newline at end of file\n"
+        "+    return 2\n"
+        "+# end\n"
+        "\\ No newline at end of file\n"
+    )
+    files = extract_module.parse_file_diffs(diff)
+
+    assert files["a.py"].added_hunks == [_A(3, 1, 3, 2, "    return 2\n# end")]
+
+
+def test_parse_file_diffs_added_line_starting_with_plus_plus_is_body_not_header():
+    """추가 코드 줄이 "++ ..."로 시작하면 diff에선 "+++ ..."가 된다 — 파일 헤더나 다음
+    헝크로 오인되지 않고 added_body에 들어가야 한다."""
+    diff = (
+        "diff --git a/a.py b/a.py\n"
+        "--- a/a.py\n"
+        "+++ b/a.py\n"
+        "@@ -2 +2,3 @@\n"
+        "-x = 1\n"
+        "+++ counter ++\n"
+        "+--- divider --\n"
+        "+@@ not a header @@\n"
+    )
+    files = extract_module.parse_file_diffs(diff)
+
+    assert set(files) == {"a.py"}
+    assert files["a.py"].added_hunks == [
+        _A(2, 1, 2, 3, "++ counter ++\n--- divider --\n@@ not a header @@")
+    ]
+
+
+def _joined_added_bodies(hunks: Iterable[extract_module.AddedHunk]) -> str:
+    """새 구조에서 옛 `added_hunk_same_file` 문자열을 복원한다."""
+    return "\n".join(hunk.added_body for hunk in hunks)
+
+
+# 실제 추출 데이터(#5, requests 7,762건, 2026-09-14 로컬 실행)에서 관찰한 added 쪽 형태를
+# 축소한 fixture. 파일 자체에는 의존하지 않는다. 관찰된 형태: 추가 줄 없음(2,513건),
+# 탭 들여쓰기(103), 앞쪽 빈 줄(223), 연속 빈 줄 3개 이상(995), 줄 끝 공백(466),
+# 비-ASCII(497), 공백·탭만 있는 줄로만 된 값(3). 여기에 순수 삭제·순수 삽입 헝크 섞임과
+# no-newline 마커를 더했다. 각 fixture의 기대값은 Issue #102 이전 `added_hunk_same_file`이
+# 파일별로 내던 문자열(삭제 줄이 있는 옛 경로만 키로 가짐)을 직접 고정한 것이다.
+_LEGACY_FIXTURES = {
+    "tabs_leading_blank_trailing_ws_multi_hunk": (
+        "diff --git a/requests/core.py b/requests/core.py\n"
+        "index 1111111..2222222 100644\n"
+        "--- a/requests/core.py\n"
+        "+++ b/requests/core.py\n"
+        "@@ -10,3 +10,3 @@ class Request(object):\n"
+        "-\tdef _build_response(self, resp):\n"
+        "-\t\tself.response.status_code = resp.code\n"
+        "-\t\treturn None\n"
+        "+\n"
+        "+\tdef _build_response(self, resp):\n"
+        '+\t\t"""Build internal Response object from given response."""\n'
+        "@@ -20,0 +21,2 @@ class Request(object):\n"
+        "+\t\tself.response.headers = resp.info().dict \n"
+        "+\t\treturn self.response\n"
+        "@@ -40,2 +40,0 @@ class Request(object):\n"
+        "-\tdef unused(self):\n"
+        "-\t\tpass\n",
+        {
+            "requests/core.py": (
+                "\n"
+                "\tdef _build_response(self, resp):\n"
+                '\t\t"""Build internal Response object from given response."""\n'
+                "\t\tself.response.headers = resp.info().dict \n"
+                "\t\treturn self.response"
+            )
+        },
+    ),
+    "non_ascii_triple_blank_no_newline": (
+        "diff --git a/test_requests.py b/test_requests.py\n"
+        "--- a/test_requests.py\n"
+        "+++ b/test_requests.py\n"
+        "@@ -1,4 +1,8 @@\n"
+        "-def httpbin(*suffix):\n"
+        "-    return 'http://httpbin.org/' + '/'.join(suffix)\n"
+        "-\n"
+        "-\n"
+        "+\n"
+        "+HTTPBIN_URL = 'http://httpbin.org/'\n"
+        "+\n"
+        "+\n"
+        "+\n"
+        "+def httpbin(*suffix):\n"
+        '+    """Returns url for HTTPBIN resource — 한글 설명."""\n'
+        "+    return HTTPBIN_URL + '/'.join(suffix)\n"
+        "\\ No newline at end of file\n",
+        {
+            "test_requests.py": (
+                "\n"
+                "HTTPBIN_URL = 'http://httpbin.org/'\n"
+                "\n"
+                "\n"
+                "\n"
+                "def httpbin(*suffix):\n"
+                '    """Returns url for HTTPBIN resource — 한글 설명."""\n'
+                "    return HTTPBIN_URL + '/'.join(suffix)"
+            )
+        },
+    ),
+    "whitespace_only_and_blank_hunks": (
+        "diff --git a/requests/models.py b/requests/models.py\n"
+        "--- a/requests/models.py\n"
+        "+++ b/requests/models.py\n"
+        "@@ -5,2 +5 @@\n"
+        "-\tdef a(self):\n"
+        "-\t\tpass\n"
+        "+\t\t\t\n"
+        "@@ -9 +8 @@\n"
+        "-\t\tx = 1\n"
+        "+\t\t\n"
+        "@@ -12,0 +12 @@\n"
+        "+\n",
+        {"requests/models.py": "\t\t\t\n\t\t\n"},
+    ),
+    "nothing_added": (
+        "diff --git a/requests/api.py b/requests/api.py\n"
+        "--- a/requests/api.py\n"
+        "+++ b/requests/api.py\n"
+        "@@ -3,2 +2,0 @@\n"
+        "-def head(url):\n"
+        "-    return None\n"
+        "diff --git a/requests/old.py b/requests/old.py\n"
+        "deleted file mode 100644\n"
+        "--- a/requests/old.py\n"
+        "+++ /dev/null\n"
+        "@@ -1,2 +0,0 @@\n"
+        "-def gone():\n"
+        "-    pass\n",
+        {"requests/api.py": "", "requests/old.py": ""},
+    ),
+}
+
+
+@pytest.mark.parametrize(
+    ("diff", "expected"), _LEGACY_FIXTURES.values(), ids=_LEGACY_FIXTURES.keys()
+)
+def test_added_hunks_reconstruct_legacy_added_hunk_same_file(diff: str, expected: dict[str, str]):
+    """새 구조를 `"\\n".join(added_body ...)`로 이어붙이면 옛 `added_hunk_same_file` 값과
+    정확히 같다 — 두 형태를 함께 저장하지 않아도 정보 손실이 없다(Issue #102)."""
+    files = extract_module.parse_file_diffs(diff)
+
+    assert set(files) == set(expected)
+    for path, file_diff in files.items():
+        assert _joined_added_bodies(file_diff.added_hunks) == expected[path]
+        for hunk in file_diff.added_hunks:
+            assert hunk.new_count == len(hunk.added_body.split("\n"))
 
 
 # --------------------------------------------------------------------------------------
@@ -450,7 +719,7 @@ class TestExtractDeletions:
         assert by_name["inner"].deletion_kind == "FULL_FUNCTION"
         assert by_name["outer"].deletion_kind == "FULL_FUNCTION"
 
-    def test_added_hunk_same_file_is_shared_across_records_from_that_file(self, tmp_path: Path):
+    def test_added_hunks_same_file_is_shared_across_records_from_that_file(self, tmp_path: Path):
         repo = _init_repo(tmp_path / "repo")
         _write(repo, "a.py", "def foo():\n    return 1\n\n\ndef bar():\n    return 2\n")
         _commit_all(repo, "add foo and bar")
@@ -460,10 +729,10 @@ class TestExtractDeletions:
         records = extract_module.extract_deletions(repo, _REPO, _last_commit_pair(repo))
 
         assert len(records) == 2
-        added = {r.added_hunk_same_file for r in records}
-        assert added == {"def baz():\n    return 3"}
+        added = {r.added_hunks_same_file for r in records}
+        assert added == {(extract_module.AddedHunk(1, 6, 1, 2, "def baz():\n    return 3"),)}
 
-    def test_added_hunk_same_file_is_empty_when_nothing_added(self, tmp_path: Path):
+    def test_added_hunks_same_file_is_empty_when_nothing_added(self, tmp_path: Path):
         repo = _init_repo(tmp_path / "repo")
         _write(repo, "a.py", "def foo():\n    return 1\n")
         _commit_all(repo, "add foo")
@@ -473,7 +742,37 @@ class TestExtractDeletions:
         records = extract_module.extract_deletions(repo, _REPO, _last_commit_pair(repo))
 
         assert len(records) == 1
-        assert records[0].added_hunk_same_file == ""
+        assert records[0].added_hunks_same_file == ()
+
+    def test_added_hunks_same_file_matches_real_git_coordinates(self, tmp_path: Path):
+        """실제 git diff 헤더 좌표가 그대로 남고, 옛 문자열 값도 그대로 복원된다(Issue #102).
+        파일 앞쪽 순수 삽입(1줄)이 뒤쪽 헝크의 new_start를 1 밀어낸다."""
+        repo = _init_repo(tmp_path / "repo")
+        _write(
+            repo,
+            "a.py",
+            "import os\n\n\ndef foo():\n    return 1\n\n\ndef bar():\n    return 2\n",
+        )
+        _commit_all(repo, "add foo and bar")
+        _write(
+            repo,
+            "a.py",
+            "import os\nimport sys\n\n\ndef foo():\n    return 1\n\n\ndef baz():\n    return 3\n",
+        )
+        _commit_all(repo, "add import, replace bar with baz")
+        commit = _last_commit_pair(repo)
+
+        records = extract_module.extract_deletions(repo, _REPO, commit)
+
+        assert [r.function_name for r in records] == ["bar"]
+        assert records[0].added_hunks_same_file == (
+            extract_module.AddedHunk(1, 0, 2, 1, "import sys"),
+            extract_module.AddedHunk(8, 2, 9, 2, "def baz():\n    return 3"),
+        )
+        # 옛 added_hunk_same_file 값: a.py의 추가 줄을 diff 순서대로 이어붙인 문자열
+        assert _joined_added_bodies(records[0].added_hunks_same_file) == (
+            "import sys\ndef baz():\n    return 3"
+        )
 
     def test_non_py_files_are_ignored(self, tmp_path: Path):
         repo = _init_repo(tmp_path / "repo")
@@ -774,7 +1073,7 @@ def test_to_json_dict_has_only_currently_known_fields():
         "end_line",
         "deletion_kind",
         "deleted_body",
-        "added_hunk_same_file",
+        "added_hunks_same_file",
         "author_date",
         "commit_message",
         "id",
@@ -784,6 +1083,48 @@ def test_to_json_dict_has_only_currently_known_fields():
     }
     assert "filter_status" not in payload
     assert "filter_rule_version" not in payload
+
+
+_SAMPLE_HUNKS = (
+    extract_module.AddedHunk(3, 2, 3, 1, "  x"),
+    extract_module.AddedHunk(9, 0, 8, 2, "\n"),
+)
+
+
+def _record_with_hunks() -> extract_module.DeletedFunction:
+    return dataclasses.replace(_sample_records(1)[0], added_hunks_same_file=_SAMPLE_HUNKS)
+
+
+def test_to_json_dict_serializes_added_hunks_as_list_of_five_key_objects():
+    """Issue #102: 새 키만 있고 옛 `added_hunk_same_file` 키는 없다. 원소는 정확히 5개
+    필드를 가진 객체이며 diff 순서를 유지한다."""
+    payload = extract_module.to_json_dict(_record_with_hunks())
+
+    assert "added_hunk_same_file" not in payload
+    assert payload["added_hunks_same_file"] == [
+        {"old_start": 3, "old_count": 2, "new_start": 3, "new_count": 1, "added_body": "  x"},
+        {"old_start": 9, "old_count": 0, "new_start": 8, "new_count": 2, "added_body": "\n"},
+    ]
+    for item in payload["added_hunks_same_file"]:
+        assert list(item) == ["old_start", "old_count", "new_start", "new_count", "added_body"]
+    assert json.loads(json.dumps(payload, ensure_ascii=False)) == payload
+
+
+def test_to_json_dict_added_hunks_empty_is_empty_list():
+    payload = extract_module.to_json_dict(_sample_records(1)[0])
+
+    assert payload["added_hunks_same_file"] == []
+
+
+def test_deleted_function_added_hunks_is_immutable_tuple():
+    """frozen dataclass 안의 값이라 tuple로 둔다 — 레코드가 해시 가능하게 남는다."""
+    record = _record_with_hunks()
+
+    assert isinstance(record.added_hunks_same_file, tuple)
+    hash(record)
+    field_names = {f.name for f in dataclasses.fields(extract_module.DeletedFunction)}
+    assert "added_hunks_same_file" in field_names
+    assert "added_hunk_same_file" not in field_names
 
 
 # --------------------------------------------------------------------------------------
@@ -973,6 +1314,19 @@ def test_excluded_to_json_dict_is_flat_extraction_row_plus_filter_metadata():
         "end_line": 4,
         "similarity": 0.95,
     }
+
+
+def test_excluded_to_json_dict_carries_added_hunks_from_record():
+    """Issue #102: excluded JSONL은 `to_json_dict(record)`를 그대로 펼치므로 새 필드가
+    별도 로직 없이 같은 모양으로 들어가고, 옛 키는 없다."""
+    item = dataclasses.replace(_sample_excluded(1)[0], record=_record_with_hunks())
+
+    payload = extract_module.excluded_to_json_dict(item)
+
+    base = extract_module.to_json_dict(item.record)
+    assert payload["added_hunks_same_file"] == base["added_hunks_same_file"]
+    assert len(payload["added_hunks_same_file"]) == 2
+    assert "added_hunk_same_file" not in payload
 
 
 def test_to_json_dict_still_has_no_filter_fields_for_excluded_record():
