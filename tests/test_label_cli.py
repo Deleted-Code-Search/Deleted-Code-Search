@@ -2,6 +2,7 @@
 
 import json
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 import pytest
 
@@ -519,3 +520,292 @@ def test_main_runs_a_session(workspace, monkeypatch):
 
     assert code == 0
     assert read_rows(records_path.parent / "sj_pre200.jsonl")[0]["reason_label"] == "BUG"
+
+
+# --------------------------------------------------------------------------------------
+# UNKNOWN 원인 태그 강제 (#88, 가이드 v2 §6.3.2)
+# --------------------------------------------------------------------------------------
+
+
+def unknown_label(note, **overrides):
+    """CLI 가 UNK 로 저장하는 라벨 모양 (가이드 §6.3)."""
+    label = {
+        "reason_label": "UNK",
+        "evidence_grade": "UNKNOWN",
+        "evidence_text": None,
+        "evidence_source": None,
+        "evidence_locator": None,
+        "confidence": 0.0,
+        "note": note,
+    }
+    label.update(overrides)
+    return label
+
+
+def v1_untagged_unknown_row(record_id):
+    """예비 200건(v1) 파일에 있는 모양 그대로 — 태그 없는 UNKNOWN (게이트 1에서 43건)."""
+    return {
+        "record_id": record_id,
+        "labeler": "sj",
+        "reason_label": "UNK",
+        "evidence_grade": "UNKNOWN",
+        "evidence_text": None,
+        "evidence_source": None,
+        "evidence_locator": None,
+        "confidence": 0.0,
+        "note": "커밋 메시지만으로는 판단 불가",
+        "labeled_at": "2026-09-20T10:00:00+09:00",
+        "guide_version": "v1",
+    }
+
+
+def put_v1_row_first(workspace):
+    """빈 틀의 첫 줄을 v1 태그 없는 UNKNOWN 으로 바꿔 둔다."""
+    _, label_path = workspace
+    rows = read_rows(label_path)
+    rows[0] = v1_untagged_unknown_row("rec-000")
+    write_jsonl(label_path, rows)
+    return label_path
+
+
+def test_cause_tags_are_the_four_the_guide_fixed():
+    """가이드 §6.3.2 가 철자·개수를 고정한 4종. CLI 는 labels.py 의 같은 상수를 쓴다."""
+    assert labels.UNKNOWN_CAUSE_TAGS == (
+        "no-context",
+        "vague-message",
+        "no-replacement",
+        "no-caller-info",
+    )
+    assert labels.FILTER_MISS_TAG == "filter-miss"
+    assert labels.FILTER_MISS_TAG not in labels.UNKNOWN_CAUSE_TAGS
+    assert label_cli.UNKNOWN_CAUSE_TAGS is labels.UNKNOWN_CAUSE_TAGS
+    assert label_cli.FILTER_MISS_TAG is labels.FILTER_MISS_TAG
+
+
+@pytest.mark.parametrize("note", ["", "   ", None, "커밋 메시지가 cleanup 뿐"])
+def test_unknown_without_cause_tag_is_a_violation(note):
+    """태그 없는 UNKNOWN 은 완성된 라벨이 아니다 (§6.3). 빈 note 와 서술만 있는 note 둘 다."""
+    violations = label_cli.unknown_cause_tag_violations(unknown_label(note))
+
+    assert len(violations) == 1
+    for tag in (*labels.UNKNOWN_CAUSE_TAGS, labels.FILTER_MISS_TAG):
+        assert tag in violations[0]  # 허용 값을 함께 보여준다
+
+
+@pytest.mark.parametrize("tag", labels.UNKNOWN_CAUSE_TAGS)
+def test_unknown_with_each_cause_tag_passes(tag):
+    """4종 중 어느 하나만 있어도 통과한다."""
+    assert label_cli.unknown_cause_tag_violations(unknown_label(tag)) == []
+
+
+def test_unknown_with_only_filter_miss_passes():
+    """filter-miss 는 원인 태그 자리를 대신하는 유일한 예외다 (§6.3.2)."""
+    assert label_cli.unknown_cause_tag_violations(unknown_label("filter-miss")) == []
+
+
+def test_unknown_with_several_cause_tags_and_free_text_passes():
+    """§6.3.2 "복수 허용 — 해당하는 것을 다 단다". 태그 뒤 자유 서술도 된다 (§7.2)."""
+    note = "no-context vague-message no-replacement no-caller-info PR 없음, 메시지는 cleanup"
+    assert label_cli.unknown_cause_tag_violations(unknown_label(note)) == []
+    assert label_cli.unknown_cause_tag_violations(unknown_label("filter-miss no-context")) == []
+
+
+def test_unknown_with_a_misspelled_cause_tag_is_a_violation():
+    """목록 밖 태그 검사는 하지 않지만(닫힌 어휘가 아니다), 오타는 "원인 태그 없음"으로 걸린다."""
+    for note in ("no-contexts", "vauge-message", "no_replacement", "filtermiss", "xno-context"):
+        assert label_cli.unknown_cause_tag_violations(unknown_label(note)), note
+
+
+def test_cause_tag_can_sit_next_to_punctuation_or_korean():
+    """쉼표로 잇거나 한국어 조사를 붙여도 태그로 본다 — 영문 경계만 본다."""
+    for note in ("no-context,vague-message", "(no-replacement)", "no-caller-info로 판단 불가"):
+        assert label_cli.unknown_cause_tag_violations(unknown_label(note)) == [], note
+
+
+def test_other_tags_are_not_rejected_on_unknown():
+    """목록 밖 태그(가이드 §10.3 `stale-v1` 등)가 함께 있어도 막지 않는다."""
+    note = "no-context stale-v1 needs-discussion"
+    assert label_cli.unknown_cause_tag_violations(unknown_label(note)) == []
+
+
+@pytest.mark.parametrize(
+    ("reason", "grade", "confidence"),
+    [("BUG", "EXPLICIT", 1.0), ("DEAD", "INFERRED", 0.6)],
+)
+def test_non_unknown_label_without_tag_passes(reason, grade, confidence):
+    """UNKNOWN 이 아닌 라벨은 이 규칙과 무관하다."""
+    label = {
+        "reason_label": reason,
+        "evidence_grade": grade,
+        "evidence_text": "근거",
+        "confidence": confidence,
+        "note": "",
+    }
+    assert label_cli.unknown_cause_tag_violations(label) == []
+
+
+def test_unk_reason_is_a_target_even_if_grade_was_hand_edited():
+    """가이드상 UNK ⇔ UNKNOWN(§4 UNK, §6.3). 등급만 어긋난 줄이 새로 저장되려 해도 잡는다."""
+    label = unknown_label("", evidence_grade="INFERRED", confidence=0.5)
+    assert label_cli.requires_unknown_cause_tag(label)
+    assert label_cli.unknown_cause_tag_violations(label)
+
+
+def test_cli_rejects_untagged_unknown_note_until_a_tag_is_given(workspace):
+    """신규 입력 경로: 태그가 없으면 저장하지 않고 허용 태그를 보여 주며 다시 묻는다."""
+    answers = ["8", "", "메시지가 부실함", "vauge-message", "vague-message 메시지가 부실함", "y"]
+    output, rows = run_session(workspace, answers)
+
+    assert output.count("UNKNOWN 이면 note 가 필수다") == 3
+    assert "note 가 비었다" in output
+    assert "no-context vague-message no-replacement no-caller-info" in output
+    assert "filter-miss" in output
+    assert rows[0]["note"] == "vague-message 메시지가 부실함"
+    assert (rows[0]["reason_label"], rows[0]["evidence_grade"]) == ("UNK", "UNKNOWN")
+
+
+def test_cli_accepts_filter_miss_alone(workspace):
+    """filter-miss 만 단 UNKNOWN 은 CLI 에서도 저장된다."""
+    _, rows = run_session(workspace, ["8", "filter-miss", "y"])
+
+    assert rows[0]["note"] == "filter-miss"
+
+
+def test_cli_low_confidence_inferred_turned_unknown_also_requires_a_tag(workspace):
+    """INFERRED 신뢰도 < 0.5 → UNK 로 바뀌는 경로도 같은 검사를 거친다."""
+    answers = ["1", "i", "0.3", "y", "호출자 불명", "no-caller-info", "y"]
+    output, rows = run_session(workspace, answers)
+
+    assert "원인 태그가 없다" in output
+    assert rows[0]["note"] == "no-caller-info"
+
+
+def test_cli_non_unknown_note_is_still_optional(workspace):
+    """UNKNOWN 이 아니면 note 를 비워도 된다 (기존 동작 유지)."""
+    _, rows = run_session(workspace, explicit_bug(0))
+
+    assert rows[0]["note"] == ""
+
+
+def test_undo_relabel_as_unknown_requires_a_tag(workspace):
+    """:u 수정 경로도 같은 검사를 거친다."""
+    answers = explicit_bug(0) + [":u", "8", "", "no-replacement", "y"]
+    output, rows = run_session(workspace, answers)
+
+    assert "[직전 건 수정]" in output
+    assert "UNKNOWN 이면 note 가 필수다" in output
+    assert (rows[0]["reason_label"], rows[0]["note"]) == ("UNK", "no-replacement")
+
+
+def test_save_refuses_a_violating_label_and_leaves_the_file_untouched(workspace):
+    """저장 직전 관문. collect_note 를 거치지 않는 경로가 생겨도 파일에 닿지 않는다."""
+    records_path, label_path = workspace
+    before = label_path.read_text(encoding="utf-8")
+    records, _ = label_cli.load_records(records_path)
+    session = label_cli.LabelSession(
+        "sj", records, label_cli.LabelFile.load(label_path), ask=Script([]), say=lambda _: None
+    )
+
+    with pytest.raises(label_cli.UnknownTagViolation, match="원인 태그"):
+        session.save(0, unknown_label("태그 없음"))
+
+    assert label_path.read_text(encoding="utf-8") == before
+    assert not (label_path.parent / "sj_pre200.jsonl.order.json").exists()
+
+
+def test_run_reasks_when_save_is_refused(workspace):
+    """run() 이 관문에서 막히면 저장하지 않고 같은 건을 다시 입력받는다."""
+    records_path, label_path = workspace
+    records, _ = label_cli.load_records(records_path)
+    transcript = []
+    session = label_cli.LabelSession(
+        "sj",
+        records,
+        label_cli.LabelFile.load(label_path),
+        ask=Script([":q"], transcript),
+        say=transcript.append,
+    )
+    produced = iter([unknown_label("태그 없음"), unknown_label("no-context")])
+    original = session.collect_label
+
+    def collect_label(view, started):
+        try:
+            return next(produced)
+        except StopIteration:
+            return original(view, started)
+
+    session.collect_label = collect_label
+    session.run()
+
+    output = "\n".join(transcript)
+    rows = read_rows(label_path)
+    assert "저장하지 않았다. 이 건을 처음부터 다시 입력한다" in output
+    assert output.count("record_id  rec-000") == 2
+    assert rows[0]["note"] == "no-context"
+    assert not labels.is_filled(rows[1])
+
+
+def test_new_label_is_stamped_guide_version_v2(workspace):
+    """새로 저장하는 줄의 guide_version 은 classify.sampling.GUIDE_VERSION(#100 에서 v2)."""
+    _, rows = run_session(workspace, ["8", "no-context", "y"])
+
+    assert sampling.GUIDE_VERSION == "v2"
+    assert rows[0]["guide_version"] == "v2"
+
+
+# ---- 기존 v1 파일 호환: 읽기·표시·집계 경로는 검사하지 않는다 ----
+
+
+def test_v1_untagged_unknown_rows_load_and_pass_the_file_check(workspace):
+    """예비 200건 형식의 태그 없는 UNKNOWN 줄은 읽기 경로에서 에러가 나지 않는다."""
+    label_path = put_v1_row_first(workspace)
+
+    label_file = label_cli.LabelFile.load(label_path)
+    problems = label_cli.find_label_file_problems(
+        label_file.rows, "sj", {"rec-000", "rec-001", "rec-002"}
+    )
+
+    assert problems == []
+    assert label_file.labeled_count() == 1
+    assert label_file.next_unlabeled() == 1
+    assert label_cli.unknown_cause_tag_violations(label_file.rows[0])  # 규칙상으론 위반인 줄
+
+
+def test_labeling_other_records_keeps_the_v1_row_as_is(workspace):
+    """다른 건을 저장하면 파일 전체를 다시 쓰지만, v1 줄은 검사도 변경도 없이 그대로 남는다."""
+    put_v1_row_first(workspace)
+
+    _, after = run_session(workspace, explicit_bug(1))
+
+    assert after[0] == v1_untagged_unknown_row("rec-000")
+    assert after[1]["reason_label"] == "BUG"
+    assert after[1]["guide_version"] == "v2"
+
+
+def test_v1_row_is_shown_on_undo_and_relabel_requires_a_tag(workspace):
+    """:u 로 v1 줄을 열면 저장값은 그대로 보여 주고, 다시 저장할 때만 검사한다."""
+    put_v1_row_first(workspace)
+
+    output, after = run_session(workspace, [":u", "8", "", "vague-message", "y"])
+
+    assert "[직전 건 수정] 저장된 값: UNK / UNKNOWN" in output
+    assert "UNKNOWN 이면 note 가 필수다" in output
+    assert (after[0]["note"], after[0]["guide_version"]) == ("vague-message", "v2")
+
+
+def test_real_pre200_label_files_still_load():
+    """저장소에 있는 예비 200건(v1) 파일 그대로. 태그 없는 UNKNOWN 이 있어도 읽기가 통과한다."""
+    labels_dir = Path(__file__).resolve().parent.parent / "datasets" / "labels"
+    records_path = labels_dir / sampling.RECORDS_FILENAME
+    if not records_path.is_file():
+        pytest.skip("예비 200건 파일이 없다")
+    records, record_problems = label_cli.load_records(records_path)
+    assert record_problems == []
+
+    untagged = 0
+    for labeler in sampling.LABELERS:
+        path = labels_dir / sampling.LABEL_FILENAME_TEMPLATE.format(labeler=labeler)
+        label_file = label_cli.LabelFile.load(path)
+        assert label_cli.find_label_file_problems(label_file.rows, labeler, records.keys()) == []
+        untagged += sum(1 for row in label_file.rows if label_cli.unknown_cause_tag_violations(row))
+    assert untagged > 0  # 규칙상 위반인 v1 줄이 실제로 있는데도 읽기는 통과한다

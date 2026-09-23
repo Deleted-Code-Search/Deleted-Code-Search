@@ -51,9 +51,13 @@ RECOVERED_GRADES = frozenset({"EXPLICIT", "INFERRED"})  # §15 이유 회수율�
 # (#7 코멘트 5번). 일치해도 "둘이 같은 것을 봤다"는 뜻이라 kappa 를 부풀린다.
 ANCHORED_TAG = "anchored"
 
-# UNKNOWN 의 원인 태그 (가이드 §6.3). 분포가 게이트 1 대응 방향을 가른다 —
+# UNKNOWN 의 원인 태그 4종 (가이드 v2 §6.3.2). 분포가 게이트 1 대응 방향을 가른다 —
 # 맥락이 안 붙어서 낮으면 저장소 재선정, 맥락은 붙는데 이유가 없어서 낮으면 축 이동.
+# `tools/label_cli.py` 가 이 목록을 그대로 강제한다 (#88). 철자·개수는 가이드와 함께만 바꾼다.
 UNKNOWN_CAUSE_TAGS = ("no-context", "vague-message", "no-replacement", "no-caller-info")
+# 원인 태그 자리를 대신할 수 있는 유일한 태그 (가이드 v2 §6.3.1 3번, §6.3.2 "최소 1개 필수").
+# 원인 태그 4종에는 들어가지 않는다 — 필터 정밀도(§10.1)를 재는 관찰 태그다.
+FILTER_MISS_TAG = "filter-miss"
 
 # 게이트 1 (§9 2주차, §11) / kappa 해석 (§8.4)
 GATE1_PASS = 0.60
