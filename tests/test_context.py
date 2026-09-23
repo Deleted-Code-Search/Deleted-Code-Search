@@ -887,16 +887,34 @@ def test_new_hunk_field_wins_over_the_old_flat_field():
     assert "'new'" in ctx.match_replacement(record).code
 
 
-def test_empty_hunk_bodies_do_not_become_blank_lines():
-    """`new_count == 0` 헝크는 `added_body`가 비어 있다. 그냥 이으면 빈 줄이 끼어든다."""
-    record = _record(
-        added_hunks_same_file=[
-            {"old_start": 1, "old_count": 2, "new_start": 1, "new_count": 0, "added_body": ""},
-        ]
-    )
+def test_no_added_hunks_is_still_a_none_verdict():
+    """새 형식은 추가가 없으면 빈 리스트다 (#102 - 추가 0줄 헝크는 넣지 않는다)."""
+    record = _record(added_hunks_same_file=[])
 
     assert ctx.added_hunk_text(record) == ""
     assert ctx.match_replacement(record).match_method == ctx.MATCH_NONE
+
+
+def test_a_blank_line_addition_is_not_dropped():
+    """`new_count == 1` 인데 `added_body` 가 빈 헝크가 있다 - 빈 줄을 추가한 경우다 (#102).
+
+    본문이 비었다고 건너뛰면 그 줄이 사라져, 복원한 텍스트가 원본과 달라진다.
+    """
+    record = _record(
+        added_hunks_same_file=[
+            {"old_start": 3, "old_count": 0, "new_start": 3, "new_count": 1, "added_body": ""},
+            {
+                "old_start": 9,
+                "old_count": 0,
+                "new_start": 10,
+                "new_count": 2,
+                "added_body": "def parse(raw):\n    return ()\n",
+            },
+        ]
+    )
+
+    assert ctx.added_hunk_text(record).startswith("\n")
+    assert ctx.match_replacement(record).match_method == ctx.MATCH_SAME_LOCATION
 
 
 def test_output_record_carries_the_replacement_field():

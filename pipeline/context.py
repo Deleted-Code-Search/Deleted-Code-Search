@@ -549,11 +549,17 @@ def added_hunk_text(record: dict[str, Any]) -> str | None:
     `None`(필드 없음)과 `""`(필드는 있고 추가 줄이 0개)를 **구별해서 돌려준다.** 앞은
     "모른다", 뒤는 "대체가 없다"이고 둘은 다른 판정으로 간다. 라벨 가이드 §6.2.3 이
     `replacement` 가 `null` 일 때 "수집되지 않은 것과 존재하지 않는 것을 이 필드로 구별할
-    수 없다"고 경고한 것이 이 구별을 잃었을 때 벌어지는 일이다.
+    수 없다"고 경고한 것이 이 구별을 잃었을 때 벌어지는 일이다. 새 형식에서는 추가가
+    없으면 빈 리스트가 오므로(#102) 그 구별이 그대로 유지된다.
+
+    **`added_body` 가 비었다고 건너뛰지 않는다.** `new_count == 1` 인데 본문이 `""` 인
+    헝크가 있다 — 빈 줄 하나를 추가한 경우다 (#102 확정). 건너뛰면 그 빈 줄이 사라져
+    복원한 텍스트가 원본과 달라진다. 추가 0줄짜리 헝크는 새 형식에 애초에 들어오지
+    않으므로(#102) 여기서 걸러 낼 것도 없다.
     """
     hunks = record.get(ADDED_HUNKS_FIELD)
     if hunks is not None:
-        return "\n".join(body for hunk in hunks if (body := (hunk or {}).get("added_body")))
+        return "\n".join((hunk or {}).get("added_body") or "" for hunk in hunks)
     flat = record.get(ADDED_HUNK_FIELD)
     return flat if flat is None else str(flat)
 
