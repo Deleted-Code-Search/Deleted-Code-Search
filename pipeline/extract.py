@@ -76,10 +76,24 @@ JSONL 저장 (내부 모델과 외부 계약 분리):
 
     `to_json_dict()`가 내보내는 키: `repo`, `commit_sha`, `parent_sha`, `file_path`,
     `function_name`, `start_line`, `end_line`, `deletion_kind`, `deleted_body`,
-    `added_hunk_same_file`, `author_date`, `commit_message`. 이 단계에서 알 수 없는
-    §4.4 필드(`repo_license`, `context`, `replacement`, `reason`, `embedding` 등)는
-    `None`이나 빈 값으로 채워 넣지 않는다 — 아직 없는 값을 있는 것처럼 보이게 하지
-    않는다는 뜻이고, 그 필드들은 각자 담당 단계(필터·맥락 결합·분류·임베딩)에서 채운다.
+    `added_hunk_same_file`, `author_date`, `commit_message`, `id`, `function_signature`,
+    `is_test_code`, `source_url` (Issue #75). 이 단계에서 알 수 없는 §4.4 필드
+    (`repo_license`, `context`, `replacement`, `reason`, `embedding` 등)는 `None`이나
+    빈 값으로 채워 넣지 않는다 — 아직 없는 값을 있는 것처럼 보이게 하지 않는다는 뜻이고,
+    그 필드들은 각자 담당 단계(필터·맥락 결합·분류·임베딩)에서 채운다.
+
+    Issue #75가 추가한 4개(`id`·`function_signature`·`is_test_code`·`source_url`)는 이
+    원칙의 예외가 아니라, 이 단계에서 **이미 알 수 있는** 값이라 예외 목록에 없다:
+    `id`는 `make_record_id()`(기존 규칙 그대로), `function_signature`는
+    `PythonAdapter.extract_functions()`가 이미 주는 `Function.signature`, `source_url`은
+    `repo`/`commit_sha`로 조합하는 GitHub 커밋 링크, `is_test_code`는 `file_path`만으로
+    판정한다(아래 `_is_test_code`) — 전부 다른 단계(필터·맥락 결합·분류)를 기다릴 필요가
+    없다.
+
+    `filter_status`(§4.4)는 **여기 포함하지 않는다.** `docs/filter_rules.md`
+    ("계약 분리" 절)와 `filter.py` 모듈 독스트링이 명시한 대로, 그 필드를 어느 단계에서
+    부여할지는 아직 결정되지 않았고 Issue #63(NOISE_TRIVIAL 구현)의 "조립 단계"에서
+    정한다 — Issue #75 범위가 아니다(팀 확인 완료).
 
     `write_jsonl()`은 `context.py`의 기존 출력 루프(`main()`의 `--out` 처리)와 같은
     관례를 그대로 따른다: UTF-8, `ensure_ascii=False`, 한 줄에 객체 1개, `indent` 없음,
@@ -172,6 +186,24 @@ def make_record_id(
     return str(uuid.uuid5(RECORD_ID_NAMESPACE, key))
 
 
+def _source_url(repo: str, commit_sha: str) -> str:
+    """§4.4 `source_url` — GitHub 커밋 링크. `datasets/labels/pre200_records.jsonl`의
+    실제 데이터와 `tests/test_sampling.py`·`tests/test_label_cli.py`가 이미 이 형식을
+    계약으로 가정하고 있다(Issue #75 조사) — 새 형식을 만들지 않고 그대로 따른다."""
+    return f"https://github.com/{repo}/commit/{commit_sha}"
+
+
+def _is_test_code(file_path: str) -> bool:
+    """§4.4 `is_test_code` — 테스트 코드는 제외하지 않고 플래그로만 보존한다
+    (CHARTER §4.2②, `docs/filter_rules.md`). 판정 기준은 저장소에 근거가 있는 것만
+    쓴다(Issue #75 조사: 기존 규칙 없음, 확인된 유일한 사례가 `tests/` 디렉터리) —
+    `file_path`의 경로 구성요소 중 정확히 `tests`가 있으면 True. `test_*.py` 파일명이나
+    `conftest.py` 같은 추가 휴리스틱은 근거가 없어 넣지 않는다. git diff 경로는 항상
+    `/` 구분자라 OS와 무관하게 그대로 나눈다(`pathlib.Path`는 윈도우에서 다르게 해석할
+    수 있어 쓰지 않는다)."""
+    return "tests" in file_path.split("/")
+
+
 @dataclass(frozen=True)
 class DeletedFunction:
     """커밋 하나에서 함수 하나가 삭제된 기록. record 단위 = 함수 (모듈 독스트링 참고).
@@ -195,6 +227,10 @@ class DeletedFunction:
     added_hunk_same_file: str
     author_date: str
     commit_message: str
+    id: str  # §4.4 `id`. `make_record_id()`로만 만든다 (Issue #75)
+    function_signature: str  # §4.4 `function_signature`. `Function.signature` 그대로
+    is_test_code: bool  # §4.4 `is_test_code`. `_is_test_code(file_path)` 판정
+    source_url: str  # §4.4 `source_url`. `_source_url(repo, commit_sha)` 그대로
 
 
 @dataclass(frozen=True)
@@ -463,6 +499,7 @@ def _parse_same_file_hunks(diff_text: str) -> dict[str, list[Hunk]]:
 def _build_records(
     repo: str, commit: CommitPair, file_path: str, source: str, file_diff: _FileDiff
 ) -> list[DeletedFunction]:
+    """파일 하나의 삭제 줄을 부모 소스의 함수 범위에 귀속시켜 함수별 `DeletedFunction`을 만든다."""
     added_hunk_same_file = "\n".join(file_diff.added_lines)
     records: list[DeletedFunction] = []
     for function in _ADAPTER.extract_functions(source):
@@ -492,6 +529,12 @@ def _build_records(
                 added_hunk_same_file=added_hunk_same_file,
                 author_date=commit.author_date,
                 commit_message=commit.commit_message,
+                id=make_record_id(
+                    repo, commit.commit_sha, file_path, function.name, function.start_line
+                ),
+                function_signature=function.signature,
+                is_test_code=_is_test_code(file_path),
+                source_url=_source_url(repo, commit.commit_sha),
             )
         )
     return records
@@ -605,6 +648,10 @@ def to_json_dict(record: DeletedFunction) -> dict[str, Any]:
         "added_hunk_same_file": record.added_hunk_same_file,
         "author_date": record.author_date,
         "commit_message": record.commit_message,
+        "id": record.id,
+        "function_signature": record.function_signature,
+        "is_test_code": record.is_test_code,
+        "source_url": record.source_url,
     }
 
 

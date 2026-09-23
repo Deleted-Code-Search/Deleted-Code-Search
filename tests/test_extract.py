@@ -81,6 +81,10 @@ def _sample_records(count: int = 3) -> list[extract_module.DeletedFunction]:
             added_hunk_same_file="",
             author_date="2026-01-01T00:00:00+00:00",
             commit_message=f"delete fn{i}",
+            id=extract_module.make_record_id(_REPO, f"c{i}", "a.py", f"fn{i}", 1),
+            function_signature=f"def fn{i}():",
+            is_test_code=False,
+            source_url=extract_module._source_url(_REPO, f"c{i}"),
         )
         for i in range(count)
     ]
@@ -300,6 +304,27 @@ class TestExtractDeletions:
         assert record.function_name == "foo"
         assert record.deletion_kind == "FULL_FUNCTION"
         assert record.file_path == "eval/gemini-2.0-flash copy.py"  # 탭 없음, 공백 보존
+
+    def test_full_function_deletion_populates_issue_75_fields(self, tmp_path: Path):
+        """id/function_signature/is_test_code/source_url이 실제 추출 경로(git diff →
+        PythonAdapter)를 통해서도 올바르게 채워지는지 확인한다 — 손으로 만든
+        `DeletedFunction`이 아니라 `extract_deletions()`의 실제 산출물로 검증한다."""
+        repo = _init_repo(tmp_path / "repo")
+        _write(repo, "tests/test_a.py", "def test_foo(x: int) -> None:\n    assert x\n")
+        _commit_all(repo, "add test_foo")
+        _write(repo, "tests/test_a.py", "")
+        commit_sha = _commit_all(repo, "delete test_foo")
+
+        records = extract_module.extract_deletions(repo, _REPO, _last_commit_pair(repo))
+
+        assert len(records) == 1
+        record = records[0]
+        assert record.id == extract_module.make_record_id(
+            _REPO, commit_sha, "tests/test_a.py", "test_foo", record.start_line
+        )
+        assert record.function_signature == "def test_foo(x: int) -> None:"
+        assert record.is_test_code is True
+        assert record.source_url == f"https://github.com/{_REPO}/commit/{commit_sha}"
 
     def test_partial_function_deletion(self, tmp_path: Path):
         repo = _init_repo(tmp_path / "repo")
@@ -672,7 +697,13 @@ def test_to_json_dict_has_no_deletion_type_key():
 
 def test_to_json_dict_has_only_currently_known_fields():
     """§4.4에 있지만 이 단계에서 알 수 없는 필드(repo_license, context, reason, embedding
-    등)를 None/빈 값으로 채워 넣지 않는다 — 아예 키 자체가 없어야 한다."""
+    등)를 None/빈 값으로 채워 넣지 않는다 — 아예 키 자체가 없어야 한다.
+
+    `filter_status`는 Issue #75 범위에서 제외한다 (팀 확인 완료) — `docs/filter_rules.md`
+    "계약 분리" 절과 `pipeline/filter.py` 모듈 독스트링이 명시한 대로, 그 필드를 부여할
+    단계는 Issue #63(NOISE_TRIVIAL 구현)의 조립 단계에서 정한다. 이 테스트는 그 경계를
+    고정한다 — `filter_status`가 없어야 한다.
+    """
     record = _sample_records(1)[0]
 
     payload = extract_module.to_json_dict(record)
@@ -690,7 +721,91 @@ def test_to_json_dict_has_only_currently_known_fields():
         "added_hunk_same_file",
         "author_date",
         "commit_message",
+        "id",
+        "function_signature",
+        "is_test_code",
+        "source_url",
     }
+    assert "filter_status" not in payload
+    assert "filter_rule_version" not in payload
+
+
+# --------------------------------------------------------------------------------------
+# id / function_signature / is_test_code / source_url (Issue #75)
+# --------------------------------------------------------------------------------------
+
+
+def test_to_json_dict_id_reuses_make_record_id():
+    """`id`는 `make_record_id()`가 만든 값 그대로다 — 새 규칙을 만들지 않는다."""
+    record = _sample_records(1)[0]
+
+    payload = extract_module.to_json_dict(record)
+
+    expected = extract_module.make_record_id(
+        record.repo, record.commit_sha, record.file_path, record.function_name, record.start_line
+    )
+    assert payload["id"] == expected
+
+
+def test_to_json_dict_id_is_stable_across_reextraction():
+    """같은 논리적 키(repo/commit/file/function/start_line)면 언제 다시 뽑아도 같은 id다
+    — 라벨 재사용의 전제 조건(§4.4 `id` 주석)."""
+    first = extract_module.make_record_id(_REPO, "c0", "a.py", "fn0", 1)
+    second = extract_module.make_record_id(_REPO, "c0", "a.py", "fn0", 1)
+    assert first == second
+
+
+def test_to_json_dict_source_url_is_github_commit_link():
+    """`https://github.com/{repo}/commit/{commit_sha}` — 실제 200건 라벨 데이터
+    (`datasets/labels/pre200_records.jsonl`)·`tests/test_sampling.py`가 이미 가정하는
+    기존 형식 그대로다."""
+    record = _sample_records(1)[0]
+
+    payload = extract_module.to_json_dict(record)
+
+    assert payload["source_url"] == f"https://github.com/{record.repo}/commit/{record.commit_sha}"
+
+
+def test_to_json_dict_function_signature_passes_through_parser_signature():
+    """`function_signature`는 `PythonAdapter`가 이미 계산한 `Function.signature`를 그대로
+    옮긴 값이다 — 새로 파싱하지 않는다."""
+    record = _sample_records(1)[0]
+
+    payload = extract_module.to_json_dict(record)
+
+    assert payload["function_signature"] == record.function_signature
+
+
+def test_is_test_code_true_for_top_level_tests_directory():
+    """최상위 `tests/` 아래 파일은 테스트 코드로 판정한다."""
+    assert extract_module._is_test_code("tests/test_parser.py") is True
+
+
+def test_is_test_code_true_for_nested_tests_directory():
+    """하위 경로의 `tests/` 디렉터리 아래 파일도 테스트 코드로 판정한다."""
+    assert extract_module._is_test_code("pkg/tests/test_widget.py") is True
+
+
+def test_is_test_code_false_for_non_test_path():
+    """`tests` 구성요소가 없는 일반 경로는 테스트 코드가 아니다."""
+    assert extract_module._is_test_code("pipeline/extract.py") is False
+
+
+def test_is_test_code_false_for_test_prefixed_filename_without_tests_dir():
+    """`test_*.py` 파일명만으로는 True가 되지 않는다 — 근거 없는 확장 금지(Issue #75)."""
+    assert extract_module._is_test_code("pkg/test_helpers.py") is False
+
+
+def test_is_test_code_false_for_conftest_without_tests_dir():
+    """`conftest.py`만으로는 True가 되지 않는다 — 근거 없는 확장 금지(Issue #75)."""
+    assert extract_module._is_test_code("conftest.py") is False
+
+
+def test_is_test_code_false_for_path_component_containing_tests_as_substring():
+    """`tests`를 포함하지만 정확히 일치하지 않는 디렉터리(`mytests`, `testsuite`)는
+    대상이 아니다 — 경로 구성요소 정확히 일치만 본다."""
+    assert extract_module._is_test_code("mytests/test_widget.py") is False
+    assert extract_module._is_test_code("testsuite/foo.py") is False
 
 
 # --------------------------------------------------------------------------------------

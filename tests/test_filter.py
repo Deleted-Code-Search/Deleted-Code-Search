@@ -43,6 +43,7 @@ def _deleted(
     deletion_kind: str = "FULL_FUNCTION",
     start_line: int = 1,
 ) -> DeletedFunction:
+    """필터 테스트용 `DeletedFunction`을 최소 필드로 만든다 (Issue #75 필드 포함)."""
     end_line = start_line + len(body.splitlines()) - 1
     return DeletedFunction(
         repo=_REPO,
@@ -57,6 +58,10 @@ def _deleted(
         added_hunk_same_file="",
         author_date="2026-01-01T00:00:00+00:00",
         commit_message="delete",
+        id=extract_module.make_record_id(_REPO, commit_sha, file_path, function_name, start_line),
+        function_signature=f"def {function_name}():",
+        is_test_code=extract_module._is_test_code(file_path),
+        source_url=extract_module._source_url(_REPO, commit_sha),
     )
 
 
