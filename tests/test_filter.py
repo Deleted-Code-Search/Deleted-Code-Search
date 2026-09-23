@@ -801,6 +801,7 @@ def _record_ids(records):
 
 
 def test_partition_moved_excludes_moved_record_with_status_version_and_evidence():
+    """이동 레코드는 NOISE_MOVE·규칙 버전·목적지 증거와 함께 excluded로, 일반 삭제는 kept로 간다."""
     moved = _deleted("old/a.py", "def foo():\n    x = 1\n    return x\n", function_name="foo")
     ordinary = _deleted("c.py", "def gone():\n    return 42\n", function_name="gone")
     destination = _function("foo", "def foo():\n    y = 1\n    return y\n", start_line=7)

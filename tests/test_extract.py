@@ -1039,6 +1039,7 @@ def test_write_excluded_jsonl_creates_empty_file_when_nothing_excluded(tmp_path:
 
 
 def test_write_excluded_jsonl_round_trips_korean_as_utf8(tmp_path: Path):
+    """한국어 커밋 메시지는 \\u 이스케이프 없이 UTF-8로 기록되고 그대로 다시 읽힌다."""
     out = tmp_path / "run_excluded.jsonl"
     korean_message = "함수를 새 모듈로 옮김. Refs #97"
     item = _sample_excluded(1)[0]
