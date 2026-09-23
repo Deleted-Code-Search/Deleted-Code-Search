@@ -581,10 +581,63 @@ def added_hunk_bodies(record: dict[str, Any]) -> list[str] | None:
     헝크별로 파싱하면 35건 전부 자식 파일에 실제로 존재하는 함수가 나온다 (조작 0건,
     잃은 건 0건).
     """
+    hunks = added_hunks(record)
+    if hunks is None:
+        return None
+    return [hunk.get("added_body") or "" for hunk in hunks]
+
+
+def added_hunks(record: dict[str, Any]) -> list[dict[str, Any]] | None:
+    """헝크 목록 그대로 (좌표 포함). 옛 평탄한 필드만 있으면 `None`."""
     hunks = record.get(ADDED_HUNKS_FIELD)
     if hunks is None:
         return None
-    return [(hunk or {}).get("added_body") or "" for hunk in hunks]
+    return [hunk or {} for hunk in hunks]
+
+
+def _ends_inside_hunk(body: str, function: Function) -> bool:
+    """후보 함수가 이 헝크 안에서 **끝난 것이 확인되나.**
+
+    헝크의 `added_body` 에는 추가된 줄만 있다. 함수의 뒷부분이 바뀌지 않은 줄이면 그
+    줄들은 여기 없다. 그런데 앞부분만으로도 구문상 완결된 함수가 되는 경우가 있다 -
+    시그니처와 첫 줄만 고친 수정이 그렇다:
+
+        -def parse(raw):
+        -    items = raw.split(',')
+        +def parse(raw, sep=','):
+        +    items = raw.split(sep)
+             return [i.strip() for i in items]
+
+    `added_body` 는 앞 두 줄뿐인데 파싱하면 완결된 `parse` 가 나온다. 그대로 내보내면
+    `return` 이 빠진 **실제로 존재한 적 없는 본문**이 근거가 된다. 자식 파일과 부분
+    문자열로 대조해도 잡히지 않는다 - 잘린 앞부분은 파일 안에 그대로 있기 때문이다.
+    예비 200건에서 39건 중 3건이 이 형태였고, `dataclasses.py::wrap` 은 시그니처 한
+    줄만 나갔다 (실제 18줄).
+
+    뒤에 들여쓰기가 `def` 와 같거나 얕은 줄이 같은 헝크 안에 있으면 함수가 거기서 끝난
+    것이 확실하다. 없으면 모른다 - 모르는 것은 채우지 않는다.
+    """
+    lines = body.split("\n")
+    head = lines[function.start_line - 1]
+    indent = len(head) - len(head.lstrip())
+    for line in lines[function.end_line :]:
+        if line.strip():
+            return len(line) - len(line.lstrip()) <= indent
+    return False
+
+
+def _whole_function(child_source: str, name: str, child_line: int) -> Function | None:
+    """자식 파일 원문에서 `child_line` 을 품는 같은 이름 함수. 없으면 `None`.
+
+    헝크의 `new_start` 로 후보의 자식 파일 줄 번호를 계산해 찾는다. 시작 줄이 정확히
+    같은지를 보지 않고 **범위에 드는지**를 보는 이유는 데코레이터 때문이다 -
+    `PythonAdapter` 는 데코레이터 첫 줄부터를 함수 시작으로 잡는데, 데코레이터가 바뀌지
+    않았으면 그 줄은 헝크에 없다.
+    """
+    for function in _ADAPTER.extract_functions(child_source):
+        if function.name == name and function.start_line <= child_line <= function.end_line:
+            return function
+    return None
 
 
 def _added_functions(text: str) -> list[Function]:
@@ -638,7 +691,7 @@ class Replacement:
 UNDETERMINED = Replacement(code=None, match_method=None, confidence=0.0)
 
 
-def match_replacement(record: dict[str, Any]) -> Replacement:
+def match_replacement(record: dict[str, Any], *, child_source: str | None = None) -> Replacement:
     """레코드 하나의 대체 코드를 찾는다 (§4.2 ③ "삭제 위치 ±N줄 내 추가된 함수/블록").
 
     **지금은 줄 번호가 없어 위치로 판정하지 못한다.** 부모 파일의 `start_line` 과 추가
@@ -661,6 +714,13 @@ def match_replacement(record: dict[str, Any]) -> Replacement:
     헝크 경계가 없으면 서로 떨어진 조각이 붙어 존재한 적 없는 함수가 만들어진다
     (예비 200건에서 14% 가 그랬다. `added_hunk_bodies` 독스트링 참고).
 
+    **`code` 는 온전하다고 확인된 본문만 채운다.** 헝크에는 추가된 줄만 있어서 함수의
+    뒷부분이 빠진 채로도 구문상 완결돼 보일 수 있다 (`_ends_inside_hunk` 독스트링).
+    `child_source`(자식 파일 원문)를 주면 거기서 함수 전체를 다시 뽑아 그 문제가 없다 -
+    클론을 들고 있는 실행 경로는 넘겨주고, 없으면 헝크 안에서 끝이 확인된 것만 채운다.
+    본문을 못 채워도 `match_method` 는 남긴다: "같은 이름 함수가 추가됐다"는 사실은
+    그대로 유효하고, 그것만으로도 라벨러에게 쓸모가 있다.
+
     나머지(이름이 다른 함수가 추가됐거나, 추가는 있는데 완결된 함수가 없는 부분 수정)도
     `UNDETERMINED` 다. 후보를 억지로 고르지 않는 이유는 그것이 게이트 1 숫자를 부풀리기
     때문이다 - 라벨 가이드 §6.2.1 이 `replacement.code` 를 INFERRED 근거 ①(신뢰도
@@ -676,19 +736,55 @@ def match_replacement(record: dict[str, Any]) -> Replacement:
     if bodies is None:
         return UNDETERMINED
 
-    name = record.get("function_name")
-    same_name = [f for body in bodies for f in _added_functions(body) if f.name == name]
-    if not same_name:
+    candidates = _same_name_candidates(record, child_source)
+    if not candidates:
         return UNDETERMINED
-    if len(same_name) == 1:
-        return Replacement(same_name[0].body, MATCH_SAME_LOCATION, SAME_NAME_CONFIDENCE)
+
+    # 신뢰도는 **후보가 몇 개였나**로 정한다. 본문을 복원했는지와는 무관하다 - 모호함은
+    # "같은 이름이 여럿 추가됐다"에서 오고, 그건 본문을 못 보여줘도 그대로다.
+    confidence = SAME_NAME_CONFIDENCE if len(candidates) == 1 else AMBIGUOUS_NAME_CONFIDENCE
+    usable = [(function, code) for function, code in candidates if code]
+    if not usable:
+        return Replacement(None, MATCH_SAME_LOCATION, confidence)
+    if len(usable) == 1:
+        return Replacement(usable[0][1], MATCH_SAME_LOCATION, confidence)
 
     # 한 파일에 같은 이름 함수가 여럿 추가될 수 있다 (`__init__` 등). 어느 것이 이 함수를
     # 이어받았는지는 위치 없이는 확정할 수 없어, 본문이 가장 가까운 것을 고르고 신뢰도를 낮춘다.
-    best = max(
-        same_name, key=lambda f: (_similarity(record.get("deleted_body") or "", f), -f.start_line)
-    )
-    return Replacement(best.body, MATCH_SAME_LOCATION, AMBIGUOUS_NAME_CONFIDENCE)
+    deleted = record.get("deleted_body") or ""
+    best = max(usable, key=lambda pair: (_similarity(deleted, pair[0]), -pair[0].start_line))
+    return Replacement(best[1], MATCH_SAME_LOCATION, confidence)
+
+
+def _same_name_candidates(
+    record: dict[str, Any], child_source: str | None
+) -> list[tuple[Function, str | None]]:
+    """삭제된 함수와 이름이 같은 추가 함수들. `(헝크에서 본 함수, 온전한 본문 또는 None)`.
+
+    본문은 **온전하다고 확인된 것만** 채운다 (`_ends_inside_hunk` 독스트링 참고).
+    `child_source` 가 있으면 자식 파일에서 함수 전체를 다시 뽑아 확인이 필요 없다.
+    """
+    name = record.get("function_name")
+    candidates: list[tuple[Function, str | None]] = []
+    for hunk in added_hunks(record) or []:
+        body = hunk.get("added_body") or ""
+        new_start = hunk.get("new_start")
+        for function in _added_functions(body):
+            if function.name != name:
+                continue
+            candidates.append((function, _whole_body(function, body, new_start, child_source)))
+    return candidates
+
+
+def _whole_body(
+    function: Function, body: str, new_start: Any, child_source: str | None
+) -> str | None:
+    """후보의 **온전한** 본문. 온전하다고 확인하지 못하면 `None`."""
+    if child_source is not None and isinstance(new_start, int):
+        whole = _whole_function(child_source, function.name, new_start + function.start_line - 1)
+        if whole is not None:
+            return whole.body
+    return function.body if _ends_inside_hunk(body, function) else None
 
 
 # --------------------------------------------------------------------------------------
@@ -735,8 +831,13 @@ def parse_targets(lines: Iterable[str]) -> list[CommitTarget]:
     return targets
 
 
-def build_output_record(target: CommitTarget, context: CommitContext) -> dict[str, Any]:
-    """출력 한 줄. #5 가 준 레코드를 그대로 두고 `context` 만 채워 넣는다.
+def build_output_record(
+    target: CommitTarget, context: CommitContext, *, child_source: str | None = None
+) -> dict[str, Any]:
+    """출력 한 줄. #5 가 준 레코드를 그대로 두고 `context`·`replacement` 를 채워 넣는다.
+
+    `child_source` 는 삭제 커밋 시점의 그 파일 원문이다. 대체 코드 본문을 온전하게 뽑는
+    데만 쓰고, 없으면 보수적으로 판정한다 (`match_replacement` 독스트링).
 
     원본을 버리면 `deleted_hunk`·`file_path` 가 사라져 §4.4 레코드를 다시 조립할 수 없다.
     한 커밋에 삭제 파일이 여럿이면 `file_path` 없이는 어느 줄이 어느 파일인지도 모른다.
@@ -747,7 +848,9 @@ def build_output_record(target: CommitTarget, context: CommitContext) -> dict[st
     if target.file_path is not None:
         record.setdefault("file_path", target.file_path)
     record["context"] = context.to_schema_context()
-    record["replacement"] = match_replacement(record).to_schema_replacement()
+    record["replacement"] = match_replacement(
+        record, child_source=child_source
+    ).to_schema_replacement()
     return record
 
 

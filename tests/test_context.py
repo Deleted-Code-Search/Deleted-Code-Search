@@ -847,7 +847,7 @@ def test_missing_field_is_undetermined_not_none():
 
 
 def test_same_name_addition_is_a_same_location_replacement():
-    added = "def parse(raw):\n    return [p.strip() for p in raw.split(',')]\n"
+    added = "def parse(raw):\n    return [p.strip() for p in raw.split(',')]\nPARSERS = [parse]\n"
     result = ctx.match_replacement(_record(added_hunks_same_file=_hunks(added)))
 
     assert result.match_method == ctx.MATCH_SAME_LOCATION
@@ -872,8 +872,8 @@ def test_partial_edits_without_a_whole_function_are_undetermined():
 def test_several_same_name_additions_pick_the_closest_body_with_lower_confidence():
     """한 파일에 같은 이름이 여럿 추가될 수 있다 (`__init__` 등). 본문이 가까운 쪽을 고른다."""
     hunks = _hunks(
-        "def parse(raw):\n    raise NotImplementedError\n",
-        "def parse(raw):\n    return raw.split(',')\n",
+        "def parse(raw):\n    raise NotImplementedError\nA = 1\n",
+        "def parse(raw):\n    return raw.split(',')\nB = 2\n",
     )
     result = ctx.match_replacement(_record(added_hunks_same_file=hunks))
 
@@ -890,12 +890,53 @@ def test_candidates_never_span_two_hunks():
     자식 파일에 없는 코드가 `replacement.code` 로 나갔다.
     """
     hunks = _hunks(
-        "def parse(raw):\n    return dict_not_none(type='any')\n",
+        "def parse(raw):\n    return dict_not_none(type='any')\nSCHEMAS = [parse]\n",
         "    serialization: SerSchema\n",
     )
     result = ctx.match_replacement(_record(added_hunks_same_file=hunks))
 
     assert "serialization" not in result.code
+
+
+TRUNCATED_HUNK = "def parse(raw, sep=','):\n    items = raw.split(sep)\n"
+WHOLE_PARSE = (
+    "def parse(raw, sep=','):\n    items = raw.split(sep)\n    return [i.strip() for i in items]\n"
+)
+
+
+def test_a_function_cut_off_by_the_hunk_does_not_become_code():
+    """헝크에 추가 줄만 있어서 뒷부분이 빠진 채로도 구문상 완결돼 보일 수 있다.
+
+        -def parse(raw):
+        -    items = raw.split(',')
+        +def parse(raw, sep=','):
+        +    items = raw.split(sep)
+             return [i.strip() for i in items]
+
+    `return` 이 빠진 본문을 내보내면 존재한 적 없는 코드가 근거가 된다. 예비 200건에서
+    39건 중 3건이 이 형태였고 `dataclasses.py::wrap` 은 시그니처 한 줄만 나갔다.
+    """
+    result = ctx.match_replacement(_record(added_hunks_same_file=_hunks(TRUNCATED_HUNK)))
+
+    assert result.code is None
+    # "같은 이름 함수가 추가됐다" 는 사실은 그대로라 판정은 남긴다.
+    assert result.match_method == ctx.MATCH_SAME_LOCATION
+
+
+def test_child_source_recovers_the_whole_function():
+    """자식 파일 원문을 주면 잘린 부분까지 복원한다 - 헝크 좌표로 자리를 찾는다."""
+    record = _record(added_hunks_same_file=_hunks(TRUNCATED_HUNK))
+    result = ctx.match_replacement(record, child_source=WHOLE_PARSE)
+
+    assert result.code == WHOLE_PARSE.rstrip("\n")
+    assert result.confidence == ctx.SAME_NAME_CONFIDENCE
+
+
+def test_child_source_without_that_function_falls_back_to_the_safe_rule():
+    """원문을 줬는데 그 자리에 없으면(좌표가 안 맞으면) 채우지 않는다."""
+    record = _record(added_hunks_same_file=_hunks(TRUNCATED_HUNK))
+
+    assert ctx.match_replacement(record, child_source="x = 1\n").code is None
 
 
 def test_flat_field_alone_never_fills_code():
@@ -909,7 +950,7 @@ def test_new_hunk_field_wins_over_the_old_flat_field():
     """새 형식이 있으면 그것을 쓴다 (2026-09-23 팀 확정)."""
     record = _record(
         added_hunk_same_file="def parse(raw):\n    return 'old'\n",
-        added_hunks_same_file=_hunks("def parse(raw):\n    return 'new'\n"),
+        added_hunks_same_file=_hunks("def parse(raw):\n    return 'new'\nDONE = 1\n"),
     )
 
     assert "'new'" in ctx.match_replacement(record).code
@@ -928,7 +969,7 @@ def test_a_blank_line_addition_is_not_dropped():
 
     본문이 비었다고 건너뛰면 그 줄이 사라져, 복원한 텍스트가 원본과 달라진다.
     """
-    record = _record(added_hunks_same_file=_hunks("", "def parse(raw):\n    return ()\n"))
+    record = _record(added_hunks_same_file=_hunks("", "def parse(raw):\n    return ()\nDONE = 1\n"))
 
     assert ctx.added_hunk_text(record).startswith("\n")
     assert ctx.match_replacement(record).match_method == ctx.MATCH_SAME_LOCATION
@@ -939,7 +980,7 @@ def test_output_record_carries_the_replacement_field():
     target = ctx.CommitTarget(
         repo="a/b",
         commit_sha="sha",
-        record=_record(added_hunks_same_file=_hunks("def parse(raw):\n    return ()\n")),
+        record=_record(added_hunks_same_file=_hunks("def parse(raw):\n    return ()\nDONE = 1\n")),
     )
     built = ctx.build_output_record(target, ctx.CommitContext(repo="a/b", commit_sha="sha"))
 
