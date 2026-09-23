@@ -11,6 +11,7 @@ same-position)를 연결한 회귀 테스트로 검증한다. 크로스 파일(�
 from __future__ import annotations
 
 import os
+import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -785,6 +786,170 @@ def test_e_greedy_matching_is_deterministic_regardless_of_input_order():
     assert forward == reversed_order
     assert len(forward) == 3  # candidate가 3개뿐이라 deleted 4개 중 정확히 1개는 KEPT
     assert filter_module._record_key(d4) not in forward  # 두 경우 모두 같은 쪽(d4)이 KEPT
+
+
+# --------------------------------------------------------------------------------------
+# Issue #97 — 제외 레코드 보존. partition_moved는 이동 판정(find_moved와 같은 매칭)을
+# 바꾸지 않고, 제외된 레코드를 버리는 대신 filter_status·filter_rule_version·
+# filter_evidence와 함께 돌려준다. 매칭 로직은 git diff 특성과 무관하므로 합성 객체로
+# 검증한다.
+# --------------------------------------------------------------------------------------
+
+
+def _record_ids(records):
+    return [r.id for r in records]
+
+
+def test_partition_moved_excludes_moved_record_with_status_version_and_evidence():
+    moved = _deleted("old/a.py", "def foo():\n    x = 1\n    return x\n", function_name="foo")
+    ordinary = _deleted("c.py", "def gone():\n    return 42\n", function_name="gone")
+    destination = _function("foo", "def foo():\n    y = 1\n    return y\n", start_line=7)
+    added = {"new/a.py": [destination]}
+
+    kept, excluded = filter_module.partition_moved([moved, ordinary], added, {})
+
+    assert kept == [ordinary]
+    assert len(excluded) == 1
+    item = excluded[0]
+    assert item.record == moved  # 원본 레코드를 그대로 들고 있다
+    assert item.filter_status == "NOISE_MOVE"
+    assert item.filter_status == filter_module.NOISE_MOVE
+    assert item.filter_rule_version == filter_module.FILTER_RULE_VERSION
+    assert item.filter_evidence == {
+        "file_path": "new/a.py",
+        "function_name": "foo",
+        "start_line": 7,
+        "end_line": 9,
+        "similarity": 1.0,  # 식별자만 다르다 — 정규화 완전 일치
+    }
+
+
+def test_partition_moved_evidence_similarity_is_the_actual_matching_value():
+    """완전 일치가 아닌 경우에도 증거의 similarity는 매칭이 실제로 계산한 값이다
+    (반올림·재계산 없음). 값은 `_move_similarity`와 ADR-014 결정 2의 직접 계산 둘 다와 같다."""
+    candidate_body = "def foo():\n    a = 1\n    b = 2\n    c = 3\n    return a + b + c\n"
+    close_body = (
+        "def foo():\n    a = 1\n    b = 2\n    c = 3\n    extra = 9\n    return a + b + c\n"
+    )
+    deleted = _deleted("b/close.py", close_body, function_name="foo")
+    added = {"c/dest.py": [_function("foo", candidate_body)]}
+
+    _kept, excluded = filter_module.partition_moved([deleted], added, {})
+
+    from difflib import SequenceMatcher
+
+    expected = SequenceMatcher(
+        None,
+        filter_module.normalize_function_body(close_body),
+        filter_module.normalize_function_body(candidate_body),
+        autojunk=False,
+    ).ratio()
+    assert filter_module.SIMILARITY_THRESHOLD <= expected < 1.0
+    assert excluded[0].filter_evidence["similarity"] == expected
+    assert excluded[0].filter_evidence["similarity"] == filter_module._move_similarity(
+        filter_module._normalize(close_body), filter_module._normalize(candidate_body)
+    )
+
+
+def test_partition_moved_evidence_names_the_greedy_winner_destination():
+    """경쟁이 있을 때 증거는 greedy가 실제로 확정한 짝의 목적지다 (test_c와 같은 구성)."""
+    candidate_body = "def foo():\n    a = 1\n    b = 2\n    c = 3\n    return a + b + c\n"
+    exact_body = "def foo():\n    x = 1\n    y = 2\n    z = 3\n    return x + y + z\n"
+    close_body = (
+        "def foo():\n    a = 1\n    b = 2\n    c = 3\n    extra = 9\n    return a + b + c\n"
+    )
+    d_exact = _deleted("a/exact.py", exact_body, function_name="foo")
+    d_close = _deleted("b/close.py", close_body, function_name="foo")
+    added = {"c/dest.py": [_function("foo", candidate_body)]}
+
+    kept, excluded = filter_module.partition_moved([d_exact, d_close], added, {})
+
+    assert kept == [d_close]
+    assert [e.record for e in excluded] == [d_exact]
+    assert excluded[0].filter_evidence["file_path"] == "c/dest.py"
+    assert excluded[0].filter_evidence["similarity"] == 1.0
+
+
+def test_partition_moved_keeps_partial_and_non_moved_records():
+    """NOISE_MOVE 비대상(PARTIAL)·유사 후보 없는 삭제는 kept에 남고 excluded에는 없다."""
+    partial = _deleted("old/a.py", "    x = 1\n    return x\n", deletion_kind="PARTIAL")
+    ordinary = _deleted("b.py", "def foo():\n    x = 1\n    return x\n", function_name="foo")
+    added = {"new/a.py": [_function("bar", "def bar():\n    for i in range(3):\n        pass\n")]}
+
+    kept, excluded = filter_module.partition_moved([partial, ordinary], added, {})
+
+    assert kept == [partial, ordinary]
+    assert excluded == []
+
+
+def test_partition_moved_is_an_exact_partition_preserving_input_order():
+    """모든 입력 레코드가 kept·excluded 중 정확히 한쪽에 한 번씩 들어가고, 양쪽 모두
+    입력 순서를 유지한다. 목적지는 두 번 쓰이지 않는다(1:1)."""
+    body_a = "def alpha():\n    return 1\n"
+    body_b = "def beta():\n    return 2\n"
+    d1 = _deleted("a/d1.py", body_a, function_name="alpha")
+    ordinary = _deleted("a/ord.py", "def gone():\n    return 99\n", function_name="gone")
+    d2 = _deleted("a/d2.py", body_a, function_name="alpha")
+    partial = _deleted("a/p.py", "    return 2\n", deletion_kind="PARTIAL", function_name="beta")
+    d3 = _deleted("a/d3.py", body_b, function_name="beta")
+    deletions = [d1, ordinary, d2, partial, d3]
+    added = {
+        "c/dest1.py": [_function("alpha", body_a)],
+        "c/dest2.py": [_function("beta", body_b)],
+    }
+
+    kept, excluded = filter_module.partition_moved(deletions, added, {})
+    excluded_records = [e.record for e in excluded]
+
+    assert sorted(_record_ids(kept) + _record_ids(excluded_records)) == sorted(
+        _record_ids(deletions)
+    )
+    assert not set(_record_ids(kept)) & set(_record_ids(excluded_records))
+    # 입력 순서 유지: 각 리스트는 입력의 부분 수열이다
+    assert kept == [r for r in deletions if r in kept]
+    assert excluded_records == [r for r in deletions if r in excluded_records]
+    assert excluded_records == [d1, d3]  # tie-break: a/d1.py < a/d2.py
+    assert kept == [ordinary, d2, partial]
+    destinations = [e.filter_evidence["file_path"] for e in excluded]
+    assert sorted(destinations) == ["c/dest1.py", "c/dest2.py"]
+
+
+def test_partition_moved_empty_input():
+    assert filter_module.partition_moved([], {}, {}) == ([], [])
+
+
+def test_exclude_moved_and_find_moved_agree_with_partition_moved():
+    """기존 공개 API는 partition_moved와 같은 판정을 낸다 — exclude_moved는 kept와 같고,
+    find_moved는 excluded 레코드의 key 집합(set)과 같다. 입력 순서를 뒤집어도 같다
+    (test_e와 같은 경쟁 구성)."""
+    body = "def helper():\n    return 1\n"
+    deletions = [
+        _deleted(path, body, function_name="helper")
+        for path in ("a/d1.py", "b/d2.py", "c/d3.py", "d/d4.py")
+    ]
+    added = {
+        "p/mod1.py": [_function("helper", body), _function("helper", body, start_line=10)],
+        "q/mod2.py": [_function("helper", body)],
+    }
+
+    for order in (deletions, list(reversed(deletions))):
+        kept, excluded = filter_module.partition_moved(order, added, {})
+        moved = filter_module.find_moved(order, added, {})
+
+        assert filter_module.exclude_moved(order, added, {}) == kept
+        assert isinstance(moved, set)
+        assert moved == {filter_module._record_key(e.record) for e in excluded}
+        assert [r.file_path for r in kept] == ["d/d4.py"]
+
+
+def test_filter_rule_version_matches_filter_rules_document():
+    """`FILTER_RULE_VERSION`은 `docs/filter_rules.md` 첫 줄 "버전: vX.Y"와 같아야 한다 —
+    문서 버전만 올리고 상수를 잊는 일을 막는다 (Issue #97)."""
+    doc = Path(__file__).resolve().parents[1] / "docs" / "filter_rules.md"
+    match = re.search(r"^버전: (v[0-9.]+?)\.?\s", doc.read_text(encoding="utf-8"), re.MULTILINE)
+
+    assert match is not None
+    assert filter_module.FILTER_RULE_VERSION == match.group(1)
 
 
 # --------------------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 # 필터 규칙
 
-버전: v0.5. 담당: 재헌. 규칙 변경 시 이 문서의 버전을 올리고, `DeletionRecord.filter_rule_version`에 반영하며, PR에 테스트와 정밀도 재측정 결과를 첨부한다. 재측정은 수동 200건 (통과 100 + 제외 100)이다 (CHARTER.md §8.4, §10.1).
+버전: v0.5. 담당: 재헌. 규칙 변경 시 이 문서의 버전을 올리고, `DeletionRecord.filter_rule_version`에 반영하며(코드 상수 `pipeline/filter.py:FILTER_RULE_VERSION`을 같은 PR에서 같은 값으로 올린다 — 테스트가 둘이 같은지 확인한다), PR에 테스트와 정밀도 재측정 결과를 첨부한다. 재측정은 수동 200건 (통과 100 + 제외 100)이다 (CHARTER.md §8.4, §10.1).
 
 NOISE_MOVE의 정규화·유사도·후보 범위는 ADR-014(`docs/adr/014-move-detection-rules.md`)가 최종 기준이다. 이 문서는 ADR-014의 결정을 요약해 필터 규칙 전체(다른 노이즈 유형 포함)와 나란히 두고, ADR-014가 정하지 않고 #52 구현에서 결정한 세부사항(같은 위치 판정 방법, 1:1 매칭 알고리즘, 실제 added-line 겹침 조건)을 함께 기록한다. ADR-014와 이 문서가 어긋나면 ADR-014가 옳다 — 이 문서를 고친다.
 
@@ -110,7 +110,7 @@ AST(tree-sitter) 기반. 치환 규칙은 ADR-014가 정한 그대로다:
 이동은 정의상 삭제 함수 1개 : 추가 함수 1개 관계다. 하나의 added function이 여러 deleted function을
 동시에 "이동"으로 설명하면 안 된다(수정 전에는 소비 추적이 없어, 같은/유사한 함수가 같은 커밋에
 여러 번 삭제되고 진짜 이동 후보가 하나뿐이어도 전부 이동으로 잘못 판정될 수 있었다). 최적 bipartite
-matching은 과하다고 보고, 유사도 내림차순 **greedy**로 확정했다(`pipeline/filter.py:find_moved`):
+matching은 과하다고 보고, 유사도 내림차순 **greedy**로 확정했다(`pipeline/filter.py:find_moved`, #97부터 본체는 `_match_moved`):
 
 1. 유효한 (삭제, 추가) pair를 전부 만든다 — same-position pair는 여기서 제외(아래 절 참고).
 2. 각 pair의 유사도를 계산한다(위 "유사도" 절 그대로): 0줄 제외 → 20% 줄 수 프리필터 → 정규화
@@ -194,15 +194,40 @@ diff 헝크(`git diff --unified=0`의 `@@ -old_start,old_count +new_start,new_co
 **적용 범위.** 데이터셋 추출에만 적용한다. 라벨링 입력(`classify/sampling.py`)은 ADR-015와 무관하게 `docs/labeling_guide.md` v1대로 FULL_FUNCTION만 대상이다.
 
 **계약 분리.**
-- `pipeline/extract.py`의 중간 추출 JSONL(`to_json_dict`·`write_jsonl`)은 **최종 데이터셋 계약이 아니다.** 이 JSONL에는 `filter_status`·`filter_rule_version` 필드가 없다.
-- `filter_status`와 `filter_rule_version`을 **어느 단계에서 부여할지**, `NOISE_TRIVIAL` 레코드를 **각 단계에서 보존할지 제거할지**는 #63에서 정한다.
+- `pipeline/extract.py`의 중간 추출 JSONL(`to_json_dict`·`write_jsonl`)은 **최종 데이터셋 계약이 아니다.** 이 JSONL에는 `filter_status`·`filter_rule_version`·`filter_evidence` 필드가 없다.
+- `NOISE_TRIVIAL` 레코드는 NOISE_MOVE와 같은 구조로 **별도 excluded JSONL에 보존한다** (#97에서 확정, 아래 "제외 레코드 보존" 절). 추출 JSONL에서는 빠진다.
 
 **구현(#63)에서 정할 것.**
-- 위 "계약 분리"의 두 항목.
+- NOISE_TRIVIAL의 `filter_evidence` 키 (줄 수를 기록한다).
 - NOISE_MOVE와 함께 적용할 때의 순서. NOISE_MOVE는 FULL_FUNCTION만 대상이라 결과가 겹치지 않는다.
 - 경계 테스트: 4줄 → NOISE_TRIVIAL, 5줄 → 유지, 빈 줄만으로 5줄이 되는 경우의 동작 고정.
 
 **한계.** 5줄이라는 값은 다시 볼 수 있다. 게이트 1 라벨링은 FULL_FUNCTION만 다루므로 이 값을 직접 검증하지 않는다. 라벨링에 PARTIAL을 포함할지 정할 때 함께 재검토한다.
+
+## 제외 레코드 보존 (#97)
+
+필터가 제외한 레코드는 버리지 않고 별도 JSONL에 사유와 함께 남긴다. §10.1 필터 평가의 "제외 100건" 표본(#89)과 최종 조립 단계의 재료다. 이 절은 판정 규칙이 아니라 출력 구조를 정한다 — 규칙 버전은 올리지 않는다.
+
+**두 파일.**
+- **추출 JSONL** (`write_jsonl`): 필터를 통과한 레코드만. 키는 `to_json_dict`의 16개 그대로이고 `filter_status`·`filter_rule_version`·`filter_evidence`를 **넣지 않는다**.
+- **excluded JSONL** (`write_excluded_jsonl`): 필터가 제외한 레코드만. 한 줄 = 추출 JSONL과 같은 16개 키 + `filter_status` + `filter_rule_version` + `filter_evidence`. **flat 구조**다 (원본을 `{"record": ...}`로 감싸지 않는다). §4.4의 `reason`(이유 분류)과 헷갈리지 않게 `reason`이라는 이름은 쓰지 않는다.
+- 한 레코드는 두 파일 중 정확히 한쪽에만 있다. 두 파일을 합치면 필터 전 전체 추출과 같다. 같은 레코드는 `id`로 식별한다.
+
+**필드.**
+- `filter_status`: §4.4 enum 값 그대로. excluded JSONL에는 `NOISE_*`만 온다 (`KEPT`는 오지 않는다).
+- `filter_rule_version`: 이 문서의 버전 (`pipeline/filter.py:FILTER_RULE_VERSION`). 노트북 여러 대의 결과를 합치거나 규칙 수정 뒤 재실행할 때 서로 다른 버전이 섞였는지 가려낸다.
+- `filter_evidence`: 사유별 판정 근거 객체. 키는 사유마다 다르다.
+
+| filter_status | `filter_evidence` | 상태 |
+|---|---|---|
+| NOISE_MOVE | `{"file_path", "function_name", "start_line", "end_line", "similarity"}` — **이동 목적지**(자식 커밋) 함수의 경로·이름·줄 범위와 greedy 매칭이 확정한 유사도(`_move_similarity` 값 그대로, 완전 일치면 1.0). 삭제 쪽 값은 행의 최상위 필드에 있다. 함수 이름에 클래스 한정자가 없어 줄 범위를 함께 남긴다 | 구현 (#97) |
+| NOISE_TRIVIAL | 줄 수 (키는 #63에서 정한다) | #63 |
+
+**출력 경로.** writer는 호출자가 준 경로에 쓰기만 한다 (경로 정책을 코드가 정하지 않는다). 운영 시 추출 JSONL이 `<stem>.jsonl`이면 excluded JSONL은 `<stem>_excluded.jsonl`로 둔다. 제외가 0건이어도 **빈 파일을 만든다** — "제외 없음"과 "excluded 출력을 안 돌림"을 구분하기 위해서다. 둘 다 생성 데이터라 `data/` 아래에 두고 커밋하지 않는다 (`.gitignore`).
+
+**코드.** `pipeline/filter.py:partition_moved`가 (남은 레코드, 제외 레코드)를 돌려주고, `pipeline/extract.py:extract_repo_with_excluded`가 커밋별로 누적한다. 기존 `find_moved`·`exclude_moved`·`extract_repo`는 반환 계약을 그대로 유지하는 래퍼다 — 판정 결과는 #97 이전과 같다.
+
+**최종 조립 단계 (미구현).** 추출 JSONL의 행에는 `filter_status = KEPT`를, excluded JSONL의 행에는 그 행의 `filter_status`를 사용해 최종 `DeletionRecord.filter_status`를 구성한다. KEPT 레코드의 `filter_rule_version`은 실행 단위 메타데이터로 추출 시점에 기록한다. 구현은 재헌 5번(병렬화·실패 복구)에서 저장소별 처리 시간·실패율 기록과 함께 한다. 조립 단계 자체는 #97 범위 밖이다.
 
 ## 변경 이력
 | 버전 | 날짜 | 변경 | 정밀도 |
