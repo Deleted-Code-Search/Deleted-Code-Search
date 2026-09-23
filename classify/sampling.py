@@ -84,14 +84,19 @@ LABELER_CONTEXT_FIELDS: tuple[str, ...] = (
     "pr_number",
     "pr_title",
     "pr_body",
+    # 등급의 근거가 **아니라** 참고 정보다 (ADR-018 결정 3). 라벨은 문장이 아니라 E1 을 못
+    # 넘고, INFERRED 근거 6종 닫힌 목록(ADR-017)에도 없다. 어디를 볼지 좁히는 데만 쓴다.
+    "pr_labels",
     "issue_numbers",
     "issue_titles",
+    # 이슈는 3건 중 1건만 붙는데(예비 200건 36.5%) 제목만으로는 이유를 못 읽는다 (ADR-018).
+    "issue_bodies",
     "review_comments",
 )
-# §4.4 `context` 에는 칸이 없지만 #6 이 이미 모으는 값. 이슈 본문에만 이유가 있는 건이 있어
-# 성제가 #7 코멘트에서 "함께 보여주자"고 제안했다. 스키마 추가 여부는 #24 (§13 절차).
-# 확정 전이므로 기본은 끄고 `--with-extra-context` 로만 켠다.
-EXTRA_CONTEXT_FIELDS: tuple[str, ...] = ("issue_bodies", "pr_labels")
+# ADR-018(#112) 전까지 `issue_bodies`·`pr_labels` 가 여기 있어 `--with-extra-context` 로만
+# 보였다. 둘 다 위로 옮겨 기본으로 보인다. 빈 튜플로 남겨 두는 이유는 `tools/label_cli.py`
+# 가 이 이름을 가져다 쓰기 때문이다 - 지우면 그쪽이 깨진다. 그쪽이 참조를 떼면 함께 지운다.
+EXTRA_CONTEXT_FIELDS: tuple[str, ...] = ()
 
 # 1차 대상 (ADR-003, 라벨 가이드 §2)
 TARGET_DELETION_KIND = "FULL_FUNCTION"
@@ -397,7 +402,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--with-extra-context",
         action="store_true",
-        help="이슈 본문·PR 라벨도 라벨러에게 보여준다 (#24 확정 전까지는 꺼 둔다)",
+        help="(효과 없음) 이슈 본문·PR 라벨은 ADR-018 로 기본 노출된다 (#112). 호환용으로만 남김",
     )
     parser.add_argument("--dry-run", action="store_true", help="파일을 쓰지 않고 요약만")
     parser.add_argument(

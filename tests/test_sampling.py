@@ -224,16 +224,29 @@ def test_unknown_pipeline_fields_do_not_leak_through():
     assert "secret_score" not in built
 
 
-def test_extra_context_is_off_by_default_and_opt_in():
+def test_issue_bodies_and_pr_labels_are_shown_by_default():
+    """ADR-018 로 §4.4 `context` 에 들어와 옵션 없이 보인다 (#112).
+
+    이슈는 예비 200건에서 3건 중 1건만 붙었는데 그중 제목만 보이고 있었다. 이름을 직접
+    박는 이유는 화이트리스트를 되읽는 구조 테스트가 필드 누락을 못 잡기 때문이다 (#99).
+    """
     record = make_record(1)
     record["context"]["issue_bodies"] = ["본문"]
     record["context"]["pr_labels"] = ["bug"]
 
-    assert "issue_bodies" not in sampling.build_labeling_record(record)["context"]
+    context = sampling.build_labeling_record(record)["context"]
+    assert context["issue_bodies"] == ["본문"]
+    assert context["pr_labels"] == ["bug"]
 
-    opted_in = sampling.build_labeling_record(record, with_extra_context=True)
-    assert opted_in["context"]["issue_bodies"] == ["본문"]
-    assert opted_in["context"]["pr_labels"] == ["bug"]
+
+def test_old_extra_context_flag_changes_nothing():
+    """옛 옵션은 `tools/label_cli.py` 호환으로만 남았다 - 켜도 결과가 같다."""
+    record = make_record(1)
+    record["context"]["issue_bodies"] = ["본문"]
+
+    assert sampling.build_labeling_record(record, with_extra_context=True) == (
+        sampling.build_labeling_record(record)
+    )
 
 
 def test_record_id_comes_from_the_schema_id_field():
