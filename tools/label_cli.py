@@ -37,6 +37,7 @@ import os
 import re
 import sys
 import time
+import unicodedata
 from collections.abc import Callable, Collection, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -226,19 +227,26 @@ def found_in_context(evidence: str, view: dict[str, Any]) -> bool:
     """EXPLICIT 인용이 수집된 맥락에 실제로 있나. 공백 차이와 `…` 생략은 허용한다 (§6.1).
 
     못 찾았다고 막지는 않는다. GitHub 원본에서 가져온 문장일 수 있다 (§2.3 off-record-evidence).
+
+    인용은 **한 곳**에서 나와야 한다 (§6.1 "가장 구체적인 한 곳"). 그래서 필드마다, 목록이면
+    항목마다 따로 본다. 전부 이어 붙여 찾으면 코멘트 1 "alpha" 와 코멘트 2 "beta" 로 어디에도
+    없는 "alpha beta" 를 찾았다고 판정해 미발견 경고를 건너뛴다. `…` 로 나눈 조각들도 같은 한
+    곳에 모두 있어야 한다. 비교는 표시용 이스케이프 전의 원문으로 한다.
     """
-    parts: list[str] = []
+    sources: list[str] = []
     for value in (view.get("context") or {}).values():
         if isinstance(value, str):
-            parts.append(value)
+            sources.append(value)
         elif isinstance(value, list):
             # 객체형 리뷰 코멘트(ADR-018)는 본문만 본다. str(dict) 는 줄바꿈을 `\n` 으로
             # 이스케이프해 여러 줄에 걸친 인용을 못 찾는다.
-            parts.extend(_item_body(item) for item in value)
-    haystack = " ".join("\n".join(parts).split())
+            sources.extend(_item_body(item) for item in value)
     pieces = [" ".join(piece.split()) for piece in re.split(r"…|\.\.\.", evidence)]
     pieces = [piece for piece in pieces if piece]
-    return bool(pieces) and all(piece in haystack for piece in pieces)
+    if not pieces:
+        return False
+    normalized = (" ".join(source.split()) for source in sources)
+    return any(all(piece in source for piece in pieces) for source in normalized)
 
 
 # --------------------------------------------------------------------------------------
@@ -333,6 +341,41 @@ CONTEXT_FIELD_NOTES = {"pr_labels": "(참고 정보 — 등급 근거 아님, AD
 COMMENT_RULE = "  " + "-" * 40
 
 
+# 양방향 텍스트 제어 문자. 범주가 Cc 가 아니라 Cf 지만, 터미널에 찍힌 인용문의 글자 순서를
+# 실제와 다르게 보이게 만든다 (Trojan Source, CVE-2021-42574).
+BIDI_CONTROLS = frozenset("‪‫‬‭‮⁦⁧⁨⁩")
+
+
+def escape_control(text: str, *, keep: str = "\n\t") -> str:
+    """터미널에 찍기 직전의 외부 텍스트에서 제어 문자를 보이는 형태로 바꾼다 (CWE-150).
+
+    커밋 메시지·PR·이슈·리뷰 본문·코드는 GitHub 에서 온 남의 텍스트다. ESC(`\\x1b`) 시퀀스가
+    그대로 찍히면 화면을 지우거나 앞 줄을 덮어써, 라벨러가 보는 맥락이 실제 맥락과 달라진다.
+    `keep` 에 든 문자(기본 줄바꿈·탭)는 그대로 두고, 나머지 Cc 범주와 `BIDI_CONTROLS` 는
+    `\\x1b`·`\\u202e` 처럼 적는다. **표시 전용이다** — 인용 검사(`found_in_context`)는
+    원문으로 한다.
+    """
+    out: list[str] = []
+    for char in text:
+        if char in keep or (unicodedata.category(char) != "Cc" and char not in BIDI_CONTROLS):
+            out.append(char)
+        elif ord(char) <= 0xFF:
+            out.append(f"\\x{ord(char):02x}")
+        else:
+            out.append(f"\\u{ord(char):04x}")
+    return "".join(out)
+
+
+def _one_line(value: object) -> str:
+    """한 줄이어야 하는 값(경로·id·시그니처 등). 줄바꿈도 이스케이프해 가짜 줄을 못 만든다."""
+    return escape_control(str(value), keep="\t")
+
+
+def _text_lines(text: str) -> list[str]:
+    """여러 줄 텍스트를 줄 단위로 이스케이프한다. `splitlines` 가 `\\r\\n`·`\\r` 도 가른다."""
+    return [escape_control(line) for line in text.splitlines()]
+
+
 def _item_body(item: object) -> str:
     """맥락 목록 항목 1개의 본문. 객체형 리뷰 코멘트(ADR-018)면 `body`, 아니면 문자열 그대로."""
     if isinstance(item, Mapping):
@@ -341,7 +384,14 @@ def _item_body(item: object) -> str:
 
 
 def _shown(value: object) -> str:
-    return "-" if value is None or value == "" else str(value)
+    """머리 줄 칸 1개. 값이 없으면 `-`, 있으면 한 줄로 이스케이프."""
+    return "-" if value is None or value == "" else _one_line(value)
+
+
+def _list_item_lines(text: str) -> list[str]:
+    """목록 항목 1개: 첫 줄은 `- ` 뒤에, 나머지 줄은 그 아래 들여쓰기."""
+    first, *rest = _text_lines(text) or [""]
+    return [f"  - {first}", *(f"    {line}" for line in rest)]
 
 
 def review_comment_header(comment: Mapping[str, Any]) -> str:
@@ -355,7 +405,7 @@ def review_comment_header(comment: Mapping[str, Any]) -> str:
     line = _shown(comment.get("line"))
     if comment.get("outdated"):
         line += " (outdated — 코멘트 당시 줄)"
-    locator = "-" if comment_id is None else f"review:comment_{comment_id}"
+    locator = "-" if comment_id is None else f"review:comment_{_one_line(comment_id)}"
     return (
         f"comment_id {_shown(comment_id)} · path {_shown(comment.get('path'))} · "
         f"side {_shown(comment.get('side'))} · line {line} · locator {locator}"
@@ -374,12 +424,10 @@ def _review_comment_lines(comments: Sequence[object]) -> list[str]:
             lines.append(COMMENT_RULE)
         if isinstance(comment, Mapping):
             lines.append(f"  - {review_comment_header(comment)}")
-            body = _item_body(comment).splitlines() or ["(본문 없음)"]
+            body = _text_lines(_item_body(comment)) or ["(본문 없음)"]
             lines.extend(f"      {line}" for line in body)
         else:
-            first, *rest = str(comment).splitlines() or [""]
-            lines.append(f"  - {first}")
-            lines.extend(f"    {line}" for line in rest)
+            lines.extend(_list_item_lines(str(comment)))
     return lines
 
 
@@ -393,26 +441,31 @@ def _block(name: str, value: object) -> list[str]:
         lines.extend(_review_comment_lines(value))
     elif isinstance(value, list):
         for item in value:
-            first, *rest = str(item).splitlines() or [""]
-            lines.append(f"  - {first}")
-            lines.extend(f"    {line}" for line in rest)
+            lines.extend(_list_item_lines(str(item)))
     else:
-        lines.extend(f"  {line}" for line in str(value).splitlines())
+        lines.extend(f"  {line}" for line in _text_lines(str(value)))
     return lines
 
 
+def _code(value: object) -> str:
+    """삭제된 코드·대체 코드. 줄은 살리고 제어 문자는 이스케이프한다."""
+    return "\n".join(_text_lines(str(value or "(없음)")))
+
+
 def render_record(view: dict[str, Any]) -> str:
+    """레코드 1건 화면. 레코드에서 온 텍스트는 모두 `escape_control` 을 거친다 (CWE-150)."""
     context = view.get("context") or {}
     replacement = view.get("replacement") or {}
     test_code = "예 — 가이드 §5 테스트 코드 특례" if view.get("is_test_code") else "아니오"
+    function = view.get("function_signature") or view.get("function_name")
     lines = [
         RULE,
-        f"record_id  {view.get('record_id')}",
-        f"repo       {view.get('repo')}",
-        f"file       {view.get('file_path')}",
-        f"function   {view.get('function_signature') or view.get('function_name')}",
+        f"record_id  {_one_line(view.get('record_id'))}",
+        f"repo       {_one_line(view.get('repo'))}",
+        f"file       {_one_line(view.get('file_path'))}",
+        f"function   {_one_line(function)}",
         f"test code  {test_code}",
-        f"source     {view.get('source_url')}",
+        f"source     {_one_line(view.get('source_url'))}",
         "",
         "== 맥락 — 먼저 읽는다 (가이드 §3: 명시 → 추론 → UNK) ==",
     ]
@@ -424,10 +477,10 @@ def render_record(view: dict[str, Any]) -> str:
     lines += [
         "",
         "== 삭제된 코드 (deleted_body) ==",
-        str(view.get("deleted_body") or "(없음)").rstrip("\n"),
+        _code(view.get("deleted_body")),
         "",
-        f"== 대체 코드 (replacement, match_method={replacement.get('match_method')}) ==",
-        str(replacement.get("code") or "(없음)").rstrip("\n"),
+        f"== 대체 코드 (replacement, match_method={_one_line(replacement.get('match_method'))}) ==",
+        _code(replacement.get("code")),
         RULE,
     ]
     return "\n".join(lines)

@@ -848,6 +848,7 @@ def render_context(**context):
 
 
 def test_object_review_comment_has_header_and_real_line_breaks():
+    """객체형 코멘트: 머리 줄에 comment_id·path·side·line·locator, 본문은 실제 줄바꿈."""
     rendered = render_context(review_comments=[review_comment()])
 
     header = next(line for line in rendered.splitlines() if "comment_id 777" in line)
@@ -863,6 +864,7 @@ def test_object_review_comment_has_header_and_real_line_breaks():
 
 
 def test_review_comment_with_missing_fields_shows_dash():
+    """값이 None 인 칸은 `-`, 빈 본문은 표시만 하고 에러 없이."""
     comment = review_comment(comment_id=None, path=None, line=None, side=None, body="")
 
     rendered = render_context(review_comments=[comment])
@@ -879,6 +881,7 @@ def test_outdated_review_comment_line_is_marked():
 
 
 def test_multiple_review_comments_are_separated():
+    """코멘트 사이에만 구분선이 들어간다."""
     comments = [review_comment(), review_comment(comment_id=778, body="second")]
 
     lines = render_context(review_comments=comments).splitlines()
@@ -899,6 +902,7 @@ def test_string_review_comments_from_pre200_show_body_only():
 
 
 def test_mixed_review_comment_formats_are_handled_one_by_one():
+    """문자열·객체가 섞여도 항목마다 타입으로 가른다."""
     rendered = render_context(review_comments=["old style", review_comment()])
 
     assert "  - old style" in rendered.splitlines()
@@ -907,6 +911,7 @@ def test_mixed_review_comment_formats_are_handled_one_by_one():
 
 
 def test_multiline_pr_body_and_issue_bodies_keep_line_breaks():
+    """문자열 필드·문자열 목록 필드도 줄바꿈을 살린다."""
     rendered = render_context(
         pr_body="Summary\r\n\r\n- removes fn_0",
         issue_bodies=["Steps:\n1. call fn_0\n2. crash"],
@@ -922,6 +927,7 @@ def test_multiline_pr_body_and_issue_bodies_keep_line_breaks():
 
 
 def test_pr_labels_are_listed_as_reference_only():
+    """ADR-018 결정 3: pr_labels 는 목록으로, 등급 근거가 아니라는 표시와 함께."""
     rendered = render_context(pr_labels=["bug", "performance"])
     lines = rendered.splitlines()
 
@@ -938,3 +944,133 @@ def test_quote_spanning_lines_of_object_review_comment_is_found():
     assert label_cli.found_in_context(
         "leaks into JSON Schema. Please use a single `extra` kwarg.", view
     )
+
+
+def view_with_context(**context):
+    """found_in_context 용: 맥락만 바꾼 라벨러 뷰."""
+    record = make_record(0)
+    record["context"] = {**record["context"], **context}
+    return label_cli.labeler_view(sampling.build_labeling_record(record, with_extra_context=True))
+
+
+def test_quote_across_two_review_comments_is_not_found():
+    """인용은 한 곳에서 나와야 한다. 코멘트 경계를 이어 붙인 문장은 미발견이다 (CodeRabbit)."""
+    view = view_with_context(
+        review_comments=[review_comment(body="alpha"), review_comment(comment_id=2, body="beta")]
+    )
+
+    assert label_cli.found_in_context("alpha", view)
+    assert label_cli.found_in_context("beta", view)
+    assert not label_cli.found_in_context("alpha beta", view)
+    assert not label_cli.found_in_context("alpha … beta", view)  # 생략 조각도 한 곳에
+
+
+def test_quote_across_fields_or_list_items_is_not_found():
+    """코멘트뿐 아니라 필드끼리·목록 항목끼리도 이어 붙이지 않는다."""
+    view = view_with_context(
+        pr_title="Fix empty headers",
+        pr_body="The parser crashed.",
+        issue_titles=["first issue", "second issue"],
+    )
+
+    assert not label_cli.found_in_context("Fix empty headers The parser crashed.", view)
+    assert not label_cli.found_in_context("first issue second issue", view)
+    assert label_cli.found_in_context("second issue", view)
+
+
+def test_multiline_quote_inside_one_review_comment_is_still_found():
+    """한 코멘트 안에서라면 여러 줄에 걸친 인용·생략 인용 모두 찾는다."""
+    view = view_with_context(
+        review_comments=[review_comment(), review_comment(comment_id=2, body="other")]
+    )
+
+    assert label_cli.found_in_context("JSON Schema. Please use", view)
+    assert label_cli.found_in_context("This `**extra` … single `extra` kwarg.", view)
+
+
+ESC_BODY = "\x1b[2J\x1b[1;1Hlooks fine\x07\r\n\tindented‮evil\x00"
+
+
+def test_escape_control_keeps_newline_and_tab_only():
+    """ESC·BEL·NUL·RLO 는 보이는 형태로, 줄바꿈·탭은 그대로."""
+    escaped = label_cli.escape_control("a\x1b[31mb\n\tc\x07\x7f‮d\r")
+
+    assert escaped == "a\\x1b[31mb\n\tc\\x07\\x7f\\u202ed\\x0d"
+    assert label_cli.escape_control("한국어 — 이모지 🙂") == "한국어 — 이모지 🙂"
+
+
+def test_control_sequences_in_review_comment_are_escaped_on_screen():
+    """리뷰 본문·머리 줄의 ESC 시퀀스가 터미널에 그대로 닿지 않는다 (CWE-150)."""
+    comment = review_comment(body=ESC_BODY, path="evil\x1b]0;title\x07.py", side="LEFT\x1b[K")
+
+    rendered = render_context(review_comments=[comment])
+    lines = rendered.splitlines()
+
+    assert "\x1b" not in rendered and "\x07" not in rendered and "‮" not in rendered
+    assert "      \\x1b[2J\\x1b[1;1Hlooks fine\\x07" in lines
+    assert "      \tindented\\u202eevil\\x00" in lines  # 탭은 그대로
+    assert "path evil\\x1b]0;title\\x07.py · side LEFT\\x1b[K" in rendered
+
+
+def test_control_sequences_in_every_external_field_are_escaped():
+    """맥락·코드·머리 줄 — 레코드에서 온 텍스트는 어디에 찍혀도 이스케이프된다."""
+    record = make_record(
+        0,
+        repo="psf/\x1b[8mrequests",
+        file_path="src/a\x1b.py",
+        function_signature="def f(\x1b):",
+        deleted_body="def f():\n\x1b[2K    pass\n",
+        source_url="https://x/\x1b",
+    )
+    record["replacement"] = {"code": "g()\x1b[1A", "match_method": "NONE\x1b", "confidence": 0.0}
+    record["context"] = {
+        "commit_message": "fix\x1b[31m",
+        "pr_number": 1,
+        "pr_title": "t\x1b",
+        "pr_body": "b\x1b",
+        "issue_numbers": [2],
+        "issue_titles": ["it\x1b"],
+        "issue_bodies": ["ib\x1b\nsecond\x1b"],
+        "pr_labels": ["bug\x1b"],
+        "review_comments": ["old\x1b"],
+    }
+    view = label_cli.labeler_view(sampling.build_labeling_record(record, with_extra_context=True))
+
+    rendered = label_cli.render_record(view)
+
+    assert "\x1b" not in rendered
+    for shown in (
+        "psf/\\x1b[8mrequests",
+        "src/a\\x1b.py",
+        "def f(\\x1b):",
+        "\\x1b[2K    pass",
+        "https://x/\\x1b",
+        "g()\\x1b[1A",
+        "match_method=NONE\\x1b",
+        "fix\\x1b[31m",
+        "t\\x1b",
+        "b\\x1b",
+        "it\\x1b",
+        "    second\\x1b",
+        "bug\\x1b",
+        "old\\x1b",
+    ):
+        assert shown in rendered, shown
+
+
+def test_single_line_fields_cannot_fake_extra_lines():
+    """경로 같은 한 줄 값의 줄바꿈은 이스케이프한다. 가짜 머리 줄을 만들지 못한다."""
+    comment = review_comment(path="a.py\n  - comment_id 999 · locator review:comment_999")
+
+    rendered = render_context(review_comments=[comment])
+
+    assert not any(line.startswith("  - comment_id 999") for line in rendered.splitlines())
+    assert "a.py\\x0a  - comment_id 999" in rendered
+
+
+def test_quote_check_uses_raw_text_not_escaped_display():
+    """이스케이프는 표시 전용. 인용 검사는 원문으로 해서 표시 형태(`\\x1b`)와는 맞지 않는다."""
+    view = view_with_context(pr_body="stop\x1b[0m here")
+
+    assert label_cli.found_in_context("stop\x1b[0m here", view)
+    assert not label_cli.found_in_context("stop\\x1b[0m here", view)
