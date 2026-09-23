@@ -428,7 +428,8 @@ def test_save_order_is_persisted_next_to_the_label_file_not_inside_it(workspace)
     _, label_path = workspace
     _, rows = run_session(workspace, explicit_bug(0) + explicit_bug(1), now=lambda: SAME_SECOND)
 
-    order = json.loads((label_path.parent / "sj_pre200.jsonl.order.json").read_text("utf-8"))
+    order_path = label_path.with_name(label_path.name + label_cli.ORDER_SUFFIX)
+    order = json.loads(order_path.read_text("utf-8"))
     assert order == {"rec-000": 1, "rec-001": 2}
     assert all(list(row) == list(label_cli.LABEL_FIELDS) for row in rows)
 
@@ -437,7 +438,7 @@ def test_missing_order_file_falls_back_to_line_order(workspace):
     """순번 파일이 없어도(도입 전 파일) 멈추지 않는다. 동률이면 줄 순서로 가린다."""
     _, label_path = workspace
     run_session(workspace, explicit_bug(0) + explicit_bug(1), now=lambda: SAME_SECOND)
-    (label_path.parent / "sj_pre200.jsonl.order.json").unlink()
+    label_path.with_name(label_path.name + label_cli.ORDER_SUFFIX).unlink()
 
     _, rows = run_session(workspace, [":u", "8", "no-context", "y"], now=lambda: SAME_SECOND)
 
@@ -710,7 +711,7 @@ def test_save_refuses_a_violating_label_and_leaves_the_file_untouched(workspace)
         session.save(0, unknown_label("태그 없음"))
 
     assert label_path.read_text(encoding="utf-8") == before
-    assert not (label_path.parent / "sj_pre200.jsonl.order.json").exists()
+    assert not label_path.with_name(label_path.name + label_cli.ORDER_SUFFIX).exists()
 
 
 def test_run_reasks_when_save_is_refused(workspace):
