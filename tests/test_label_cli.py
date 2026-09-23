@@ -711,7 +711,14 @@ def test_save_refuses_a_violating_label_and_leaves_the_file_untouched(workspace)
         session.save(0, unknown_label("태그 없음"))
 
     assert label_path.read_text(encoding="utf-8") == before
-    assert not label_path.with_name(label_path.name + label_cli.ORDER_SUFFIX).exists()
+    order_path = label_path.with_name(label_path.name + label_cli.ORDER_SUFFIX)
+    assert not order_path.exists()
+
+    # 대조: 같은 세션이 정상 라벨을 저장하면 같은 경로에 순번 파일이 생긴다.
+    # 위의 "없다"가 "원래 안 쓴다"가 아니라 "거부해서 안 썼다"임을 보인다.
+    session.save(0, unknown_label("no-context"))
+    assert order_path.exists()
+    assert label_path.read_text(encoding="utf-8") != before
 
 
 def test_run_reasks_when_save_is_refused(workspace):
