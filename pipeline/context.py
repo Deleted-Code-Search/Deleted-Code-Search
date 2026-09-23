@@ -35,12 +35,14 @@ import difflib
 import json
 import os
 import re
+import subprocess
 import sys
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, NamedTuple
 
+from pipeline.extract import _read_file_at
 from pipeline.parsers.base import Function
 from pipeline.parsers.python_adapter import PythonAdapter
 from pipeline.select_repos import (
@@ -719,12 +721,25 @@ def _similarity(deleted_body: str, candidate: Function) -> float:
     "같은 일을 하는 코드"가 붙는다. `filter._move_similarity` 를 쓰지 않는 이유는 그쪽이
     이동 판정용이라 0.9 미만을 `None` 으로 잘라 내기 때문이다. 대체 코드는 다시 쓰인
     코드라 0.9 를 넘는 일이 드물어, 여기서는 자르지 않고 순위만 매긴다.
+
+    **줄이 아니라 토큰 단위로 비교한다** (#107). 정규화 결과는 줄 목록인데, 줄을 그대로
+    비교 단위로 쓰면 줄이 조금만 달라도 통째로 불일치가 된다. 한두 줄짜리 함수(프로토콜
+    스텁 `def __call__(...) -> Any: ...` 등)는 시그니처가 조금만 바뀌어도 0 이 나온다.
+    예비 200건에서 같은 이름 후보가 여럿인 10건을 줄 단위로 재면 **거의 전부 0.000** 이었고,
+    그래서 선택이 사실상 줄 번호 순서(아래 동점 처리)로 정해지고 있었다 - 시그니처가 삭제된
+    것과 글자 하나 안 다른 후보도 0 이었다. 토큰 단위로 바꾸면 점수가 의미를 갖는다.
+
+    그래도 형제 중 하나를 고르는 데는 약하다. 정규화가 식별자를 `VAR` 로 지우므로
+    `_BaseMultiHostUrl` 과 `_BaseUrl` 이 같아 보인다. 그래서 `match_replacement` 는 위치를
+    먼저 보고, 이 함수는 위치로 못 가를 때만 쓴다.
     """
     from pipeline.filter import normalize_function_body
 
-    return difflib.SequenceMatcher(
-        None, normalize_function_body(deleted_body), normalize_function_body(candidate.body)
-    ).ratio()
+    def tokens(source: str) -> list[str]:
+        """정규화한 줄들을 이어 토큰으로 쪼갠다 - 비교 단위를 줄이 아니라 토큰으로."""
+        return " ".join(normalize_function_body(source)).split()
+
+    return difflib.SequenceMatcher(None, tokens(deleted_body), tokens(candidate.body)).ratio()
 
 
 @dataclass(frozen=True)
@@ -798,40 +813,91 @@ def match_replacement(record: dict[str, Any], *, child_source: str | None = None
     if not candidates:
         return UNDETERMINED
 
-    # 신뢰도는 **후보가 몇 개였나**로 정한다. 본문을 복원했는지와는 무관하다 - 모호함은
-    # "같은 이름이 여럿 추가됐다"에서 오고, 그건 본문을 못 보여줘도 그대로다.
-    confidence = SAME_NAME_CONFIDENCE if len(candidates) == 1 else AMBIGUOUS_NAME_CONFIDENCE
-    usable = [(function, code) for function, code in candidates if code]
+    # 위치가 먼저다 (#107). 삭제 자리에 걸친 헝크의 후보가 있으면 그것들만 본다.
+    # `SAME_LOCATION` 은 이름 그대로 위치이고, 같은 이름 형제 중 하나를 고르는 데 본문
+    # 유사도는 믿을 수 없다 - `_similarity` 가 식별자를 `VAR` 로 지운 뒤 비교해서, 형제를
+    # 가르는 바로 그 이름(`_BaseMultiHostUrl` 과 `_BaseUrl`)이 같아 보인다. 예비 200건에서
+    # 같은 이름 후보가 여럿인 10건 중 7건이 위치로 하나로 좁혀졌고, 그중 3건은 유사도가
+    # 다른 클래스의 함수를 골랐다.
+    at_site = [candidate for candidate in candidates if candidate.at_site]
+    pool = at_site or candidates
+
+    # 신뢰도는 **최종 후보군이 몇 개였나**로 정한다. 위치로 하나로 좁혀졌다면 모호함이
+    # 사라진 것이라 후보가 처음부터 하나였던 경우와 같다. 본문을 복원했는지와는 무관하다 -
+    # 모호함은 "같은 이름이 여럿"에서 오고, 그건 본문을 못 보여줘도 그대로다.
+    confidence = SAME_NAME_CONFIDENCE if len(pool) == 1 else AMBIGUOUS_NAME_CONFIDENCE
+    usable = [candidate for candidate in pool if candidate.code]
     if not usable:
         return Replacement(None, MATCH_SAME_LOCATION, confidence)
     if len(usable) == 1:
-        return Replacement(usable[0][1], MATCH_SAME_LOCATION, confidence)
+        return Replacement(usable[0].code, MATCH_SAME_LOCATION, confidence)
 
-    # 한 파일에 같은 이름 함수가 여럿 추가될 수 있다 (`__init__` 등). 어느 것이 이 함수를
-    # 이어받았는지는 위치 없이는 확정할 수 없어, 본문이 가장 가까운 것을 고르고 신뢰도를 낮춘다.
+    # 위치로도 못 가르면 본문이 가장 가까운 것을 고른다. 위 이유로 믿을 만한 선택은
+    # 아니라서 신뢰도를 낮춘 채 둔다.
     deleted = record.get("deleted_body") or ""
-    best = max(usable, key=lambda pair: (_similarity(deleted, pair[0]), -pair[0].start_line))
-    return Replacement(best[1], MATCH_SAME_LOCATION, confidence)
+    best = max(usable, key=lambda c: (_similarity(deleted, c.function), -c.function.start_line))
+    return Replacement(best.code, MATCH_SAME_LOCATION, confidence)
 
 
-def _same_name_candidates(
-    record: dict[str, Any], child_source: str | None
-) -> list[tuple[Function, str | None]]:
-    """삭제된 함수와 이름이 같은 추가 함수들. `(헝크에서 본 함수, 온전한 본문 또는 None)`.
+class _Candidate(NamedTuple):
+    """같은 이름 추가 함수 하나."""
+
+    function: Function
+    """헝크 본문에서 파싱한 함수. 줄 번호는 헝크 기준이다."""
+    code: str | None
+    """온전하다고 확인된 본문. 확인 못 했으면 `None`."""
+    at_site: bool
+    """이 후보가 나온 헝크가 삭제된 함수 자리에 걸치나 (`_at_deletion_site`)."""
+
+
+def _same_name_candidates(record: dict[str, Any], child_source: str | None) -> list[_Candidate]:
+    """삭제된 함수와 이름이 같은 추가 함수들.
 
     본문은 **온전하다고 확인된 것만** 채운다 (`_ends_inside_hunk` 독스트링 참고).
     `child_source` 가 있으면 자식 파일에서 함수 전체를 다시 뽑아 확인이 필요 없다.
     """
     name = record.get("function_name")
-    candidates: list[tuple[Function, str | None]] = []
+    start_line, end_line = record.get("start_line"), record.get("end_line")
+    candidates: list[_Candidate] = []
     for hunk in added_hunks(record) or []:
         body = hunk.get("added_body") or ""
-        new_start = hunk.get("new_start")
+        at_site = _at_deletion_site(hunk, start_line, end_line)
         for function in _added_functions(body):
             if function.name != name:
                 continue
-            candidates.append((function, _whole_body(function, body, new_start, child_source)))
+            code = _whole_body(function, body, hunk.get("new_start"), child_source)
+            candidates.append(_Candidate(function, code, at_site))
     return candidates
+
+
+def _at_deletion_site(hunk: dict[str, Any], start_line: Any, end_line: Any) -> bool:
+    """헝크가 삭제된 함수 자리(부모 좌표 `[start_line, end_line]`)에 걸치나.
+
+    헝크의 `old_start`·`old_count` 는 부모 파일 좌표다 (#102). 제자리 교체는 보통 삭제와
+    추가가 한 헝크에 묶여(`@@ -118,24 +118,9 @@`) 그 옛 범위가 삭제된 함수와 겹친다.
+    `old_count == 0` 인 순수 추가 헝크는 `old_start` 줄 **뒤에** 끼워 넣은 것이라 그 한 줄을
+    범위로 본다. 좌표가 없는 레코드(옛 형식, 테스트 픽스처)는 위치를 모르는 것이라
+    `False` - 유사도로 떨어진다.
+    """
+    old_start = hunk.get("old_start")
+    if not all(isinstance(value, int) for value in (old_start, start_line, end_line)):
+        return False
+    old_end = old_start + max(hunk.get("old_count") or 0, 1) - 1
+    return old_start <= end_line and start_line <= old_end
+
+
+def read_child_source(repo_path: str | Path, commit_sha: str, file_path: str) -> str | None:
+    """삭제 커밋 시점의 그 파일 원문. 읽을 수 없으면 `None` (#107).
+
+    `extract.py` 의 `_read_file_at` 을 그대로 쓴다 - 비ASCII 경로(`core.quotepath=false`)와
+    git 환경 변수 처리를 두 벌로 두면 추출이 만든 `file_path` 와 여기서 읽는 경로가 어긋날 수
+    있다. 파일이 그 커밋에서 통째로 지워졌으면 원문이 없고, 그때는 추가 줄도 없어 대체 코드
+    판정에 쓸 일이 없다.
+    """
+    try:
+        return _read_file_at(repo_path, commit_sha, file_path)
+    except (subprocess.CalledProcessError, OSError, UnicodeDecodeError):
+        return None
 
 
 def _whole_body(
@@ -999,6 +1065,7 @@ def run_targets(
 
 
 def build_parser() -> argparse.ArgumentParser:
+    """CLI 인자. 실행 방법은 모듈 독스트링 "실행" 절."""
     parser = argparse.ArgumentParser(
         prog="python -m pipeline.context",
         description="커밋에 PR·이슈·리뷰 코멘트를 붙인다 (CHARTER.md §4.2 맥락 결합).",
@@ -1009,6 +1076,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--sample", type=int, default=0, help="최근 커밋 N건에 적용해 비율 측정")
     parser.add_argument("--input", type=Path, default=None, help="#5 출력 JSONL")
     parser.add_argument("--out", type=Path, default=None, help="결과 JSONL 저장 경로")
+    parser.add_argument(
+        "--repo-path",
+        type=Path,
+        default=None,
+        help="저장소 클론 경로. 주면 대체 코드 본문을 자식 파일에서 온전히 뽑는다 (#107)",
+    )
     parser.add_argument("--max-issues", type=int, default=MAX_ISSUES_PER_COMMIT)
     parser.add_argument("--cache-dir", type=Path, default=None)
     parser.add_argument("--env-file", type=Path, default=Path(".env"))
@@ -1017,6 +1090,12 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
+    """맥락을 모으고 결과를 낸다. 한도 소진으로 멈췄으면 1, 정상이면 0.
+
+    `--out` 으로 레코드를 쓸 때 **`--repo-path` 를 꼭 준다.** 없으면 에러 없이 대체 코드
+    본문이 크게 줄어든다 - 예비 200건에서 39건 -> 8건 (#107). 헝크에는 추가된 줄만 있어서
+    자식 파일 원문 없이는 함수가 헝크 안에서 끝난 것이 확인된 후보만 채울 수 있기 때문이다.
+    """
     args = build_parser().parse_args(argv)
     load_env_file(args.env_file)
     # 리포트가 한글이라 Windows 기본 콘솔(cp949)에서 깨진다. 팀 전원이 Windows 다.
@@ -1053,10 +1132,22 @@ def main(argv: Sequence[str] | None = None) -> int:
     contexts, report = run_targets(collector, targets, log=log if len(targets) > 1 else None)
 
     if args.out:
+        if args.repo_path is None:
+            # 에러 없이 조용히 나빠지는 경로라 알린다. 예비 200건에서 대체 코드 본문이
+            # 39건 -> 10건으로 줄었다 (#107).
+            log(
+                "--repo-path 없이 돈다: 대체 코드 본문은 헝크 안에서 끝이 확인된 것만 채운다."
+                " 클론 경로를 주면 자식 파일에서 온전히 뽑는다."
+            )
         args.out.parent.mkdir(parents=True, exist_ok=True)
         with args.out.open("w", encoding="utf-8") as handle:
             for target, context in zip(targets, contexts, strict=False):
-                record = build_output_record(target, context)
+                child_source = (
+                    read_child_source(args.repo_path, target.commit_sha, target.file_path)
+                    if args.repo_path is not None and target.file_path
+                    else None
+                )
+                record = build_output_record(target, context, child_source=child_source)
                 handle.write(json.dumps(record, ensure_ascii=False) + "\n")
         print(f"JSONL: {args.out} ({len(contexts)}건)")
 
