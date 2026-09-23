@@ -777,14 +777,17 @@ def test_to_json_dict_function_signature_passes_through_parser_signature():
 
 
 def test_is_test_code_true_for_top_level_tests_directory():
+    """최상위 `tests/` 아래 파일은 테스트 코드로 판정한다."""
     assert extract_module._is_test_code("tests/test_parser.py") is True
 
 
 def test_is_test_code_true_for_nested_tests_directory():
+    """하위 경로의 `tests/` 디렉터리 아래 파일도 테스트 코드로 판정한다."""
     assert extract_module._is_test_code("pkg/tests/test_widget.py") is True
 
 
 def test_is_test_code_false_for_non_test_path():
+    """`tests` 구성요소가 없는 일반 경로는 테스트 코드가 아니다."""
     assert extract_module._is_test_code("pipeline/extract.py") is False
 
 

@@ -43,6 +43,7 @@ def _deleted(
     deletion_kind: str = "FULL_FUNCTION",
     start_line: int = 1,
 ) -> DeletedFunction:
+    """필터 테스트용 `DeletedFunction`을 최소 필드로 만든다 (Issue #75 필드 포함)."""
     end_line = start_line + len(body.splitlines()) - 1
     return DeletedFunction(
         repo=_REPO,

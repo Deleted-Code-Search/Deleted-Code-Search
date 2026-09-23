@@ -499,6 +499,7 @@ def _parse_same_file_hunks(diff_text: str) -> dict[str, list[Hunk]]:
 def _build_records(
     repo: str, commit: CommitPair, file_path: str, source: str, file_diff: _FileDiff
 ) -> list[DeletedFunction]:
+    """파일 하나의 삭제 줄을 부모 소스의 함수 범위에 귀속시켜 함수별 `DeletedFunction`을 만든다."""
     added_hunk_same_file = "\n".join(file_diff.added_lines)
     records: list[DeletedFunction] = []
     for function in _ADAPTER.extract_functions(source):
