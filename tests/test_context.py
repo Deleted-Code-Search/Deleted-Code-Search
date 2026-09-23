@@ -797,3 +797,192 @@ def test_one_failing_commit_does_not_abort_the_batch(tmp_path):
     assert contexts[0].has_any_context is False
     assert contexts[1].pr_number == 100
     assert report.as_dict()["any_rate"] == 0.5
+
+
+# --------------------------------------------------------------------------------------
+# 대체 코드 매칭 (§4.4 replacement, Issue #67)
+# --------------------------------------------------------------------------------------
+
+DELETED_PARSE = "def parse(raw):\n    return raw.split(',')\n"
+
+
+def _record(**overrides):
+    record = {
+        "function_name": "parse",
+        "deleted_body": DELETED_PARSE,
+        "added_hunk_same_file": "",
+    }
+    record.update(overrides)
+    return record
+
+
+def _hunks(*bodies):
+    """#102 형식의 헝크 목록. 좌표는 이 테스트들이 보지 않으므로 형태만 맞춘다."""
+    return [
+        {
+            "old_start": 10 * index + 1,
+            "old_count": 0,
+            "new_start": 10 * index + 1,
+            "new_count": len(body.splitlines()),
+            "added_body": body,
+        }
+        for index, body in enumerate(bodies)
+    ]
+
+
+def test_no_added_lines_is_a_positive_none_verdict():
+    """추가 줄이 0개면 대체가 없다고 단정할 수 있다 — 판정 불가와 다르다."""
+    result = ctx.match_replacement(_record(added_hunk_same_file=""))
+
+    assert result.match_method == ctx.MATCH_NONE
+    assert result.code is None
+
+
+def test_missing_field_is_undetermined_not_none():
+    """필드 자체가 없으면 "모른다"다. `NONE`으로 적으면 없는 근거가 생긴다 (가이드 §6.2.3)."""
+    record = _record()
+    del record["added_hunk_same_file"]
+
+    assert ctx.match_replacement(record) == ctx.UNDETERMINED
+
+
+def test_same_name_addition_is_a_same_location_replacement():
+    added = "def parse(raw):\n    return [p.strip() for p in raw.split(',')]\nPARSERS = [parse]\n"
+    result = ctx.match_replacement(_record(added_hunks_same_file=_hunks(added)))
+
+    assert result.match_method == ctx.MATCH_SAME_LOCATION
+    assert result.confidence == ctx.SAME_NAME_CONFIDENCE
+    assert "p.strip()" in result.code
+
+
+def test_addition_under_another_name_is_left_undetermined():
+    """이름이 다른 후보를 고르려면 위치가 필요하다. 억지로 고르면 없는 근거가 생긴다."""
+    added = "def parse_all(raw):\n    return [p.strip() for p in raw.split(',')]\n"
+
+    assert ctx.match_replacement(_record(added_hunks_same_file=_hunks(added))) == ctx.UNDETERMINED
+
+
+def test_partial_edits_without_a_whole_function_are_undetermined():
+    """흩어진 수정만 있으면 완결된 함수가 안 나온다 — 대체 코드 후보가 아니다."""
+    added = "    raw = raw.strip()\n        return None\n"
+
+    assert ctx.match_replacement(_record(added_hunks_same_file=_hunks(added))) == ctx.UNDETERMINED
+
+
+def test_several_same_name_additions_pick_the_closest_body_with_lower_confidence():
+    """한 파일에 같은 이름이 여럿 추가될 수 있다 (`__init__` 등). 본문이 가까운 쪽을 고른다."""
+    hunks = _hunks(
+        "def parse(raw):\n    raise NotImplementedError\nA = 1\n",
+        "def parse(raw):\n    return raw.split(',')\nB = 2\n",
+    )
+    result = ctx.match_replacement(_record(added_hunks_same_file=hunks))
+
+    assert result.match_method == ctx.MATCH_SAME_LOCATION
+    assert result.confidence == ctx.AMBIGUOUS_NAME_CONFIDENCE
+    assert "raise NotImplementedError" not in result.code
+
+
+def test_candidates_never_span_two_hunks():
+    """서로 떨어진 헝크의 조각을 이어 붙이면 존재한 적 없는 함수가 만들어진다.
+
+    예비 200건에서 평탄한 문자열을 파싱했을 때 35건 중 5건(14%)이 이 형태였다.
+    아래는 그중 `any_schema` 를 줄인 것이다 - 시그니처 헝크와 무관한 한 줄이 붙어
+    자식 파일에 없는 코드가 `replacement.code` 로 나갔다.
+    """
+    hunks = _hunks(
+        "def parse(raw):\n    return dict_not_none(type='any')\nSCHEMAS = [parse]\n",
+        "    serialization: SerSchema\n",
+    )
+    result = ctx.match_replacement(_record(added_hunks_same_file=hunks))
+
+    assert "serialization" not in result.code
+
+
+TRUNCATED_HUNK = "def parse(raw, sep=','):\n    items = raw.split(sep)\n"
+WHOLE_PARSE = (
+    "def parse(raw, sep=','):\n    items = raw.split(sep)\n    return [i.strip() for i in items]\n"
+)
+
+
+def test_a_function_cut_off_by_the_hunk_does_not_become_code():
+    """헝크에 추가 줄만 있어서 뒷부분이 빠진 채로도 구문상 완결돼 보일 수 있다.
+
+        -def parse(raw):
+        -    items = raw.split(',')
+        +def parse(raw, sep=','):
+        +    items = raw.split(sep)
+             return [i.strip() for i in items]
+
+    `return` 이 빠진 본문을 내보내면 존재한 적 없는 코드가 근거가 된다. 예비 200건에서
+    39건 중 3건이 이 형태였고 `dataclasses.py::wrap` 은 시그니처 한 줄만 나갔다.
+    """
+    result = ctx.match_replacement(_record(added_hunks_same_file=_hunks(TRUNCATED_HUNK)))
+
+    assert result.code is None
+    # "같은 이름 함수가 추가됐다" 는 사실은 그대로라 판정은 남긴다.
+    assert result.match_method == ctx.MATCH_SAME_LOCATION
+
+
+def test_child_source_recovers_the_whole_function():
+    """자식 파일 원문을 주면 잘린 부분까지 복원한다 - 헝크 좌표로 자리를 찾는다."""
+    record = _record(added_hunks_same_file=_hunks(TRUNCATED_HUNK))
+    result = ctx.match_replacement(record, child_source=WHOLE_PARSE)
+
+    assert result.code == WHOLE_PARSE.rstrip("\n")
+    assert result.confidence == ctx.SAME_NAME_CONFIDENCE
+
+
+def test_child_source_without_that_function_falls_back_to_the_safe_rule():
+    """원문을 줬는데 그 자리에 없으면(좌표가 안 맞으면) 채우지 않는다."""
+    record = _record(added_hunks_same_file=_hunks(TRUNCATED_HUNK))
+
+    assert ctx.match_replacement(record, child_source="x = 1\n").code is None
+
+
+def test_flat_field_alone_never_fills_code():
+    """옛 형식은 헝크 경계가 없어 후보를 안전하게 뽑을 수 없다 - `code` 를 채우지 않는다."""
+    added = "def parse(raw):\n    return [p.strip() for p in raw.split(',')]\n"
+
+    assert ctx.match_replacement(_record(added_hunk_same_file=added)) == ctx.UNDETERMINED
+
+
+def test_new_hunk_field_wins_over_the_old_flat_field():
+    """새 형식이 있으면 그것을 쓴다 (2026-09-23 팀 확정)."""
+    record = _record(
+        added_hunk_same_file="def parse(raw):\n    return 'old'\n",
+        added_hunks_same_file=_hunks("def parse(raw):\n    return 'new'\nDONE = 1\n"),
+    )
+
+    assert "'new'" in ctx.match_replacement(record).code
+
+
+def test_no_added_hunks_is_still_a_none_verdict():
+    """새 형식은 추가가 없으면 빈 리스트다 (#102 - 추가 0줄 헝크는 넣지 않는다)."""
+    record = _record(added_hunks_same_file=[])
+
+    assert ctx.added_hunk_text(record) == ""
+    assert ctx.match_replacement(record).match_method == ctx.MATCH_NONE
+
+
+def test_a_blank_line_addition_is_not_dropped():
+    """`new_count == 1` 인데 `added_body` 가 빈 헝크가 있다 - 빈 줄을 추가한 경우다 (#102).
+
+    본문이 비었다고 건너뛰면 그 줄이 사라져, 복원한 텍스트가 원본과 달라진다.
+    """
+    record = _record(added_hunks_same_file=_hunks("", "def parse(raw):\n    return ()\nDONE = 1\n"))
+
+    assert ctx.added_hunk_text(record).startswith("\n")
+    assert ctx.match_replacement(record).match_method == ctx.MATCH_SAME_LOCATION
+
+
+def test_output_record_carries_the_replacement_field():
+    """라벨러가 보는 `replacement`가 여기서 채워진다 (§4.4, sampling.LABELER_REPLACEMENT_FIELDS)."""
+    target = ctx.CommitTarget(
+        repo="a/b",
+        commit_sha="sha",
+        record=_record(added_hunks_same_file=_hunks("def parse(raw):\n    return ()\nDONE = 1\n")),
+    )
+    built = ctx.build_output_record(target, ctx.CommitContext(repo="a/b", commit_sha="sha"))
+
+    assert set(built["replacement"]) == {"code", "match_method", "confidence"}
+    assert built["replacement"]["match_method"] == ctx.MATCH_SAME_LOCATION
