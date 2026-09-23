@@ -10,6 +10,11 @@
     있더라도 읽지 않는다 (§2.2 anchoring). 맥락(커밋·PR·이슈·리뷰)을 코드보다 **먼저** 보여준다 —
     §3 판정 순서가 "명시 → 추론"이고, 대체 코드가 먼저 눈에 들어오면 명시된 이유를 덮어쓴다.
 
+UNKNOWN 원인 태그 (#88, 가이드 v2 §6.3.2):
+    UNKNOWN 라벨은 note 에 원인 태그 4종 중 1개 이상 또는 filter-miss 가 없으면 저장하지 않는다.
+    게이트 1에서 UNKNOWN 62건 중 43건이 태그 없이 저장되어 §11 대응 분기를 가를 수 없었다.
+    강제는 새로 저장하는 라벨에만 한다. 기존 줄(예비 200건 v1)은 읽기·표시·집계에서 검사하지 않는다.
+
 파일 (#33 산출물):
     읽기  datasets/labels/pre200_records.jsonl    라벨러가 보는 레코드
     쓰기  datasets/labels/{labeler}_pre200.jsonl  빈 틀의 줄을 한 줄씩 채운다
@@ -32,13 +37,19 @@ import os
 import re
 import sys
 import time
-from collections.abc import Callable, Collection, Sequence
+from collections.abc import Callable, Collection, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from classify.labels import EVIDENCE_GRADES, REASON_LABELS, UNKNOWN_CAUSE_TAGS, is_filled
+from classify.labels import (
+    EVIDENCE_GRADES,
+    FILTER_MISS_TAG,
+    REASON_LABELS,
+    UNKNOWN_CAUSE_TAGS,
+    is_filled,
+)
 from classify.sampling import (
     EXTRA_CONTEXT_FIELDS,
     GUIDE_VERSION,
@@ -90,7 +101,7 @@ NOTE_TAGS = (
     "multi-reason",
     "priority-rule",
     "off-record-evidence",
-    "filter-miss",
+    FILTER_MISS_TAG,
     "anchored",
     *UNKNOWN_CAUSE_TAGS,
 )
@@ -226,6 +237,68 @@ def found_in_context(evidence: str, view: dict[str, Any]) -> bool:
     pieces = [" ".join(piece.split()) for piece in re.split(r"…|\.\.\.", evidence)]
     pieces = [piece for piece in pieces if piece]
     return bool(pieces) and all(piece in haystack for piece in pieces)
+
+
+# --------------------------------------------------------------------------------------
+# UNKNOWN 원인 태그 (가이드 v2 §6.3.2, #88)
+#
+# 강제는 **새로 저장하는 라벨에만** 한다 (`LabelSession.save`). 기존 줄을 읽고·보여주고·세는
+# 경로(`LabelFile.load`, `find_label_file_problems`, `[직전 건 수정]` 표시, `classify.labels`
+# 집계)는 이 검사를 부르지 않는다. 예비 200건(v1) 파일에 태그 없는 UNKNOWN 이 있고, 그 파일은
+# v1 기준으로 완성된 기록이라 고치지 않는다 (가이드 §10.3 — 200건은 재라벨하지 않는다).
+# --------------------------------------------------------------------------------------
+
+
+def has_note_tag(note: str | None, tag: str) -> bool:
+    """`note` 에 `tag` 가 **낱말로** 들어 있나.
+
+    `note` 는 "태그 + 자유 서술"(가이드 §7.2)이라 태그를 따로 떼어 낼 구분자가 없다. 그렇다고
+    부분 문자열로 보면(`classify.labels.has_tag`) `no-contexts` 같은 오타도 태그로 친다. 그래서
+    앞뒤가 영문·숫자·`-`·`_` 가 아닐 때만 태그로 본다. 한국어 조사가 붙은 `no-context로` 는
+    태그로 친다 — 영문 경계만 보기 때문이다.
+    """
+    pattern = rf"(?<![A-Za-z0-9_-]){re.escape(tag)}(?![A-Za-z0-9_-])"
+    return re.search(pattern, note or "") is not None
+
+
+def requires_unknown_cause_tag(label: Mapping[str, Any]) -> bool:
+    """원인 태그 규칙의 대상인가.
+
+    가이드는 대상을 "UNKNOWN 라벨"(§6.3.2)로 적고, `UNK` 와 `UNKNOWN` 은 항상 함께 간다고
+    정한다(§4 UNK, §6.3). 이 CLI 는 둘을 늘 같이 쓰지만, 손으로 고친 줄이 섞여도 빠지지 않게
+    둘 중 하나만 맞아도 대상으로 본다.
+    """
+    return label.get("evidence_grade") == "UNKNOWN" or label.get("reason_label") == "UNK"
+
+
+def unknown_cause_tag_violations(label: Mapping[str, Any]) -> list[str]:
+    """라벨 1건이 가이드 v2 §6.3.2 원인 태그 규칙을 어기는지. 빈 목록이면 통과.
+
+    규칙: UNKNOWN 라벨의 `note` 에 원인 태그 4종(`UNKNOWN_CAUSE_TAGS`) 중 1개 이상 **또는**
+    `filter-miss` 가 있어야 한다. 복수 태그는 허용한다(§6.3.2 "복수 허용").
+
+    검사하지 않는 것:
+        - UNKNOWN 이 아닌 라벨 — 이 규칙과 무관하다. 다른 태그도 막지 않는다.
+        - 목록 밖 태그 — 가이드의 태그 어휘는 닫힌 목록이 아니다. `note` 가 "태그 + 자유
+          서술"(§7.2)이라 목록 밖 낱말과 서술을 구별할 수 없고, 가이드 스스로 §7.2 목록에 없는
+          `stale-{이전버전}`(§10.3)을 쓴다. 원인 태그를 잘못 쓴 오타는 "원인 태그 없음"으로
+          걸린다.
+    """
+    if not requires_unknown_cause_tag(label):
+        return []
+    note = label.get("note") or ""
+    if any(has_note_tag(note, tag) for tag in (*UNKNOWN_CAUSE_TAGS, FILTER_MISS_TAG)):
+        return []
+    what = "note 가 비었다" if not note.strip() else f"note {note!r} 에 원인 태그가 없다"
+    return [
+        f"UNKNOWN 이면 note 가 필수다 — {what}. "
+        f"원인 태그 {' '.join(UNKNOWN_CAUSE_TAGS)} 중 1개 이상(여러 개 가능), "
+        f"또는 이동·리네임이 필터를 통과한 건이면 {FILTER_MISS_TAG} (가이드 §6.3.2)"
+    ]
+
+
+class UnknownTagViolation(ValueError):
+    """저장하려는 라벨이 원인 태그 규칙을 어긴다. 파일에는 아무것도 쓰지 않았다."""
 
 
 # --------------------------------------------------------------------------------------
@@ -556,7 +629,15 @@ class LabelSession:
                 target = index if editing else None
                 continue
 
-            self.save(index, label)
+            try:
+                self.save(index, label)
+            except UnknownTagViolation as error:
+                # collect_note 가 먼저 막으므로 정상 흐름에선 오지 않는다. 입력 경로가 늘어도
+                # 규칙을 어긴 라벨이 파일에 닿지 않게 하는 마지막 관문이다.
+                self.say(f"  ! {error}")
+                self.say("  저장하지 않았다. 이 건을 처음부터 다시 입력한다.")
+                target = index if editing else None
+                continue
             if not editing:
                 self.saved += 1
 
@@ -611,6 +692,14 @@ class LabelSession:
         return max(stamped)[2] if stamped else None
 
     def save(self, index: int, label: dict[str, Any]) -> None:
+        """라벨 1건을 제자리에 쓴다. 라벨이 파일에 닿는 유일한 경로다 (신규·:u 수정·:r 재입력).
+
+        쓰기 전에 원인 태그 규칙(가이드 §6.3.2)을 **이 라벨에만** 검사한다. 파일의 다른 줄은
+        검사하지 않는다 — 예비 200건(v1)의 태그 없는 UNKNOWN 도 그대로 다시 써진다.
+        """
+        violations = unknown_cause_tag_violations(label)
+        if violations:
+            raise UnknownTagViolation(" / ".join(violations))
         row = self.file.rows[index]
         filled = {
             **label,
@@ -644,7 +733,7 @@ class LabelSession:
         if evidence["evidence_grade"] == "UNKNOWN":
             reason = "UNK"
 
-        note = self.collect_note(evidence["evidence_grade"])
+        note = self.collect_note(reason, evidence["evidence_grade"])
         label = {"reason_label": reason, **evidence, "note": note}
         self.say(format_summary(label))
         if self.clock() - started > RECORD_SOFT_LIMIT_SECONDS and "needs-discussion" not in note:
@@ -744,19 +833,23 @@ class LabelSession:
         )
         return self.ask_until(f"evidence_locator [{hint}]: ", lambda raw: raw or default)
 
-    def collect_note(self, grade: str) -> str:
-        if grade == "UNKNOWN":
+    def collect_note(self, reason: str, grade: str) -> str:
+        if requires_unknown_cause_tag({"reason_label": reason, "evidence_grade": grade}):
             self.say(
-                "UNKNOWN — 무엇이 없어서 판단하지 못했는지 한 줄 필수 (가이드 §6.3). 원인 태그: "
-                + " ".join(UNKNOWN_CAUSE_TAGS)
+                "UNKNOWN — 무엇이 없어서 판단하지 못했는지 원인 태그 필수 (가이드 §6.3.2).\n"
+                f"  원인 태그(1개 이상, 여러 개 가능): {' '.join(UNKNOWN_CAUSE_TAGS)}\n"
+                f"  이동·리네임이 필터를 통과한 건이면 대신: {FILTER_MISS_TAG}\n"
+                "  태그 뒤에 자유 서술을 이어 써도 된다"
             )
-            note = self.ask_until(
-                "note: ",
-                required_text("UNKNOWN 이면 note 가 필수다 — 예: no-context vague-message"),
-            )
-            if not any(tag in note for tag in UNKNOWN_CAUSE_TAGS):
-                self.say("  원인 태그가 없다. 집계(§6.3)에서 '(태그 없음)'으로 잡힌다.")
-            return note
+
+            def parse(raw: str) -> str:
+                label = {"reason_label": reason, "evidence_grade": grade, "note": raw}
+                violations = unknown_cause_tag_violations(label)
+                if violations:
+                    raise ValueError(" / ".join(violations))
+                return raw
+
+            return self.ask_until("note: ", parse)
         self.say("note 태그: " + " ".join(NOTE_TAGS))
         return self.ask_until("note (없으면 Enter): ", lambda raw: raw)
 
