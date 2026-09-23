@@ -1018,7 +1018,10 @@ def test_several_candidates_at_the_site_still_fall_back_to_similarity():
     result = ctx.match_replacement(record)
 
     assert result.confidence == ctx.AMBIGUOUS_NAME_CONFIDENCE
-    assert "return h(v)" in result.code
+    # 두 후보가 공유하는 줄(`return h(v)`)로는 어느 쪽을 골랐는지 모른다. 본문으로 가른다 -
+    # 삭제된 것과 구조가 같은 먼 형제가 골라져야 한다.
+    assert "isinstance(v, source)" in result.code
+    assert "str(v)" not in result.code
 
 
 def test_similarity_compares_tokens_not_whole_lines():
@@ -1045,6 +1048,7 @@ def test_similarity_compares_tokens_not_whole_lines():
     ],
 )
 def test_deletion_site_uses_parent_coordinates(hunk, expected):
+    """헝크의 옛 좌표가 삭제된 함수 범위(부모 118-141)에 걸치는지로 자리를 판정한다 (#107)."""
     assert ctx._at_deletion_site(hunk, 118, 141) is expected
 
 

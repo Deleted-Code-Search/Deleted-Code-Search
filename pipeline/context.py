@@ -736,6 +736,7 @@ def _similarity(deleted_body: str, candidate: Function) -> float:
     from pipeline.filter import normalize_function_body
 
     def tokens(source: str) -> list[str]:
+        """정규화한 줄들을 이어 토큰으로 쪼갠다 - 비교 단위를 줄이 아니라 토큰으로."""
         return " ".join(normalize_function_body(source)).split()
 
     return difflib.SequenceMatcher(None, tokens(deleted_body), tokens(candidate.body)).ratio()
@@ -1064,6 +1065,7 @@ def run_targets(
 
 
 def build_parser() -> argparse.ArgumentParser:
+    """CLI 인자. 실행 방법은 모듈 독스트링 "실행" 절."""
     parser = argparse.ArgumentParser(
         prog="python -m pipeline.context",
         description="커밋에 PR·이슈·리뷰 코멘트를 붙인다 (CHARTER.md §4.2 맥락 결합).",
@@ -1088,6 +1090,12 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
+    """맥락을 모으고 결과를 낸다. 한도 소진으로 멈췄으면 1, 정상이면 0.
+
+    `--out` 으로 레코드를 쓸 때 **`--repo-path` 를 꼭 준다.** 없으면 에러 없이 대체 코드
+    본문이 크게 줄어든다 - 예비 200건에서 39건 -> 8건 (#107). 헝크에는 추가된 줄만 있어서
+    자식 파일 원문 없이는 함수가 헝크 안에서 끝난 것이 확인된 후보만 채울 수 있기 때문이다.
+    """
     args = build_parser().parse_args(argv)
     load_env_file(args.env_file)
     # 리포트가 한글이라 Windows 기본 콘솔(cp949)에서 깨진다. 팀 전원이 Windows 다.
