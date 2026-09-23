@@ -104,6 +104,7 @@ requires_git = pytest.mark.skipif(_GIT_MISSING, reason="git CLI가 필요하다"
 
 
 def test_parse_file_diffs_splits_deleted_and_added_lines():
+    """삭제 줄은 옛 줄 번호로, 추가 줄은 헤더 좌표를 가진 AddedHunk 하나로 나뉜다."""
     diff = (
         "diff --git a/a.py b/a.py\n"
         "index 111..222 100644\n"
@@ -212,6 +213,7 @@ _A = extract_module.AddedHunk
 
 
 def test_parse_file_diffs_keeps_each_added_hunk_in_diff_order():
+    """한 파일의 여러 헝크가 합쳐지지 않고 헝크마다 AddedHunk 하나로 diff 순서대로 남는다."""
     diff = (
         "diff --git a/a.py b/a.py\n"
         "--- a/a.py\n"
@@ -314,6 +316,7 @@ def test_parse_file_diffs_includes_blank_line_hunk_with_empty_body():
 
 
 def test_parse_file_diffs_added_body_excludes_no_newline_marker():
+    """`\\ No newline at end of file` 표식 줄은 추가 코드가 아니므로 added_body에 섞이지 않는다."""
     diff = (
         "diff --git a/a.py b/a.py\n"
         "--- a/a.py\n"
@@ -720,6 +723,7 @@ class TestExtractDeletions:
         assert by_name["outer"].deletion_kind == "FULL_FUNCTION"
 
     def test_added_hunks_same_file_is_shared_across_records_from_that_file(self, tmp_path: Path):
+        """같은 파일에서 나온 레코드들은 그 파일의 added_hunks_same_file을 똑같이 공유한다."""
         repo = _init_repo(tmp_path / "repo")
         _write(repo, "a.py", "def foo():\n    return 1\n\n\ndef bar():\n    return 2\n")
         _commit_all(repo, "add foo and bar")
@@ -733,6 +737,7 @@ class TestExtractDeletions:
         assert added == {(extract_module.AddedHunk(1, 6, 1, 2, "def baz():\n    return 3"),)}
 
     def test_added_hunks_same_file_is_empty_when_nothing_added(self, tmp_path: Path):
+        """추가 줄이 전혀 없는 커밋이면 added_hunks_same_file은 빈 tuple이다."""
         repo = _init_repo(tmp_path / "repo")
         _write(repo, "a.py", "def foo():\n    return 1\n")
         _commit_all(repo, "add foo")
@@ -1092,6 +1097,7 @@ _SAMPLE_HUNKS = (
 
 
 def _record_with_hunks() -> extract_module.DeletedFunction:
+    """직렬화 테스트용: 샘플 레코드에 `_SAMPLE_HUNKS` 두 개를 채운 것."""
     return dataclasses.replace(_sample_records(1)[0], added_hunks_same_file=_SAMPLE_HUNKS)
 
 
@@ -1111,6 +1117,7 @@ def test_to_json_dict_serializes_added_hunks_as_list_of_five_key_objects():
 
 
 def test_to_json_dict_added_hunks_empty_is_empty_list():
+    """added_hunks_same_file이 비어 있으면 JSON에서 키가 빠지지 않고 빈 리스트로 나온다."""
     payload = extract_module.to_json_dict(_sample_records(1)[0])
 
     assert payload["added_hunks_same_file"] == []
@@ -1295,6 +1302,7 @@ def _sample_excluded(count: int = 3) -> list[extract_module.ExcludedRecord]:
 
 
 def test_excluded_to_json_dict_is_flat_extraction_row_plus_filter_metadata():
+    """excluded 행은 추출 행 필드를 감싸지 않고 그대로 펼친 뒤 filter_* 3개 키만 더한다."""
     item = _sample_excluded(1)[0]
 
     payload = extract_module.excluded_to_json_dict(item)
