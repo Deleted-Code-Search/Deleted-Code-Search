@@ -83,7 +83,7 @@ GitHub 리뷰 코멘트의 `line` 은 어느 파일 기준인지가 `side` 로 �
 
 ## 결과
 
-- `CHARTER.md` §4.4 `context` 갱신 (v1.16)
+- `CHARTER.md` §4.4 `context` 갱신 (v1.17)
 - `pipeline/context.py` - `ReviewComment` 에 `comment_id`·`side`·`outdated`, `to_schema_context()` 반영
 - `classify/sampling.py` 의 `LABELER_CONTEXT_FIELDS` 갱신은 **후속이다.** 라벨러에게 무엇을 보일지는 가이드 §2.1 필드 표가 정하고, 그 표는 성제가 맞춘다. 표가 갱신되면 코드 화이트리스트를 거기 맞춘다
 - 가이드 §7.2 의 locator 표기 규칙(`review:comment_<comment_id>`)도 성제가 맞춘다

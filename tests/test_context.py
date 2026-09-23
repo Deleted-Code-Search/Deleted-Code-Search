@@ -1052,10 +1052,15 @@ def test_comment_without_any_line_is_not_marked_outdated():
 
 
 def test_missing_optional_fields_do_not_crash():
-    """side·user·path 가 없는 응답도 있다. 빈 값으로 두되 터지지는 않는다."""
+    """side·user·path 가 없는 응답도 있다. 터지지 않되, `side` 는 `""` 가 아니라 `None` 이다.
+
+    §4.4 가 `side` 를 `enum | null` 로 정의하므로 빈 문자열은 스키마에 없는 세 번째 값이
+    된다. `path`·`author` 는 `str` 로 정의돼 있어 `""` 가 맞다.
+    """
     parsed = ctx._parse_review_comment({"id": 1, "body": "  hi  "})
 
-    assert (parsed.body, parsed.side, parsed.author, parsed.path) == ("hi", "", "", "")
+    assert parsed.side is None
+    assert (parsed.body, parsed.author, parsed.path) == ("hi", "", "")
 
 
 def test_schema_comment_has_exactly_the_adr_fields():

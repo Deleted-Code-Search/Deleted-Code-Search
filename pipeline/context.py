@@ -227,8 +227,14 @@ class ReviewComment:
     `line` 의 좌표계는 `side` 가 정한다 - 그래서 둘을 같이 들고 있어야 한다:
         LEFT  = diff 왼쪽, 즉 **부모(삭제 전) 파일**의 줄 번호
         RIGHT = diff 오른쪽, 즉 **자식(삭제 후) 파일**의 줄 번호
-    우리 대상은 삭제된 코드라 대부분 LEFT 다. `side` 없이 숫자만 두면 어느 파일의
-    몇 번째 줄인지 알 수 없다.
+    실측으로는 RIGHT 가 훨씬 많았다 (예비 200건의 리뷰 코멘트 271건에서 RIGHT 258 /
+    LEFT 13). 리뷰 코멘트는 PR 심사 중에 달려 제안된 새 코드 쪽에 붙고, 그것이 머지되며
+    삭제가 되기 때문으로 보인다. `side` 없이 숫자만 두면 어느 파일의 몇 번째 줄인지
+    알 수 없다.
+
+    `side` 가 없으면 `""` 가 아니라 `None` 이다. §4.4 가 `enum | null` 로 정의하므로
+    빈 문자열은 스키마에 없는 **세 번째 값**이 된다. 없는 것을 빈 값으로 바꾸지 않는
+    것은 `line`·`replacement` 와 같은 원칙이다.
 
     `outdated` 는 그 줄이 **지금도 유효한 위치인가**를 말한다. GitHub 은 코멘트가 달린
     뒤 그 자리가 바뀌면 `line` 을 `null` 로 만들고 `original_line`(코멘트 당시 줄)만
@@ -240,7 +246,7 @@ class ReviewComment:
     comment_id: int | None = None
     path: str = ""
     line: int | None = None
-    side: str = ""
+    side: str | None = None
     outdated: bool = False
     author: str = ""
 
@@ -274,7 +280,7 @@ def _parse_review_comment(item: dict[str, Any]) -> ReviewComment:
         comment_id=item.get("id"),
         path=item.get("path") or "",
         line=line,
-        side=item.get("side") or "",
+        side=item.get("side"),
         outdated=outdated and line is not None,
         author=(item.get("user") or {}).get("login") or "",
     )
