@@ -817,3 +817,124 @@ def test_real_pre200_label_files_still_load():
         assert label_cli.find_label_file_problems(label_file.rows, labeler, records.keys()) == []
         untagged += sum(1 for row in label_file.rows if label_cli.unknown_cause_tag_violations(row))
     assert untagged > 0  # 규칙상 위반인 v1 줄이 실제로 있는데도 읽기는 통과한다
+
+
+# --------------------------------------------------------------------------------------
+# 맥락 표시 — 객체형 리뷰 코멘트·여러 줄 필드 (#109, ADR-018)
+# --------------------------------------------------------------------------------------
+
+
+def review_comment(**overrides):
+    """ADR-018 객체형 리뷰 코멘트 1건."""
+    comment = {
+        "comment_id": 777,
+        "body": "This `**extra` leaks into JSON Schema.\r\n\r\nPlease use a single `extra` kwarg.",
+        "path": "pydantic/fields.py",
+        "line": 12,
+        "side": "LEFT",
+        "outdated": False,
+        "author": "reviewer",
+    }
+    comment.update(overrides)
+    return comment
+
+
+def render_context(**context):
+    """레코드 1건의 맥락만 바꿔 화면을 그린다. #33 레코드 파일 경로(`--with-extra-context`)로."""
+    record = make_record(0)
+    record["context"] = {**record["context"], **context}
+    row = sampling.build_labeling_record(record, with_extra_context=True)
+    return label_cli.render_record(label_cli.labeler_view(row))
+
+
+def test_object_review_comment_has_header_and_real_line_breaks():
+    rendered = render_context(review_comments=[review_comment()])
+
+    header = next(line for line in rendered.splitlines() if "comment_id 777" in line)
+    assert "path pydantic/fields.py" in header
+    assert "side LEFT" in header
+    assert "line 12" in header
+    assert "locator review:comment_777" in header  # 가이드 §7.2 표기 그대로 옮겨 적는다
+    assert "\\n" not in rendered and "\\r" not in rendered
+    assert "{" not in header  # dict 를 한 줄로 찍지 않는다
+    lines = rendered.splitlines()
+    first = lines.index("      This `**extra` leaks into JSON Schema.")
+    assert lines[first + 1 : first + 3] == ["      ", "      Please use a single `extra` kwarg."]
+
+
+def test_review_comment_with_missing_fields_shows_dash():
+    comment = review_comment(comment_id=None, path=None, line=None, side=None, body="")
+
+    rendered = render_context(review_comments=[comment])
+
+    assert "  - comment_id - · path - · side - · line - · locator -" in rendered.splitlines()
+    assert "(본문 없음)" in rendered
+
+
+def test_outdated_review_comment_line_is_marked():
+    """ADR-018: outdated 면 line 은 코멘트 당시 줄이다. 현재 좌표로 오해하지 않게 표시한다."""
+    rendered = render_context(review_comments=[review_comment(outdated=True)])
+
+    assert "line 12 (outdated" in rendered
+
+
+def test_multiple_review_comments_are_separated():
+    comments = [review_comment(), review_comment(comment_id=778, body="second")]
+
+    lines = render_context(review_comments=comments).splitlines()
+
+    first = next(i for i, line in enumerate(lines) if "comment_id 777" in line)
+    second = next(i for i, line in enumerate(lines) if "comment_id 778" in line)
+    assert label_cli.COMMENT_RULE in lines[first:second]
+    assert lines.count(label_cli.COMMENT_RULE) == 1  # 사이에만, 끝에는 없다
+
+
+def test_string_review_comments_from_pre200_show_body_only():
+    """예비 200건은 본문 문자열 배열이다. 머리 줄 없이 본문만, 에러 없이."""
+    rendered = render_context(review_comments=["old style\r\nsecond line"])
+
+    assert "comment_id" not in rendered
+    assert "  - old style" in rendered.splitlines()
+    assert "    second line" in rendered.splitlines()
+
+
+def test_mixed_review_comment_formats_are_handled_one_by_one():
+    rendered = render_context(review_comments=["old style", review_comment()])
+
+    assert "  - old style" in rendered.splitlines()
+    assert "locator review:comment_777" in rendered
+    assert rendered.count("comment_id") == 1
+
+
+def test_multiline_pr_body_and_issue_bodies_keep_line_breaks():
+    rendered = render_context(
+        pr_body="Summary\r\n\r\n- removes fn_0",
+        issue_bodies=["Steps:\n1. call fn_0\n2. crash"],
+    )
+    lines = rendered.splitlines()
+
+    assert "\\n" not in rendered
+    assert lines[lines.index("  Summary") + 2] == "  - removes fn_0"
+    assert lines[lines.index("  - Steps:") + 1 : lines.index("  - Steps:") + 3] == [
+        "    1. call fn_0",
+        "    2. crash",
+    ]
+
+
+def test_pr_labels_are_listed_as_reference_only():
+    rendered = render_context(pr_labels=["bug", "performance"])
+    lines = rendered.splitlines()
+
+    title = lines.index("pr_labels (참고 정보 — 등급 근거 아님, ADR-018):")
+    assert lines[title + 1 : title + 3] == ["  - bug", "  - performance"]
+
+
+def test_quote_spanning_lines_of_object_review_comment_is_found():
+    """객체형 코멘트도 본문에서 찾는다. str(dict) 로는 줄바꿈이 `\\n` 이 되어 못 찾았다."""
+    record = make_record(0)
+    record["context"]["review_comments"] = [review_comment()]
+    view = label_cli.labeler_view(record)
+
+    assert label_cli.found_in_context(
+        "leaks into JSON Schema. Please use a single `extra` kwarg.", view
+    )

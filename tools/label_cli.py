@@ -232,7 +232,9 @@ def found_in_context(evidence: str, view: dict[str, Any]) -> bool:
         if isinstance(value, str):
             parts.append(value)
         elif isinstance(value, list):
-            parts.extend(str(item) for item in value)
+            # 객체형 리뷰 코멘트(ADR-018)는 본문만 본다. str(dict) 는 줄바꿈을 `\n` 으로
+            # 이스케이프해 여러 줄에 걸친 인용을 못 찾는다.
+            parts.extend(_item_body(item) for item in value)
     haystack = " ".join("\n".join(parts).split())
     pieces = [" ".join(piece.split()) for piece in re.split(r"…|\.\.\.", evidence)]
     pieces = [piece for piece in pieces if piece]
@@ -326,11 +328,70 @@ def labeler_view(row: dict[str, Any]) -> dict[str, Any]:
     return view
 
 
+# 필드 이름 옆에 붙는 안내. pr_labels 는 참고 정보이고 등급 근거가 아니다 (ADR-018 결정 3)
+CONTEXT_FIELD_NOTES = {"pr_labels": "(참고 정보 — 등급 근거 아님, ADR-018)"}
+COMMENT_RULE = "  " + "-" * 40
+
+
+def _item_body(item: object) -> str:
+    """맥락 목록 항목 1개의 본문. 객체형 리뷰 코멘트(ADR-018)면 `body`, 아니면 문자열 그대로."""
+    if isinstance(item, Mapping):
+        return str(item.get("body") or "")
+    return str(item)
+
+
+def _shown(value: object) -> str:
+    return "-" if value is None or value == "" else str(value)
+
+
+def review_comment_header(comment: Mapping[str, Any]) -> str:
+    """객체형 리뷰 코멘트(ADR-018)의 머리 줄. 값이 없으면 `-`.
+
+    `locator` 는 가이드 §7.2 `evidence_locator` 표기(`review:comment_<comment_id>`,
+    ADR-018 결과 절)라 라벨러가 그대로 옮겨 적는다. `line` 은 `side` 가 정한 파일의 줄이고,
+    `outdated` 면 코멘트 당시 줄(`original_line`)이라 표시를 붙인다 — 현재 좌표로 오해하지 않게.
+    """
+    comment_id = comment.get("comment_id")
+    line = _shown(comment.get("line"))
+    if comment.get("outdated"):
+        line += " (outdated — 코멘트 당시 줄)"
+    locator = "-" if comment_id is None else f"review:comment_{comment_id}"
+    return (
+        f"comment_id {_shown(comment_id)} · path {_shown(comment.get('path'))} · "
+        f"side {_shown(comment.get('side'))} · line {line} · locator {locator}"
+    )
+
+
+def _review_comment_lines(comments: Sequence[object]) -> list[str]:
+    """코멘트마다 머리 줄 + 들여쓴 본문, 코멘트 사이는 구분선.
+
+    형식은 파일이 아니라 **항목마다** 값의 타입으로 가른다. 예비 200건(ADR-018 이전)은 본문
+    문자열 배열이라 머리 줄 없이 본문만 찍는다. 섞여 있어도 한 건씩 처리한다.
+    """
+    lines: list[str] = []
+    for position, comment in enumerate(comments):
+        if position:
+            lines.append(COMMENT_RULE)
+        if isinstance(comment, Mapping):
+            lines.append(f"  - {review_comment_header(comment)}")
+            body = _item_body(comment).splitlines() or ["(본문 없음)"]
+            lines.extend(f"      {line}" for line in body)
+        else:
+            first, *rest = str(comment).splitlines() or [""]
+            lines.append(f"  - {first}")
+            lines.extend(f"    {line}" for line in rest)
+    return lines
+
+
 def _block(name: str, value: object) -> list[str]:
+    """맥락 필드 1개. 여러 줄 값은 실제 줄바꿈을 살려 들여쓴다 (`\\r\\n` 도 가른다)."""
+    title = f"{name} {CONTEXT_FIELD_NOTES[name]}" if name in CONTEXT_FIELD_NOTES else name
     if value is None or value == "" or value == []:
-        return [f"{name}: (없음)"]
-    lines = [f"{name}:"]
-    if isinstance(value, list):
+        return [f"{title}: (없음)"]
+    lines = [f"{title}:"]
+    if name == "review_comments" and isinstance(value, list):
+        lines.extend(_review_comment_lines(value))
+    elif isinstance(value, list):
         for item in value:
             first, *rest = str(item).splitlines() or [""]
             lines.append(f"  - {first}")
