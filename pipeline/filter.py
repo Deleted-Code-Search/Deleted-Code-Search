@@ -102,9 +102,16 @@ ADR-014는 이 세부 규칙을 정하지 않았고(#52 구현에 위임), 결�
 
 filter_status: CHARTER §4.4에 이미 정의된 enum(NOISE_MOVE 포함)을 그대로 쓴다. 새
 enum이나 스키마를 만들지 않는다. 최종 `DeletionRecord` 조립(context·reason·filter_status를
-한 레코드로 합치는 단계)은 아직 어디에도 없어서, 이 모듈은 그 조립을 새로 만들지 않고
-`list[DeletedFunction]`에서 이동으로 판정된 것을 제외한 `list[DeletedFunction]`을
-돌려주는 선에서 끝낸다 — 조립 단계가 생기면 그때 `filter_status="NOISE_MOVE"`를 붙인다.
+한 레코드로 합치는 단계)은 아직 어디에도 없고 이 모듈도 만들지 않는다.
+
+제외 레코드 보존(Issue #97, `docs/filter_rules.md` "제외 레코드 보존" 절): 제외된
+레코드를 버리지 않는다. `partition_moved`가 (남은 레코드, 제외 레코드)를 함께 돌려주고,
+제외 레코드는 `pipeline.extract.ExcludedRecord`로 `filter_status`(`NOISE_MOVE`)·
+`filter_rule_version`(`FILTER_RULE_VERSION`)·`filter_evidence`(이동 목적지와 유사도)를
+붙여 둔다. 추출 JSONL에는 이 세 필드를 넣지 않는다 — 제외 레코드는 호출자가 별도
+excluded JSONL(`pipeline.extract.write_excluded_jsonl`)로 쓴다. `find_moved`·
+`exclude_moved`는 Issue #97 이전 공개 API를 그대로 유지하는 래퍼이고, 셋 다 같은 매칭
+본체(`_match_moved`)를 한 번만 부른다 — 판정 결과는 Issue #97 이전과 같다.
 
 **ADR-014 정합 라운드에서 코드로 먼저 구현하고 팀장이 최종 확인한 사항** (ADR-014
 본문에는 아직 없지만 확정됐고, ADR-014 반영은 팀장이 별도로 한다):
@@ -126,11 +133,12 @@ import hashlib
 from collections.abc import Sequence
 from dataclasses import dataclass
 from difflib import SequenceMatcher
+from typing import Any
 
 import tree_sitter as ts
 import tree_sitter_python as tspython
 
-from pipeline.extract import DeletedFunction, Hunk
+from pipeline.extract import DeletedFunction, ExcludedRecord, Hunk
 from pipeline.parsers.base import Function
 
 _LANGUAGE = ts.Language(tspython.language())
@@ -139,6 +147,14 @@ _PARSER = ts.Parser(_LANGUAGE)
 # CHARTER §4.2② 확정값. 바꾸지 않는다 (Issue #52 팀 결정).
 SIMILARITY_THRESHOLD = 0.9
 LINE_COUNT_SKIP_RATIO = 0.20
+
+# excluded JSONL의 `filter_rule_version` (Issue #97). `docs/filter_rules.md` 첫 줄의
+# "버전:"과 항상 같아야 한다 — 문서 버전을 올리면 이 값도 같은 PR에서 올린다
+# (`tests/test_filter.py`가 둘이 같은지 확인한다).
+FILTER_RULE_VERSION = "v0.5"
+
+# CHARTER §4.4 `filter_status` enum 값. 새 이름을 만들지 않는다.
+NOISE_MOVE = "NOISE_MOVE"
 
 _VAR_PLACEHOLDER = "VAR"
 _STR_PLACEHOLDER = "STR"
@@ -451,17 +467,34 @@ def _candidate_key(path: str, function: Function) -> _CandidateKey:
     return (path, function.start_line, function.end_line)
 
 
-def find_moved(
+@dataclass(frozen=True)
+class _MoveMatch:
+    """greedy 매칭으로 확정된 짝 하나의 목적지와 유사도 (Issue #97).
+
+    예전 `find_moved`가 이미 계산하고 버리던 값을 그대로 담는다 — excluded JSONL의
+    `filter_evidence`에 쓴다. 판정에는 아무 영향이 없다.
+    """
+
+    file_path: str  # 목적지(자식 커밋) 경로
+    function: Function  # 목적지 함수, 자식 커밋 좌표계
+    similarity: float  # `_move_similarity` 값 그대로 (정규화 완전 일치면 1.0)
+
+
+def _match_moved(
     deletions: Sequence[DeletedFunction],
     added_functions: dict[str, list[Function]],
     same_file_hunks: dict[str, list[Hunk]],
-) -> set[_RecordKey]:
-    """`deletions` 중 이동(§4.2② NOISE_MOVE)으로 판정된 레코드의 key 집합.
+) -> dict[_RecordKey, _MoveMatch]:
+    """이동(§4.2② NOISE_MOVE)으로 판정된 레코드의 key → 확정된 짝. 이동 판정의 본체.
+
+    `find_moved`·`partition_moved`가 둘 다 이 함수를 **한 번만** 부른다 — 증거
+    (`filter_evidence`, Issue #97)를 얻으려고 매칭을 다시 계산하지 않는다. 판정 기준·
+    정렬·greedy 순서는 Issue #97 이전 `find_moved`와 같다.
 
     `deletions`는 같은 커밋(들)의 `DeletedFunction` 목록. `added_functions`·
     `same_file_hunks`는 그 커밋의 `pipeline.extract.collect_added_functions()`·
     `collect_same_file_hunks()` 결과를 그대로 받는다 — **호출자가 이미 그 커밋 하나로
-    좁혀서 줘야 한다**(`deletions`에 여러 커밋이 섞여 있어도 `find_moved` 자체는 안전하다
+    좁혀서 줘야 한다**(`deletions`에 여러 커밋이 섞여 있어도 이 함수 자체는 안전하다
     — 항상 같은 `commit_sha`를 가진 레코드끼리만 key가 겹치지만, `added_functions`·
     `same_file_hunks`가 여러 커밋을 넘나들면 엉뚱한 커밋의 헝크·후보로 판정하게 된다).
 
@@ -482,6 +515,9 @@ def find_moved(
         for function in functions
     ]
 
+    # 정렬 key(`pairs`)는 예전 그대로 두고, 목적지 Function은 key로 되찾는다 — 정렬·
+    # tie-break가 Issue #97 이전과 달라지지 않게 한다(Function 객체는 비교 대상이 아니다).
+    destinations: dict[_CandidateKey, Function] = {}
     pairs: list[tuple[float, _RecordKey, _CandidateKey]] = []
     for record in deletions:
         if record.deletion_kind != "FULL_FUNCTION":
@@ -496,19 +532,87 @@ def find_moved(
             similarity = _move_similarity(deleted_norm, candidate_norm)
             if similarity is None:
                 continue
-            pairs.append((similarity, record_key, _candidate_key(candidate_path, candidate_fn)))
+            candidate_key = _candidate_key(candidate_path, candidate_fn)
+            destinations[candidate_key] = candidate_fn
+            pairs.append((similarity, record_key, candidate_key))
 
     # 유사도 내림차순, 동점은 (record_key, candidate_key) 오름차순 — deterministic.
     pairs.sort(key=lambda pair: (-pair[0], pair[1], pair[2]))
 
-    matched: set[_RecordKey] = set()
+    matched: dict[_RecordKey, _MoveMatch] = {}
     consumed: set[_CandidateKey] = set()
-    for _similarity, record_key, candidate_key in pairs:
+    for similarity, record_key, candidate_key in pairs:
         if record_key in matched or candidate_key in consumed:
             continue
-        matched.add(record_key)
+        matched[record_key] = _MoveMatch(
+            file_path=candidate_key[0],
+            function=destinations[candidate_key],
+            similarity=similarity,
+        )
         consumed.add(candidate_key)
     return matched
+
+
+def find_moved(
+    deletions: Sequence[DeletedFunction],
+    added_functions: dict[str, list[Function]],
+    same_file_hunks: dict[str, list[Hunk]],
+) -> set[_RecordKey]:
+    """`deletions` 중 이동(§4.2② NOISE_MOVE)으로 판정된 레코드의 key 집합.
+
+    인자·판정 기준은 `_match_moved` 독스트링 참고. Issue #97 이전의 공개 API를 그대로
+    유지하는 래퍼다 — 짝의 목적지·유사도는 버리고 key만 돌려준다.
+    """
+    return set(_match_moved(deletions, added_functions, same_file_hunks))
+
+
+def _move_evidence(match: _MoveMatch) -> dict[str, Any]:
+    """NOISE_MOVE의 `filter_evidence` — #89 판정자가 목적지를 바로 찾아볼 수 있게 한다.
+
+    `file_path`·`function_name`·`start_line`·`end_line`은 **목적지**(자식 커밋) 함수의
+    값이다(삭제 쪽 값은 excluded 행의 최상위 필드에 이미 있다). 이름에 클래스 한정자가
+    없어(`pipeline/parsers/base.py`) 같은 파일에 같은 이름이 여럿일 수 있으므로 줄 범위를
+    함께 남긴다. `similarity`는 `_move_similarity` 값 그대로다(반올림하지 않는다).
+    """
+    return {
+        "file_path": match.file_path,
+        "function_name": match.function.name,
+        "start_line": match.function.start_line,
+        "end_line": match.function.end_line,
+        "similarity": match.similarity,
+    }
+
+
+def partition_moved(
+    deletions: Sequence[DeletedFunction],
+    added_functions: dict[str, list[Function]],
+    same_file_hunks: dict[str, list[Hunk]],
+) -> tuple[list[DeletedFunction], list[ExcludedRecord]]:
+    """`deletions`를 (이동 아님, 이동으로 제외)로 나눈다 (Issue #97).
+
+    제외된 레코드를 버리지 않고 `ExcludedRecord`(`filter_status="NOISE_MOVE"`,
+    `FILTER_RULE_VERSION`, 목적지·유사도 증거)로 돌려준다 — §10.1 "제외 100건" 표본과
+    최종 조립 단계의 `filter_status` 재료다. 두 리스트 모두 `deletions`의 입력 순서를
+    유지하고, 모든 레코드는 정확히 한쪽에만 들어간다. 인자·판정 기준은 `_match_moved`와
+    같다.
+    """
+    matches = _match_moved(deletions, added_functions, same_file_hunks)
+    kept: list[DeletedFunction] = []
+    excluded: list[ExcludedRecord] = []
+    for record in deletions:
+        match = matches.get(_record_key(record))
+        if match is None:
+            kept.append(record)
+            continue
+        excluded.append(
+            ExcludedRecord(
+                record=record,
+                filter_status=NOISE_MOVE,
+                filter_rule_version=FILTER_RULE_VERSION,
+                filter_evidence=_move_evidence(match),
+            )
+        )
+    return kept, excluded
 
 
 def exclude_moved(
@@ -518,7 +622,8 @@ def exclude_moved(
 ) -> list[DeletedFunction]:
     """`deletions`에서 이동으로 판정된 레코드를 뺀 나머지 (§4.2② "최종 삭제 레코드에서 제외").
 
-    인자·판정 기준은 `find_moved`와 같다.
+    인자·판정 기준은 `find_moved`와 같다. Issue #97 이전 공개 API를 유지하는 래퍼 —
+    `partition_moved`의 kept와 같다. 제외 레코드까지 필요하면 `partition_moved`를 쓴다.
     """
-    moved = find_moved(deletions, added_functions, same_file_hunks)
-    return [record for record in deletions if _record_key(record) not in moved]
+    kept, _excluded = partition_moved(deletions, added_functions, same_file_hunks)
+    return kept

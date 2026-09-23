@@ -90,22 +90,29 @@ JSONL 저장 (내부 모델과 외부 계약 분리):
     판정한다(아래 `_is_test_code`) — 전부 다른 단계(필터·맥락 결합·분류)를 기다릴 필요가
     없다.
 
-    `filter_status`(§4.4)는 **여기 포함하지 않는다.** `docs/filter_rules.md`
-    ("계약 분리" 절)와 `filter.py` 모듈 독스트링이 명시한 대로, 그 필드를 어느 단계에서
-    부여할지는 아직 결정되지 않았고 Issue #63(NOISE_TRIVIAL 구현)의 "조립 단계"에서
-    정한다 — Issue #75 범위가 아니다(팀 확인 완료).
+    `filter_status`·`filter_rule_version`·`filter_evidence`는 **여기 포함하지 않는다.**
+    추출 JSONL은 필터를 통과한 레코드만 담는 중간 산출물이고, 최종 `filter_status`는
+    조립 단계가 이 파일과 excluded JSONL을 합쳐 만든다(`docs/filter_rules.md` "계약
+    분리"·"제외 레코드 보존" 절, Issue #97).
 
     `write_jsonl()`은 `context.py`의 기존 출력 루프(`main()`의 `--out` 처리)와 같은
     관례를 그대로 따른다: UTF-8, `ensure_ascii=False`, 한 줄에 객체 1개, `indent` 없음,
     줄 끝 `\n`, 부모 디렉터리는 자동 생성. JSON array로 쓰지 않는다.
 
-    출력 경로 정책(어느 디렉터리에, 어떤 파일 이름으로)은 여기서 정하지 않는다 —
-    `write_jsonl(records, out_path)`는 호출자가 준 경로에 쓰기만 한다.
+    제외 레코드(Issue #97): 필터가 제외한 레코드는 `ExcludedRecord`로 받아
+    `write_excluded_jsonl()`로 별도 파일에 쓴다. 한 줄은 `to_json_dict()`의 키 전부 +
+    `filter_status`·`filter_rule_version`·`filter_evidence` (flat, `excluded_to_json_dict`).
+    관례는 `write_jsonl()`과 같고, 0건이어도 빈 파일을 만든다.
 
-`extract_repo(repo_path, repo, ref)`: 저장소 하나를 처음부터 끝까지 훑는 최소 순차
-루프. `walk_commits()`로 얻은 `CommitPair`마다 `extract_deletions()`를 그대로 돌려
-누적한다. `ref`는 clone.py·walk.py와 같은 이유로 호출자가 명시한다 — default branch를
-이 함수가 추측하지 않는다. 병렬화·재시도는 넣지 않는다(4주차 범위).
+    출력 경로 정책(어느 디렉터리에, 어떤 파일 이름으로)은 여기서 정하지 않는다 —
+    두 writer 모두 호출자가 준 경로에 쓰기만 한다.
+
+`extract_repo_with_excluded(repo_path, repo, ref)`: 저장소 하나를 처음부터 끝까지
+훑는 최소 순차 루프. `walk_commits()`로 얻은 `CommitPair`마다 `extract_deletions()`와
+이동 필터(`filter.partition_moved`)를 돌려 (남은 레코드, 제외 레코드)를 누적한다.
+`extract_repo(repo_path, repo, ref)`는 그 첫 번째 값만 돌려주는 기존 API다. `ref`는
+clone.py·walk.py와 같은 이유로 호출자가 명시한다 — default branch를 이 함수가 추측하지
+않는다. 병렬화·재시도는 넣지 않는다(4주차 범위).
 
 `collect_added_functions(repo_path, commit)`: 이동 탐지 필터(§4.2②, Issue #52)가 쓰는
 added-side 함수 후보를 모은다. `parse_file_diffs`는 옛(부모) 경로로만 섹션을 식별하고
@@ -231,6 +238,28 @@ class DeletedFunction:
     function_signature: str  # §4.4 `function_signature`. `Function.signature` 그대로
     is_test_code: bool  # §4.4 `is_test_code`. `_is_test_code(file_path)` 판정
     source_url: str  # §4.4 `source_url`. `_source_url(repo, commit_sha)` 그대로
+
+
+@dataclass(frozen=True)
+class ExcludedRecord:
+    """필터가 제외한 `DeletedFunction` 하나와 그 사유 (Issue #97).
+
+    원본 레코드를 그대로 들고 있다 — 제외 레코드는 추출 JSONL에 없으므로 이게 원문을
+    남기는 유일한 곳이다. 만드는 쪽은 `pipeline.filter`(지금은 `partition_moved`)이고,
+    #63 NOISE_TRIVIAL도 같은 타입을 쓴다. 타입을 여기 두는 이유는 `Hunk`와 같다 —
+    `filter.py`가 이 모듈을 import하므로 반대 방향 import(순환)를 만들지 않는다.
+
+    filter_status: CHARTER §4.4 enum 값 그대로 (`"NOISE_MOVE"` 등). `KEPT`는 여기 오지
+        않는다 — 제외된 레코드만 담는다.
+    filter_rule_version: `pipeline.filter.FILTER_RULE_VERSION` (= `docs/filter_rules.md` 버전).
+    filter_evidence: 사유별 판정 근거. 키는 사유마다 다르다(`docs/filter_rules.md`
+        "제외 레코드 보존" 절).
+    """
+
+    record: DeletedFunction
+    filter_status: str
+    filter_rule_version: str
+    filter_evidence: dict[str, Any]
 
 
 @dataclass(frozen=True)
@@ -599,31 +628,49 @@ def collect_same_file_hunks(repo_path: str | Path, commit: CommitPair) -> dict[s
     return _parse_same_file_hunks(diff_text)
 
 
-def extract_repo(repo_path: str | Path, repo: str, ref: str) -> list[DeletedFunction]:
-    """저장소 하나를 처음부터 끝까지 순차로 훑는다 (Issue #5 "저장소 1개 끝까지 통과").
+def extract_repo_with_excluded(
+    repo_path: str | Path, repo: str, ref: str
+) -> tuple[list[DeletedFunction], list[ExcludedRecord]]:
+    """저장소 하나를 처음부터 끝까지 순차로 훑어 (남은 레코드, 제외 레코드)를 돌려준다.
 
     `walk_commits(repo_path, ref)`가 내놓는 `CommitPair`마다 `extract_deletions()`로
     삭제를 뽑고, 같은 커밋의 `collect_added_functions()`·`collect_same_file_hunks()`를
-    구해 `filter.exclude_moved()`로 이동(NOISE_MOVE, §4.2②, Issue #52)을 걸러낸 뒤
-    순서대로 누적한다 — 커밋 하나 안에서만 후보를 매칭해야 하므로(`find_moved`의 "호출자가
-    이미 그 커밋 하나로 좁혀서 줘야 한다" 계약, `filter.py` 참고) 커밋별로 따로 호출한다.
+    구해 `filter.partition_moved()`로 이동(NOISE_MOVE, §4.2②, Issue #52)을 나눈 뒤
+    두 쪽 다 커밋 순서대로 누적한다 — 커밋 하나 안에서만 후보를 매칭해야 하므로
+    (`filter._match_moved`의 "호출자가 이미 그 커밋 하나로 좁혀서 줘야 한다" 계약) 커밋별로
+    따로 호출한다. 제외 레코드는 버리지 않는다(Issue #97) — 파일로 쓰는 것은 호출자가
+    `write_jsonl`·`write_excluded_jsonl`로 한다(경로 정책은 이 모듈이 정하지 않는다).
     `ref`는 walk.py와 같은 이유로 호출자가 명시한다 — default branch를 이 함수가
     추측하지 않는다. 병렬화·재시도는 넣지 않는다(4주차 범위, 모듈 독스트링 참고).
 
     `filter.py`를 함수 안에서(모듈 최상단이 아니라) import한다 — `filter.py`가 이미
-    `from pipeline.extract import DeletedFunction, Hunk`로 이 모듈을 가져다 쓰므로,
-    최상단에서 서로 가져오면 순환 import가 된다(둘 다 아직 다 안 만들어진 상태로 서로를
-    참조하려 들어서 `ImportError`가 난다). 함수 호출 시점까지 미루면 양쪽 모듈이 이미
-    완전히 로드된 뒤라 문제없다.
+    `from pipeline.extract import DeletedFunction, ExcludedRecord, Hunk`로 이 모듈을
+    가져다 쓰므로, 최상단에서 서로 가져오면 순환 import가 된다(둘 다 아직 다 안 만들어진
+    상태로 서로를 참조하려 들어서 `ImportError`가 난다). 함수 호출 시점까지 미루면 양쪽
+    모듈이 이미 완전히 로드된 뒤라 문제없다.
     """
-    from pipeline.filter import exclude_moved
+    from pipeline.filter import partition_moved
 
     records: list[DeletedFunction] = []
+    excluded: list[ExcludedRecord] = []
     for commit in walk_commits(repo_path, ref):
         deletions = extract_deletions(repo_path, repo, commit)
         added = collect_added_functions(repo_path, commit)
         hunks = collect_same_file_hunks(repo_path, commit)
-        records.extend(exclude_moved(deletions, added, hunks))
+        commit_kept, commit_excluded = partition_moved(deletions, added, hunks)
+        records.extend(commit_kept)
+        excluded.extend(commit_excluded)
+    return records, excluded
+
+
+def extract_repo(repo_path: str | Path, repo: str, ref: str) -> list[DeletedFunction]:
+    """저장소 하나를 처음부터 끝까지 순차로 훑는다 (Issue #5 "저장소 1개 끝까지 통과").
+
+    필터를 통과한 레코드만 돌려준다 — Issue #97 이전 반환 계약 그대로다. 동작은
+    `extract_repo_with_excluded()`의 첫 번째 값과 같다. 제외 레코드까지 필요하면 그
+    함수를 쓴다.
+    """
+    records, _excluded = extract_repo_with_excluded(repo_path, repo, ref)
     return records
 
 
@@ -667,3 +714,36 @@ def write_jsonl(records: Iterable[DeletedFunction], out_path: str | Path) -> Non
     with path.open("w", encoding="utf-8") as handle:
         for record in records:
             handle.write(json.dumps(to_json_dict(record), ensure_ascii=False) + "\n")
+
+
+def excluded_to_json_dict(excluded: ExcludedRecord) -> dict[str, Any]:
+    """`ExcludedRecord` 하나를 excluded JSONL 한 줄로 내보낼 dict로 바꾼다 (Issue #97).
+
+    flat 구조다 — `to_json_dict(excluded.record)`의 키 전부에 `filter_status`·
+    `filter_rule_version`·`filter_evidence` 세 키를 더한다. 원본 레코드를 `{"record": ...}`
+    로 감싸지 않는다: 추출 JSONL과 같은 키로 읽을 수 있어야 조립 단계와 #89 표본 추출이
+    두 파일을 같은 방식으로 다룬다. `reason`이라는 이름은 쓰지 않는다 — §4.4의 `reason`은
+    이유 분류(BUG/PERF…) 필드다.
+    """
+    return {
+        **to_json_dict(excluded.record),
+        "filter_status": excluded.filter_status,
+        "filter_rule_version": excluded.filter_rule_version,
+        "filter_evidence": dict(excluded.filter_evidence),
+    }
+
+
+def write_excluded_jsonl(excluded: Iterable[ExcludedRecord], out_path: str | Path) -> None:
+    """필터 제외 레코드를 excluded JSONL로 쓴다 (Issue #97). 관례는 `write_jsonl`과 같다.
+
+    UTF-8, `ensure_ascii=False`, 한 줄에 객체 1개, 입력 순서 유지, 부모 디렉터리 자동
+    생성. **제외 레코드가 0건이어도 빈 파일을 만든다** — "제외 레코드 없음"과 "excluded
+    출력을 아예 안 돌림"을 파일 존재 여부로 구분할 수 있어야 한다. 경로는 호출자가
+    정한다(운영 시 추출 JSONL `<stem>.jsonl` 옆에 `<stem>_excluded.jsonl`,
+    `docs/filter_rules.md` "제외 레코드 보존" 절).
+    """
+    path = Path(out_path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8") as handle:
+        for item in excluded:
+            handle.write(json.dumps(excluded_to_json_dict(item), ensure_ascii=False) + "\n")

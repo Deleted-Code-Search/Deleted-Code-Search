@@ -666,6 +666,60 @@ def test_extract_repo_excludes_moved_function_but_keeps_ordinary_deletion(tmp_pa
     assert records[0].file_path == "c.py"
 
 
+@requires_git
+def test_extract_repo_with_excluded_preserves_moved_records_across_commits(tmp_path: Path):
+    """Issue #97 통합: 여러 커밋에서 이동은 excluded(NOISE_MOVE + 목적지 증거)로, 일반
+    삭제는 kept로 누적된다. 누락·중복이 없고, kept는 기존 `extract_repo()` 결과와 같다.
+
+    - 커밋 1: `old/a.py`의 `moved_one` → `new/a.py`(순수 신규 파일), `c.py`의 `gone_one` 삭제
+    - 커밋 2: `lib/b.py`의 `moved_two` → `lib/d.py`(순수 신규 파일), `c.py`의 `gone_two` 삭제
+    """
+    repo = _init_repo(tmp_path / "repo")
+    _write(repo, "old/a.py", "def moved_one():\n    return 1\n")
+    _write(repo, "lib/b.py", "def moved_two(x):\n    return x * 2\n")
+    _write(repo, "c.py", "def gone_one():\n    return 'a'\n\n\ndef gone_two():\n    return 'b'\n")
+    _commit_all(repo, "add functions")
+
+    (repo / "old" / "a.py").unlink()
+    _write(repo, "new/a.py", "def moved_one():\n    return 1\n")
+    _write(repo, "c.py", "def gone_two():\n    return 'b'\n")
+    _commit_all(repo, "move moved_one, delete gone_one")
+
+    (repo / "lib" / "b.py").unlink()
+    _write(repo, "lib/d.py", "def moved_two(x):\n    return x * 2\n")
+    _write(repo, "c.py", "")
+    _commit_all(repo, "move moved_two, delete gone_two")
+
+    commits = walk_commits(repo, "main")
+    kept, excluded = extract_module.extract_repo_with_excluded(repo, _REPO, "main")
+
+    assert [r.function_name for r in kept] == ["gone_one", "gone_two"]
+    assert [e.record.function_name for e in excluded] == ["moved_one", "moved_two"]
+    assert [e.record.commit_sha for e in excluded] == [c.commit_sha for c in commits]
+    assert {e.filter_status for e in excluded} == {"NOISE_MOVE"}
+    assert [e.filter_evidence["file_path"] for e in excluded] == ["new/a.py", "lib/d.py"]
+    assert [e.filter_evidence["function_name"] for e in excluded] == ["moved_one", "moved_two"]
+
+    # 누락·중복 없음: kept + excluded = 필터 전 전체 추출
+    all_extracted = [
+        record
+        for commit in commits
+        for record in extract_module.extract_deletions(repo, _REPO, commit)
+    ]
+    ids = [r.id for r in kept] + [e.record.id for e in excluded]
+    assert sorted(ids) == sorted(r.id for r in all_extracted)
+    assert len(set(ids)) == len(ids)
+
+    # 기존 kept-only API는 그대로
+    assert extract_module.extract_repo(repo, _REPO, "main") == kept
+
+
+def test_extract_repo_with_excluded_does_not_guess_ref(tmp_path: Path):
+    """extract_repo_with_excluded는 ref를 추측하지 않으므로 ref 없이 호출하면 TypeError가 난다."""
+    with pytest.raises(TypeError):
+        extract_module.extract_repo_with_excluded(tmp_path, _REPO)  # type: ignore[call-arg]
+
+
 # --------------------------------------------------------------------------------------
 # DeletedFunction / to_json_dict: 내부 필드명 vs JSONL 바깥 계약
 # --------------------------------------------------------------------------------------
@@ -699,10 +753,12 @@ def test_to_json_dict_has_only_currently_known_fields():
     """§4.4에 있지만 이 단계에서 알 수 없는 필드(repo_license, context, reason, embedding
     등)를 None/빈 값으로 채워 넣지 않는다 — 아예 키 자체가 없어야 한다.
 
-    `filter_status`는 Issue #75 범위에서 제외한다 (팀 확인 완료) — `docs/filter_rules.md`
-    "계약 분리" 절과 `pipeline/filter.py` 모듈 독스트링이 명시한 대로, 그 필드를 부여할
-    단계는 Issue #63(NOISE_TRIVIAL 구현)의 조립 단계에서 정한다. 이 테스트는 그 경계를
-    고정한다 — `filter_status`가 없어야 한다.
+    추출 JSONL에는 `filter_status`·`filter_rule_version`·`filter_evidence`가 없다
+    (`docs/filter_rules.md` "계약 분리"·"제외 레코드 보존" 절). 필터가 제외한 레코드는
+    Issue #97의 별도 excluded JSONL(`write_excluded_jsonl`)에 이 필드들과 함께 보존하고,
+    최종 `filter_status`는 후속 조립 단계가 두 파일을 합쳐 만든다. #63은 같은 구조에
+    NOISE_TRIVIAL을 추가한다. 이 테스트는 추출 JSONL 쪽 경계를 고정한다 — filter 필드가
+    없어야 한다.
     """
     record = _sample_records(1)[0]
 
@@ -868,6 +924,136 @@ def test_write_jsonl_round_trips_korean_commit_message_as_utf8(tmp_path: Path):
     lines = out.read_text(encoding="utf-8").splitlines()
     assert len(lines) == 1
     assert json.loads(lines[0])["commit_message"] == korean_message
+
+
+# --------------------------------------------------------------------------------------
+# excluded JSONL (Issue #97): 추출 JSONL 키 전부 + filter_status·filter_rule_version·
+# filter_evidence, flat. 추출 JSONL 쪽 계약(test_to_json_dict_has_only_currently_known_fields)
+# 은 그대로다.
+# --------------------------------------------------------------------------------------
+
+_FILTER_KEYS = {"filter_status", "filter_rule_version", "filter_evidence"}
+
+
+def _sample_excluded(count: int = 3) -> list[extract_module.ExcludedRecord]:
+    return [
+        extract_module.ExcludedRecord(
+            record=record,
+            filter_status="NOISE_MOVE",
+            filter_rule_version="v0.5",
+            filter_evidence={
+                "file_path": f"new/{record.function_name}.py",
+                "function_name": record.function_name,
+                "start_line": 3,
+                "end_line": 4,
+                "similarity": 0.95,
+            },
+        )
+        for record in _sample_records(count)
+    ]
+
+
+def test_excluded_to_json_dict_is_flat_extraction_row_plus_filter_metadata():
+    item = _sample_excluded(1)[0]
+
+    payload = extract_module.excluded_to_json_dict(item)
+    base = extract_module.to_json_dict(item.record)
+
+    assert set(payload) == set(base) | _FILTER_KEYS
+    assert len(payload) == 16 + 3
+    assert {key: payload[key] for key in base} == base  # 원본 필드를 감싸지 않고 그대로
+    assert "record" not in payload
+    assert "reason" not in payload  # §4.4 reason(이유 분류)과 충돌하는 이름을 쓰지 않는다
+    assert payload["filter_status"] == "NOISE_MOVE"
+    assert payload["filter_rule_version"] == "v0.5"
+    assert payload["filter_evidence"] == {
+        "file_path": "new/fn0.py",
+        "function_name": "fn0",
+        "start_line": 3,
+        "end_line": 4,
+        "similarity": 0.95,
+    }
+
+
+def test_to_json_dict_still_has_no_filter_fields_for_excluded_record():
+    """같은 레코드라도 추출 JSONL 직렬화에는 filter 필드가 들어가지 않는다."""
+    item = _sample_excluded(1)[0]
+
+    assert not _FILTER_KEYS & set(extract_module.to_json_dict(item.record))
+
+
+def test_excluded_row_from_partition_moved_has_move_evidence():
+    """filter.partition_moved가 만든 실제 ExcludedRecord를 직렬화해 NOISE_MOVE 증거 구조를
+    고정한다."""
+    from pipeline import filter as filter_module
+    from pipeline.parsers.base import Function
+
+    record = _sample_records(1)[0]  # a.py fn0, FULL_FUNCTION, 2줄
+    destination = Function(
+        name="fn0",
+        start_line=10,
+        end_line=11,
+        body="def fn0():\n    return 0",
+        signature="def fn0():",
+    )
+
+    _kept, excluded = filter_module.partition_moved([record], {"b.py": [destination]}, {})
+    payload = extract_module.excluded_to_json_dict(excluded[0])
+
+    assert payload["filter_status"] == "NOISE_MOVE"
+    assert payload["filter_rule_version"] == filter_module.FILTER_RULE_VERSION
+    assert payload["filter_evidence"] == {
+        "file_path": "b.py",
+        "function_name": "fn0",
+        "start_line": 10,
+        "end_line": 11,
+        "similarity": 1.0,
+    }
+    assert payload["file_path"] == "a.py"  # 최상위는 삭제 쪽(원본) 값 그대로
+
+
+def test_write_excluded_jsonl_writes_one_flat_object_per_line_in_order(tmp_path: Path):
+    out = tmp_path / "run_excluded.jsonl"
+    items = _sample_excluded(4)
+
+    extract_module.write_excluded_jsonl(items, out)
+
+    content = out.read_text(encoding="utf-8")
+    assert not content.lstrip().startswith("[")
+    lines = content.splitlines()
+    assert len(lines) == 4
+    rows = [json.loads(line) for line in lines]
+    assert [row["id"] for row in rows] == [item.record.id for item in items]
+    assert all(row["filter_status"] == "NOISE_MOVE" for row in rows)
+    assert rows[0] == extract_module.excluded_to_json_dict(items[0])
+
+
+def test_write_excluded_jsonl_creates_empty_file_when_nothing_excluded(tmp_path: Path):
+    """0건이어도 파일은 만든다 — "제외 없음"과 "excluded 출력 안 함"을 구분한다."""
+    out = tmp_path / "nested" / "run_excluded.jsonl"
+    assert not out.parent.exists()
+
+    extract_module.write_excluded_jsonl([], out)
+
+    assert out.exists()
+    assert out.read_bytes() == b""
+
+
+def test_write_excluded_jsonl_round_trips_korean_as_utf8(tmp_path: Path):
+    """한국어 커밋 메시지는 \\u 이스케이프 없이 UTF-8로 기록되고 그대로 다시 읽힌다."""
+    out = tmp_path / "run_excluded.jsonl"
+    korean_message = "함수를 새 모듈로 옮김. Refs #97"
+    item = _sample_excluded(1)[0]
+    item = dataclasses.replace(
+        item, record=dataclasses.replace(item.record, commit_message=korean_message)
+    )
+
+    extract_module.write_excluded_jsonl([item], out)
+
+    raw_bytes = out.read_bytes()
+    assert "새 모듈".encode() in raw_bytes
+    assert b"\\u" not in raw_bytes
+    assert json.loads(out.read_text(encoding="utf-8"))["commit_message"] == korean_message
 
 
 # --------------------------------------------------------------------------------------
