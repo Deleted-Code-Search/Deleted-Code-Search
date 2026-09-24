@@ -96,10 +96,6 @@ LABELER_CONTEXT_FIELDS: tuple[str, ...] = (
     "issue_bodies",
     "review_comments",
 )
-# ADR-018(#112) 전까지 `issue_bodies`·`pr_labels` 가 여기 있어 `--with-extra-context` 로만
-# 보였다. 둘 다 위로 옮겨 기본으로 보인다. 빈 튜플로 남겨 두는 이유는 `tools/label_cli.py`
-# 가 이 이름을 가져다 쓰기 때문이다 - 지우면 그쪽이 깨진다. 그쪽이 참조를 떼면 함께 지운다.
-EXTRA_CONTEXT_FIELDS: tuple[str, ...] = ()
 
 # 1차 대상 (ADR-003, 라벨 가이드 §2)
 TARGET_DELETION_KIND = "FULL_FUNCTION"
@@ -262,9 +258,7 @@ def stratified_sample(
 # --------------------------------------------------------------------------------------
 
 
-def build_labeling_record(
-    record: dict[str, Any], *, with_extra_context: bool = False
-) -> dict[str, Any]:
+def build_labeling_record(record: dict[str, Any]) -> dict[str, Any]:
     """라벨러가 볼 1줄. 가이드 §2.1 에 적힌 필드만 담는다.
 
     화이트리스트로 만든다. 원본에서 `reason.*` 를 지우는 방식이면 #5 가 필드를 추가했을 때
@@ -277,10 +271,7 @@ def build_labeling_record(
     out["replacement"] = {key: replacement.get(key) for key in LABELER_REPLACEMENT_FIELDS}
 
     context = record.get("context") or {}
-    picked_context = {key: context.get(key) for key in LABELER_CONTEXT_FIELDS}
-    if with_extra_context:
-        picked_context.update({key: context.get(key) for key in EXTRA_CONTEXT_FIELDS})
-    out["context"] = picked_context
+    out["context"] = {key: context.get(key) for key in LABELER_CONTEXT_FIELDS}
     return out
 
 
@@ -402,11 +393,6 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--out-dir", type=Path, default=Path("datasets/labels"))
     parser.add_argument("--size", type=int, default=SAMPLE_SIZE)
     parser.add_argument("--seed", type=int, default=DEFAULT_SEED, help="고정해야 재현된다")
-    parser.add_argument(
-        "--with-extra-context",
-        action="store_true",
-        help="(효과 없음) 이슈 본문·PR 라벨은 ADR-018 로 기본 노출된다 (#112). 호환용으로만 남김",
-    )
     parser.add_argument("--dry-run", action="store_true", help="파일을 쓰지 않고 요약만")
     parser.add_argument(
         "--force",
@@ -471,10 +457,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         written = write_jsonl(
             records_path,
-            (
-                build_labeling_record(record, with_extra_context=args.with_extra_context)
-                for record in sample
-            ),
+            (build_labeling_record(record) for record in sample),
             overwrite=args.force,
         )
         print(f"레코드: {records_path} ({written}건)")
