@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import http.client
 import json
 import os
 import re
@@ -117,6 +118,17 @@ def parse_answer(text: str) -> tuple[str, str, str]:
 
 Caller = Callable[[str, str, str], str]
 """(system, prompt, model) -> 응답 텍스트. 테스트·다른 공급자를 위해 주입 가능하게 둔다."""
+
+# 호출 한 건의 실패로 볼 예외. 여기 없는 예외는 배치 전체를 멈춘다.
+# `http.client.HTTPException` 을 넣은 이유: 응답을 읽다 연결이 끊기면 `IncompleteRead` 가 나는데,
+# 이건 `OSError` 가 아니라 `HTTPException` 계열이다. 빠져 있어서 기준선 B 와 분류기 LLM 후보가
+# 둘 다 한 건의 끊김으로 멈췄다 (#84 코드래빗). 두 곳이 같은 목록을 쓰도록 여기 한 번만 둔다.
+CALL_ERRORS: tuple[type[Exception], ...] = (
+    urllib.error.URLError,
+    OSError,
+    ValueError,
+    http.client.HTTPException,
+)
 
 
 def anthropic_caller(api_key: str, *, timeout: int = 60) -> Caller:
@@ -230,7 +242,7 @@ class LlmBaseline:
 
         try:
             text = self.ask(prompt)
-        except (urllib.error.URLError, OSError, ValueError) as error:
+        except CALL_ERRORS as error:
             self.failures["호출 실패"] = self.failures.get("호출 실패", 0) + 1
             return Prediction(
                 record_id=record_id_of(record),

@@ -3,6 +3,7 @@
 네트워크·API 키 없이 돈다. 기준선 B 의 LLM 호출은 주입한 가짜 호출기로 대체한다.
 """
 
+import http.client
 import json
 
 import pytest
@@ -262,6 +263,23 @@ def test_call_failure_is_recorded_not_raised():
 
     assert prediction.predicted_label == "UNK"
     assert "호출 실패" in prediction.note
+    assert baseline.failures["호출 실패"] == 1
+
+
+def test_connection_dropped_mid_response_is_a_call_failure_not_a_crash():
+    """응답을 읽다 끊기면 `IncompleteRead` 가 난다 - `OSError` 가 아니라 빠져 있었다 (#84).
+
+    잡지 않으면 한 건의 끊김으로 배치 전체가 멈추고 예측 파일이 남지 않는다.
+    """
+
+    def dropped(system, prompt, model):
+        raise http.client.IncompleteRead(b"partial")
+
+    baseline = bl.LlmBaseline(dropped)
+    prediction = baseline.predict(record("msg"))
+
+    assert prediction.predicted_label == "UNK"
+    assert "IncompleteRead" in prediction.note
     assert baseline.failures["호출 실패"] == 1
 
 

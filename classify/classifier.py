@@ -39,7 +39,6 @@ import json
 import math
 import os
 import sys
-import urllib.error
 from collections import Counter
 from collections.abc import Sequence
 from dataclasses import dataclass, field, replace
@@ -48,6 +47,7 @@ from typing import Any
 
 from classify.baseline_keyword import KEYWORD_RULES
 from classify.baseline_llm import (
+    CALL_ERRORS,
     DEFAULT_MODEL,
     LABEL_DEFINITIONS,
     MAX_DIFF_CHARS,
@@ -200,7 +200,7 @@ class LlmCandidate:
         """
         try:
             text = self.runner.ask(build_candidate_prompt(record))
-        except (urllib.error.URLError, OSError, ValueError) as error:
+        except CALL_ERRORS as error:
             self._fail(f"호출 실패: {type(error).__name__}")
             return None
         label, reason, problem = parse_answer(text)

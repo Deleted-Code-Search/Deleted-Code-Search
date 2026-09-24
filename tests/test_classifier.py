@@ -4,6 +4,7 @@
 근거 규칙(가이드 §6)을 지키는지만 본다.
 """
 
+import http.client
 import json
 
 import pytest
@@ -493,6 +494,20 @@ def test_llm_failure_does_not_stop_classification():
 
     assert result.label == "DEAD"
     assert candidate.failures == {"호출 실패: OSError": 1}
+
+
+def test_connection_dropped_mid_response_does_not_stop_classification():
+    """`IncompleteRead` 는 `OSError` 가 아니다 - 빠져 있어 한 건의 끊김으로 배치가 멈췄다."""
+
+    def dropped(system, prompt, model):
+        """응답을 읽다 연결이 끊긴 호출기."""
+        raise http.client.IncompleteRead(b"partial")
+
+    candidate = clf.LlmCandidate(LlmBaseline(caller=dropped))
+    result = clf.Classifier(llm=candidate).classify(make_record(commit_message="Remove unused."))
+
+    assert result.label == "DEAD"
+    assert candidate.failures == {"호출 실패: IncompleteRead": 1}
 
 
 def test_llm_prompt_carries_context_locators_and_replacement():
