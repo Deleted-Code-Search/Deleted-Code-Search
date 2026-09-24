@@ -470,15 +470,19 @@ class FakeResponse:
     """`urlopen` 이 돌려주는 응답 흉내."""
 
     def __init__(self, body):
+        """`body` 를 JSON 으로 담아 둔다."""
         self.body = json.dumps(body).encode("utf-8")
 
     def __enter__(self):
+        """`with urlopen(...) as response` 용."""
         return self
 
     def __exit__(self, *exc):
+        """예외를 삼키지 않는다."""
         return False
 
     def read(self):
+        """응답 본문 바이트."""
         return self.body
 
 
@@ -487,6 +491,7 @@ def test_nvidia_caller_sends_openai_style_request_and_reads_the_answer(monkeypat
     sent = []
 
     def fake_urlopen(request, timeout):
+        """보낸 요청을 남기고 정상 답을 준다."""
         sent.append(request)
         return FakeResponse({"choices": [{"message": {"content": "BUG|근거"}}]})
 
@@ -512,6 +517,39 @@ def test_nvidia_caller_empty_choices_is_an_empty_answer(monkeypatch):
     monkeypatch.setattr(bl.urllib.request, "urlopen", lambda *a, **k: FakeResponse({}))
 
     assert bl.nvidia_caller("k", min_interval=0)("s", "p", "m") == ""
+
+
+@pytest.mark.parametrize(
+    ("provider", "body"),
+    [
+        ("nvidia", []),
+        ("nvidia", {"choices": {"0": {}}}),
+        ("nvidia", {"choices": ["BUG|x"]}),
+        ("nvidia", {"choices": [{"message": "BUG|x"}]}),
+        ("anthropic", []),
+        ("anthropic", {"content": "BUG|x"}),
+        ("anthropic", {"content": [{"type": "text", "text": 7}]}),
+    ],
+)
+def test_malformed_response_is_a_value_error(monkeypatch, provider, body):
+    """모양이 다른 응답은 `ValueError` - `CALL_ERRORS` 라 그 건만 실패로 남는다 (#59 코드래빗)."""
+    monkeypatch.setattr(bl.urllib.request, "urlopen", lambda *a, **k: FakeResponse(body))
+    kwargs = {"min_interval": 0} if provider == "nvidia" else {}
+    call = bl.PROVIDERS[provider].make_caller("k", **kwargs)
+
+    with pytest.raises(ValueError, match="응답 모양"):
+        call("s", "p", "m")
+
+
+def test_one_odd_answer_does_not_stop_the_batch():
+    """OpenAI 호환 서버는 `content` 를 조각 리스트로 주기도 한다. 그 건만 UNK, 다음 건은 계속."""
+    answers = iter([[{"type": "text", "text": "BUG|x"}], "DEAD|y"])
+    baseline = bl.LlmBaseline(lambda *_: next(answers))
+
+    first, second = baseline.predict_all([record("a", record_id="r1"), record("b", record_id="r2")])
+
+    assert (first.predicted_label, second.predicted_label) == ("UNK", "DEAD")
+    assert "문자열이 아니다" in first.note
 
 
 def test_nvidia_caller_spaces_calls_under_the_free_rate_limit(monkeypatch):

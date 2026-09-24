@@ -152,6 +152,10 @@ CALL_ERRORS: tuple[type[Exception], ...] = (
     ValueError,
     http.client.HTTPException,
 )
+# 응답 JSON 이 예상과 다른 모양일 때 답을 꺼내다 나는 예외들. 그대로 두면 `CALL_ERRORS` 밖이라
+# 몇 시간짜리 배치가 한 건에서 멈추고, 예측 파일은 끝에 한 번에 쓰므로 아무것도 안 남는다.
+# 호출기가 `ValueError` 로 바꿔 그 건만 실패로 남긴다 (#59 코드래빗).
+SHAPE_ERRORS: tuple[type[Exception], ...] = (AttributeError, TypeError, KeyError, IndexError)
 
 
 def anthropic_caller(api_key: str, *, timeout: int = 60) -> Caller:
@@ -163,6 +167,7 @@ def anthropic_caller(api_key: str, *, timeout: int = 60) -> Caller:
     """
 
     def call(system: str, prompt: str, model: str) -> str:
+        """한 번 묻고 답 텍스트를 돌려준다. 응답 모양이 다르면 `ValueError`."""
         payload = json.dumps(
             {
                 "model": model,
@@ -182,8 +187,11 @@ def anthropic_caller(api_key: str, *, timeout: int = 60) -> Caller:
         )
         with urllib.request.urlopen(request, timeout=timeout) as response:
             body = json.loads(response.read().decode("utf-8"))
-        blocks = body.get("content") or []
-        return "".join(block.get("text", "") for block in blocks if block.get("type") == "text")
+        try:
+            blocks = body.get("content") or []
+            return "".join(block.get("text", "") for block in blocks if block.get("type") == "text")
+        except SHAPE_ERRORS as error:
+            raise ValueError(f"응답 모양이 다르다: {error!r}") from error
 
     return call
 
@@ -203,6 +211,7 @@ def nvidia_caller(
     last_call = float("-inf")
 
     def call(system: str, prompt: str, model: str) -> str:
+        """간격을 지켜 한 번 묻는다. 응답 모양이 다르면 `ValueError`."""
         nonlocal last_call
         wait = last_call + min_interval - time.monotonic()
         if wait > 0:
@@ -227,8 +236,11 @@ def nvidia_caller(
         )
         with urllib.request.urlopen(request, timeout=timeout) as response:
             body = json.loads(response.read().decode("utf-8"))
-        choices = body.get("choices") or [{}]
-        return (choices[0].get("message") or {}).get("content") or ""
+        try:
+            choices = body.get("choices") or [{}]
+            return (choices[0].get("message") or {}).get("content") or ""
+        except SHAPE_ERRORS as error:
+            raise ValueError(f"응답 모양이 다르다: {error!r}") from error
 
     return call
 
@@ -327,6 +339,10 @@ class LlmBaseline:
 
         self.calls += 1
         text = self.caller(SYSTEM_PROMPT, prompt, self.model)
+        # 모든 호출기가 여기를 거치므로 답이 문자열인지는 여기서 한 번만 본다. OpenAI 호환 서버는
+        # `content` 를 조각 리스트로 주기도 한다 - 그대로 두면 아래 `strip` 에서 배치가 멈춘다.
+        if not isinstance(text, str):
+            raise ValueError(f"응답이 문자열이 아니다: {type(text).__name__}")
         # 빈 답은 남기지 않는다. 답이 아니라 실패다 (생각 과정이 토큰을 다 쓰는 등) - 캐시에
         # 남기면 원인을 고친 뒤 다시 돌려도 그 건은 영영 다시 묻지 않는다 (#59 에서 실제로 그랬다).
         if path is not None and text.strip():
@@ -367,6 +383,7 @@ class LlmBaseline:
 
 
 def build_parser() -> argparse.ArgumentParser:
+    """CLI 인자. 실행 방법은 모듈 독스트링 "실행" 절."""
     parser = argparse.ArgumentParser(
         prog="python -m classify.baseline_llm",
         description="기준선 B - LLM 에 diff + 커밋 메시지를 주고 이유 8종 예측 (#44).",
@@ -385,6 +402,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
+    """기준선 B 를 돌려 예측을 저장하고 분포·호출 수·실패를 보고한다."""
     args = build_parser().parse_args(argv)
     sys.stdout.reconfigure(encoding="utf-8")
     sys.stderr.reconfigure(encoding="utf-8")
