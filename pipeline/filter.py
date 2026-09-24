@@ -95,10 +95,13 @@ ADR-014는 이 세부 규칙을 정하지 않았고(#52 구현에 위임), 결�
     1. (삭제, 추가) 유효한 pair를 전부 만든다 — same-position pair는 여기서 제외(위 참고).
     2. 각 pair의 유사도를 `_move_similarity`로 계산, `None`(20% 프리필터 탈락 또는
        ratio < 0.9)인 pair는 버린다.
-    3. 남은 pair를 유사도 내림차순으로 정렬한다. 동점은 deterministic 하게: 삭제 쪽
-       key(`_record_key` — `commit_sha, file_path, start_line, end_line`) 오름차순,
-       그다음 추가 쪽 key(`_candidate_key` — `file_path, start_line, end_line`) 오름차순
-       — 입력 순서(dict 순회 순서 등)에 결과가 흔들리지 않게 한다.
+    3. 남은 pair를 유사도 내림차순으로 정렬한다. 정규화 유사도가 같으면 원문 유사도
+       (`_raw_similarity` — 줄마다 strip·빈 줄 제거한 원문 줄 목록의 SequenceMatcher,
+       Issue #80) 내림차순. 이것은 threshold가 아니라 정렬 순서만 정한다. 그것까지 같으면
+       deterministic 하게: 삭제 쪽 key(`_record_key` — `commit_sha, file_path,
+       start_line, end_line`) 오름차순, 그다음 추가 쪽 key(`_candidate_key` —
+       `file_path, start_line, end_line`) 오름차순 — 입력 순서(dict 순회 순서 등)에
+       결과가 흔들리지 않게 한다.
     4. 정렬된 순서대로, 삭제·추가 양쪽 다 아직 안 쓰였으면 그 pair를 확정하고 둘 다
        "소비(consumed)" 처리한다. 둘 중 하나라도 이미 쓰였으면 건너뛴다.
     5. 짝을 찾은 삭제만 NOISE_MOVE로 제외 대상이다. 짝을 못 찾은 삭제는 KEPT.
@@ -142,6 +145,8 @@ FULL_FUNCTION만, NOISE_TRIVIAL은 PARTIAL만 보므로 제외 대상이 겹치�
 from __future__ import annotations
 
 import hashlib
+import itertools
+from collections import Counter
 from collections.abc import Sequence
 from dataclasses import dataclass
 from difflib import SequenceMatcher
@@ -163,7 +168,7 @@ LINE_COUNT_SKIP_RATIO = 0.20
 # excluded JSONL의 `filter_rule_version` (Issue #97). `docs/filter_rules.md` 첫 줄의
 # "버전:"과 항상 같아야 한다 — 문서 버전을 올리면 이 값도 같은 PR에서 올린다
 # (`tests/test_filter.py`가 둘이 같은지 확인한다).
-FILTER_RULE_VERSION = "v0.6"
+FILTER_RULE_VERSION = "v0.7"
 
 # ADR-015 확정값: PARTIAL의 `deleted_hunk` 줄 수가 이보다 작으면(4줄 이하) NOISE_TRIVIAL.
 PARTIAL_MIN_LINES = 5
@@ -396,6 +401,22 @@ def _move_similarity(deleted: _NormalizedBody, candidate: _NormalizedBody) -> fl
     return ratio if ratio >= SIMILARITY_THRESHOLD else None
 
 
+def _raw_lines(raw_body: str) -> list[str]:
+    """원문 유사도(Issue #80)용 줄 목록: 줄마다 `strip()`, 빈 줄 제거. 정규화하지 않는다."""
+    return [stripped for line in raw_body.splitlines() if (stripped := line.strip())]
+
+
+def _raw_similarity(deleted_lines: list[str], candidate_lines: list[str]) -> float:
+    """정규화 유사도 동점을 깨는 2차 정렬 key (Issue #80). 이동 판정 기준이 아니다.
+
+    `_move_similarity`와 같은 방식(줄 목록, 인자 순서 (삭제, 추가), `autojunk=False`)으로
+    원문 줄 목록을 비교한다. `_match_moved`가 정규화 유사도 동점 그룹 안에서 아직 안 쓰인
+    삭제·추가를 실제로 공유해 경쟁하는 pair에만 필요할 때 부른다 — 경쟁이 없는 pair의
+    순서는 greedy 결과를 바꾸지 않기 때문이다.
+    """
+    return SequenceMatcher(None, deleted_lines, candidate_lines, autojunk=False).ratio()
+
+
 # --------------------------------------------------------------------------------------
 # same-position 판정 — 같은 file_path 후보 중 "제자리 수정"을 걸러낸다 (팀 추가 결정).
 # 근거·한계는 docs/filter_rules.md NOISE_MOVE 절에도 기록돼 있다.
@@ -522,8 +543,15 @@ def _match_moved(
     뺀다(`_is_same_position`, 모듈 독스트링 "같은 경로 후보 처리" 절).
 
     1:1 greedy 매칭(모듈 독스트링 참고): 유효한 (삭제, 추가) pair를 전부 만들고 유사도
-    내림차순 정렬 후, 양쪽 다 아직 안 쓰인 pair만 순서대로 확정한다. 동점은
+    내림차순 정렬 후, 양쪽 다 아직 안 쓰인 pair만 순서대로 확정한다. 정규화 유사도 동점은
+    원문 유사도(`_raw_similarity`) 내림차순으로 먼저 깨고(Issue #80), 그것까지 같으면
     `(record_key, candidate_key)` 오름차순으로 깨 입력 순서와 무관하게 결정된다.
+
+    원문 유사도는 필요할 때만 계산한다: 정규화 유사도 동점 그룹마다, 앞(더 높은) 그룹에서
+    이미 쓰인 삭제·추가가 낀 pair를 먼저 빼고, 남은 pair 중 삭제 또는 추가를 다른 pair와
+    공유하는(실제로 경쟁하는) pair에만 계산한다. 경쟁이 없는 pair는 그룹 안 어느 위치에
+    있어도 확정되고 다른 pair의 결과를 바꾸지 않으므로, 위 전체 정렬 순서로 greedy를 돈
+    결과와 같다.
     """
     candidates: list[tuple[str, Function, _NormalizedBody]] = [
         (path, function, _normalize(function.body))
@@ -533,7 +561,9 @@ def _match_moved(
 
     # 정렬 key(`pairs`)는 예전 그대로 두고, 목적지 Function은 key로 되찾는다 — 정렬·
     # tie-break가 Issue #97 이전과 달라지지 않게 한다(Function 객체는 비교 대상이 아니다).
+    # 원문 유사도에 쓸 본문도 key로 되찾아, 원문 줄 목록은 필요할 때만 만든다.
     destinations: dict[_CandidateKey, Function] = {}
+    deleted_bodies: dict[_RecordKey, str] = {}
     pairs: list[tuple[float, _RecordKey, _CandidateKey]] = []
     for record in deletions:
         if record.deletion_kind != "FULL_FUNCTION":
@@ -550,22 +580,57 @@ def _match_moved(
                 continue
             candidate_key = _candidate_key(candidate_path, candidate_fn)
             destinations[candidate_key] = candidate_fn
+            deleted_bodies[record_key] = record.deleted_hunk
             pairs.append((similarity, record_key, candidate_key))
 
-    # 유사도 내림차순, 동점은 (record_key, candidate_key) 오름차순 — deterministic.
+    # 정규화 유사도 내림차순, 그다음 (record_key, candidate_key) 오름차순. 정규화 유사도가
+    # 같은 pair는 아래에서 그룹으로 묶어 처리한다.
     pairs.sort(key=lambda pair: (-pair[0], pair[1], pair[2]))
+
+    deleted_raw: dict[_RecordKey, list[str]] = {}
+    candidate_raw: dict[_CandidateKey, list[str]] = {}
+
+    def raw_similarity(record_key: _RecordKey, candidate_key: _CandidateKey) -> float:
+        if record_key not in deleted_raw:
+            deleted_raw[record_key] = _raw_lines(deleted_bodies[record_key])
+        if candidate_key not in candidate_raw:
+            candidate_raw[candidate_key] = _raw_lines(destinations[candidate_key].body)
+        return _raw_similarity(deleted_raw[record_key], candidate_raw[candidate_key])
 
     matched: dict[_RecordKey, _MoveMatch] = {}
     consumed: set[_CandidateKey] = set()
-    for similarity, record_key, candidate_key in pairs:
-        if record_key in matched or candidate_key in consumed:
-            continue
-        matched[record_key] = _MoveMatch(
-            file_path=candidate_key[0],
-            function=destinations[candidate_key],
-            similarity=similarity,
-        )
-        consumed.add(candidate_key)
+    for similarity, group in itertools.groupby(pairs, key=lambda pair: pair[0]):
+        # 앞 그룹에서 이미 쓰인 삭제·추가가 낀 pair는 어차피 건너뛰므로 뺀다.
+        alive = [
+            (record_key, candidate_key)
+            for _similarity, record_key, candidate_key in group
+            if record_key not in matched and candidate_key not in consumed
+        ]
+        record_counts = Counter(record_key for record_key, _ in alive)
+        candidate_counts = Counter(candidate_key for _, candidate_key in alive)
+        independent: list[tuple[_RecordKey, _CandidateKey]] = []
+        competing: list[tuple[float, _RecordKey, _CandidateKey]] = []
+        for record_key, candidate_key in alive:
+            if record_counts[record_key] == 1 and candidate_counts[candidate_key] == 1:
+                independent.append((record_key, candidate_key))
+            else:
+                raw = raw_similarity(record_key, candidate_key)
+                competing.append((raw, record_key, candidate_key))
+        # 경쟁 pair만 원문 유사도 내림차순(Issue #80) → (record_key, candidate_key) 오름차순.
+        # 원문 유사도는 이 순서에만 쓰고 판정(threshold)·evidence의 similarity에는 쓰지 않는다.
+        competing.sort(key=lambda pair: (-pair[0], pair[1], pair[2]))
+        ordered = independent + [
+            (record_key, candidate_key) for _, record_key, candidate_key in competing
+        ]
+        for record_key, candidate_key in ordered:
+            if record_key in matched or candidate_key in consumed:
+                continue
+            matched[record_key] = _MoveMatch(
+                file_path=candidate_key[0],
+                function=destinations[candidate_key],
+                similarity=similarity,
+            )
+            consumed.add(candidate_key)
     return matched
 
 

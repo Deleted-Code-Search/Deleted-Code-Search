@@ -947,6 +947,380 @@ def test_exclude_moved_and_find_moved_agree_with_partition_moved():
         assert [r.file_path for r in kept] == ["d/d4.py"]
 
 
+# --------------------------------------------------------------------------------------
+# Issue #80 — 정규화 유사도 동점일 때 원문 유사도(raw similarity)로 tie-break. 정규화
+# 유사도가 같은 pair끼리만 순서를 바꾼다: threshold·1:1·evidence 값은 그대로다. 매칭
+# 로직이라 합성 객체로 검증한다.
+# --------------------------------------------------------------------------------------
+
+_RAW_TIE_DESTINATION = "tests/test_forward_ref.py"
+
+
+def _raw_tie_bodies() -> tuple[str, str, str]:
+    """(원문이 목적지와 더 같은 삭제, 리터럴만 다른 삭제, 목적지) 본문.
+
+    두 삭제는 문자열 리터럴만 달라 정규화 본문이 같다(10줄). 목적지는 원문이 더 같은
+    쪽에 한 줄을 덧붙인 것(11줄)이라, 두 삭제 모두 정규화 유사도가 `2·10/21 ≈ 0.9524`로
+    동점이다 — 283e72d9(`test_forward_ref_sub_types`)와 같은 모양이다.
+    """
+    names = "abcdefgh"
+    closer = "def test_forward_ref_sub_types():\n"
+    closer += "".join(f"    {n} = make('{n}37')\n" for n in names)
+    closer += "    assert a\n"
+    farther = closer.replace("37'", "36'")
+    destination = closer + "    check(a, b)\n"
+    return closer, farther, destination
+
+
+def _raw_similarity_of(deleted_body: str, candidate_body: str) -> float:
+    """테스트용 기대값: 줄마다 strip, 빈 줄 제거, (삭제, 추가) 순서, `autojunk=False`."""
+    from difflib import SequenceMatcher
+
+    def lines(body: str) -> list[str]:
+        return [line.strip() for line in body.splitlines() if line.strip()]
+
+    return SequenceMatcher(None, lines(deleted_body), lines(candidate_body), autojunk=False).ratio()
+
+
+def test_raw_tie_fixture_preconditions():
+    """픽스처 자체 검증: 정규화 유사도는 동점(0.9524), 원문 유사도는 closer 쪽이 높다."""
+    closer, farther, destination = _raw_tie_bodies()
+    dest_norm = filter_module._normalize(destination)
+    closer_sim = filter_module._move_similarity(filter_module._normalize(closer), dest_norm)
+    farther_sim = filter_module._move_similarity(filter_module._normalize(farther), dest_norm)
+
+    assert closer_sim == farther_sim == 20 / 21
+    assert _raw_similarity_of(closer, destination) > _raw_similarity_of(farther, destination)
+
+
+def test_regression_283e72d9_rename_source_wins_normalized_tie():
+    """283e72d9 회귀: test_py36.py·test_py37.py의 두 삭제가 같은 목적지와 정규화 유사도
+    동점이면, 경로 사전순(test_py36.py가 앞)이 아니라 원문이 더 같은 test_py37.py가
+    목적지를 차지한다. 짝을 못 찾은 test_py36.py는 KEPT, 1:1은 유지된다."""
+    closer, farther, destination = _raw_tie_bodies()
+    py36 = _deleted("tests/test_py36.py", farther, function_name="test_forward_ref_sub_types")
+    py37 = _deleted("tests/test_py37.py", closer, function_name="test_forward_ref_sub_types")
+    added = {_RAW_TIE_DESTINATION: [_function("test_forward_ref_sub_types", destination)]}
+
+    kept, excluded = filter_module.partition_moved([py36, py37], added, {})
+
+    assert [e.record for e in excluded] == [py37]
+    assert kept == [py36]
+    # evidence의 similarity는 정규화 유사도 그대로다 — 원문 유사도가 아니다.
+    assert excluded[0].filter_evidence == {
+        "file_path": _RAW_TIE_DESTINATION,
+        "function_name": "test_forward_ref_sub_types",
+        "start_line": 1,
+        "end_line": 11,
+        "similarity": 20 / 21,
+    }
+
+
+@pytest.mark.parametrize(
+    ("closer_path", "farther_path"),
+    [("a/closer.py", "b/farther.py"), ("b/closer.py", "a/farther.py")],
+)
+def test_raw_tie_break_does_not_depend_on_source_path_order(closer_path: str, farther_path: str):
+    """원문이 더 같은 쪽이 경로 사전순의 앞이든 뒤든 목적지를 차지한다."""
+    closer, farther, destination = _raw_tie_bodies()
+    d_closer = _deleted(closer_path, closer, function_name="test_forward_ref_sub_types")
+    d_farther = _deleted(farther_path, farther, function_name="test_forward_ref_sub_types")
+    added = {_RAW_TIE_DESTINATION: [_function("test_forward_ref_sub_types", destination)]}
+
+    moved = filter_module.find_moved([d_closer, d_farther], added, {})
+
+    assert moved == {filter_module._record_key(d_closer)}
+
+
+def test_raw_tie_break_keeps_one_to_one_and_is_order_independent():
+    """삭제 3개(원문 유사도 서로 다름, 정규화 유사도 전부 동점) : 목적지 2개. 목적지는
+    각각 한 번만 쓰이고(N:1 없음), 입력 순서를 뒤집어도 같은 결과다."""
+    closer, farther, destination = _raw_tie_bodies()
+    farthest = closer.replace("37'", "99'").replace("assert a", "assert b")
+    deletions = [
+        _deleted("a/farthest.py", farthest, function_name="test_forward_ref_sub_types"),
+        _deleted("b/farther.py", farther, function_name="test_forward_ref_sub_types"),
+        _deleted("c/closer.py", closer, function_name="test_forward_ref_sub_types"),
+    ]
+    dest1 = _function("test_forward_ref_sub_types", destination)
+    dest2 = _function("test_forward_ref_sub_types", destination, start_line=20)
+    added = {_RAW_TIE_DESTINATION: [dest1], "tests/test_other.py": [dest2]}
+    added_reversed = {"tests/test_other.py": [dest2], _RAW_TIE_DESTINATION: [dest1]}
+
+    results = []
+    for order, added_order in ((deletions, added), (list(reversed(deletions)), added_reversed)):
+        kept, excluded = filter_module.partition_moved(order, added_order, {})
+        destinations = [
+            (e.filter_evidence["file_path"], e.filter_evidence["start_line"]) for e in excluded
+        ]
+        assert len(destinations) == len(set(destinations)) == 2  # 목적지 중복 사용 없음
+        results.append(
+            (
+                sorted(r.file_path for r in kept),
+                sorted(
+                    (e.record.file_path, *d) for e, d in zip(excluded, destinations, strict=True)
+                ),
+            )
+        )
+
+    assert results[0] == results[1]
+    kept_paths, moved = results[0]
+    assert kept_paths == ["a/farthest.py"]  # 원문 유사도가 가장 낮은 쪽이 남는다
+    # 원문 유사도 순(closer → farther)으로, 각자 candidate_key가 작은 목적지부터 차지한다
+    assert moved == [
+        ("b/farther.py", "tests/test_other.py", 20),
+        ("c/closer.py", _RAW_TIE_DESTINATION, 1),
+    ]
+
+
+def test_raw_similarity_never_overrides_higher_normalized_similarity():
+    """정규화 유사도가 더 높은 pair가 원문 유사도 때문에 뒤집히지 않는다. `renamed`는
+    식별자가 전부 달라 원문 유사도는 낮지만 정규화 완전 일치(1.0), `near`는 원문이 거의
+    같지만 정규화 0.95 — `renamed`가 이긴다."""
+    destination = (
+        "def foo():\n" + "".join(f"    v{i} = {i}\n" for i in range(9)) + "    return v0\n"
+    )
+    renamed = "def foo():\n" + "".join(f"    w{i} = {i}\n" for i in range(9)) + "    return w0\n"
+    near = destination.replace("    return v0\n", "    v9 = 9\n    return v0\n")
+    d_renamed = _deleted("b/renamed.py", renamed, function_name="foo")
+    d_near = _deleted("a/near.py", near, function_name="foo")
+    added = {"c/dest.py": [_function("foo", destination)]}
+
+    dest_norm = filter_module._normalize(destination)
+    assert filter_module._move_similarity(filter_module._normalize(renamed), dest_norm) == 1.0
+    near_sim = filter_module._move_similarity(filter_module._normalize(near), dest_norm)
+    assert near_sim is not None and filter_module.SIMILARITY_THRESHOLD <= near_sim < 1.0
+    assert _raw_similarity_of(near, destination) > _raw_similarity_of(renamed, destination)
+
+    moved = filter_module.find_moved([d_near, d_renamed], added, {})
+
+    assert moved == {filter_module._record_key(d_renamed)}
+
+
+def test_raw_similarity_tie_falls_back_to_record_key_then_candidate_key():
+    """원문 유사도까지 같으면 기존 순서 그대로: record_key 오름차순, 그다음 candidate_key
+    오름차순."""
+    body = "def helper():\n    return 1\n"
+    d_a = _deleted("a/mod.py", body, function_name="helper")
+    d_b = _deleted("b/mod.py", body, function_name="helper")
+    added = {"z/dest.py": [_function("helper", body)]}
+
+    assert filter_module.find_moved([d_b, d_a], added, {}) == {filter_module._record_key(d_a)}
+
+    added_two = {
+        "z/dest.py": [_function("helper", body)],
+        "y/dest.py": [_function("helper", body, start_line=5)],
+    }
+    _kept, excluded = filter_module.partition_moved([d_a], added_two, {})
+    assert excluded[0].filter_evidence["file_path"] == "y/dest.py"  # "y/..." < "z/..."
+
+
+def test_similarity_threshold_is_unchanged():
+    """#80은 tie-break만 바꾼다 — 이동 판정 threshold는 0.9 그대로다."""
+    assert filter_module.SIMILARITY_THRESHOLD == 0.9
+
+
+def test_high_raw_similarity_does_not_rescue_below_threshold_pair():
+    """4aafd867 모양(이동+리네임, 정규화 유사도 0.8889): 원문 유사도가 0.9를 넘어도
+    정규화 유사도가 threshold 미만이면 이동이 아니다 — 원문 유사도는 판정 기준이 아니다."""
+    comments = "".join(f"    # note {i}\n" for i in range(12))
+    tail = "".join(f"    v{i} = {i}\n" for i in range(8))
+    deleted_body = "def old_name():\n" + comments + tail
+    destination = "def new_name():\n" + comments + tail
+    deleted = _deleted("a/old.py", deleted_body, function_name="old_name")
+    added = {"b/new.py": [_function("new_name", destination)]}
+
+    normalized_ratio = _raw_similarity_of(
+        "\n".join(filter_module.normalize_function_body(deleted_body)),
+        "\n".join(filter_module.normalize_function_body(destination)),
+    )
+    assert normalized_ratio == 16 / 18  # 0.8889 < 0.9
+    assert _raw_similarity_of(deleted_body, destination) >= filter_module.SIMILARITY_THRESHOLD
+
+    kept, excluded = filter_module.partition_moved([deleted], added, {})
+
+    assert kept == [deleted]
+    assert excluded == []
+
+
+# --------------------------------------------------------------------------------------
+# Issue #80 후속 — 원문 유사도는 정규화 유사도 동점 그룹 안에서 아직 안 쓰인 삭제·추가를
+# 실제로 공유하는(경쟁하는) pair에만 계산한다. 판정 결과는 위 #80 테스트와 같고, 여기서는
+# `_raw_similarity` 호출 자체를 센다.
+# --------------------------------------------------------------------------------------
+
+
+def _count_raw_similarity_calls(
+    monkeypatch: pytest.MonkeyPatch,
+) -> list[tuple[tuple[str, ...], tuple[str, ...]]]:
+    """`_raw_similarity` 호출을 (삭제 원문 줄, 추가 원문 줄)로 기록한다. 값은 그대로 돌려준다."""
+    calls: list[tuple[tuple[str, ...], tuple[str, ...]]] = []
+    original = filter_module._raw_similarity
+
+    def recording(deleted_lines: list[str], candidate_lines: list[str]) -> float:
+        calls.append((tuple(deleted_lines), tuple(candidate_lines)))
+        return original(deleted_lines, candidate_lines)
+
+    monkeypatch.setattr(filter_module, "_raw_similarity", recording)
+    return calls
+
+
+def _raw_key(deleted_body: str, candidate_body: str) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    return (
+        tuple(filter_module._raw_lines(deleted_body)),
+        tuple(filter_module._raw_lines(candidate_body)),
+    )
+
+
+def _independent_tie_bodies() -> tuple[str, str]:
+    """`_raw_tie_bodies`와 구조가 달라 서로 pair가 생기지 않는 (삭제, 목적지). 목적지는
+    삭제에 한 줄을 덧붙인 것이라 정규화 유사도가 `_raw_tie_bodies`와 같은 20/21이다."""
+    deleted = "def rebuild():\n" + "".join("    x.attr[0] = f(y, z)\n" for _ in range(8))
+    deleted += "    return x\n"
+    return deleted, deleted + "    log(x)\n"
+
+
+def test_lazy_raw_similarity_not_called_for_independent_exact_moves(monkeypatch):
+    """A. 서로 충돌하지 않는 exact MOVE 여러 개(정규화 1.0 동점 그룹): 원문 유사도 0회."""
+    bodies = [
+        "def alpha():\n    return 1\n",
+        "def beta(x):\n    for i in range(x):\n        print(i)\n",
+        "def gamma(a, b):\n    if a:\n        return b\n    return None\n",
+    ]
+    names = ["alpha", "beta", "gamma"]
+    deletions = [
+        _deleted(f"old/{n}.py", body, function_name=n)
+        for n, body in zip(names, bodies, strict=True)
+    ]
+    added = {f"new/{n}.py": [_function(n, body)] for n, body in zip(names, bodies, strict=True)}
+    calls = _count_raw_similarity_calls(monkeypatch)
+
+    kept, excluded = filter_module.partition_moved(deletions, added, {})
+
+    assert kept == []
+    assert [(e.record.file_path, e.filter_evidence["file_path"]) for e in excluded] == [
+        (f"old/{n}.py", f"new/{n}.py") for n in names
+    ]
+    assert all(e.filter_evidence["similarity"] == 1.0 for e in excluded)
+    assert calls == []
+
+
+def test_lazy_raw_similarity_called_only_for_competing_283e72d9_pairs(monkeypatch):
+    """B. 283e72d9 모양: 두 삭제가 같은 목적지를 두고 경쟁 — 그 두 pair에만 원문 유사도를
+    계산하고, 결과는 #80 K1 그대로(test_py37.py가 목적지, test_py36.py는 KEPT)."""
+    closer, farther, destination = _raw_tie_bodies()
+    py36 = _deleted("tests/test_py36.py", farther, function_name="test_forward_ref_sub_types")
+    py37 = _deleted("tests/test_py37.py", closer, function_name="test_forward_ref_sub_types")
+    added = {_RAW_TIE_DESTINATION: [_function("test_forward_ref_sub_types", destination)]}
+    calls = _count_raw_similarity_calls(monkeypatch)
+
+    kept, excluded = filter_module.partition_moved([py36, py37], added, {})
+
+    assert [e.record for e in excluded] == [py37]
+    assert kept == [py36]
+    assert excluded[0].filter_evidence["similarity"] == 20 / 21
+    assert sorted(calls) == sorted([_raw_key(farther, destination), _raw_key(closer, destination)])
+
+
+def test_lazy_raw_similarity_skips_pairs_whose_destination_was_consumed(monkeypatch):
+    """C-1. 정규화 1.0 그룹이 목적지를 먼저 차지하면, 그 목적지를 두고 20/21로 동점인
+    낮은 그룹의 pair(closer·farther)에는 원문 유사도를 계산하지 않는다."""
+    closer, farther, destination = _raw_tie_bodies()
+    exact = _deleted("a/exact.py", destination, function_name="test_forward_ref_sub_types")
+    d_closer = _deleted("b/closer.py", closer, function_name="test_forward_ref_sub_types")
+    d_farther = _deleted("c/farther.py", farther, function_name="test_forward_ref_sub_types")
+    added = {_RAW_TIE_DESTINATION: [_function("test_forward_ref_sub_types", destination)]}
+    calls = _count_raw_similarity_calls(monkeypatch)
+
+    kept, excluded = filter_module.partition_moved([exact, d_closer, d_farther], added, {})
+
+    assert [e.record for e in excluded] == [exact]
+    assert excluded[0].filter_evidence["similarity"] == 1.0
+    assert kept == [d_closer, d_farther]
+    assert calls == []
+
+
+def test_lazy_raw_similarity_skips_pairs_whose_source_was_consumed(monkeypatch):
+    """C-2. 정규화 1.0 그룹이 삭제(source)를 먼저 확정하면, 그 삭제가 낮은 20/21 동점
+    그룹에서 다른 삭제와 같은 목적지를 두고 겹치던 pair는 빠진다 — 남은 pair는 경쟁이
+    없으므로 원문 유사도 0회."""
+    closer, _farther, destination = _raw_tie_bodies()
+    # `other`는 closer에 destination과 다른 한 줄을 붙인 것: closer 본문 목적지와 20/21,
+    # destination 목적지와는 20/22(0.909)라 1.0 그룹에 끼지 않는다.
+    other = closer + "    return None\n"
+    source = _deleted("a/source.py", destination, function_name="test_forward_ref_sub_types")
+    d_other = _deleted("b/other.py", other, function_name="test_forward_ref_sub_types")
+    dest_exact = _function("test_forward_ref_sub_types", destination)
+    dest_short = _function("test_forward_ref_sub_types", closer, start_line=30)
+    added = {"x/exact.py": [dest_exact], "y/short.py": [dest_short]}
+
+    source_norm = filter_module._normalize(destination)
+    other_norm = filter_module._normalize(other)
+    short_norm = filter_module._normalize(closer)
+    assert filter_module._move_similarity(source_norm, short_norm) == 20 / 21
+    assert filter_module._move_similarity(other_norm, short_norm) == 20 / 21
+    other_exact = filter_module._move_similarity(other_norm, source_norm)
+    assert other_exact is not None and 20 / 21 > other_exact > filter_module.SIMILARITY_THRESHOLD
+    calls = _count_raw_similarity_calls(monkeypatch)
+
+    kept, excluded = filter_module.partition_moved([source, d_other], added, {})
+
+    assert kept == []
+    assert [(e.record.file_path, e.filter_evidence["file_path"]) for e in excluded] == [
+        ("a/source.py", "x/exact.py"),
+        ("b/other.py", "y/short.py"),
+    ]
+    assert [e.filter_evidence["similarity"] for e in excluded] == [1.0, 20 / 21]
+    assert calls == []
+
+
+def test_lazy_raw_similarity_mixed_group_independent_and_competing(monkeypatch):
+    """D. 같은 20/21 그룹에 독립 pair(rebuild)와 경쟁 pair(283e72d9 모양)가 함께 있다.
+    독립 pair는 원문 유사도 없이 확정되고, 경쟁 pair 두 개에만 원문 유사도를 계산해
+    closer가 목적지를 차지한다 — #80 K1과 같은 결과."""
+    closer, farther, destination = _raw_tie_bodies()
+    indep_deleted, indep_destination = _independent_tie_bodies()
+    # 독립 pair가 경로 사전순으로 경쟁 pair 사이에 끼게 둔다.
+    d_farther = _deleted("a/farther.py", farther, function_name="test_forward_ref_sub_types")
+    d_indep = _deleted("b/rebuild.py", indep_deleted, function_name="rebuild")
+    d_closer = _deleted("c/closer.py", closer, function_name="test_forward_ref_sub_types")
+    added = {
+        _RAW_TIE_DESTINATION: [_function("test_forward_ref_sub_types", destination)],
+        "tests/test_rebuild.py": [_function("rebuild", indep_destination)],
+    }
+
+    indep_sim = filter_module._move_similarity(
+        filter_module._normalize(indep_deleted), filter_module._normalize(indep_destination)
+    )
+    assert indep_sim == 20 / 21  # 경쟁 pair와 같은 정규화 유사도 그룹
+    for tie_body in (closer, farther):
+        assert (
+            filter_module._move_similarity(
+                filter_module._normalize(tie_body), filter_module._normalize(indep_destination)
+            )
+            is None
+        )
+    assert (
+        filter_module._move_similarity(
+            filter_module._normalize(indep_deleted), filter_module._normalize(destination)
+        )
+        is None
+    )
+    calls = _count_raw_similarity_calls(monkeypatch)
+
+    kept, excluded = filter_module.partition_moved([d_farther, d_indep, d_closer], added, {})
+
+    assert kept == [d_farther]
+    assert [(e.record.file_path, e.filter_evidence["file_path"]) for e in excluded] == [
+        ("b/rebuild.py", "tests/test_rebuild.py"),
+        ("c/closer.py", _RAW_TIE_DESTINATION),
+    ]
+    assert [e.filter_evidence["similarity"] for e in excluded] == [20 / 21, 20 / 21]
+    assert "raw_similarity" not in excluded[1].filter_evidence
+    assert sorted(calls) == sorted([_raw_key(farther, destination), _raw_key(closer, destination)])
+    assert _raw_key(indep_deleted, indep_destination) not in calls
+
+
 def test_filter_rule_version_matches_filter_rules_document():
     """`FILTER_RULE_VERSION`은 `docs/filter_rules.md` 첫 줄 "버전: vX.Y"와 같아야 한다 —
     문서 버전만 올리고 상수를 잊는 일을 막는다 (Issue #97)."""
@@ -1011,7 +1385,7 @@ def test_partition_trivial_never_excludes_short_full_function():
 
 
 def test_partition_trivial_excluded_record_has_status_version_and_line_count():
-    """제외 레코드는 #97 `ExcludedRecord` 그대로: 원본 레코드 객체, NOISE_TRIVIAL, v0.6,
+    """제외 레코드는 #97 `ExcludedRecord` 그대로: 원본 레코드 객체, NOISE_TRIVIAL, v0.7,
     `filter_evidence == {"line_count": n}`. #102 `added_hunks_same_file`도 레코드째 남는다."""
     hunks = (extract_module.AddedHunk(2, 3, 2, 1, "    y = 0"),)
     record = dataclasses.replace(
@@ -1028,7 +1402,7 @@ def test_partition_trivial_excluded_record_has_status_version_and_line_count():
     assert item.record.added_hunks_same_file is hunks
     assert item.filter_status == "NOISE_TRIVIAL"
     assert item.filter_status == filter_module.NOISE_TRIVIAL
-    assert item.filter_rule_version == "v0.6"
+    assert item.filter_rule_version == "v0.7"
     assert item.filter_rule_version == filter_module.FILTER_RULE_VERSION
     assert item.filter_evidence == {"line_count": 3}
 
