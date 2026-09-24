@@ -168,6 +168,7 @@ def test_functions_are_returned_in_source_order():
 
 
 def test_decorated_class_method_extraction():
+    """데코레이터 클래스의 메서드가 추출되고, 범위에 클래스 데코레이터가 들어가지 않는다."""
     src = source(
         "@dataclass",
         "class A:",
@@ -186,6 +187,7 @@ def test_decorated_class_method_extraction():
 
 
 def test_multiple_decorators_on_class_with_async_method():
+    """데코레이터 여러 개가 붙은 클래스에서도 일반·`async` 메서드가 순서대로 추출된다."""
     src = source(
         "@deco1",
         "@deco2(arg=1)",
@@ -205,6 +207,7 @@ def test_multiple_decorators_on_class_with_async_method():
 
 
 def test_decorated_method_inside_decorated_class_is_found_once():
+    """데코레이터 클래스 안의 데코레이터 메서드는 한 번만, 자신의 데코레이터부터 잡힌다."""
     src = source(
         "@dataclass",
         "class A:",
@@ -223,6 +226,7 @@ def test_decorated_method_inside_decorated_class_is_found_once():
 
 
 def test_decorated_method_inside_plain_class_is_found_once():
+    """일반 클래스 안의 데코레이터 메서드가 중복 없이 한 번만 추출된다."""
     src = source(
         "class A:",
         "    @property",
@@ -238,6 +242,7 @@ def test_decorated_method_inside_plain_class_is_found_once():
 
 
 def test_methods_of_nested_plain_and_decorated_classes():
+    """중첩된 일반 클래스와 데코레이터 클래스의 메서드가 모두 추출된다."""
     src = source(
         "class Outer:",
         "    class Plain:",
@@ -257,6 +262,7 @@ def test_methods_of_nested_plain_and_decorated_classes():
 
 
 def test_method_of_decorated_class_defined_inside_function():
+    """함수 안에 정의된 데코레이터 클래스의 메서드도 추출된다."""
     src = source(
         "def factory():",
         "    @dataclass(frozen=True)",
