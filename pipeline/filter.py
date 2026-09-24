@@ -145,6 +145,8 @@ FULL_FUNCTION만, NOISE_TRIVIAL은 PARTIAL만 보므로 제외 대상이 겹치�
 from __future__ import annotations
 
 import hashlib
+import itertools
+from collections import Counter
 from collections.abc import Sequence
 from dataclasses import dataclass
 from difflib import SequenceMatcher
@@ -408,7 +410,9 @@ def _raw_similarity(deleted_lines: list[str], candidate_lines: list[str]) -> flo
     """정규화 유사도 동점을 깨는 2차 정렬 key (Issue #80). 이동 판정 기준이 아니다.
 
     `_move_similarity`와 같은 방식(줄 목록, 인자 순서 (삭제, 추가), `autojunk=False`)으로
-    원문 줄 목록을 비교한다. `_move_similarity`가 threshold를 통과시킨 pair에만 부른다.
+    원문 줄 목록을 비교한다. `_match_moved`가 정규화 유사도 동점 그룹 안에서 아직 안 쓰인
+    삭제·추가를 실제로 공유해 경쟁하는 pair에만 필요할 때 부른다 — 경쟁이 없는 pair의
+    순서는 greedy 결과를 바꾸지 않기 때문이다.
     """
     return SequenceMatcher(None, deleted_lines, candidate_lines, autojunk=False).ratio()
 
@@ -542,24 +546,31 @@ def _match_moved(
     내림차순 정렬 후, 양쪽 다 아직 안 쓰인 pair만 순서대로 확정한다. 정규화 유사도 동점은
     원문 유사도(`_raw_similarity`) 내림차순으로 먼저 깨고(Issue #80), 그것까지 같으면
     `(record_key, candidate_key)` 오름차순으로 깨 입력 순서와 무관하게 결정된다.
+
+    원문 유사도는 필요할 때만 계산한다: 정규화 유사도 동점 그룹마다, 앞(더 높은) 그룹에서
+    이미 쓰인 삭제·추가가 낀 pair를 먼저 빼고, 남은 pair 중 삭제 또는 추가를 다른 pair와
+    공유하는(실제로 경쟁하는) pair에만 계산한다. 경쟁이 없는 pair는 그룹 안 어느 위치에
+    있어도 확정되고 다른 pair의 결과를 바꾸지 않으므로, 위 전체 정렬 순서로 greedy를 돈
+    결과와 같다.
     """
-    candidates: list[tuple[str, Function, _NormalizedBody, list[str]]] = [
-        (path, function, _normalize(function.body), _raw_lines(function.body))
+    candidates: list[tuple[str, Function, _NormalizedBody]] = [
+        (path, function, _normalize(function.body))
         for path, functions in added_functions.items()
         for function in functions
     ]
 
     # 정렬 key(`pairs`)는 예전 그대로 두고, 목적지 Function은 key로 되찾는다 — 정렬·
     # tie-break가 Issue #97 이전과 달라지지 않게 한다(Function 객체는 비교 대상이 아니다).
+    # 원문 유사도에 쓸 본문도 key로 되찾아, 원문 줄 목록은 필요할 때만 만든다.
     destinations: dict[_CandidateKey, Function] = {}
-    pairs: list[tuple[float, float, _RecordKey, _CandidateKey]] = []
+    deleted_bodies: dict[_RecordKey, str] = {}
+    pairs: list[tuple[float, _RecordKey, _CandidateKey]] = []
     for record in deletions:
         if record.deletion_kind != "FULL_FUNCTION":
             continue
         record_key = _record_key(record)
         deleted_norm = _normalize(record.deleted_hunk)
-        deleted_raw = _raw_lines(record.deleted_hunk)
-        for candidate_path, candidate_fn, candidate_norm, candidate_raw in candidates:
+        for candidate_path, candidate_fn, candidate_norm in candidates:
             if candidate_path == record.file_path and _is_same_position(
                 same_file_hunks, record.file_path, record.start_line, record.end_line, candidate_fn
             ):
@@ -567,27 +578,59 @@ def _match_moved(
             similarity = _move_similarity(deleted_norm, candidate_norm)
             if similarity is None:
                 continue
-            raw_similarity = _raw_similarity(deleted_raw, candidate_raw)
             candidate_key = _candidate_key(candidate_path, candidate_fn)
             destinations[candidate_key] = candidate_fn
-            pairs.append((similarity, raw_similarity, record_key, candidate_key))
+            deleted_bodies[record_key] = record.deleted_hunk
+            pairs.append((similarity, record_key, candidate_key))
 
-    # 정규화 유사도 내림차순 → 동점이면 원문 유사도 내림차순(Issue #80) → 그것도 같으면
-    # (record_key, candidate_key) 오름차순 — deterministic. 원문 유사도는 정렬 순서에만
-    # 쓰고 판정(threshold)·evidence의 similarity에는 쓰지 않는다.
-    pairs.sort(key=lambda pair: (-pair[0], -pair[1], pair[2], pair[3]))
+    # 정규화 유사도 내림차순, 그다음 (record_key, candidate_key) 오름차순. 정규화 유사도가
+    # 같은 pair는 아래에서 그룹으로 묶어 처리한다.
+    pairs.sort(key=lambda pair: (-pair[0], pair[1], pair[2]))
+
+    deleted_raw: dict[_RecordKey, list[str]] = {}
+    candidate_raw: dict[_CandidateKey, list[str]] = {}
+
+    def raw_similarity(record_key: _RecordKey, candidate_key: _CandidateKey) -> float:
+        if record_key not in deleted_raw:
+            deleted_raw[record_key] = _raw_lines(deleted_bodies[record_key])
+        if candidate_key not in candidate_raw:
+            candidate_raw[candidate_key] = _raw_lines(destinations[candidate_key].body)
+        return _raw_similarity(deleted_raw[record_key], candidate_raw[candidate_key])
 
     matched: dict[_RecordKey, _MoveMatch] = {}
     consumed: set[_CandidateKey] = set()
-    for similarity, _raw, record_key, candidate_key in pairs:
-        if record_key in matched or candidate_key in consumed:
-            continue
-        matched[record_key] = _MoveMatch(
-            file_path=candidate_key[0],
-            function=destinations[candidate_key],
-            similarity=similarity,
-        )
-        consumed.add(candidate_key)
+    for similarity, group in itertools.groupby(pairs, key=lambda pair: pair[0]):
+        # 앞 그룹에서 이미 쓰인 삭제·추가가 낀 pair는 어차피 건너뛰므로 뺀다.
+        alive = [
+            (record_key, candidate_key)
+            for _similarity, record_key, candidate_key in group
+            if record_key not in matched and candidate_key not in consumed
+        ]
+        record_counts = Counter(record_key for record_key, _ in alive)
+        candidate_counts = Counter(candidate_key for _, candidate_key in alive)
+        independent: list[tuple[_RecordKey, _CandidateKey]] = []
+        competing: list[tuple[float, _RecordKey, _CandidateKey]] = []
+        for record_key, candidate_key in alive:
+            if record_counts[record_key] == 1 and candidate_counts[candidate_key] == 1:
+                independent.append((record_key, candidate_key))
+            else:
+                raw = raw_similarity(record_key, candidate_key)
+                competing.append((raw, record_key, candidate_key))
+        # 경쟁 pair만 원문 유사도 내림차순(Issue #80) → (record_key, candidate_key) 오름차순.
+        # 원문 유사도는 이 순서에만 쓰고 판정(threshold)·evidence의 similarity에는 쓰지 않는다.
+        competing.sort(key=lambda pair: (-pair[0], pair[1], pair[2]))
+        ordered = independent + [
+            (record_key, candidate_key) for _, record_key, candidate_key in competing
+        ]
+        for record_key, candidate_key in ordered:
+            if record_key in matched or candidate_key in consumed:
+                continue
+            matched[record_key] = _MoveMatch(
+                file_path=candidate_key[0],
+                function=destinations[candidate_key],
+                similarity=similarity,
+            )
+            consumed.add(candidate_key)
     return matched
 
 
