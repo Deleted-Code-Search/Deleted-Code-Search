@@ -89,6 +89,7 @@ class ReasonModel:
 
     @property
     def trained(self) -> bool:
+        """학습됐나. 안 됐으면 `predict_proba` 가 빈 확률을 낸다."""
         return self.pipeline is not None
 
     @property

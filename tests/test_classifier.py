@@ -68,6 +68,7 @@ def trained_model(label="DESIGN"):
 
 
 def test_every_context_source_gets_its_locator():
+    """맥락의 출처마다 가이드 §7.2 형식의 위치가 붙는다."""
     record = make_record(
         commit_message="Remove the retry helper.",
         pr_number=12,
@@ -142,6 +143,7 @@ def test_closing_reference_is_ignored_for_the_label_but_kept_in_the_quote():
 
 
 def test_markdown_bullets_are_stripped_and_fragments_dropped():
+    """목록 기호는 벗기고 체크박스 잔해 같은 짧은 조각은 버린다."""
     sentences = rules.split_sentences("- [x]\n* Removed unused helper\n## Why")
 
     assert sentences == ["Removed unused helper"]
@@ -186,6 +188,36 @@ def test_file_name_is_not_a_target():
     assert clf.Classifier().classify(record).evidence_grade == "INFERRED"
 
 
+@pytest.mark.parametrize("message", ["Update docs to fix typo.", "update docs to fix typo."])
+def test_a_plain_word_function_name_in_prose_is_not_explicit(message):
+    """`update` 는 영어 단어와 모양이 같다. 문장에 나왔다고 그 함수를 가리키는 게 아니다.
+
+    예비 200건에서 `host` 함수가 "Fix host required enforcement ..." 로 EXPLICIT 1.0 이 됐다.
+    """
+    record = make_record(function_name="update", commit_message=message)
+    result = clf.Classifier().classify(record)
+
+    assert result.label == "BUG"
+    assert result.evidence_grade != "EXPLICIT"
+
+
+@pytest.mark.parametrize(
+    "message",
+    ["Remove unused `update`.", "Remove unused `Model.update`.", "Remove unused update()."],
+)
+def test_a_plain_word_function_name_counts_with_a_code_marker(message):
+    """백틱 안이거나 괄호가 붙으면 코드를 가리킨 것이다."""
+    record = make_record(function_name="update", commit_message=message)
+
+    assert clf.Classifier().classify(record).evidence_grade == "EXPLICIT"
+
+
+def test_identifier_names_are_matched_case_sensitively():
+    """식별자는 대소문자를 가린다. `LEGACY_BACKOFF` 는 다른 이름이다."""
+    assert rules.mentions("drop legacy_backoff", ("legacy_backoff",))
+    assert not rules.mentions("drop LEGACY_BACKOFF", ("legacy_backoff",))
+
+
 def test_dunder_names_are_not_targets():
     """`__init__` 은 클래스마다 있어 이름만으로 어느 함수인지 가리키지 못한다."""
     assert rules.target_names(make_record(function_name="__init__")) == ()
@@ -197,6 +229,7 @@ def test_short_function_names_are_not_used_as_targets():
 
 
 def test_reason_sentences_carry_label_and_whether_they_name_the_target():
+    """이유 문장마다 라벨과 함수를 이름으로 가리키는지가 붙는다."""
     record = make_record(
         commit_message="legacy_backoff is unused now. Also fix typo in docs.",
     )
@@ -219,6 +252,7 @@ def test_no_evidence_is_unk_even_if_the_model_and_llm_disagree():
 
 
 def test_sentence_naming_the_function_is_explicit_with_its_locator():
+    """같은 라벨 문장이 함수를 이름으로 가리키면 EXPLICIT - 원문과 위치가 그대로 남는다."""
     record = make_record(pr_number=12, pr_body="legacy_backoff is no longer used by the client.")
     result = clf.Classifier().classify(record)
 
@@ -403,6 +437,7 @@ def test_model_can_pick_a_reason_the_sentence_keyword_missed():
 
 
 def test_llm_breaks_a_tie_among_labels_the_evidence_allows():
+    """근거 문장이 두 라벨로 갈려 동점이면 LLM 한 표가 가른다."""
     record = make_record(commit_message="Remove unused code. Refactor the module.")
     without = clf.Classifier().classify(record)
     with_llm = clf.Classifier(llm=fake_llm("DESIGN|구조를 바꿨다")).classify(record)
@@ -447,7 +482,10 @@ def test_version_says_whether_and_which_llm_was_used():
 
 
 def test_llm_failure_does_not_stop_classification():
+    """LLM 호출이 실패해도 표만 빠지고 분류는 계속된다."""
+
     def broken(system, prompt, model):
+        """늘 네트워크 오류를 내는 호출기."""
         raise OSError("network down")
 
     candidate = clf.LlmCandidate(LlmBaseline(caller=broken))
@@ -502,6 +540,7 @@ def test_prediction_file_uses_predicted_label_not_reason_label():
 
 
 def test_classification_rejects_labels_outside_the_eight():
+    """§4.2 ③ 8종 밖의 라벨로는 결과를 만들 수 없다."""
     with pytest.raises(ValueError):
         clf.Classification("r", "MAYBE", "EXPLICIT", "", "", "", 1.0)
 
@@ -512,6 +551,7 @@ def test_classification_rejects_labels_outside_the_eight():
 
 
 def test_model_gives_probabilities_over_the_reasons_it_saw():
+    """모델은 학습에 나온 이유들에 대해서만 확률을 낸다."""
     model = trained_model("DESIGN")
     probabilities = model.predict_proba(make_record(commit_message="more layering"))
 
@@ -528,6 +568,7 @@ def test_model_does_not_learn_unk():
 
 
 def test_model_with_a_single_reason_stays_untrained_instead_of_crashing():
+    """이유가 한 종류뿐이면 학습하지 않고 빈 확률을 낸다 - 예외로 멈추지 않는다."""
     records = [make_record(f"t{i}") for i in range(3)]
     model = ReasonModel().fit(records, ["DEAD", "DEAD", "UNK"])
 
@@ -557,6 +598,7 @@ def test_only_settled_labels_are_used_for_training():
 
 
 def test_cli_runs_end_to_end_without_an_api_key(tmp_path, capsys):
+    """API 키 없이 CLI 가 학습·분류·저장까지 끝까지 돈다."""
     records = [
         make_record("a", commit_message="Remove unused helpers."),
         make_record("b", commit_message="Refactor retry module."),

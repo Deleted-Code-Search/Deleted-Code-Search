@@ -107,6 +107,7 @@ class Classification:
     note: str = ""
 
     def __post_init__(self) -> None:
+        """라벨·등급이 정의된 값인지 확인한다. 밖의 값이 예측 파일에 섞이면 평가가 조용히 틀린다."""
         if self.label not in REASON_LABELS:
             raise ValueError(f"{self.label!r} 은 §4.2 ③ 8종이 아니다")
         if self.evidence_grade not in EVIDENCE_GRADES:
@@ -209,6 +210,7 @@ class LlmCandidate:
         return label, reason
 
     def _fail(self, reason: str) -> None:
+        """실패 사유별 건수를 센다. CLI 가 끝에 보고한다."""
         self.failures[reason] = self.failures.get(reason, 0) + 1
 
 
@@ -240,6 +242,7 @@ class Classifier:
         return replace(self._classify(record), version=self.version)
 
     def _classify(self, record: dict[str, Any]) -> Classification:
+        """`classify` 의 본체. 버전은 `classify` 가 덧씌운다."""
         record_id = record_id_of(record)
         sentences = find_reason_sentences(record)
         replacement = _usable_replacement(record)
@@ -401,10 +404,12 @@ def _usable_replacement(record: dict[str, Any]) -> tuple[str, float] | None:
 
 
 def _priority(label: str) -> int:
+    """가이드 §11-1 우선순위에서의 자리. 작을수록 먼저다."""
     return PRIORITY.index(label) if label in PRIORITY else len(PRIORITY)
 
 
 def _first_line(code: str) -> str:
+    """코드의 첫 비어 있지 않은 줄 - 대체 코드를 한 줄로 가리킬 때 쓴다."""
     return next((line.strip() for line in code.splitlines() if line.strip()), "")
 
 
@@ -414,6 +419,7 @@ def _first_line(code: str) -> str:
 
 
 def load_jsonl(path: Path) -> list[dict[str, Any]]:
+    """JSONL 을 읽는다. 빈 줄은 건너뛴다."""
     return [
         json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()
     ]

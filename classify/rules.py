@@ -77,8 +77,8 @@ class ReasonSentence:
     label: str
     keywords: tuple[str, ...]
     names_target: bool
-    """삭제된 함수를 이름으로 가리키나 - 가이드 §6.1.1 E2-(가). 파일 이름은 보지 않는다
-    (`target_names`)."""
+    """삭제된 함수를 이름으로 가리키나 - 가이드 §6.1.1 E2-(가). 파일 이름은 보지 않고
+    (`target_names`), 평범한 단어 모양 이름은 코드 표시가 있어야 한다 (`mentions`)."""
 
 
 def split_sentences(text: str | None) -> list[str]:
@@ -115,6 +115,7 @@ def passages(record: dict[str, Any]) -> list[Passage]:
     found: list[Passage] = []
 
     def add(text: str | None, source: str, locator: str) -> None:
+        """텍스트를 문장으로 쪼개 같은 출처·위치를 붙여 쌓는다."""
         found.extend(Passage(sentence, source, locator) for sentence in split_sentences(text))
 
     add(commit_message_of(record), "commit", "commit:message")
@@ -170,11 +171,38 @@ def target_names(record: dict[str, Any]) -> tuple[str, ...]:
     return (function_name,)
 
 
+def looks_like_identifier(name: str) -> bool:
+    """코드 식별자 모양인가 - 밑줄, 첫 글자 뒤의 대문자, 숫자 중 하나가 있다.
+
+    `legacy_backoff`·`parseAll`·`v2_schema` 는 식별자 모양이라 문장에 나오면 그 함수다.
+    `update`·`host`·`validate` 는 평범한 영어 단어와 모양이 같아 구별이 안 된다.
+    """
+    core = name.strip("_")
+    return "_" in core or any(ch.isupper() for ch in core[1:]) or any(ch.isdigit() for ch in core)
+
+
 def mentions(sentence: str, names: tuple[str, ...]) -> bool:
-    """문장이 이름 중 하나를 **단어로** 포함하나. `parse` 가 `parser` 에 걸리지 않게 한다."""
-    return any(
-        re.search(rf"(?<![\w]){re.escape(name)}(?![\w])", sentence, re.IGNORECASE) for name in names
-    )
+    """문장이 삭제된 함수를 이름으로 가리키나.
+
+    - **단어로** 찾는다. `parse` 가 `parser` 에 걸리지 않게 한다
+    - **대소문자를 가린다.** 식별자는 대소문자를 가린다
+    - **평범한 단어 모양 이름은 코드 표시가 있을 때만** 인정한다 - 백틱 안이거나(`` `update` ``)
+      괄호가 붙을 때(`update()`). 그렇지 않으면 `update` 함수에 "Update docs to fix typo." 가
+      EXPLICIT 1.0 근거가 된다. 파일 이름을 대상에서 뺀 것(`target_names`)과 같은 이유다 -
+      흔한 단어는 아무 문장에나 걸리고, EXPLICIT 은 잘못 주는 것이 놓치는 것보다 나쁘다.
+      예비 200건에서 `host` 함수가 "Fix host required enforcement ..." 로 EXPLICIT 이 됐다
+    """
+    for name in names:
+        word = rf"(?<![\w]){re.escape(name)}(?![\w])"
+        if looks_like_identifier(name):
+            if re.search(word, sentence):
+                return True
+            continue
+        in_code = any(re.search(word, span) for span in INLINE_CODE_RE.findall(sentence))
+        called = re.search(rf"(?<![\w]){re.escape(name)}\(", sentence)
+        if in_code or called:
+            return True
+    return False
 
 
 def find_reason_sentences(record: dict[str, Any]) -> list[ReasonSentence]:
