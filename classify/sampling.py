@@ -74,7 +74,10 @@ LABELER_FIELDS: tuple[str, ...] = (
     "source_url",
 )
 # 중첩 필드는 따로. (레코드 키, 하위 키들)
-LABELER_REPLACEMENT_FIELDS: tuple[str, ...] = ("code", "match_method")
+# `confidence` 는 매칭 확신("이 코드가 대체가 맞다")이지 이유 판단이 아니라 `reason.*` 유출이
+# 아니다. 가이드 §6.2.2 근거 ① 구간 상한이 이 숫자를 보고 판단한다 - 안 보이면 모든 ① 이
+# 0.8 미만으로 묶인다 (#117).
+LABELER_REPLACEMENT_FIELDS: tuple[str, ...] = ("code", "match_method", "confidence")
 LABELER_CONTEXT_FIELDS: tuple[str, ...] = (
     "commit_message",
     # 번호 2개는 §4.4 `context` 에 이미 있고 `to_schema_context()` 도 이미 내보낸다 - 여기서

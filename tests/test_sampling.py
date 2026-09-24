@@ -203,6 +203,17 @@ def test_labelers_can_see_the_numbers_that_evidence_locator_needs():
     assert context["issue_numbers"] == [1]
 
 
+def test_labelers_can_see_the_replacement_confidence():
+    """가이드 §6.2.2 근거 ① 구간 상한이 이 값에 기댄다 (#117).
+
+    안 보이면 모든 ① 이 0.8 미만으로 묶인다. 위 구조 테스트는 화이트리스트를 되읽어서
+    빠져도 못 잡는다. 이름을 박아 둔다.
+    """
+    replacement = sampling.build_labeling_record(make_record(1))["replacement"]
+
+    assert replacement["confidence"] == 0.8
+
+
 def test_guide_version_constant_matches_the_guide_document():
     """문서 버전과 상수가 갈리면 라벨이 틀린 `guide_version` 을 달고 저장된다 (#99).
 
