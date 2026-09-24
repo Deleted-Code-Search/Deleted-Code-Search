@@ -886,16 +886,20 @@ def _at_deletion_site(hunk: dict[str, Any], start_line: Any, end_line: Any) -> b
 
     헝크의 `old_start`·`old_count` 는 부모 파일 좌표다 (#102). 제자리 교체는 보통 삭제와
     추가가 한 헝크에 묶여(`@@ -118,24 +118,9 @@`) 그 옛 범위가 삭제된 함수와 겹친다.
-    `old_count == 0` 인 순수 추가 헝크는 `old_start` 줄 **뒤에** 끼워 넣은 것이라 그 한 줄을
-    범위로 본다. 좌표가 없는 레코드(옛 형식, 테스트 픽스처)는 위치를 모르는 것이라
-    `False` - 유사도로 떨어지고 신뢰도도 낮춘다.
+    `old_count == 0` 인 순수 추가 헝크는 `old_start` 줄 **뒤에** 끼워 넣은 것이라 그 줄과 다음
+    줄 사이의 빈 범위 `[old_start + 1, old_start]` 로 본다 (#111 리뷰). 그 줄 자체로 보면 함수
+    뒤쪽에서, 다음 줄로 보면 앞쪽에서 한 줄씩 너그러워진다 - 빈 범위로 보면 어느 헝크든 양쪽
+    모두 "사이에 낀 줄 `SITE_TOLERANCE_LINES - 1` 개까지"로 같다. 좌표가 없는 레코드(옛 형식,
+    테스트 픽스처)는 위치를 모르는 것이라 `False` - 유사도로 떨어지고 신뢰도도 낮춘다.
     """
     old_start = hunk.get("old_start")
     if not all(isinstance(value, int) for value in (old_start, start_line, end_line)):
         return False
-    old_end = old_start + max(hunk.get("old_count") or 0, 1) - 1
+    old_count = hunk.get("old_count") or 0
+    first = old_start + (old_count == 0)
+    last = first + old_count - 1
     tolerance = SITE_TOLERANCE_LINES
-    return old_start <= end_line + tolerance and start_line - tolerance <= old_end
+    return first <= end_line + tolerance and start_line - tolerance <= last
 
 
 def read_child_source(repo_path: str | Path, commit_sha: str, file_path: str) -> str | None:

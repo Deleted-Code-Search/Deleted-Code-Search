@@ -1051,6 +1051,11 @@ def test_similarity_compares_tokens_not_whole_lines():
         ({"old_start": 144, "old_count": 1}, False),  # 3줄 뒤
         ({"old_start": 110, "old_count": 7}, True),  # 110-116, 시작 2줄 앞
         ({"old_start": 110, "old_count": 6}, False),  # 110-115, 3줄 앞
+        # 순수 추가는 그 줄 뒤의 빈 범위다 - 바꾼 헝크와 같은 기준 (#111 리뷰)
+        ({"old_start": 142, "old_count": 0}, True),  # 142 뒤 = 143 에서 시작하는 헝크와 같다
+        ({"old_start": 143, "old_count": 0}, False),  # 143 뒤 = 144 에서 시작하는 헝크와 같다
+        ({"old_start": 116, "old_count": 0}, True),  # 116 뒤 = 116 에서 끝나는 헝크와 같다
+        ({"old_start": 115, "old_count": 0}, False),  # 115 뒤 = 115 에서 끝나는 헝크와 같다
     ],
 )
 def test_deletion_site_uses_parent_coordinates(hunk, expected):
