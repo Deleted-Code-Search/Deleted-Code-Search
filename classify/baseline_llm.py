@@ -67,6 +67,11 @@ NVIDIA_MODEL = "deepseek-ai/deepseek-v4.1-flash"
 # 옵션을 무시하면(GLM 은 무시하고 늘 생각한다) 토큰 상한을 늘려야 한다.
 NVIDIA_REQUEST_OPTIONS: dict[str, Any] = {"chat_template_kwargs": {"thinking": False}}
 ANTHROPIC_MODEL = "claude-sonnet-5"
+# Sonnet 5 는 `thinking` 을 빼면 생각 과정이 켜진 채로 돈다. 생각 토큰도 `max_tokens` 에 들어가서
+# NVIDIA 에서 겪은 것처럼 답이 빈 채로 올 수 있고, 게이트 2 사전 등록의 "생각 과정 끔"과도 어긋난다.
+# Opus 5.5·Fable 5.1 등은 `disabled` 를 400 으로 거부한다 - 모델을 바꾸면 이 값부터 다시 본다
+# (Anthropic 문서 "Thinking", 2026-09-24 확인. 키가 없어 실제 호출로는 확인하지 못했다).
+ANTHROPIC_REQUEST_OPTIONS: dict[str, Any] = {"thinking": {"type": "disabled"}}
 DEFAULT_MODEL = NVIDIA_MODEL
 NVIDIA_API_URL = "https://integrate.api.nvidia.com/v1/chat/completions"
 # 무료 한도가 분당 40회다. 넘으면 429 가 한 건의 호출 실패로 남아 그 레코드가 UNK 가 되므로,
@@ -174,6 +179,7 @@ def anthropic_caller(api_key: str, *, timeout: int = 60) -> Caller:
                 "max_tokens": MAX_ANSWER_TOKENS,
                 "system": system,
                 "messages": [{"role": "user", "content": prompt}],
+                **ANTHROPIC_REQUEST_OPTIONS,
             }
         ).encode("utf-8")
         request = urllib.request.Request(

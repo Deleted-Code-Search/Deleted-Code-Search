@@ -512,6 +512,24 @@ def test_nvidia_caller_sends_openai_style_request_and_reads_the_answer(monkeypat
     ]
 
 
+def test_anthropic_caller_turns_thinking_off_and_reads_only_text(monkeypatch):
+    """Sonnet 5 는 기본으로 생각한다 - 끄지 않으면 생각이 `max_tokens` 를 먹어 답이 빈다 (#59)."""
+    sent = []
+
+    def fake_urlopen(request, timeout):
+        """보낸 요청을 남기고, 생각 블록과 답 블록을 함께 준다."""
+        sent.append(request)
+        blocks = [{"type": "thinking", "thinking": ""}, {"type": "text", "text": "BUG|근거"}]
+        return FakeResponse({"content": blocks})
+
+    monkeypatch.setattr(bl.urllib.request, "urlopen", fake_urlopen)
+
+    assert bl.anthropic_caller("sk-test")("시스템", "프롬프트", "claude-sonnet-5") == "BUG|근거"
+    payload = json.loads(sent[0].data.decode("utf-8"))
+    assert payload["thinking"] == {"type": "disabled"}
+    assert payload["max_tokens"] == bl.MAX_ANSWER_TOKENS
+
+
 def test_nvidia_caller_empty_choices_is_an_empty_answer(monkeypatch):
     """답이 없으면 빈 문자열 - `parse_answer` 가 "빈 응답" 으로 사유를 남긴다."""
     monkeypatch.setattr(bl.urllib.request, "urlopen", lambda *a, **k: FakeResponse({}))
