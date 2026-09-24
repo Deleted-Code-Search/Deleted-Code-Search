@@ -1,6 +1,6 @@
 # 필터 규칙
 
-버전: v0.5. 담당: 재헌. 규칙 변경 시 이 문서의 버전을 올리고, `DeletionRecord.filter_rule_version`에 반영하며(코드 상수 `pipeline/filter.py:FILTER_RULE_VERSION`을 같은 PR에서 같은 값으로 올린다 — 테스트가 둘이 같은지 확인한다), PR에 테스트와 정밀도 재측정 결과를 첨부한다. 재측정은 수동 200건 (통과 100 + 제외 100)이다 (CHARTER.md §8.4, §10.1).
+버전: v0.6. 담당: 재헌. 규칙 변경 시 이 문서의 버전을 올리고, `DeletionRecord.filter_rule_version`에 반영하며(코드 상수 `pipeline/filter.py:FILTER_RULE_VERSION`을 같은 PR에서 같은 값으로 올린다 — 테스트가 둘이 같은지 확인한다), PR에 테스트와 정밀도 재측정 결과를 첨부한다. 재측정은 수동 200건 (통과 100 + 제외 100)이다 (CHARTER.md §8.4, §10.1).
 
 NOISE_MOVE의 정규화·유사도·후보 범위는 ADR-014(`docs/adr/014-move-detection-rules.md`)가 최종 기준이다. 이 문서는 ADR-014의 결정을 요약해 필터 규칙 전체(다른 노이즈 유형 포함)와 나란히 두고, ADR-014가 정하지 않고 #52 구현에서 결정한 세부사항(같은 위치 판정 방법, 1:1 매칭 알고리즘, 실제 added-line 겹침 조건)을 함께 기록한다. ADR-014와 이 문서가 어긋나면 ADR-014가 옳다 — 이 문서를 고친다.
 
@@ -12,7 +12,7 @@ NOISE_MOVE의 정규화·유사도·후보 범위는 ADR-014(`docs/adr/014-move-
 | NOISE_FORMAT | 포맷·주석·독스트링만 변경 | 미구현 |
 | NOISE_BULK | 파일 전체 삭제 + "remove/delete directory/module" 계열 메시지 + 함수 100개 이상 | 미구현 |
 | NOISE_GENERATED | 마이그레이션·자동 생성·vendored 경로 패턴 | 미구현 |
-| NOISE_TRIVIAL | PARTIAL 레코드 중 `deleted_body`가 **4줄 이하**(빈 줄 포함)인 것. 5줄 이상 PARTIAL만 데이터셋에 유지한다. FULL_FUNCTION은 대상이 아니다. 라벨링 대상 범위는 바꾸지 않는다 (ADR-015) | 미구현 (#63) |
+| NOISE_TRIVIAL | PARTIAL 레코드 중 `deleted_body`가 **4줄 이하**인 것. 줄 수는 `len(deleted_body.splitlines())`(빈 줄 포함, 마지막 빈 줄은 세지 않음 — 아래 절). 5줄 이상 PARTIAL만 데이터셋에 유지한다. FULL_FUNCTION은 대상이 아니다. 라벨링 대상 범위는 바꾸지 않는다 (ADR-015) | 구현 (`pipeline/filter.py:partition_trivial` + `pipeline/extract.py`, #63). 회귀 테스트는 `tests/test_filter.py`, `tests/test_extract.py`. 정밀도 재측정은 §10.1 필터 평가(#89)에서 한다 |
 
 테스트 코드 삭제는 제외하지 않고 `is_test_code` 플래그로 구분한다.
 
@@ -177,7 +177,7 @@ diff 헝크(`git diff --unified=0`의 `@@ -old_start,old_count +new_start,new_co
 
 **규칙.**
 - 대상: `deletion_kind == PARTIAL` 레코드만. FULL_FUNCTION은 줄 수와 무관하게 이 규칙에서 제외되지 않는다.
-- 줄 수: `deleted_body`(내부 필드 `deleted_hunk`)의 줄 수. **빈 줄을 포함한다** — 2026-09-17 실측과 같은 기준이다.
+- 줄 수: 정확히 `len(deleted_body.splitlines())` (내부 필드로는 `len(deleted_hunk.splitlines())`). 보정하지 않는다. **빈 줄도 센다** — 2026-09-17 실측도 빈 줄을 포함해 셌다. 단, 마지막 빈 줄은 세지 않을 수 있다 (아래 "한계").
 - **5줄 이상 → 유지, 4줄 이하 → `NOISE_TRIVIAL`.**
 
 **근거 (2026-09-17 `pydantic/pydantic` 실측, 필터 적용 후 PARTIAL 19,690건).**
@@ -197,12 +197,19 @@ diff 헝크(`git diff --unified=0`의 `@@ -old_start,old_count +new_start,new_co
 - `pipeline/extract.py`의 중간 추출 JSONL(`to_json_dict`·`write_jsonl`)은 **최종 데이터셋 계약이 아니다.** 이 JSONL에는 `filter_status`·`filter_rule_version`·`filter_evidence` 필드가 없다.
 - `NOISE_TRIVIAL` 레코드는 NOISE_MOVE와 같은 구조로 **별도 excluded JSONL에 보존한다** (#97에서 확정, 아래 "제외 레코드 보존" 절). 추출 JSONL에서는 빠진다.
 
-**구현(#63)에서 정할 것.**
-- NOISE_TRIVIAL의 `filter_evidence` 키 (줄 수를 기록한다).
-- NOISE_MOVE와 함께 적용할 때의 순서. NOISE_MOVE는 FULL_FUNCTION만 대상이라 결과가 겹치지 않는다.
-- 경계 테스트: 4줄 → NOISE_TRIVIAL, 5줄 → 유지, 빈 줄만으로 5줄이 되는 경우의 동작 고정.
+**구현 (#63).**
+- `pipeline/filter.py:partition_trivial`이 (유지, 제외)로 나눈다. 이 구현부터 규칙 버전은 **v0.6**이다 (v0.5는 ADR-015/#62의 명세 버전, 구현 전 상태). #63 전후 결과는 버전으로 구분된다.
+- **정밀도 재측정은 #89에서 진행한다.** #63(PR #125)에서는 수행하지 않는다.
+- `filter_evidence`는 `{"line_count": 줄 수}` — 위 줄 수(`len(deleted_body.splitlines())`, int) 그대로다. 아래 "제외 레코드 보존" 절의 표.
+- NOISE_MOVE와 함께 적용할 때: NOISE_MOVE는 FULL_FUNCTION만, NOISE_TRIVIAL은 PARTIAL만 대상이라 제외 대상이 겹치지 않고 적용 순서가 판정에 영향을 주지 않는다. PARTIAL은 이동 후보를 소비하지도 않는다. `pipeline/extract.py:extract_repo_with_excluded`가 커밋마다 `partition_moved` → `partition_trivial` 순으로 적용하고, 두 사유의 제외 레코드를 그 커밋의 추출 순서대로 합친다.
+- 경계 테스트(`tests/test_filter.py`): 4줄 → NOISE_TRIVIAL, 5줄 → 유지, FULL_FUNCTION 4줄 이하 → 유지, 빈 줄만 5줄 → 4로 세어 NOISE_TRIVIAL, 빈 줄만 6줄 → 5로 세어 유지.
 
-**한계.** 5줄이라는 값은 다시 볼 수 있다. 게이트 1 라벨링은 FULL_FUNCTION만 다루므로 이 값을 직접 검증하지 않는다. 라벨링에 PARTIAL을 포함할지 정할 때 함께 재검토한다.
+**한계.**
+- 5줄이라는 값은 다시 볼 수 있다. 게이트 1 라벨링은 FULL_FUNCTION만 다루므로 이 값을 직접 검증하지 않는다. 라벨링에 PARTIAL을 포함할지 정할 때 함께 재검토한다.
+- **마지막 빈 줄은 세지 않는다.** `deleted_body`는 삭제 줄을 `"\n"`으로 이어 붙인 값(끝 개행 없음)이라, 마지막 삭제 줄이 빈 줄이면 `splitlines()`가 그 줄을 세지 않아 실제 삭제 줄 수보다 1 적게 나온다. 보정하지 않는다(팀 결정). 그래서:
+  - 코드 4줄 + 끝 빈 줄 1줄(실제 5줄 삭제) → 4 → `NOISE_TRIVIAL`.
+  - 빈 줄만 N줄 삭제 → N−1. 빈 줄만 5줄이면 4 → `NOISE_TRIVIAL`, 6줄이어야 유지된다. 빈 줄 1줄만 삭제되면 0이다.
+  - 중간·앞쪽 빈 줄은 센다. 빈 줄이 아닌 줄로 끝나면 실제 삭제 줄 수와 같다.
 
 ## 제외 레코드 보존 (#97)
 
@@ -221,11 +228,11 @@ diff 헝크(`git diff --unified=0`의 `@@ -old_start,old_count +new_start,new_co
 | filter_status | `filter_evidence` | 상태 |
 |---|---|---|
 | NOISE_MOVE | `{"file_path", "function_name", "start_line", "end_line", "similarity"}` — **이동 목적지**(자식 커밋) 함수의 경로·이름·줄 범위와 greedy 매칭이 확정한 유사도(`_move_similarity` 값 그대로, 완전 일치면 1.0). 삭제 쪽 값은 행의 최상위 필드에 있다. 함수 이름에 클래스 한정자가 없어 줄 범위를 함께 남긴다 | 구현 (#97) |
-| NOISE_TRIVIAL | 줄 수 (키는 #63에서 정한다) | #63 |
+| NOISE_TRIVIAL | `{"line_count"}` — 판정에 쓴 줄 수 `len(deleted_body.splitlines())` (int, 0~4). 마지막 빈 줄은 세지 않은 값이다(NOISE_TRIVIAL 절 "한계") | 구현 (#63) |
 
 **출력 경로.** writer는 호출자가 준 경로에 쓰기만 한다 (경로 정책을 코드가 정하지 않는다). 운영 시 추출 JSONL이 `<stem>.jsonl`이면 excluded JSONL은 `<stem>_excluded.jsonl`로 둔다. 제외가 0건이어도 **빈 파일을 만든다** — "제외 없음"과 "excluded 출력을 안 돌림"을 구분하기 위해서다. 둘 다 생성 데이터라 `data/` 아래에 두고 커밋하지 않는다 (`.gitignore`).
 
-**코드.** `pipeline/filter.py:partition_moved`가 (남은 레코드, 제외 레코드)를 돌려주고, `pipeline/extract.py:extract_repo_with_excluded`가 커밋별로 누적한다. 기존 `find_moved`·`exclude_moved`·`extract_repo`는 반환 계약을 그대로 유지하는 래퍼다 — 판정 결과는 #97 이전과 같다.
+**코드.** `pipeline/filter.py:partition_moved`(NOISE_MOVE)와 `partition_trivial`(NOISE_TRIVIAL, #63)이 각각 (남은 레코드, 제외 레코드)를 돌려주고, `pipeline/extract.py:extract_repo_with_excluded`가 커밋별로 둘을 적용해 누적한다. 한 커밋의 제외 레코드는 사유와 무관하게 추출 순서대로 놓인다. 기존 `find_moved`·`exclude_moved`는 반환 계약을 그대로 유지하는 래퍼다 — NOISE_MOVE만 다루고, 판정 결과는 #97 이전과 같다. `extract_repo`는 시그니처와 반환 타입이 그대로이고, #63부터 NOISE_TRIVIAL도 빠진 결과를 돌려준다.
 
 **최종 조립 단계 (미구현).** 추출 JSONL의 행에는 `filter_status = KEPT`를, excluded JSONL의 행에는 그 행의 `filter_status`를 사용해 최종 `DeletionRecord.filter_status`를 구성한다. KEPT 레코드의 `filter_rule_version`은 실행 단위 메타데이터로 추출 시점에 기록한다. 구현은 재헌 5번(병렬화·실패 복구)에서 저장소별 처리 시간·실패율 기록과 함께 한다. 조립 단계 자체는 #97 범위 밖이다.
 
@@ -238,3 +245,4 @@ diff 헝크(`git diff --unified=0`의 `@@ -old_start,old_count +new_start,new_co
 | v0.3 | 2026-09-15 | 코드 리뷰 BLOCKER/HIGH 수정(Issue #52): added 후보를 "실제 added line과 겹치는 함수"로 제한(B-1), 1:1 greedy 매칭 도입(H-1), "오탐보다 미탐" 최우선 원칙 명시(ADR-014 예정) | 실측 전 |
 | v0.4 | 2026-09-15 | ADR-014 정합(팀장 결정 — ADR-014를 최종 기준으로 코드 수정): placeholder를 VAR/STR/NUM 3종으로 분리(기존 LIT 통합 폐기), 중첩 함수 선언 이름만 VAR로 치환(본문은 재귀 정규화 유지), 정규화 결과를 줄 목록(list[str])으로 변경, 1차 거르기 기준을 원본 줄 수에서 **정규화 줄 수**로 수정, `SequenceMatcher`를 문자열 전체 대신 **줄 목록**으로 비교하고 `autojunk=False` 명시, 정규화 본문 0줄 함수 제외 가드 추가. bool/None/복소수 placeholder 분류는 팀장 최종 확인 완료(bool/None 미치환, 복소수 NUM) — ADR-014 본문 반영은 팀장이 별도 진행 | 실측 전 |
 | v0.5 | 2026-09-17 | NOISE_TRIVIAL 규칙 명세 (ADR-015, #62): PARTIAL 중 `deleted_body` 4줄 이하(빈 줄 포함) 제외. 명세와 버전 표기만 — 구현·테스트·`filter_rule_version` 반영·정밀도 재측정은 #63 | — (#63에서 재측정) |
+| v0.6 | 2026-09-24 | NOISE_TRIVIAL 실제 구현 (Issue #63 / PR #125, ADR-015 후속 메모): PARTIAL만 대상, `len(deleted_body.splitlines()) <= 4`이면 `NOISE_TRIVIAL`로 제외하고 5줄 이상은 유지. FULL_FUNCTION은 비적용. 마지막 빈 줄(trailing empty line)은 보정하지 않는다. 판정 줄 수를 `filter_evidence.line_count`에 기록하고, 제외 레코드는 #97 `ExcludedRecord`로 excluded JSONL에 보존. 기존 NOISE_MOVE 공개 API(`find_moved`·`partition_moved`·`exclude_moved`) 계약 유지. 정밀도 재측정은 #89에서 진행 | — (#89에서 재측정) |

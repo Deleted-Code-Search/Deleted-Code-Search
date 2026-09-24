@@ -118,7 +118,8 @@ JSONL 저장 (내부 모델과 외부 계약 분리):
 
 `extract_repo_with_excluded(repo_path, repo, ref)`: 저장소 하나를 처음부터 끝까지
 훑는 최소 순차 루프. `walk_commits()`로 얻은 `CommitPair`마다 `extract_deletions()`와
-이동 필터(`filter.partition_moved`)를 돌려 (남은 레코드, 제외 레코드)를 누적한다.
+이동 필터(`filter.partition_moved`)·사소한 부분 삭제 필터(`filter.partition_trivial`,
+#63)를 돌려 (남은 레코드, 제외 레코드)를 누적한다.
 `extract_repo(repo_path, repo, ref)`는 그 첫 번째 값만 돌려주는 기존 API다. `ref`는
 clone.py·walk.py와 같은 이유로 호출자가 명시한다 — default branch를 이 함수가 추측하지
 않는다. 병렬화·재시도는 넣지 않는다(4주차 범위).
@@ -277,8 +278,8 @@ class ExcludedRecord:
     """필터가 제외한 `DeletedFunction` 하나와 그 사유 (Issue #97).
 
     원본 레코드를 그대로 들고 있다 — 제외 레코드는 추출 JSONL에 없으므로 이게 원문을
-    남기는 유일한 곳이다. 만드는 쪽은 `pipeline.filter`(지금은 `partition_moved`)이고,
-    #63 NOISE_TRIVIAL도 같은 타입을 쓴다. 타입을 여기 두는 이유는 `Hunk`와 같다 —
+    남기는 유일한 곳이다. 만드는 쪽은 `pipeline.filter`의 `partition_moved`(NOISE_MOVE)와
+    `partition_trivial`(NOISE_TRIVIAL, #63)이다. 타입을 여기 두는 이유는 `Hunk`와 같다 —
     `filter.py`가 이 모듈을 import하므로 반대 방향 import(순환)를 만들지 않는다.
 
     filter_status: CHARTER §4.4 enum 값 그대로 (`"NOISE_MOVE"` 등). `KEPT`는 여기 오지
@@ -687,11 +688,15 @@ def extract_repo_with_excluded(
 
     `walk_commits(repo_path, ref)`가 내놓는 `CommitPair`마다 `extract_deletions()`로
     삭제를 뽑고, 같은 커밋의 `collect_added_functions()`·`collect_same_file_hunks()`를
-    구해 `filter.partition_moved()`로 이동(NOISE_MOVE, §4.2②, Issue #52)을 나눈 뒤
-    두 쪽 다 커밋 순서대로 누적한다 — 커밋 하나 안에서만 후보를 매칭해야 하므로
+    구해 `filter.partition_moved()`로 이동(NOISE_MOVE, §4.2②, Issue #52)을, 그 나머지에
+    `filter.partition_trivial()`로 사소한 부분 삭제(NOISE_TRIVIAL, ADR-015, Issue #63)를
+    나눈 뒤 두 쪽 다 커밋 순서대로 누적한다 — 커밋 하나 안에서만 후보를 매칭해야 하므로
     (`filter._match_moved`의 "호출자가 이미 그 커밋 하나로 좁혀서 줘야 한다" 계약) 커밋별로
-    따로 호출한다. 제외 레코드는 버리지 않는다(Issue #97) — 파일로 쓰는 것은 호출자가
-    `write_jsonl`·`write_excluded_jsonl`로 한다(경로 정책은 이 모듈이 정하지 않는다).
+    따로 호출한다. NOISE_MOVE는 FULL_FUNCTION만, NOISE_TRIVIAL은 PARTIAL만 보므로 두
+    필터의 적용 순서는 판정에 영향이 없다. 한 커밋의 제외 레코드는 두 사유가 섞여도
+    `extract_deletions()` 순서를 유지한다. 제외 레코드는 버리지 않는다(Issue #97) — 파일로
+    쓰는 것은 호출자가 `write_jsonl`·`write_excluded_jsonl`로 한다(경로 정책은 이 모듈이
+    정하지 않는다).
     `ref`는 walk.py와 같은 이유로 호출자가 명시한다 — default branch를 이 함수가
     추측하지 않는다. 병렬화·재시도는 넣지 않는다(4주차 범위, 모듈 독스트링 참고).
 
@@ -701,7 +706,7 @@ def extract_repo_with_excluded(
     상태로 서로를 참조하려 들어서 `ImportError`가 난다). 함수 호출 시점까지 미루면 양쪽
     모듈이 이미 완전히 로드된 뒤라 문제없다.
     """
-    from pipeline.filter import partition_moved
+    from pipeline.filter import partition_moved, partition_trivial
 
     records: list[DeletedFunction] = []
     excluded: list[ExcludedRecord] = []
@@ -709,16 +714,21 @@ def extract_repo_with_excluded(
         deletions = extract_deletions(repo_path, repo, commit)
         added = collect_added_functions(repo_path, commit)
         hunks = collect_same_file_hunks(repo_path, commit)
-        commit_kept, commit_excluded = partition_moved(deletions, added, hunks)
+        after_move, moved = partition_moved(deletions, added, hunks)
+        commit_kept, trivial = partition_trivial(after_move)
+        # 두 필터의 제외 레코드를 커밋 안 입력 순서로 되돌린다 — 레코드는 `id`로 식별한다
+        # (`docs/filter_rules.md` "제외 레코드 보존" 절). sorted는 안정 정렬이다.
+        position = {record.id: index for index, record in enumerate(deletions)}
         records.extend(commit_kept)
-        excluded.extend(commit_excluded)
+        excluded.extend(sorted(moved + trivial, key=lambda item: position[item.record.id]))
     return records, excluded
 
 
 def extract_repo(repo_path: str | Path, repo: str, ref: str) -> list[DeletedFunction]:
     """저장소 하나를 처음부터 끝까지 순차로 훑는다 (Issue #5 "저장소 1개 끝까지 통과").
 
-    필터를 통과한 레코드만 돌려준다 — Issue #97 이전 반환 계약 그대로다. 동작은
+    필터를 통과한 레코드만 돌려준다 — 시그니처와 반환 타입은 Issue #97 이전 그대로다.
+    Issue #63부터 NOISE_MOVE에 더해 NOISE_TRIVIAL(4줄 이하 PARTIAL)도 빠진다. 동작은
     `extract_repo_with_excluded()`의 첫 번째 값과 같다. 제외 레코드까지 필요하면 그
     함수를 쓴다.
     """

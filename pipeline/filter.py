@@ -1,4 +1,7 @@
-"""의미 있는 삭제 필터 (이동·리네임·포맷·대량·생성코드 제외). 담당: 재헌
+"""의미 있는 삭제 필터 (이동·리네임·포맷·대량·생성코드·사소한 부분 삭제 제외). 담당: 재헌
+
+Issue #63 구현: NOISE_TRIVIAL(§4.2②, ADR-015) — PARTIAL 중 `len(deleted_hunk.splitlines())`
+가 4줄 이하인 것을 제외한다(`partition_trivial`). 아래 "NOISE_TRIVIAL" 절 참고.
 
 Issue #52 구현: NOISE_MOVE(§4.2②) — 같은 커밋에서 삭제된 함수와 실제로 추가된 함수의
 정규화 본문을 비교해, 이동인 삭제를 최종 레코드에서 제외한다. 정규화·유사도·후보 범위는
@@ -113,6 +116,15 @@ excluded JSONL(`pipeline.extract.write_excluded_jsonl`)로 쓴다. `find_moved`�
 `exclude_moved`는 Issue #97 이전 공개 API를 그대로 유지하는 래퍼이고, 셋 다 같은 매칭
 본체(`_match_moved`)를 한 번만 부른다 — 판정 결과는 Issue #97 이전과 같다.
 
+NOISE_TRIVIAL(Issue #63, ADR-015, `partition_trivial`): `deletion_kind == "PARTIAL"`이고
+`len(deleted_hunk.splitlines()) <= 4`면 제외한다. FULL_FUNCTION은 대상이 아니다. 줄 수는
+보정 없이 `splitlines()` 그대로라 마지막 삭제 줄이 빈 줄이면 1 적게 센다(팀 결정,
+`docs/filter_rules.md` NOISE_TRIVIAL 절 "한계"). 제외 레코드는 NOISE_MOVE와 같은
+`ExcludedRecord`에 `filter_evidence={"line_count": 줄 수}`로 담는다. 이동 판정 3개 API
+(`find_moved`·`partition_moved`·`exclude_moved`)는 NOISE_MOVE만 다루는 계약 그대로다 —
+두 필터를 함께 적용하는 곳은 `pipeline.extract.extract_repo_with_excluded`다. NOISE_MOVE는
+FULL_FUNCTION만, NOISE_TRIVIAL은 PARTIAL만 보므로 제외 대상이 겹치지 않는다.
+
 **ADR-014 정합 라운드에서 코드로 먼저 구현하고 팀장이 최종 확인한 사항** (ADR-014
 본문에는 아직 없지만 확정됐고, ADR-014 반영은 팀장이 별도로 한다):
 - `bool`/`None` 리터럴은 치환하지 않고 원문 보존, 복소수는 숫자 리터럴이라 `NUM` — 위
@@ -151,10 +163,14 @@ LINE_COUNT_SKIP_RATIO = 0.20
 # excluded JSONL의 `filter_rule_version` (Issue #97). `docs/filter_rules.md` 첫 줄의
 # "버전:"과 항상 같아야 한다 — 문서 버전을 올리면 이 값도 같은 PR에서 올린다
 # (`tests/test_filter.py`가 둘이 같은지 확인한다).
-FILTER_RULE_VERSION = "v0.5"
+FILTER_RULE_VERSION = "v0.6"
+
+# ADR-015 확정값: PARTIAL의 `deleted_hunk` 줄 수가 이보다 작으면(4줄 이하) NOISE_TRIVIAL.
+PARTIAL_MIN_LINES = 5
 
 # CHARTER §4.4 `filter_status` enum 값. 새 이름을 만들지 않는다.
 NOISE_MOVE = "NOISE_MOVE"
+NOISE_TRIVIAL = "NOISE_TRIVIAL"
 
 _VAR_PLACEHOLDER = "VAR"
 _STR_PLACEHOLDER = "STR"
@@ -627,3 +643,51 @@ def exclude_moved(
     """
     kept, _excluded = partition_moved(deletions, added_functions, same_file_hunks)
     return kept
+
+
+# --------------------------------------------------------------------------------------
+# 사소한 부분 삭제 — NOISE_TRIVIAL (ADR-015, Issue #63)
+# --------------------------------------------------------------------------------------
+
+
+def _deleted_line_count(record: DeletedFunction) -> int:
+    """NOISE_TRIVIAL 판정에 쓰는 줄 수: `len(deleted_hunk.splitlines())` 그대로 (Issue #63).
+
+    `deleted_hunk`는 삭제 줄을 `"\\n"`으로 이어 붙인 값이라(끝 개행 없음) 보통 삭제 줄
+    수와 같다. 마지막 삭제 줄이 빈 줄이면 `splitlines()`가 그 줄을 세지 않아 1 적게
+    나온다 — 보정하지 않는다(팀 결정, `docs/filter_rules.md` NOISE_TRIVIAL 절 "한계").
+    """
+    return len(record.deleted_hunk.splitlines())
+
+
+def partition_trivial(
+    deletions: Sequence[DeletedFunction],
+) -> tuple[list[DeletedFunction], list[ExcludedRecord]]:
+    """`deletions`를 (유지, NOISE_TRIVIAL로 제외)로 나눈다 (ADR-015, Issue #63).
+
+    `deletion_kind == "PARTIAL"`이고 줄 수(`_deleted_line_count`)가 `PARTIAL_MIN_LINES`
+    미만(4줄 이하)인 레코드만 제외한다. FULL_FUNCTION은 줄 수와 무관하게 유지한다.
+    제외 레코드는 `ExcludedRecord`(`filter_status="NOISE_TRIVIAL"`, `FILTER_RULE_VERSION`,
+    `filter_evidence={"line_count": 줄 수}`)로 원본 레코드를 그대로 들고 간다. 두
+    리스트 모두 입력 순서를 유지하고, 모든 레코드는 정확히 한쪽에만 들어간다.
+
+    NOISE_MOVE(`partition_moved`)는 FULL_FUNCTION만, 이 함수는 PARTIAL만 보므로 둘의
+    제외 대상은 겹치지 않고 적용 순서가 판정에 영향을 주지 않는다. git이 필요 없는 순수
+    함수다.
+    """
+    kept: list[DeletedFunction] = []
+    excluded: list[ExcludedRecord] = []
+    for record in deletions:
+        line_count = _deleted_line_count(record)
+        if record.deletion_kind != "PARTIAL" or line_count >= PARTIAL_MIN_LINES:
+            kept.append(record)
+            continue
+        excluded.append(
+            ExcludedRecord(
+                record=record,
+                filter_status=NOISE_TRIVIAL,
+                filter_rule_version=FILTER_RULE_VERSION,
+                filter_evidence={"line_count": line_count},
+            )
+        )
+    return kept, excluded

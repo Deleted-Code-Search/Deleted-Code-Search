@@ -1018,6 +1018,72 @@ def test_extract_repo_with_excluded_preserves_moved_records_across_commits(tmp_p
     assert extract_module.extract_repo(repo, _REPO, "main") == kept
 
 
+@requires_git
+def test_extract_repo_with_excluded_applies_noise_trivial_with_noise_move(tmp_path: Path):
+    """Issue #63 통합: 한 커밋에서 NOISE_TRIVIAL(4줄 PARTIAL)·NOISE_MOVE(이동한 FULL)·유지
+    (5줄 PARTIAL, 일반 FULL 삭제)가 함께 나온다. 누락·중복이 없고, 제외 레코드는 사유가
+    섞여도 추출 순서(diff 파일 순서: b.py → c.py → old/a.py → q.py)를 따른다. NOISE_TRIVIAL
+    레코드는 #102 `added_hunks_same_file`을 그대로 들고 excluded 행에 남는다."""
+    repo = _init_repo(tmp_path / "repo")
+    _write(
+        repo,
+        "b.py",
+        "def shrink():\n    a = 1\n    b = 2\n    c = 3\n    d = 4\n    return 0\n",
+    )
+    _write(repo, "c.py", "def gone():\n    return 2\n")
+    _write(repo, "old/a.py", "def moved_func():\n    return 1\n")
+    _write(
+        repo,
+        "q.py",
+        "def keep():\n    a = 1\n    b = 2\n    c = 3\n    d = 4\n    e = 5\n    return 0\n",
+    )
+    _commit_all(repo, "add functions")
+    _write(repo, "b.py", "def shrink():\n    return 0\n\n\ndef extra():\n    return [1]\n")
+    _write(repo, "c.py", "")
+    (repo / "old" / "a.py").unlink()
+    _write(repo, "new/a.py", "def moved_func():\n    return 1\n")
+    _write(repo, "q.py", "def keep():\n    return 0\n")
+    _commit_all(repo, "shrink, delete gone, move moved_func, trim keep")
+
+    extracted = extract_module.extract_deletions(repo, _REPO, _last_commit_pair(repo))
+    assert [(r.function_name, r.deletion_kind) for r in extracted] == [
+        ("shrink", "PARTIAL"),
+        ("gone", "FULL_FUNCTION"),
+        ("moved_func", "FULL_FUNCTION"),
+        ("keep", "PARTIAL"),
+    ]
+    assert [len(r.deleted_hunk.splitlines()) for r in extracted] == [4, 2, 2, 5]
+
+    kept, excluded = extract_module.extract_repo_with_excluded(repo, _REPO, "main")
+
+    assert [r.function_name for r in kept] == ["gone", "keep"]
+    # 두 필터를 차례로 적용해도 제외 레코드는 추출 순서다 (TRIVIAL이 MOVE보다 앞)
+    assert [(e.record.function_name, e.filter_status) for e in excluded] == [
+        ("shrink", "NOISE_TRIVIAL"),
+        ("moved_func", "NOISE_MOVE"),
+    ]
+    trivial, moved = excluded
+    assert trivial.filter_evidence == {"line_count": 4}
+    assert trivial.filter_rule_version == "v0.6"
+    assert moved.filter_evidence["file_path"] == "new/a.py"
+    assert trivial.record == extracted[0]  # 원본 레코드 그대로
+
+    # 누락·중복 없음: kept + excluded = 필터 전 전체 추출
+    ids = [r.id for r in kept] + [e.record.id for e in excluded]
+    assert sorted(ids) == sorted(r.id for r in extracted)
+    assert len(set(ids)) == len(ids)
+
+    # #102: NOISE_TRIVIAL excluded 행에도 구조화된 added_hunks_same_file이 그대로 남는다
+    assert trivial.record.added_hunks_same_file  # b.py에는 extra()가 추가됐다
+    row = extract_module.excluded_to_json_dict(trivial)
+    base = extract_module.to_json_dict(extracted[0])
+    assert row["added_hunks_same_file"] == base["added_hunks_same_file"]
+    assert {key: row[key] for key in base} == base
+
+    # 기존 kept-only API는 같은 kept를 돌려준다
+    assert extract_module.extract_repo(repo, _REPO, "main") == kept
+
+
 def test_extract_repo_with_excluded_does_not_guess_ref(tmp_path: Path):
     """extract_repo_with_excluded는 ref를 추측하지 않으므로 ref 없이 호출하면 TypeError가 난다."""
     with pytest.raises(TypeError):
@@ -1372,6 +1438,29 @@ def test_excluded_row_from_partition_moved_has_move_evidence():
         "similarity": 1.0,
     }
     assert payload["file_path"] == "a.py"  # 최상위는 삭제 쪽(원본) 값 그대로
+
+
+def test_excluded_row_from_partition_trivial_has_line_count_and_added_hunks():
+    """filter.partition_trivial이 만든 NOISE_TRIVIAL ExcludedRecord도 같은 flat 구조(16 + 3
+    키)로 직렬화되고, `filter_evidence`는 `{"line_count": n}`, #102 `added_hunks_same_file`은
+    레코드에 있던 그대로다."""
+    from pipeline import filter as filter_module
+
+    record = dataclasses.replace(_record_with_hunks(), deletion_kind="PARTIAL")
+
+    _kept, excluded = filter_module.partition_trivial([record])
+    payload = extract_module.excluded_to_json_dict(excluded[0])
+
+    assert len(payload) == 16 + 3
+    assert payload["filter_status"] == "NOISE_TRIVIAL"
+    assert payload["filter_rule_version"] == "v0.6"
+    assert payload["filter_evidence"] == {"line_count": 2}
+    assert payload["deleted_body"] == record.deleted_hunk
+    assert (
+        payload["added_hunks_same_file"]
+        == extract_module.to_json_dict(record)["added_hunks_same_file"]
+    )
+    assert len(payload["added_hunks_same_file"]) == 2
 
 
 def test_write_excluded_jsonl_writes_one_flat_object_per_line_in_order(tmp_path: Path):

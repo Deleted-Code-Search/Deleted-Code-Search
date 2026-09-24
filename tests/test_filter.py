@@ -1,4 +1,6 @@
-"""filter.py 테스트 (Issue #52 — 함수 이동 탐지 필터).
+"""filter.py 테스트 (Issue #52 — 함수 이동 탐지 필터, Issue #63 — NOISE_TRIVIAL).
+
+NOISE_TRIVIAL(`partition_trivial`)은 git 없이 `DeletedFunction`을 직접 구성해 검증한다.
 
 정규화·유사도·줄 수 프리필터는 순수 함수 단위로 검증한다. same-position 판정과 이동
 판정(`find_moved`/`exclude_moved`)은 실제 line-number 밀림·헝크 병합처럼 손으로 만든
@@ -10,6 +12,7 @@ same-position)를 연결한 회귀 테스트로 검증한다. 크로스 파일(�
 
 from __future__ import annotations
 
+import dataclasses
 import os
 import re
 import shutil
@@ -20,7 +23,7 @@ import pytest
 
 from pipeline import extract as extract_module
 from pipeline import filter as filter_module
-from pipeline.extract import DeletedFunction, Hunk
+from pipeline.extract import DeletedFunction, ExcludedRecord, Hunk
 from pipeline.parsers.base import Function
 
 _REPO = "acme/widgets"
@@ -952,6 +955,157 @@ def test_filter_rule_version_matches_filter_rules_document():
 
     assert match is not None
     assert filter_module.FILTER_RULE_VERSION == match.group(1)
+
+
+# --------------------------------------------------------------------------------------
+# NOISE_TRIVIAL (ADR-015, Issue #63) — PARTIAL 중 `len(deleted_hunk.splitlines()) <= 4`는
+# 제외, FULL_FUNCTION은 대상 아님. 줄 수는 보정 없이 splitlines() 그대로(마지막 빈 줄은
+# 세지 않음, `docs/filter_rules.md` NOISE_TRIVIAL 절 "한계").
+# --------------------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("body", "line_count", "trivial"),
+    [
+        ("    x = 1", 1, True),
+        ("    a = 1\n    b = 2\n    c = 3\n    d = 4", 4, True),  # 경계: 4줄 → 제외
+        ("    a = 1\n    b = 2\n    c = 3\n    d = 4\n    e = 5", 5, False),  # 경계: 5줄 → 유지
+        ("", 0, True),  # 빈 줄 1줄만 삭제 → "" → 0줄
+        ("\n" * 4, 4, True),  # 빈 줄만 5줄 삭제 → 마지막 빈 줄을 세지 않아 4
+        ("\n" * 5, 5, False),  # 빈 줄만 6줄 삭제 → 5, 유지
+        ("    a = 1\n    b = 2\n    c = 3\n    d = 4\n", 4, True),  # 코드 4줄 + 끝 빈 줄
+        ("    a = 1\n\n    b = 2\n    c = 3\n    d = 4", 5, False),  # 중간 빈 줄은 센다
+        ("\n    a = 1\n    b = 2\n    c = 3\n    d = 4", 5, False),  # 앞쪽 빈 줄도 센다
+    ],
+)
+def test_partition_trivial_partial_line_count_boundary(body: str, line_count: int, trivial: bool):
+    """PARTIAL은 `len(deleted_hunk.splitlines())`가 4 이하면 NOISE_TRIVIAL, 5 이상이면 유지.
+    trailing empty line은 보정하지 않는다 — 빈 줄만 5줄이면 4로 세어 제외된다."""
+    record = _deleted("a.py", body, deletion_kind="PARTIAL")
+    assert len(record.deleted_hunk.splitlines()) == line_count
+
+    kept, excluded = filter_module.partition_trivial([record])
+
+    if trivial:
+        assert kept == []
+        assert [e.record for e in excluded] == [record]
+        assert excluded[0].filter_evidence == {"line_count": line_count}
+    else:
+        assert kept == [record]
+        assert excluded == []
+
+
+def test_partition_trivial_never_excludes_short_full_function():
+    """FULL_FUNCTION은 줄 수와 무관하게 NOISE_TRIVIAL 대상이 아니다 (1·2·4줄, 빈 본문)."""
+    records = [
+        _deleted("a.py", "def f(): pass", function_name="f"),
+        _deleted("b.py", "def g():\n    return 1", function_name="g"),
+        _deleted("c.py", "def h():\n    a = 1\n    b = 2\n    return a + b", function_name="h"),
+        _deleted("d.py", "", function_name="i"),
+    ]
+
+    kept, excluded = filter_module.partition_trivial(records)
+
+    assert kept == records
+    assert excluded == []
+
+
+def test_partition_trivial_excluded_record_has_status_version_and_line_count():
+    """제외 레코드는 #97 `ExcludedRecord` 그대로: 원본 레코드 객체, NOISE_TRIVIAL, v0.6,
+    `filter_evidence == {"line_count": n}`. #102 `added_hunks_same_file`도 레코드째 남는다."""
+    hunks = (extract_module.AddedHunk(2, 3, 2, 1, "    y = 0"),)
+    record = dataclasses.replace(
+        _deleted("a.py", "    a = 1\n    b = 2\n    c = 3", deletion_kind="PARTIAL"),
+        added_hunks_same_file=hunks,
+    )
+
+    _kept, excluded = filter_module.partition_trivial([record])
+
+    assert len(excluded) == 1
+    item = excluded[0]
+    assert isinstance(item, ExcludedRecord)
+    assert item.record is record  # 복사·재구성하지 않는다
+    assert item.record.added_hunks_same_file is hunks
+    assert item.filter_status == "NOISE_TRIVIAL"
+    assert item.filter_status == filter_module.NOISE_TRIVIAL
+    assert item.filter_rule_version == "v0.6"
+    assert item.filter_rule_version == filter_module.FILTER_RULE_VERSION
+    assert item.filter_evidence == {"line_count": 3}
+
+
+def test_partition_trivial_is_an_exact_partition_preserving_input_order():
+    """모든 레코드가 kept·excluded 중 정확히 한쪽에 한 번씩, 양쪽 모두 입력 순서대로."""
+    short1 = _deleted("a.py", "    x = 1", deletion_kind="PARTIAL", function_name="s1")
+    full = _deleted("b.py", "def f():\n    return 1", function_name="f")
+    long_ = _deleted("c.py", "\n".join(["    x = 1"] * 7), deletion_kind="PARTIAL")
+    short2 = _deleted("d.py", "    y = 2\n    z = 3", deletion_kind="PARTIAL", function_name="s2")
+    deletions = [short1, full, long_, short2]
+
+    kept, excluded = filter_module.partition_trivial(deletions)
+
+    assert kept == [full, long_]
+    assert [e.record for e in excluded] == [short1, short2]
+    assert [e.filter_evidence["line_count"] for e in excluded] == [1, 2]
+
+
+def test_partition_trivial_empty_input():
+    """빈 입력이면 kept·excluded 모두 빈 리스트."""
+    assert filter_module.partition_trivial([]) == ([], [])
+
+
+def _move_and_trivial_fixture():
+    """NOISE_MOVE·NOISE_TRIVIAL·KEPT가 섞인 한 커밋. 짧은 PARTIAL `decoy`는 이동 목적지와
+    본문이 같지만 PARTIAL이라 이동 후보가 아니고, 목적지를 소비하지도 않는다."""
+    body = "def foo():\n    x = 1\n    return x"
+    trivial = _deleted("a/p.py", "    a = 1\n    b = 2", deletion_kind="PARTIAL", function_name="p")
+    decoy = _deleted("a/q.py", body, deletion_kind="PARTIAL", function_name="foo")
+    moved = _deleted("b/old.py", body, function_name="foo")
+    long_partial = _deleted(
+        "c/r.py", "\n".join(f"    v{i} = {i}" for i in range(6)), deletion_kind="PARTIAL"
+    )
+    ordinary = _deleted("d/gone.py", "def gone():\n    return 42", function_name="gone")
+    deletions = [trivial, decoy, moved, long_partial, ordinary]
+    added = {"new/foo.py": [_function("foo", body)]}
+    return deletions, added, trivial, decoy, moved, long_partial, ordinary
+
+
+def test_move_and_trivial_together_have_no_missing_or_duplicate_records():
+    """두 필터를 extract_repo_with_excluded와 같은 순서(move → trivial)로 적용하면 모든
+    레코드가 kept·MOVE·TRIVIAL 중 정확히 한 곳에 간다. 반대 순서로 적용해도 결과가 같다
+    (MOVE는 FULL_FUNCTION만, TRIVIAL은 PARTIAL만 본다)."""
+    deletions, added, trivial, decoy, moved, long_partial, ordinary = _move_and_trivial_fixture()
+
+    after_move, moved_excluded = filter_module.partition_moved(deletions, added, {})
+    kept, trivial_excluded = filter_module.partition_trivial(after_move)
+
+    assert kept == [long_partial, ordinary]
+    assert [e.record for e in moved_excluded] == [moved]
+    assert moved_excluded[0].filter_evidence["file_path"] == "new/foo.py"
+    assert [e.record for e in trivial_excluded] == [trivial, decoy]
+    assert [e.filter_status for e in trivial_excluded] == ["NOISE_TRIVIAL"] * 2
+    all_ids = _record_ids(kept) + [e.record.id for e in moved_excluded + trivial_excluded]
+    assert sorted(all_ids) == sorted(_record_ids(deletions))
+    assert len(set(all_ids)) == len(all_ids)
+
+    # 반대 순서(trivial → move)도 같은 판정
+    after_trivial, trivial_first = filter_module.partition_trivial(deletions)
+    kept_rev, moved_rev = filter_module.partition_moved(after_trivial, added, {})
+    assert kept_rev == kept
+    assert [e.record for e in trivial_first] == [e.record for e in trivial_excluded]
+    assert [e.record for e in moved_rev] == [e.record for e in moved_excluded]
+
+
+def test_move_apis_keep_their_noise_move_only_contract_with_short_partials():
+    """#63 이후에도 find_moved·partition_moved·exclude_moved는 NOISE_MOVE만 다룬다 —
+    4줄 이하 PARTIAL을 제외하지 않고 kept에 남긴다."""
+    deletions, added, trivial, decoy, moved, long_partial, ordinary = _move_and_trivial_fixture()
+
+    kept, excluded = filter_module.partition_moved(deletions, added, {})
+
+    assert kept == [trivial, decoy, long_partial, ordinary]
+    assert {e.filter_status for e in excluded} == {"NOISE_MOVE"}
+    assert filter_module.exclude_moved(deletions, added, {}) == kept
+    assert filter_module.find_moved(deletions, added, {}) == {filter_module._record_key(moved)}
 
 
 # --------------------------------------------------------------------------------------
