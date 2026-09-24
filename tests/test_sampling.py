@@ -250,16 +250,6 @@ def test_issue_bodies_and_pr_labels_are_shown_by_default():
     assert context["pr_labels"] == ["bug"]
 
 
-def test_old_extra_context_flag_changes_nothing():
-    """옛 옵션은 `tools/label_cli.py` 호환으로만 남았다 - 켜도 결과가 같다."""
-    record = make_record(1)
-    record["context"]["issue_bodies"] = ["본문"]
-
-    assert sampling.build_labeling_record(record, with_extra_context=True) == (
-        sampling.build_labeling_record(record)
-    )
-
-
 def test_record_id_comes_from_the_schema_id_field():
     """§4.4 는 `id`, 라벨 파일은 `record_id`. 이름이 달라 그냥 복사하면 None 이 된다."""
     built = sampling.build_labeling_record(make_record(1, id="uuid-1234"))
