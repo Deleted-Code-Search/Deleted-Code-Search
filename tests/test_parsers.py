@@ -157,6 +157,190 @@ def test_functions_are_returned_in_source_order():
 
 
 # --------------------------------------------------------------------------------------
+# 회귀: 데코레이터가 붙은 클래스의 메서드 (Issue #131, #80 filter-miss 조사 중 발견)
+#
+# `@dataclass class` 는 tree-sitter에서 `decorated_definition` 아래 `class_definition` 으로
+# 온다. `_walk_children` 이 `decorated_definition` 안에서 `function_definition` 만 찾고, 없으면
+# 서브트리를 통째로 버려 클래스 안 메서드가 하나도 나오지 않았다. 클래스 자체는 여전히
+# 추출 대상이 아니다. 메서드의 줄 범위는 메서드 자신의 데코레이터부터이고 클래스
+# 데코레이터는 들어가지 않는다.
+# --------------------------------------------------------------------------------------
+
+
+def test_decorated_class_method_extraction():
+    src = source(
+        "@dataclass",
+        "class A:",
+        "    def method(self, x):",
+        "        return x",
+    )
+    functions = PythonAdapter().extract_functions(src)
+
+    assert len(functions) == 1
+    fn = functions[0]
+    assert fn.name == "method"
+    assert fn.start_line == 3  # 클래스 데코레이터(1행)는 메서드 범위에 들어가지 않는다
+    assert fn.end_line == 4
+    assert fn.signature == "def method(self, x):"
+    assert fn.body == "    def method(self, x):\n        return x"
+
+
+def test_multiple_decorators_on_class_with_async_method():
+    src = source(
+        "@deco1",
+        "@deco2(arg=1)",
+        "class A:",
+        "    def first(self):",
+        "        return 1",
+        "",
+        "    async def second(self) -> None:",
+        "        await get()",
+    )
+    functions = PythonAdapter().extract_functions(src)
+
+    assert names(functions) == ["first", "second"]
+    assert (functions[0].start_line, functions[0].end_line) == (4, 5)
+    assert (functions[1].start_line, functions[1].end_line) == (7, 8)
+    assert functions[1].signature == "async def second(self) -> None:"
+
+
+def test_decorated_method_inside_decorated_class_is_found_once():
+    src = source(
+        "@dataclass",
+        "class A:",
+        "    @staticmethod",
+        "    def helper():",
+        "        return 1",
+    )
+    functions = PythonAdapter().extract_functions(src)
+
+    assert names(functions) == ["helper"]  # decorated_definition 과 function_definition 중복 없음
+    fn = functions[0]
+    assert fn.start_line == 3  # 메서드 자신의 데코레이터부터, 클래스 데코레이터는 제외
+    assert fn.end_line == 5
+    assert fn.signature == "def helper():"
+    assert fn.body == "    @staticmethod\n    def helper():\n        return 1"
+
+
+def test_decorated_method_inside_plain_class_is_found_once():
+    src = source(
+        "class A:",
+        "    @property",
+        "    def value(self):",
+        "        return 1",
+    )
+    functions = PythonAdapter().extract_functions(src)
+
+    assert names(functions) == ["value"]
+    assert functions[0].start_line == 2
+    assert functions[0].end_line == 4
+    assert functions[0].signature == "def value(self):"
+
+
+def test_methods_of_nested_plain_and_decorated_classes():
+    src = source(
+        "class Outer:",
+        "    class Plain:",
+        "        def a(self):",
+        "            return 1",
+        "",
+        "    @dataclass",
+        "    class Decorated:",
+        "        def b(self):",
+        "            return 2",
+    )
+    functions = PythonAdapter().extract_functions(src)
+
+    assert names(functions) == ["a", "b"]
+    assert (functions[0].start_line, functions[0].end_line) == (3, 4)
+    assert (functions[1].start_line, functions[1].end_line) == (8, 9)
+
+
+def test_method_of_decorated_class_defined_inside_function():
+    src = source(
+        "def factory():",
+        "    @dataclass(frozen=True)",
+        "    class A:",
+        "        def method(self):",
+        "            return 1",
+        "    return A",
+    )
+    functions = PythonAdapter().extract_functions(src)
+
+    assert names(functions) == ["factory", "method"]
+    assert (functions[0].start_line, functions[0].end_line) == (1, 6)
+    assert (functions[1].start_line, functions[1].end_line) == (4, 5)
+
+
+def test_decorated_class_in_test_function_pydantic_137d4d8393_shape():
+    """pydantic 137d4d8393 `tests/test_examples.py`(부모)·`tests/test_annotated.py`(자식) 축약.
+
+    삭제 쪽: 테스트 함수 안의 중첩 함수 `my_validator_function`(record 1b0b6cb9)과 같은
+    함수 안 `@dataclass(frozen=True)` 클래스의 메서드. 자식 쪽 대응 코드
+    `MyDatetimeValidator.tz_constraint_validator`는 그 클래스의 메서드라 수정 전에는 이동
+    목적지 후보에 없었다. 이 커밋은 본문을 다시 쓴 것이라 이동 판정은 여전히 아니다 —
+    여기서는 추출 여부만 본다.
+    """
+    parent = source(
+        "def test_tzinfo_validator_example_pattern() -> None:",
+        "    def my_validator_function(",
+        "        tz_constraint: Union[str, None],",
+        "        value: dt.datetime,",
+        "        handler: Callable,",
+        "    ):",
+        "        return handler(value)",
+        "",
+        "    @dataclass(frozen=True)",
+        "    class MyDatetimeValidator:",
+        "        tz_constraint: Optional[str] = None",
+        "",
+        "        def __get_pydantic_core_schema__(",
+        "            self,",
+        "            source_type: Any,",
+        "            handler: GetCoreSchemaHandler,",
+        "        ) -> CoreSchema:",
+        "            return handler(source_type)",
+    )
+    child = source(
+        "def test_tzinfo_validator_example_pattern() -> None:",
+        "    @dataclass(frozen=True)",
+        "    class MyDatetimeValidator:",
+        "        tz_constraint: Optional[str] = None",
+        "",
+        "        def tz_constraint_validator(",
+        "            self,",
+        "            value: dt.datetime,",
+        "            handler: Callable,  # (1)!",
+        "        ):",
+        "            return handler(value)",
+    )
+
+    parent_functions = PythonAdapter().extract_functions(parent)
+    assert names(parent_functions) == [
+        "test_tzinfo_validator_example_pattern",
+        "my_validator_function",
+        "__get_pydantic_core_schema__",
+    ]
+    assert (parent_functions[1].start_line, parent_functions[1].end_line) == (2, 7)
+    assert (parent_functions[2].start_line, parent_functions[2].end_line) == (13, 18)
+
+    child_functions = PythonAdapter().extract_functions(child)
+    assert names(child_functions) == [
+        "test_tzinfo_validator_example_pattern",
+        "tz_constraint_validator",
+    ]
+    target = child_functions[1]
+    assert (target.start_line, target.end_line) == (6, 11)
+    assert target.signature == (
+        "def tz_constraint_validator(\n"
+        "            self,\n"
+        "            value: dt.datetime,\n"
+        "            handler: Callable,  # (1)!\n"
+        "        ):"
+    )
+
+
+# --------------------------------------------------------------------------------------
 # 회귀: 함수 본문 첫 줄이 독립된 주석인 경우 (Issue #5 E2E, psf/requests `add_password` 재현)
 #
 # 함수 본문 첫 줄이 `#` 주석 하나뿐이면 tree-sitter-python이 그 주석을 `block`(본문) 밖,
@@ -233,6 +417,28 @@ def test_syntax_error_inside_function_drops_its_nested_functions_too():
     functions = PythonAdapter().extract_functions(src)
 
     assert names(functions) == []
+
+
+def test_syntax_error_in_one_method_of_decorated_class_keeps_other_methods():
+    """데코레이터 클래스도 일반 클래스처럼 메서드 단위로 오류를 판정한다 (Issue #131).
+
+    클래스는 `Function`이 아니므로 클래스 전체를 버리지 않는다 — 깨진 메서드만 빠진다.
+    """
+    src = source(
+        "@dataclass",
+        "class A:",
+        "    def good_before(self):",
+        "        return 1",
+        "",
+        "    def broken(self, :",
+        "        return 2",
+        "",
+        "    def good_after(self):",
+        "        return 3",
+    )
+    functions = PythonAdapter().extract_functions(src)
+
+    assert names(functions) == ["good_before", "good_after"]
 
 
 def test_completely_invalid_source_returns_empty_list_without_raising():
