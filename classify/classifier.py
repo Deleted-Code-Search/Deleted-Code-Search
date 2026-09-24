@@ -29,7 +29,7 @@ LLM 은 후보와 근거 문장만 (ADR-005):
 
 실행:
     python -m classify.classifier --records records.jsonl --labels merged.jsonl --out out.jsonl
-    python -m classify.classifier ... --llm        # LLM 후보도 쓴다 (ANTHROPIC_API_KEY, #59)
+    python -m classify.classifier ... --llm        # LLM 후보도 쓴다 (NVIDIA_API_KEY, #59)
 """
 
 from __future__ import annotations
@@ -37,7 +37,6 @@ from __future__ import annotations
 import argparse
 import json
 import math
-import os
 import sys
 from collections import Counter
 from collections.abc import Sequence
@@ -48,11 +47,12 @@ from typing import Any
 from classify.baseline_keyword import KEYWORD_RULES
 from classify.baseline_llm import (
     CALL_ERRORS,
-    DEFAULT_MODEL,
+    DEFAULT_PROVIDER,
     LABEL_DEFINITIONS,
     MAX_DIFF_CHARS,
+    PROVIDERS,
     LlmBaseline,
-    anthropic_caller,
+    caller_from_env,
     parse_answer,
 )
 from classify.baselines import UNKNOWN_LABEL, record_id_of
@@ -463,7 +463,8 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--out", type=Path, default=None, help="예측 JSONL 저장 경로")
     parser.add_argument("--llm", action="store_true", help="LLM 후보도 쓴다 (API 호출, #59)")
-    parser.add_argument("--model", default=DEFAULT_MODEL, help="LLM 모델 (--llm 일 때)")
+    parser.add_argument("--provider", choices=sorted(PROVIDERS), default=DEFAULT_PROVIDER)
+    parser.add_argument("--model", default=None, help="LLM 모델 (기본: 공급자별 고정 모델)")
     parser.add_argument("--cache-dir", type=Path, default=None)
     parser.add_argument("--env-file", type=Path, default=Path(".env"))
     return parser
@@ -485,14 +486,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     llm = None
     if args.llm:
         load_env_file(args.env_file)
-        api_key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
-        if not api_key:
-            print("--llm 에는 ANTHROPIC_API_KEY 가 필요하다 (.env, §8.4).", file=sys.stderr)
+        caller = caller_from_env(args.provider)
+        if caller is None:
             return 2
         cache_dir = args.cache_dir or resolve_cache_dir(None) / "llm_classifier"
         runner = LlmBaseline(
-            anthropic_caller(api_key),
-            model=args.model,
+            caller,
+            model=args.model or PROVIDERS[args.provider].model,
             cache_dir=cache_dir,
             prompt_version=CANDIDATE_PROMPT_VERSION,
         )

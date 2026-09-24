@@ -639,3 +639,19 @@ def test_cli_runs_end_to_end_without_an_api_key(tmp_path, capsys):
     assert "정확도를 말하지 않는다" in printed
     # 읽은 라벨 수가 아니라 레코드와 실제로 이어진 수를 말해야 한다.
     assert "레코드와 이어진 2건" in printed
+
+
+def test_cli_llm_without_key_names_the_default_provider_key(tmp_path, monkeypatch, capsys):
+    """`--llm` 은 기준선 B 와 같은 공급자 표를 쓴다 - 기본은 NVIDIA (#59)."""
+    monkeypatch.delenv("NVIDIA_API_KEY", raising=False)
+    records_path, labels_path = tmp_path / "records.jsonl", tmp_path / "labels.jsonl"
+    records_path.write_text(json.dumps(make_record("a")), encoding="utf-8")
+    labels_path.write_text("", encoding="utf-8")
+
+    code = clf.main(
+        ["--records", str(records_path), "--labels", str(labels_path), "--llm"]
+        + ["--env-file", str(tmp_path / "none")]
+    )
+
+    assert code == 2
+    assert "NVIDIA_API_KEY" in capsys.readouterr().err

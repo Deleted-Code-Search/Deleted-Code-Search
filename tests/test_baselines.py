@@ -304,6 +304,16 @@ def test_cache_avoids_a_second_call(tmp_path):
     assert baseline.cache_hits == 1
 
 
+def test_empty_answer_is_not_cached(tmp_path):
+    """빈 답은 실패다. 남기면 원인을 고친 뒤에도 그 건은 다시 묻지 않는다 (#59)."""
+    answers = iter(["", "BUG|근거"])
+    baseline = bl.LlmBaseline(lambda *_: next(answers), cache_dir=tmp_path / "llm")
+
+    assert baseline.predict(record("same message")).predicted_label == "UNK"
+    assert baseline.predict(record("same message")).predicted_label == "BUG"
+    assert baseline.calls == 2
+
+
 def test_cache_key_changes_with_prompt_version(tmp_path):
     """프롬프트를 고치면 옛 답을 쓰면 안 된다."""
     calls = []
@@ -443,9 +453,137 @@ def test_zero_limit_means_everything(tmp_path, capsys):
     assert "3건 대상" in capsys.readouterr().err
 
 
-def test_llm_cli_stops_without_api_key(tmp_path, monkeypatch):
-    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+@pytest.mark.parametrize("provider", ["nvidia", "anthropic"])
+def test_llm_cli_stops_without_api_key(tmp_path, monkeypatch, capsys, provider):
+    """키가 없으면 어느 키가 필요한지 말하고 멈춘다 (§8.4 - 키는 .env 에만)."""
+    for provider_config in bl.PROVIDERS.values():
+        monkeypatch.delenv(provider_config.env_key, raising=False)
     source = tmp_path / "records.jsonl"
     source.write_text(json.dumps(record("remove helper")), encoding="utf-8")
+    argv = ["--input", str(source), "--env-file", str(tmp_path / "none"), "--provider", provider]
 
-    assert bl.main(["--input", str(source), "--env-file", str(tmp_path / "none")]) == 2
+    assert bl.main(argv) == 2
+    assert bl.PROVIDERS[provider].env_key in capsys.readouterr().err
+
+
+class FakeResponse:
+    """`urlopen` 이 돌려주는 응답 흉내."""
+
+    def __init__(self, body):
+        """`body` 를 JSON 으로 담아 둔다."""
+        self.body = json.dumps(body).encode("utf-8")
+
+    def __enter__(self):
+        """`with urlopen(...) as response` 용."""
+        return self
+
+    def __exit__(self, *exc):
+        """예외를 삼키지 않는다."""
+        return False
+
+    def read(self):
+        """응답 본문 바이트."""
+        return self.body
+
+
+def test_nvidia_caller_sends_openai_style_request_and_reads_the_answer(monkeypatch):
+    """OpenAI 호환 형식. 생각 과정을 끄고 temperature 0 으로 보낸다 (#59)."""
+    sent = []
+
+    def fake_urlopen(request, timeout):
+        """보낸 요청을 남기고 정상 답을 준다."""
+        sent.append(request)
+        return FakeResponse({"choices": [{"message": {"content": "BUG|근거"}}]})
+
+    monkeypatch.setattr(bl.urllib.request, "urlopen", fake_urlopen)
+    call = bl.nvidia_caller("nvapi-test", min_interval=0)
+
+    assert call("시스템", "프롬프트", "some/model") == "BUG|근거"
+    request = sent[0]
+    payload = json.loads(request.data.decode("utf-8"))
+    assert request.full_url == bl.NVIDIA_API_URL
+    assert request.get_header("Authorization") == "Bearer nvapi-test"
+    assert payload["model"] == "some/model"
+    assert payload["temperature"] == 0
+    assert payload["chat_template_kwargs"] == {"thinking": False}
+    assert payload["messages"] == [
+        {"role": "system", "content": "시스템"},
+        {"role": "user", "content": "프롬프트"},
+    ]
+
+
+def test_anthropic_caller_turns_thinking_off_and_reads_only_text(monkeypatch):
+    """Sonnet 5 는 기본으로 생각한다 - 끄지 않으면 생각이 `max_tokens` 를 먹어 답이 빈다 (#59)."""
+    sent = []
+
+    def fake_urlopen(request, timeout):
+        """보낸 요청을 남기고, 생각 블록과 답 블록을 함께 준다."""
+        sent.append(request)
+        blocks = [{"type": "thinking", "thinking": ""}, {"type": "text", "text": "BUG|근거"}]
+        return FakeResponse({"content": blocks})
+
+    monkeypatch.setattr(bl.urllib.request, "urlopen", fake_urlopen)
+
+    assert bl.anthropic_caller("sk-test")("시스템", "프롬프트", "claude-sonnet-5") == "BUG|근거"
+    payload = json.loads(sent[0].data.decode("utf-8"))
+    assert payload["thinking"] == {"type": "disabled"}
+    assert payload["max_tokens"] == bl.MAX_ANSWER_TOKENS
+
+
+def test_nvidia_caller_empty_choices_is_an_empty_answer(monkeypatch):
+    """답이 없으면 빈 문자열 - `parse_answer` 가 "빈 응답" 으로 사유를 남긴다."""
+    monkeypatch.setattr(bl.urllib.request, "urlopen", lambda *a, **k: FakeResponse({}))
+
+    assert bl.nvidia_caller("k", min_interval=0)("s", "p", "m") == ""
+
+
+@pytest.mark.parametrize(
+    ("provider", "body"),
+    [
+        ("nvidia", []),
+        ("nvidia", {"choices": {"0": {}}}),
+        ("nvidia", {"choices": ["BUG|x"]}),
+        ("nvidia", {"choices": [{"message": "BUG|x"}]}),
+        ("anthropic", []),
+        ("anthropic", {"content": "BUG|x"}),
+        ("anthropic", {"content": [{"type": "text", "text": 7}]}),
+    ],
+)
+def test_malformed_response_is_a_value_error(monkeypatch, provider, body):
+    """모양이 다른 응답은 `ValueError` - `CALL_ERRORS` 라 그 건만 실패로 남는다 (#59 코드래빗)."""
+    monkeypatch.setattr(bl.urllib.request, "urlopen", lambda *a, **k: FakeResponse(body))
+    kwargs = {"min_interval": 0} if provider == "nvidia" else {}
+    call = bl.PROVIDERS[provider].make_caller("k", **kwargs)
+
+    with pytest.raises(ValueError, match="응답 모양"):
+        call("s", "p", "m")
+
+
+def test_one_odd_answer_does_not_stop_the_batch():
+    """OpenAI 호환 서버는 `content` 를 조각 리스트로 주기도 한다. 그 건만 UNK, 다음 건은 계속."""
+    answers = iter([[{"type": "text", "text": "BUG|x"}], "DEAD|y"])
+    baseline = bl.LlmBaseline(lambda *_: next(answers))
+
+    first, second = baseline.predict_all([record("a", record_id="r1"), record("b", record_id="r2")])
+
+    assert (first.predicted_label, second.predicted_label) == ("UNK", "DEAD")
+    assert "문자열이 아니다" in first.note
+
+
+def test_nvidia_caller_spaces_calls_under_the_free_rate_limit(monkeypatch):
+    """분당 40회를 넘으면 429 가 한 건의 실패로 남는다. 두 번째 호출은 간격만큼 기다린다."""
+    clock = iter([100.0, 100.0, 100.5, 101.6])
+    waits = []
+    monkeypatch.setattr(bl.time, "monotonic", lambda: next(clock))
+    monkeypatch.setattr(bl.time, "sleep", waits.append)
+    monkeypatch.setattr(
+        bl.urllib.request,
+        "urlopen",
+        lambda *a, **k: FakeResponse({"choices": [{"message": {"content": "BUG|x"}}]}),
+    )
+    call = bl.nvidia_caller("k", min_interval=1.6)
+
+    call("s", "p", "m")
+    call("s", "p", "m")
+
+    assert waits == [pytest.approx(1.1)]
