@@ -847,10 +847,10 @@ def review_comment(**overrides):
 
 
 def render_context(**context):
-    """레코드 1건의 맥락만 바꿔 화면을 그린다. #33 레코드 파일 경로(`--with-extra-context`)로."""
+    """레코드 1건의 맥락만 바꿔 화면을 그린다. #33 레코드 파일 경로로 (옵션 없이, #113)."""
     record = make_record(0)
     record["context"] = {**record["context"], **context}
-    row = sampling.build_labeling_record(record, with_extra_context=True)
+    row = sampling.build_labeling_record(record)
     return label_cli.render_record(label_cli.labeler_view(row))
 
 
@@ -942,6 +942,41 @@ def test_pr_labels_are_listed_as_reference_only():
     assert lines[title + 1 : title + 3] == ["  - bug", "  - performance"]
 
 
+@pytest.mark.parametrize("from_records_file", [True, False])
+def test_issue_bodies_and_pr_labels_are_shown_once_by_default(from_records_file):
+    """#113: 두 필드는 옵션 없이 기본으로, 한 번씩만 그려진다 (옛 추가 경로와 겹치지 않게)."""
+    record = make_record(0)
+    record["context"] = {
+        **record["context"],
+        "issue_bodies": ["UNIQUE-ISSUE-BODY"],
+        "pr_labels": ["UNIQUE-PR-LABEL"],
+    }
+    row = sampling.build_labeling_record(record) if from_records_file else record
+
+    rendered = label_cli.render_record(label_cli.labeler_view(row))
+    titles = [line.split(" ")[0].rstrip(":") for line in rendered.splitlines()]
+
+    assert rendered.count("UNIQUE-ISSUE-BODY") == 1
+    assert rendered.count("UNIQUE-PR-LABEL") == 1
+    assert titles.count("issue_bodies") == 1
+    assert titles.count("pr_labels") == 1
+
+
+def test_no_stale_with_extra_context_explanation():
+    """#118: 두 필드가 `--with-extra-context` 로만 보인다는 옛 설명이 남아 있지 않다."""
+    rendered = render_context(issue_bodies=["b"], pr_labels=["l"])
+    shown_to_labeler = (
+        label_cli.labeler_view.__doc__,
+        rendered,
+        label_cli.build_parser().format_help(),
+    )
+
+    for text in shown_to_labeler:
+        assert "with-extra-context" not in text
+        assert "with_extra_context" not in text
+    assert not hasattr(label_cli, "EXTRA_CONTEXT_FIELDS")
+
+
 def test_quote_spanning_lines_of_object_review_comment_is_found():
     """객체형 코멘트도 본문에서 찾는다. str(dict) 로는 줄바꿈이 `\\n` 이 되어 못 찾았다."""
     record = make_record(0)
@@ -957,7 +992,7 @@ def view_with_context(**context):
     """found_in_context 용: 맥락만 바꾼 라벨러 뷰."""
     record = make_record(0)
     record["context"] = {**record["context"], **context}
-    return label_cli.labeler_view(sampling.build_labeling_record(record, with_extra_context=True))
+    return label_cli.labeler_view(sampling.build_labeling_record(record))
 
 
 def test_quote_across_two_review_comments_is_not_found():
@@ -1041,7 +1076,7 @@ def test_control_sequences_in_every_external_field_are_escaped():
         "pr_labels": ["bug\x1b"],
         "review_comments": ["old\x1b"],
     }
-    view = label_cli.labeler_view(sampling.build_labeling_record(record, with_extra_context=True))
+    view = label_cli.labeler_view(sampling.build_labeling_record(record))
 
     rendered = label_cli.render_record(view)
 

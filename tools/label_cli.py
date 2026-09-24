@@ -52,7 +52,6 @@ from classify.labels import (
     is_filled,
 )
 from classify.sampling import (
-    EXTRA_CONTEXT_FIELDS,
     GUIDE_VERSION,
     LABEL_FILENAME_TEMPLATE,
     LABELER_CONTEXT_FIELDS,
@@ -320,7 +319,8 @@ def labeler_view(row: dict[str, Any]) -> dict[str, Any]:
     """라벨러에게 보여줄 필드만 남긴 사본. `reason` 은 여기서 떨어진다 (가이드 §2.2).
 
     #33 레코드 파일(`record_id`)이든 §4.4 원본(`id`, 개발용 픽스처)이든 같은 모양으로 만든다.
-    이슈 본문·PR 라벨(#24 확정 전)은 #33 이 `--with-extra-context` 로 담았을 때만 보인다.
+    맥락은 `LABELER_CONTEXT_FIELDS` 만 담는다. 이슈 본문·PR 라벨도 그 안에 있어 기본으로 보인다
+    (#113, 가이드 §2.1). 옛 레코드 파일에 키가 없으면 `None` 으로 채운다.
     """
     if "record_id" not in row:
         return build_labeling_record(row)
@@ -330,9 +330,7 @@ def labeler_view(row: dict[str, Any]) -> dict[str, Any]:
     replacement = row.get("replacement") or {}
     view["replacement"] = {key: replacement.get(key) for key in LABELER_REPLACEMENT_FIELDS}
     context = row.get("context") or {}
-    picked = {key: context.get(key) for key in LABELER_CONTEXT_FIELDS}
-    picked.update({key: context[key] for key in EXTRA_CONTEXT_FIELDS if key in context})
-    view["context"] = picked
+    view["context"] = {key: context.get(key) for key in LABELER_CONTEXT_FIELDS}
     return view
 
 
@@ -471,9 +469,6 @@ def render_record(view: dict[str, Any]) -> str:
     ]
     for key in LABELER_CONTEXT_FIELDS:
         lines.extend(_block(key, context.get(key)))
-    for key in EXTRA_CONTEXT_FIELDS:
-        if key in context:
-            lines.extend(_block(key, context.get(key)))
     lines += [
         "",
         "== 삭제된 코드 (deleted_body) ==",
