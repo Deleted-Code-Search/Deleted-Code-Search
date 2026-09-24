@@ -204,7 +204,12 @@ class LlmBaseline:
             self.failures["캐시 쓰기"] = self.failures.get("캐시 쓰기", 0) + 1
             print(f"캐시를 남기지 못했다 (응답은 그대로 쓴다): {error}", file=sys.stderr)
 
-    def _ask(self, prompt: str) -> str:
+    def ask(self, prompt: str) -> str:
+        """프롬프트 하나를 캐시를 거쳐 묻는다.
+
+        공개로 둔 이유는 분류기(`classify.classifier`)의 LLM 후보 생성이 같은 캐시·호출기를
+        쓰기 때문이다 (#84). 캐시 키에 프롬프트 버전이 들어가므로 프롬프트가 다르면 섞이지 않는다.
+        """
         path = self._cache_path(prompt)
         if path is not None:
             cached = self._read_cache(path)
@@ -224,7 +229,7 @@ class LlmBaseline:
         version = f"{self.prompt_version}/{self.model}"
 
         try:
-            text = self._ask(prompt)
+            text = self.ask(prompt)
         except (urllib.error.URLError, OSError, ValueError) as error:
             self.failures["호출 실패"] = self.failures.get("호출 실패", 0) + 1
             return Prediction(
