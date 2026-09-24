@@ -1,6 +1,6 @@
 # 필터 규칙
 
-버전: v0.6. 담당: 재헌. 규칙 변경 시 이 문서의 버전을 올리고, `DeletionRecord.filter_rule_version`에 반영하며(코드 상수 `pipeline/filter.py:FILTER_RULE_VERSION`을 같은 PR에서 같은 값으로 올린다 — 테스트가 둘이 같은지 확인한다), PR에 테스트와 정밀도 재측정 결과를 첨부한다. 재측정은 수동 200건 (통과 100 + 제외 100)이다 (CHARTER.md §8.4, §10.1).
+버전: v0.7. 담당: 재헌. 규칙 변경 시 이 문서의 버전을 올리고, `DeletionRecord.filter_rule_version`에 반영하며(코드 상수 `pipeline/filter.py:FILTER_RULE_VERSION`을 같은 PR에서 같은 값으로 올린다 — 테스트가 둘이 같은지 확인한다), PR에 테스트와 정밀도 재측정 결과를 첨부한다. 재측정은 수동 200건 (통과 100 + 제외 100)이다 (CHARTER.md §8.4, §10.1).
 
 NOISE_MOVE의 정규화·유사도·후보 범위는 ADR-014(`docs/adr/014-move-detection-rules.md`)가 최종 기준이다. 이 문서는 ADR-014의 결정을 요약해 필터 규칙 전체(다른 노이즈 유형 포함)와 나란히 두고, ADR-014가 정하지 않고 #52 구현에서 결정한 세부사항(같은 위치 판정 방법, 1:1 매칭 알고리즘, 실제 added-line 겹침 조건)을 함께 기록한다. ADR-014와 이 문서가 어긋나면 ADR-014가 옳다 — 이 문서를 고친다.
 
@@ -116,17 +116,53 @@ matching은 과하다고 보고, 유사도 내림차순 **greedy**로 확정했�
 2. 각 pair의 유사도를 계산한다(위 "유사도" 절 그대로): 0줄 제외 → 20% 줄 수 프리필터 → 정규화
    완전 동일(해시로 먼저 비교, 1.0) → `SequenceMatcher(..., autojunk=False)`. `< 0.9`거나
    앞 단계에서 탈락하면 그 pair는 버린다.
-3. 남은 pair를 유사도 내림차순으로 정렬한다. **동점 tie-break**: 삭제 쪽 key
-   (`commit_sha, file_path, start_line, end_line`) 오름차순, 그다음 추가 쪽 key
-   (`file_path, start_line, end_line`) 오름차순 — 이 값들은 그 커밋 안에서 안정적으로 식별
-   가능한 값이라, dict 순회 순서 등 입력 순서에 결과가 흔들리지 않는다.
+3. 남은 pair를 유사도(정규화 유사도) 내림차순으로 정렬한다. **동점 tie-break** (v0.7부터):
+   1. **원문 유사도 내림차순** (#80). 삭제 쪽 `deleted_hunk`와 추가 쪽 `Function.body`
+      원문을 줄마다 `strip()`하고 빈 줄을 뺀 줄 목록으로
+      `SequenceMatcher(None, 삭제_원문줄, 추가_원문줄, autojunk=False).ratio()` — 인자 순서는
+      ADR-014 결정 2와 같은 (삭제, 추가)다. 구현: `pipeline/filter.py:_raw_similarity`.
+   2. 원문 유사도까지 같으면 삭제 쪽 key (`commit_sha, file_path, start_line, end_line`)
+      오름차순, 그다음 추가 쪽 key (`file_path, start_line, end_line`) 오름차순 — 이 값들은
+      그 커밋 안에서 안정적으로 식별 가능한 값이라, dict 순회 순서 등 입력 순서에 결과가
+      흔들리지 않는다 (v0.6까지의 tie-break 그대로).
+
+   **원문 유사도는 이동 판정 기준이 아니다.** 이동 여부는 여전히 정규화 유사도와
+   `SIMILARITY_THRESHOLD = 0.9`(ADR-014 결정 2)로만 정한다. 원문 유사도는 threshold를 이미
+   통과한 pair 사이에서, 정규화 유사도가 **같을 때만** 정렬 순서를 정한다 — 정규화 유사도가
+   더 높은 pair를 원문 유사도로 뒤집지 않고, threshold 미만 pair를 원문 유사도로 살리지
+   않는다. excluded JSONL의 `filter_evidence.similarity`도 정규화 유사도 그대로다.
 4. 정렬된 순서대로, 삭제·추가 양쪽 다 아직 안 쓰였으면 pair를 확정하고 둘 다 소비 처리한다.
 5. 짝을 찾은 삭제만 NOISE_MOVE로 제외한다. 못 찾은 삭제는 KEPT.
+
+**원문 유사도 tie-break를 넣은 이유 (#80).** 게이트 1 filter-miss 18건 중 283e72d9
+(`pydantic` 커밋 8e0455c9c6, `test_forward_ref_sub_types`): `tests/test_py36.py`와
+`tests/test_py37.py`의 두 삭제가 `tests/test_forward_ref.py`의 같은 목적지와 정규화 유사도
+0.9524로 동점이었다. v0.6까지는 동점을 경로 사전순으로 깨서 `test_py36.py`가 목적지를
+먼저 차지했고, 실제 git rename 원본인 `test_py37.py`는 KEPT로 남았다. 이 커밋의 동점 10쌍에서
+같은 현상이 있었다. 정규화는 리터럴을 `STR`/`NUM`으로 지워 두 원본을 구분하지 못하지만, 원문은
+구분한다. ADR-014의 범위(정규화·threshold·후보 범위·1:1)를 넓히지 않고 현행 1:1 매칭 안의
+tie-break만 바꾼 것이다.
+
+**사전 분석 (#80, `pydantic/pydantic` 전체 히스토리 5,723커밋 시뮬레이션).** v0.6 재현은
+FULL_FUNCTION 8,978건 중 NOISE_MOVE 5,977건, 남은 3,001건으로 pre200 모집단과 일치했다.
+v0.7을 적용하면 판정이 바뀌는 커밋은 3개, 레코드는 24건(12쌍이 서로 자리를 바꿈)이다.
+커밋별 NOISE_MOVE 총 개수는 그대로이고 1:1도 유지된다. 조사한 12쌍 모두 원문이 더 같은 원본을
+고르는 방향이었다. 이 값은 정밀도가 아니다 — **정밀도 재측정은 #89에서 한다.**
+
+**범위 밖 (#80에서 다루지 않음, #89까지 보류).** 이동+리네임으로 정규화 유사도가 0.8889인
+사례(4aafd867)는 threshold·정규화를 바꾸지 않았으므로 여전히 KEPT다. 두 커밋 뒤에 다시 나타나는
+사례(dd5e735a)는 커밋을 넘는 이동 탐지를 하지 않으므로 여전히 KEPT다.
 
 회귀 테스트: `tests/test_filter.py`의 `test_b_one_to_one_exact_match_consumes_only_one_deleted`,
 `test_c_higher_similarity_wins_the_shared_candidate`,
 `test_d_greedy_matching_does_not_reuse_candidates_across_independent_groups`,
-`test_e_greedy_matching_is_deterministic_regardless_of_input_order`.
+`test_e_greedy_matching_is_deterministic_regardless_of_input_order`. 원문 유사도 tie-break(#80):
+`test_regression_283e72d9_rename_source_wins_normalized_tie`,
+`test_raw_tie_break_does_not_depend_on_source_path_order`,
+`test_raw_tie_break_keeps_one_to_one_and_is_order_independent`,
+`test_raw_similarity_never_overrides_higher_normalized_similarity`,
+`test_raw_similarity_tie_falls_back_to_record_key_then_candidate_key`,
+`test_high_raw_similarity_does_not_rescue_below_threshold_pair`.
 
 ## NOISE_MOVE — same-position 판정 (Issue #52 구현 결정 — ADR-014가 #52에 위임)
 
@@ -246,3 +282,4 @@ diff 헝크(`git diff --unified=0`의 `@@ -old_start,old_count +new_start,new_co
 | v0.4 | 2026-09-15 | ADR-014 정합(팀장 결정 — ADR-014를 최종 기준으로 코드 수정): placeholder를 VAR/STR/NUM 3종으로 분리(기존 LIT 통합 폐기), 중첩 함수 선언 이름만 VAR로 치환(본문은 재귀 정규화 유지), 정규화 결과를 줄 목록(list[str])으로 변경, 1차 거르기 기준을 원본 줄 수에서 **정규화 줄 수**로 수정, `SequenceMatcher`를 문자열 전체 대신 **줄 목록**으로 비교하고 `autojunk=False` 명시, 정규화 본문 0줄 함수 제외 가드 추가. bool/None/복소수 placeholder 분류는 팀장 최종 확인 완료(bool/None 미치환, 복소수 NUM) — ADR-014 본문 반영은 팀장이 별도 진행 | 실측 전 |
 | v0.5 | 2026-09-17 | NOISE_TRIVIAL 규칙 명세 (ADR-015, #62): PARTIAL 중 `deleted_body` 4줄 이하(빈 줄 포함) 제외. 명세와 버전 표기만 — 구현·테스트·`filter_rule_version` 반영·정밀도 재측정은 #63 | — (#63에서 재측정) |
 | v0.6 | 2026-09-24 | NOISE_TRIVIAL 실제 구현 (Issue #63 / PR #125, ADR-015 후속 메모): PARTIAL만 대상, `len(deleted_body.splitlines()) <= 4`이면 `NOISE_TRIVIAL`로 제외하고 5줄 이상은 유지. FULL_FUNCTION은 비적용. 마지막 빈 줄(trailing empty line)은 보정하지 않는다. 판정 줄 수를 `filter_evidence.line_count`에 기록하고, 제외 레코드는 #97 `ExcludedRecord`로 excluded JSONL에 보존. 기존 NOISE_MOVE 공개 API(`find_moved`·`partition_moved`·`exclude_moved`) 계약 유지. 정밀도 재측정은 #89에서 진행 | — (#89에서 재측정) |
+| v0.7 | 2026-09-24 | NOISE_MOVE 1:1 greedy 매칭의 동점 tie-break 변경 (Issue #80, 283e72d9): 정렬 key를 `(-정규화 유사도, record_key, candidate_key)`에서 `(-정규화 유사도, -원문 유사도, record_key, candidate_key)`로. 원문 유사도는 줄마다 strip·빈 줄 제거한 원문 줄 목록의 `SequenceMatcher(삭제, 추가, autojunk=False).ratio()`이고, threshold를 통과한 pair의 정렬 순서에만 쓴다 — 판정 threshold(0.9)·정규화·후보 범위·1:1·`filter_evidence` 키와 `similarity` 값(정규화 유사도)은 그대로다. 같은 입력의 NOISE_MOVE/KEPT 판정이 바뀔 수 있어 버전을 올린다 (pydantic 사전 분석: 3커밋 24건, 커밋별 NOISE_MOVE 수 불변). ADR-014 결정 내용 변경 없음 | — (#89에서 재측정) |
