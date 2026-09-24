@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from collections.abc import Sequence
 from dataclasses import dataclass, field
@@ -95,6 +96,18 @@ def is_filled(row: dict[str, Any]) -> bool:
 def has_tag(row: dict[str, Any], tag: str) -> bool:
     """`note` 는 "태그 + 자유 서술" 형식이라 부분 문자열로 본다 (가이드 §7.2)."""
     return tag in (row.get("note") or "")
+
+
+def has_note_tag(note: str | None, tag: str) -> bool:
+    """`note` 에 `tag` 가 **낱말로** 들어 있나.
+
+    `note` 는 "태그 + 자유 서술"(가이드 §7.2)이라 태그를 따로 떼어 낼 구분자가 없다. 그렇다고
+    부분 문자열로 보면(위 `has_tag`) `no-contexts` 같은 오타도 태그로 친다. 그래서
+    앞뒤가 영문·숫자·`-`·`_` 가 아닐 때만 태그로 본다. 한국어 조사가 붙은 `no-context로` 는
+    태그로 친다 — 영문 경계만 보기 때문이다.
+    """
+    pattern = rf"(?<![A-Za-z0-9_-]){re.escape(tag)}(?![A-Za-z0-9_-])"
+    return re.search(pattern, note or "") is not None
 
 
 def find_label_problems(personal: dict[str, list[dict[str, Any]]]) -> list[str]:
@@ -438,11 +451,8 @@ def unknown_causes(merged: Sequence[dict[str, Any]]) -> dict[str, int]:
           `filter-miss` 는 "예외 조항에서만 원인 태그의 자리를 대신한다"고 했기 때문이다.
         - 둘 다 없으면 → `(태그 없음)`. 진짜 태그 누락만 남는다.
     """
-    # label_cli 저장 검증(#88)과 같은 낱말 매칭을 쓴다 — `filter-miss 의심` 이 저장을 통과했다면
-    # 여기서도 filter-miss 로 세져야 한다 (가이드 §6.3.3). tools.label_cli 가 이 모듈을 import
-    # 하므로 순환을 피하려고 함수 안에서 불러온다.
-    from tools.label_cli import has_note_tag
-
+    # label_cli 저장 검증(#88)과 같은 낱말 매칭(`has_note_tag`)을 쓴다 — `filter-miss 의심` 이
+    # 저장을 통과했다면 여기서도 filter-miss 로 세져야 한다 (가이드 §6.3.3).
     counts = {tag: 0 for tag in UNKNOWN_CAUSE_TAGS}
     counts["(태그 없음)"] = 0
     counts[FILTER_MISS_TAG] = 0
