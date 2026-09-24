@@ -17,8 +17,9 @@
 실행:
     python -m classify.baseline_llm --input records.jsonl --out predictions.jsonl
     python -m classify.baseline_llm --input records.jsonl --dry-run   # 프롬프트만 확인
+    python -m classify.baseline_llm ... --provider anthropic            # 유료로 바꿀 때
 
-    ANTHROPIC_API_KEY 는 .env 에서만 읽는다 (§8.4).
+    키(NVIDIA_API_KEY, ANTHROPIC_API_KEY)는 .env 에서만 읽는다 (§8.4).
 """
 
 from __future__ import annotations
@@ -30,12 +31,13 @@ import json
 import os
 import re
 import sys
+import time
 import urllib.error
 import urllib.request
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, NamedTuple
 
 from classify.baselines import (
     METHOD_LLM,
@@ -51,9 +53,30 @@ from pipeline.select_repos import load_env_file, resolve_cache_dir
 
 # 프롬프트를 고치면 올린다. 캐시 키와 예측 파일에 함께 들어가므로 어느 프롬프트로 낸 답인지 남는다.
 PROMPT_VERSION = "b1"
-DEFAULT_MODEL = "claude-sonnet-5"
-API_URL = "https://api.anthropic.com/v1/messages"
-API_VERSION = "2023-06-01"
+
+# 공급자 (#59). NVIDIA API 무료 한도로 먼저 가고, 한도나 응답 품질로 안 되면 Anthropic 유료로
+# 바꾼다 (2026-09-24 팀 결정). 모델은 캐시 키·예측 파일에 들어가므로 바꾸면 자동으로 다시 묻는다.
+DEFAULT_PROVIDER = "nvidia"
+# 2026-09-24 에 목록(`/v1/models`, 82개)에서 부를 수 있는 모델을 실제로 불러 골랐다. 목록에
+# 있어도 404·503·60초 초과가 많았고, 답이 온 것은 이것과 `z-ai/glm-5.3` 이었다. 예비 레코드
+# 5건에서 둘 다 형식 5/5, 사람 라벨과 4/5 로 같았고, 이쪽이 생각 과정을 끌 수 있어 평균
+# 10초로 GLM(19초, 최대 43초, 생각 토큰 최대 1,547)보다 빠르고 답이 흔들릴 여지가 적다 (#59).
+NVIDIA_MODEL = "deepseek-ai/deepseek-v4.1-flash"
+# 이 모델은 기본으로 생각 과정(reasoning)을 먼저 쓴다. 그게 `MAX_ANSWER_TOKENS` 를 다 써 버리면
+# 답(`content`)이 빈 채로 온다 - 실제 프롬프트 첫 호출이 그랬다. 모델을 바꿀 때 그 모델이 이
+# 옵션을 무시하면(GLM 은 무시하고 늘 생각한다) 토큰 상한을 늘려야 한다.
+NVIDIA_REQUEST_OPTIONS: dict[str, Any] = {"chat_template_kwargs": {"thinking": False}}
+ANTHROPIC_MODEL = "claude-sonnet-5"
+DEFAULT_MODEL = NVIDIA_MODEL
+NVIDIA_API_URL = "https://integrate.api.nvidia.com/v1/chat/completions"
+# 무료 한도가 분당 40회다. 넘으면 429 가 한 건의 호출 실패로 남아 그 레코드가 UNK 가 되므로,
+# 한도보다 조금 느리게 부른다. 캐시에 있는 건은 호출기를 거치지 않아 기다리지 않는다.
+NVIDIA_MIN_INTERVAL_SECONDS = 1.6
+# 무료 한도는 대기열이 길 때가 있다 (실측 한 건 7~13초, 다른 모델은 60초를 넘기기도 했다).
+NVIDIA_TIMEOUT_SECONDS = 120
+ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages"
+ANTHROPIC_API_VERSION = "2023-06-01"
+MAX_ANSWER_TOKENS = 256
 MAX_DIFF_CHARS = 4000
 MAX_MESSAGE_CHARS = 2000
 
@@ -143,18 +166,18 @@ def anthropic_caller(api_key: str, *, timeout: int = 60) -> Caller:
         payload = json.dumps(
             {
                 "model": model,
-                "max_tokens": 256,
+                "max_tokens": MAX_ANSWER_TOKENS,
                 "system": system,
                 "messages": [{"role": "user", "content": prompt}],
             }
         ).encode("utf-8")
         request = urllib.request.Request(
-            API_URL,
+            ANTHROPIC_API_URL,
             data=payload,
             headers={
                 "content-type": "application/json",
                 "x-api-key": api_key,
-                "anthropic-version": API_VERSION,
+                "anthropic-version": ANTHROPIC_API_VERSION,
             },
         )
         with urllib.request.urlopen(request, timeout=timeout) as response:
@@ -163,6 +186,79 @@ def anthropic_caller(api_key: str, *, timeout: int = 60) -> Caller:
         return "".join(block.get("text", "") for block in blocks if block.get("type") == "text")
 
     return call
+
+
+def nvidia_caller(
+    api_key: str,
+    *,
+    timeout: int = NVIDIA_TIMEOUT_SECONDS,
+    min_interval: float = NVIDIA_MIN_INTERVAL_SECONDS,
+) -> Caller:
+    """NVIDIA API(build.nvidia.com) 호출기. OpenAI 호환 chat completions 다 (#59).
+
+    `anthropic_caller` 와 같은 이유로 urllib 으로 직접 부른다. `temperature` 를 0 으로 두는 것은
+    같은 입력에 같은 답을 받기 위해서다 - 캐시가 재실행을 막아 주지만, 캐시를 지운 사람이 다른
+    답을 받으면 기준선 숫자를 재현할 수 없다.
+    """
+    last_call = float("-inf")
+
+    def call(system: str, prompt: str, model: str) -> str:
+        nonlocal last_call
+        wait = last_call + min_interval - time.monotonic()
+        if wait > 0:
+            time.sleep(wait)
+        last_call = time.monotonic()
+        payload = json.dumps(
+            {
+                "model": model,
+                "max_tokens": MAX_ANSWER_TOKENS,
+                "temperature": 0,
+                "messages": [
+                    {"role": "system", "content": system},
+                    {"role": "user", "content": prompt},
+                ],
+                **NVIDIA_REQUEST_OPTIONS,
+            }
+        ).encode("utf-8")
+        request = urllib.request.Request(
+            NVIDIA_API_URL,
+            data=payload,
+            headers={"content-type": "application/json", "authorization": f"Bearer {api_key}"},
+        )
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            body = json.loads(response.read().decode("utf-8"))
+        choices = body.get("choices") or [{}]
+        return (choices[0].get("message") or {}).get("content") or ""
+
+    return call
+
+
+class Provider(NamedTuple):
+    """LLM 공급자 하나. 키 이름·고정 모델·호출기를 한 곳에 묶는다."""
+
+    env_key: str
+    model: str
+    make_caller: Callable[[str], Caller]
+
+
+PROVIDERS: dict[str, Provider] = {
+    "nvidia": Provider("NVIDIA_API_KEY", NVIDIA_MODEL, nvidia_caller),
+    "anthropic": Provider("ANTHROPIC_API_KEY", ANTHROPIC_MODEL, anthropic_caller),
+}
+
+
+def caller_from_env(provider: str) -> Caller | None:
+    """환경 변수의 키로 호출기를 만든다. 키가 없으면 알리고 `None` (§8.4 - 키는 `.env` 에만).
+
+    기준선 B 와 분류기(`--llm`)가 같이 쓴다. 두 곳이 키 이름을 따로 들고 있으면 공급자를 바꿀
+    때 한쪽만 바뀐다.
+    """
+    env_key = PROVIDERS[provider].env_key
+    api_key = os.environ.get(env_key, "").strip()
+    if not api_key:
+        print(f"{env_key} 가 없다. .env 에 채워라 (§8.4).", file=sys.stderr)
+        return None
+    return PROVIDERS[provider].make_caller(api_key)
 
 
 @dataclass
@@ -231,7 +327,9 @@ class LlmBaseline:
 
         self.calls += 1
         text = self.caller(SYSTEM_PROMPT, prompt, self.model)
-        if path is not None:
+        # 빈 답은 남기지 않는다. 답이 아니라 실패다 (생각 과정이 토큰을 다 쓰는 등) - 캐시에
+        # 남기면 원인을 고친 뒤 다시 돌려도 그 건은 영영 다시 묻지 않는다 (#59 에서 실제로 그랬다).
+        if path is not None and text.strip():
             self._write_cache(path, text)
         return text
 
@@ -275,7 +373,8 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--input", type=Path, required=True, help="레코드 JSONL")
     parser.add_argument("--out", type=Path, default=None, help="예측 JSONL 저장 경로")
-    parser.add_argument("--model", default=DEFAULT_MODEL)
+    parser.add_argument("--provider", choices=sorted(PROVIDERS), default=DEFAULT_PROVIDER)
+    parser.add_argument("--model", default=None, help="기본: 공급자별 고정 모델")
     parser.add_argument("--limit", type=int, default=0, help="앞에서 N건만 (비용 확인용)")
     parser.add_argument("--cache-dir", type=Path, default=None)
     parser.add_argument("--env-file", type=Path, default=Path(".env"))
@@ -313,13 +412,13 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"\n(dry-run: {len(records)}건 대상, API 를 부르지 않았다)", file=sys.stderr)
         return 0
 
-    api_key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
-    if not api_key:
-        print("ANTHROPIC_API_KEY 가 없다. .env 에 채워라 (§8.4).", file=sys.stderr)
+    caller = caller_from_env(args.provider)
+    if caller is None:
         return 2
 
     cache_dir = args.cache_dir or resolve_cache_dir(None) / "llm_baseline"
-    baseline = LlmBaseline(anthropic_caller(api_key), model=args.model, cache_dir=cache_dir)
+    model = args.model or PROVIDERS[args.provider].model
+    baseline = LlmBaseline(caller, model=model, cache_dir=cache_dir)
     predictions = baseline.predict_all(records)
 
     if args.out:
