@@ -3,8 +3,9 @@
 CHARTER.md §4.2 파서 계층, ADR-001 기준. `pipeline/parsers/base.py`의 계약
 (`extract_functions(source_text) -> list[Function]`)을 구현한다.
 
-추출 대상(이슈 #4 완료 조건): 모듈 최상위 함수, 클래스 메서드, 중첩 함수, `async def`,
-데코레이터가 붙은 함수. 본문 정규화는 하지 않는다 — 범위 밖(3주차 AST 정규화 이슈).
+추출 대상(이슈 #4 완료 조건): 모듈 최상위 함수, 클래스 메서드(데코레이터가 붙은 클래스의
+메서드 포함, 이슈 #131), 중첩 함수, `async def`, 데코레이터가 붙은 함수. 클래스 자체는
+추출하지 않는다. 본문 정규화는 하지 않는다 — 범위 밖(3주차 AST 정규화 이슈).
 
 라인 번호(1-indexed, inclusive, 데코레이터 포함)와 구문 오류 처리 정책은 `base.py` 독스트링
 참조. 이 모듈은 그 정책을 tree-sitter의 `has_error`로 구현한다: 오류와 겹치는 함수 노드는
@@ -63,15 +64,21 @@ def _walk_children(
     """`node`의 자식들을 훑어 함수 정의를 찾는다. 매치된 노드 자체는 재귀하지 않고,
 
     (데코레이터가 있으면) 안쪽 `function_definition`의 자식들만 이어서 훑어 같은 노드를
-    두 번 담지 않는다.
+    두 번 담지 않는다. 데코레이터가 붙은 클래스는 클래스 자체를 담지 않고, 일반 클래스와
+    똑같이 안쪽 `class_definition`을 훑어 그 안의 메서드를 찾는다 (Issue #131).
     """
     for child in node.children:
         if child.type == "decorated_definition":
             inner = _function_definition_child(child)
-            if inner is not None and not child.has_error:
-                out.append(_build_function(child, inner, source_bytes, lines))
-                _walk_children(inner, source_bytes, lines, out)
-            # has_error 인 경우: 경계를 신뢰할 수 없으므로 안(중첩 함수 포함)을 통째로 버린다
+            if inner is not None:
+                if not child.has_error:
+                    out.append(_build_function(child, inner, source_bytes, lines))
+                    _walk_children(inner, source_bytes, lines, out)
+                # has_error 인 경우: 경계를 신뢰할 수 없으므로 안(중첩 함수 포함)을 통째로 버린다
+            else:
+                definition = child.child_by_field_name("definition")
+                if definition is not None and definition.type == "class_definition":
+                    _walk_children(definition, source_bytes, lines, out)
         elif child.type == "function_definition":
             if not child.has_error:
                 out.append(_build_function(child, child, source_bytes, lines))
