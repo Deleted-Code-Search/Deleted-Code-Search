@@ -29,7 +29,7 @@
 - **적용 범위는 데이터셋 추출이다.** PARTIAL 레코드는 **`deleted_body`가 5줄 이상일 때만** 데이터셋에 포함한다.
 - **라벨링 대상 범위는 이 ADR에서 변경하지 않는다.** 예비 200건과 본 500건은 `docs/labeling_guide.md` v1대로 FULL_FUNCTION만 대상으로 한다. 라벨링에 PARTIAL을 포함할지는 게이트 1 이후 별도 결정으로 남긴다.
 - **4줄 이하 PARTIAL은 `filter_status`를 `NOISE_TRIVIAL`로 표시해 제외한다.**
-- 줄 수는 `deleted_body`의 줄 수이고 **빈 줄을 포함해 센다** (위 실측과 같은 기준). 구현(#63)은 정확히 `len(deleted_body.splitlines())`이며 마지막 빈 줄은 세지 않는다 (아래 "한계").
+- 줄 수는 `deleted_body`의 줄 수이고 **빈 줄을 포함해 센다** (위 실측과 같은 기준).
 - FULL_FUNCTION은 줄 수와 무관하게 이 규칙의 대상이 아니다.
 - §4.4 `DeletionRecord.filter_status` enum에 `NOISE_TRIVIAL`을 추가한다 (스키마 변경, §13).
 
@@ -47,14 +47,12 @@
 ## 한계
 - **5줄이라는 값은 다시 볼 수 있다.** 게이트 1 라벨링은 FULL_FUNCTION만 다루므로 이 값을 직접 검증하지 않는다.
   라벨링에 PARTIAL을 포함할지 정할 때 함께 재검토하고, 포함한다면 5-9줄 구간에서 UNK 비율이 높게 나올 때 기준을 올린다.
-- **줄 수는 빈 줄을 포함해 센다.** 주석만 5줄 이상 삭제된 PARTIAL도 유지된다. 다만 줄 수는 `len(deleted_body.splitlines())`이고
-  `deleted_body`는 삭제 줄을 `"\n"`으로 이어 붙인 값(끝 개행 없음)이라, **마지막 삭제 줄이 빈 줄이면 그 줄은 세지 않는다** (보정하지 않는다, #63).
-  빈 줄만 5줄 삭제된 PARTIAL은 4로 세어 `NOISE_TRIVIAL`이 되고, 6줄이어야 유지된다. 코드 4줄 뒤에 빈 줄 1줄이 함께 삭제된 경우도 4로 세어 제외된다.
+- **줄 수는 빈 줄을 포함해 센다.** 빈 줄이나 주석만 5줄 이상 삭제된 PARTIAL도 유지된다.
 - 삭제 줄만 센다. 대체(추가) 코드의 줄 수는 보지 않는다.
 - 근거 표본이 얇다. 1~4줄 사례는 requests 재표본 PARTIAL 19건에서 나왔고 판정자는 1인이다.
 
 ## 영향
-- `pipeline/filter.py` 구현: **#63 (재헌)**. 추출 JSONL에는 `filter_status` 필드가 없고, NOISE_TRIVIAL 레코드는 NOISE_MOVE와 같은 방식으로 추출 JSONL에서 빠져 **excluded JSONL에 보존된다** (#97 구조, `filter_evidence = {"line_count": 줄 수}`, `docs/filter_rules.md` "제외 레코드 보존" 절).
+- `pipeline/filter.py` 구현: **#63 (재헌)**. 현재 JSONL에는 `filter_status` 필드가 없고 NOISE_MOVE는 레코드를 빼는 방식이다. NOISE_TRIVIAL을 같은 방식으로 뺄지는 #63에서 정한다.
 - CHARTER.md: §4.2 ②에 규칙 추가, §4.4 `filter_status`에 `NOISE_TRIVIAL` 추가, §5 표에 행 추가, §19 기록 (v1.13).
 - `docs/filter_rules.md`: NOISE_TRIVIAL 행과 세부 규칙 추가, 규칙 버전 v0.4 → v0.5.
 - **라벨링 입력은 바뀌지 않는다.** 예비 200건과 본 500건은 `docs/labeling_guide.md` v1대로 FULL_FUNCTION만 대상이다.
@@ -62,3 +60,20 @@
   라벨링에 PARTIAL을 포함할지는 게이트 1 이후 별도 결정이다.
 - 필터 규칙 변경이므로 §10.1 정밀도 재측정 대상에 포함한다 (수동 200건: 통과 100 + 제외 100).
 - 라벨 데이터가 아직 없어 재라벨 비용은 없다.
+
+## 후속 메모 — 2026-09-24, Issue #63 / PR #125
+
+이 메모는 위 결정을 변경하지 않는다. #63 구현 시 확정된 세부 동작·한계·후속 구현 상태를 기록한다.
+
+- **구현 완료.** Issue #63 / PR #125에서 NOISE_TRIVIAL을 구현했다 (`pipeline/filter.py:partition_trivial`, `pipeline/extract.py:extract_repo_with_excluded`).
+- **줄 수 계산은 정확히 `len(deleted_body.splitlines())`이다.** 내부 필드 기준으로는 `len(deleted_hunk.splitlines())`. trailing empty line을 별도로 보정하지 않는다.
+- **마지막 빈 줄은 세지 않을 수 있다.** `deleted_body`는 삭제 줄을 `"\n"`으로 이어 붙인 값이고 끝 개행이 없으므로,
+  마지막 삭제 줄이 빈 줄이면 실제 삭제 줄 수보다 1 적게 계산된다. 예:
+  - 빈 줄만 5줄 삭제 → `splitlines()` 기준 4 → `NOISE_TRIVIAL`
+  - 빈 줄만 6줄 삭제 → `splitlines()` 기준 5 → 유지
+
+  이 동작은 Issue #63에서 확정된 구현 기준이며 보정하지 않는다.
+- **제외 레코드 보존.** #97 계약에 따라 NOISE_TRIVIAL 제외 레코드도 추출 JSONL에서 빠지고 excluded JSONL에 보존된다.
+  `filter_status = "NOISE_TRIVIAL"`, `filter_evidence = {"line_count": n}` (n은 위 줄 수).
+- **규칙 버전.** Issue #63 구현 이후 filter rule version은 **v0.6**이다 (`pipeline/filter.py:FILTER_RULE_VERSION`, `docs/filter_rules.md`). v0.5는 이 ADR(#62)의 명세 버전으로 남는다.
+- **정밀도 재측정은 #89에서 진행한다.** PR #125에서는 수행하지 않는다.

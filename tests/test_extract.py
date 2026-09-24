@@ -1064,7 +1064,7 @@ def test_extract_repo_with_excluded_applies_noise_trivial_with_noise_move(tmp_pa
     ]
     trivial, moved = excluded
     assert trivial.filter_evidence == {"line_count": 4}
-    assert trivial.filter_rule_version == "v0.5"
+    assert trivial.filter_rule_version == "v0.6"
     assert moved.filter_evidence["file_path"] == "new/a.py"
     assert trivial.record == extracted[0]  # 원본 레코드 그대로
 
@@ -1453,7 +1453,7 @@ def test_excluded_row_from_partition_trivial_has_line_count_and_added_hunks():
 
     assert len(payload) == 16 + 3
     assert payload["filter_status"] == "NOISE_TRIVIAL"
-    assert payload["filter_rule_version"] == "v0.5"
+    assert payload["filter_rule_version"] == "v0.6"
     assert payload["filter_evidence"] == {"line_count": 2}
     assert payload["deleted_body"] == record.deleted_hunk
     assert (

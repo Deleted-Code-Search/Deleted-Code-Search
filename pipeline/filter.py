@@ -163,7 +163,7 @@ LINE_COUNT_SKIP_RATIO = 0.20
 # excluded JSONL의 `filter_rule_version` (Issue #97). `docs/filter_rules.md` 첫 줄의
 # "버전:"과 항상 같아야 한다 — 문서 버전을 올리면 이 값도 같은 PR에서 올린다
 # (`tests/test_filter.py`가 둘이 같은지 확인한다).
-FILTER_RULE_VERSION = "v0.5"
+FILTER_RULE_VERSION = "v0.6"
 
 # ADR-015 확정값: PARTIAL의 `deleted_hunk` 줄 수가 이보다 작으면(4줄 이하) NOISE_TRIVIAL.
 PARTIAL_MIN_LINES = 5

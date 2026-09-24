@@ -1011,7 +1011,7 @@ def test_partition_trivial_never_excludes_short_full_function():
 
 
 def test_partition_trivial_excluded_record_has_status_version_and_line_count():
-    """제외 레코드는 #97 `ExcludedRecord` 그대로: 원본 레코드 객체, NOISE_TRIVIAL, v0.5,
+    """제외 레코드는 #97 `ExcludedRecord` 그대로: 원본 레코드 객체, NOISE_TRIVIAL, v0.6,
     `filter_evidence == {"line_count": n}`. #102 `added_hunks_same_file`도 레코드째 남는다."""
     hunks = (extract_module.AddedHunk(2, 3, 2, 1, "    y = 0"),)
     record = dataclasses.replace(
@@ -1028,7 +1028,7 @@ def test_partition_trivial_excluded_record_has_status_version_and_line_count():
     assert item.record.added_hunks_same_file is hunks
     assert item.filter_status == "NOISE_TRIVIAL"
     assert item.filter_status == filter_module.NOISE_TRIVIAL
-    assert item.filter_rule_version == "v0.5"
+    assert item.filter_rule_version == "v0.6"
     assert item.filter_rule_version == filter_module.FILTER_RULE_VERSION
     assert item.filter_evidence == {"line_count": 3}
 
