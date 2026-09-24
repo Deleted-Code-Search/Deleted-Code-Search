@@ -857,7 +857,8 @@ def test_missing_field_is_undetermined_not_none():
 
 def test_same_name_addition_is_a_same_location_replacement():
     added = "def parse(raw):\n    return [p.strip() for p in raw.split(',')]\nPARSERS = [parse]\n"
-    result = ctx.match_replacement(_record(added_hunks_same_file=_hunks(added)))
+    record = _record(start_line=1, end_line=2, added_hunks_same_file=_hunks(added))
+    result = ctx.match_replacement(record)
 
     assert result.match_method == ctx.MATCH_SAME_LOCATION
     assert result.confidence == ctx.SAME_NAME_CONFIDENCE
@@ -934,7 +935,7 @@ def test_a_function_cut_off_by_the_hunk_does_not_become_code():
 
 def test_child_source_recovers_the_whole_function():
     """자식 파일 원문을 주면 잘린 부분까지 복원한다 - 헝크 좌표로 자리를 찾는다."""
-    record = _record(added_hunks_same_file=_hunks(TRUNCATED_HUNK))
+    record = _record(start_line=1, end_line=2, added_hunks_same_file=_hunks(TRUNCATED_HUNK))
     result = ctx.match_replacement(record, child_source=WHOLE_PARSE)
 
     assert result.code == WHOLE_PARSE.rstrip("\n")
@@ -1045,11 +1046,62 @@ def test_similarity_compares_tokens_not_whole_lines():
         ({"old_start": 130, "old_count": 0}, True),  # 순수 추가 - 130 뒤에 끼워 넣었다
         ({"old_start": 300, "old_count": 5}, False),  # 딴 자리
         ({"old_count": 5}, False),  # 좌표 없음 - 모르는 것
+        # ±2줄 (#111). 경계가 함수와 한두 줄 어긋난 헝크는 자리다
+        ({"old_start": 143, "old_count": 1}, True),  # 끝에서 2줄 뒤
+        ({"old_start": 144, "old_count": 1}, False),  # 3줄 뒤
+        ({"old_start": 110, "old_count": 7}, True),  # 110-116, 시작 2줄 앞
+        ({"old_start": 110, "old_count": 6}, False),  # 110-115, 3줄 앞
+        # 순수 추가는 그 줄 뒤의 빈 범위다 - 바꾼 헝크와 같은 기준 (#111 리뷰)
+        ({"old_start": 142, "old_count": 0}, True),  # 142 뒤 = 143 에서 시작하는 헝크와 같다
+        ({"old_start": 143, "old_count": 0}, False),  # 143 뒤 = 144 에서 시작하는 헝크와 같다
+        ({"old_start": 116, "old_count": 0}, True),  # 116 뒤 = 116 에서 끝나는 헝크와 같다
+        ({"old_start": 115, "old_count": 0}, False),  # 115 뒤 = 115 에서 끝나는 헝크와 같다
     ],
 )
 def test_deletion_site_uses_parent_coordinates(hunk, expected):
-    """헝크의 옛 좌표가 삭제된 함수 범위(부모 118-141)에 걸치는지로 자리를 판정한다 (#107)."""
+    """헝크의 옛 좌표가 삭제된 함수 범위(부모 118-141) ±2줄에 걸치는지로 판정한다 (#107, #111)."""
     assert ctx._at_deletion_site(hunk, 118, 141) is expected
+
+
+ADDED_INIT = "def parse(raw):\n    return raw.split(';')\nX = 1\n"
+
+
+def test_single_candidate_a_line_or_two_off_is_still_at_the_site():
+    """헝크 경계가 함수와 한두 줄 어긋나도 제자리 교체다 (#111).
+
+    예비 200건 `errors.py::__init__` 모양 - 부모 83-84, 헝크는 81 뒤에 끼워 넣었다.
+    """
+    record = _record(
+        start_line=83, end_line=84, added_hunks_same_file=[_hunk_at(81, 0, ADDED_INIT)]
+    )
+
+    assert ctx.match_replacement(record).confidence == ctx.SAME_NAME_CONFIDENCE
+
+
+@pytest.mark.parametrize(
+    ("start_line", "end_line"),
+    [
+        (774, 780),  # 예비 200건 `mypy.py::to_var` 모양 - 헝크는 320줄, 450줄 넘게 떨어졌다
+        (None, None),  # 삭제 위치를 모른다 - 자리를 확인하지 못했다
+    ],
+)
+def test_single_candidate_not_confirmed_at_the_site_gets_lower_confidence(start_line, end_line):
+    """후보가 하나여도 자리가 확인되지 않으면 0.9 가 아니다 (#111).
+
+    버리지는 않는다 - "같은 커밋·같은 파일에 같은 이름 함수가 들어왔다"는 사실은 쓸모가 있다.
+    가이드 §6.2.2 가 0.8 미만인 대체 코드만으로 근거 ① 을 0.8 이상에 넣지 않으므로, 라벨러는
+    이 건에서 다른 근거로 받쳐야 한다.
+    """
+    record = _record(
+        start_line=start_line,
+        end_line=end_line,
+        added_hunks_same_file=[_hunk_at(320, 0, ADDED_INIT)],
+    )
+    result = ctx.match_replacement(record)
+
+    assert result.match_method == ctx.MATCH_SAME_LOCATION
+    assert result.confidence == ctx.AMBIGUOUS_NAME_CONFIDENCE
+    assert "split(';')" in result.code
 
 
 def test_record_without_line_numbers_is_never_at_the_site():

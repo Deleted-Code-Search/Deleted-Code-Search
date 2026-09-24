@@ -589,10 +589,19 @@ MATCH_SAME_LOCATION = "SAME_LOCATION"
 MATCH_CALLER_CHANGE = "CALLER_CHANGE"
 MATCH_NONE = "NONE"
 
-# 같은 이름 함수가 하나만 추가됐을 때. 1.0 이 아닌 이유는 `match_replacement` 독스트링 참고.
+# 삭제 자리(±`SITE_TOLERANCE_LINES`)에서 같은 이름 함수가 하나로 확인됐을 때. 1.0 이 아닌
+# 이유는 `match_replacement` 독스트링 참고.
 SAME_NAME_CONFIDENCE = 0.9
-# 같은 이름 후보가 여럿이라 유사도로 고른 경우. 위치가 아니라 본문으로 고른 것이라 낮춘다.
+# 위치로 확인하지 못한 후보. 같은 이름이 여럿이라 본문으로 골랐거나, 하나뿐이지만 삭제
+# 자리에서 멀거나 위치를 모를 때다 (#111). 가이드 §6.2.2 는 0.8 미만인 대체 코드만으로
+# 근거 ① 을 0.8 이상에 넣지 않으므로, 자리가 확인되지 않은 대체는 다른 근거가 받쳐야 한다.
 AMBIGUOUS_NAME_CONFIDENCE = 0.7
+# §4.2 ③ "삭제 위치 ±N줄" 의 N (#111). 헝크 경계는 함수 경계와 한두 줄 어긋난다 - 예비
+# 200건에서 `_core_utils.py::is_typed_dict_field`(부모 27-28, 헝크 29)와 `errors.py::__init__`
+# (83-84, 81)가 그랬다. 같은 이름 후보까지의 거리는 0~2 줄이거나 18 줄 이상으로 갈려서
+# 2~17 중 무엇을 잡아도 결과가 같다. 가장 작은 값을 쓴다 - 넓힐수록 새 저장소에서 "자리"가
+# 잘못 넓어질 위험만 커진다. 20개 저장소 추출(#82)에서 이 간격이 무너지면 다시 본다.
+SITE_TOLERANCE_LINES = 2
 
 # 추출 출력의 추가 줄 필드. 헝크 단위 새 이름이 있으면 그것을 쓰고, 없으면 옛 평탄한 문자열을
 # 읽는다 (2026-09-23 팀 확정). 예비 200건이 옛 형식으로 이미 뽑혀 있어 둘 다 읽어야 한다.
@@ -767,20 +776,21 @@ UNDETERMINED = Replacement(code=None, match_method=None, confidence=0.0)
 def match_replacement(record: dict[str, Any], *, child_source: str | None = None) -> Replacement:
     """레코드 하나의 대체 코드를 찾는다 (§4.2 ③ "삭제 위치 ±N줄 내 추가된 함수/블록").
 
-    **지금은 줄 번호가 없어 위치로 판정하지 못한다.** 부모 파일의 `start_line` 과 추가
-    줄을 이어 붙일 좌표가 레코드에 없다. 헝크 좌표(#102)가 붙으면 그때 위치로 판정한다.
-
-    그래서 지금 판정하는 것은 두 경우뿐이다.
+    판정하는 것은 두 경우뿐이다.
 
     - **추가 줄이 하나도 없다** -> `NONE`. 그 커밋이 그 파일에 아무것도 안 넣었으므로
       대체 코드가 없다는 것이 확실하다. **이 판정은 옛 평탄한 필드로도 안전하다** -
       비었는지만 보고 조각을 붙이지 않는다
-    - **삭제된 함수와 같은 이름의 함수가 추가됐다** -> `SAME_LOCATION`, 신뢰도
-      `SAME_NAME_CONFIDENCE`. 이동 필터(§4.2 ②)가 **"이 파일 다른 자리로 옮겨 간 것"을 이미
-      빼고 남긴 레코드**라(`filter.partition_moved`), 같은 커밋·같은 파일에 같은 이름이
-      다시 나타났다면 제자리 교체로 본다. 1.0 이 아닌 것은 잔여 가능성 때문이다 - 본문이
-      크게 다시 쓰이면서 자리도 옮긴 경우는 유사도 0.9 에 걸리지 않아 이동으로 안 잡히고
-      여기까지 온다
+    - **삭제된 함수와 같은 이름의 함수가 추가됐다** -> `SAME_LOCATION`. 이동 필터(§4.2 ②)가
+      **"이 파일 다른 자리로 옮겨 간 것"을 이미 빼고 남긴 레코드**라(`filter.partition_moved`),
+      같은 커밋·같은 파일에 같은 이름이 다시 나타났다면 교체로 본다. 신뢰도는 **위치**로
+      가른다 (#111). 헝크 좌표(#102)가 삭제된 함수 범위 ±`SITE_TOLERANCE_LINES` 에 걸치는
+      후보가 하나면 `SAME_NAME_CONFIDENCE`, 아니면 `AMBIGUOUS_NAME_CONFIDENCE` 다. 멀리 있는
+      후보를 버리지 않는 것은 "같은 이름 함수가 들어왔다"는 사실이 여전히 쓸모 있어서고,
+      0.9 를 주지 않는 것은 그게 본문이 크게 다시 쓰이면서 자리도 옮긴 경우라서다 - 유사도
+      0.9 에 안 걸려 이동으로 안 잡히고 여기까지 온다 (예비 200건 `mypy.py::to_var` 는
+      부모 774줄 / 헝크 320줄). 자리에서 확인돼도 1.0 이 아닌 것은 같은 이유의 잔여
+      가능성 때문이다
 
     **후보는 헝크별 추가 줄에서만 뽑는다** (`added_hunk_bodies`). 옛 평탄한 필드
     (`added_hunk_same_file`)밖에 없으면 `code` 를 채우지 않고 `UNDETERMINED` 로 둔다 -
@@ -822,10 +832,11 @@ def match_replacement(record: dict[str, Any], *, child_source: str | None = None
     at_site = [candidate for candidate in candidates if candidate.at_site]
     pool = at_site or candidates
 
-    # 신뢰도는 **최종 후보군이 몇 개였나**로 정한다. 위치로 하나로 좁혀졌다면 모호함이
-    # 사라진 것이라 후보가 처음부터 하나였던 경우와 같다. 본문을 복원했는지와는 무관하다 -
-    # 모호함은 "같은 이름이 여럿"에서 오고, 그건 본문을 못 보여줘도 그대로다.
-    confidence = SAME_NAME_CONFIDENCE if len(pool) == 1 else AMBIGUOUS_NAME_CONFIDENCE
+    # 신뢰도는 **삭제 자리에서 하나로 확인됐나**로 정한다. 위치로 하나로 좁혀졌다면 모호함이
+    # 사라진 것이다. 후보가 하나뿐이어도 자리가 아니거나 위치를 모르면 확인된 것이 아니다
+    # (#111 - 예비 200건에서 후보 하나인 29건 중 8건이 18줄 이상 떨어져 있었다). 본문을
+    # 복원했는지와는 무관하다 - 불확실함은 위치에서 오고, 본문을 못 보여줘도 그대로다.
+    confidence = SAME_NAME_CONFIDENCE if len(at_site) == 1 else AMBIGUOUS_NAME_CONFIDENCE
     usable = [candidate for candidate in pool if candidate.code]
     if not usable:
         return Replacement(None, MATCH_SAME_LOCATION, confidence)
@@ -871,19 +882,24 @@ def _same_name_candidates(record: dict[str, Any], child_source: str | None) -> l
 
 
 def _at_deletion_site(hunk: dict[str, Any], start_line: Any, end_line: Any) -> bool:
-    """헝크가 삭제된 함수 자리(부모 좌표 `[start_line, end_line]`)에 걸치나.
+    """헝크가 삭제된 함수 자리(부모 좌표 `[start_line, end_line]` ±`SITE_TOLERANCE_LINES`)에 걸치나.
 
     헝크의 `old_start`·`old_count` 는 부모 파일 좌표다 (#102). 제자리 교체는 보통 삭제와
     추가가 한 헝크에 묶여(`@@ -118,24 +118,9 @@`) 그 옛 범위가 삭제된 함수와 겹친다.
-    `old_count == 0` 인 순수 추가 헝크는 `old_start` 줄 **뒤에** 끼워 넣은 것이라 그 한 줄을
-    범위로 본다. 좌표가 없는 레코드(옛 형식, 테스트 픽스처)는 위치를 모르는 것이라
-    `False` - 유사도로 떨어진다.
+    `old_count == 0` 인 순수 추가 헝크는 `old_start` 줄 **뒤에** 끼워 넣은 것이라 그 줄과 다음
+    줄 사이의 빈 범위 `[old_start + 1, old_start]` 로 본다 (#111 리뷰). 그 줄 자체로 보면 함수
+    뒤쪽에서, 다음 줄로 보면 앞쪽에서 한 줄씩 너그러워진다 - 빈 범위로 보면 어느 헝크든 양쪽
+    모두 "사이에 낀 줄 `SITE_TOLERANCE_LINES - 1` 개까지"로 같다. 좌표가 없는 레코드(옛 형식,
+    테스트 픽스처)는 위치를 모르는 것이라 `False` - 유사도로 떨어지고 신뢰도도 낮춘다.
     """
     old_start = hunk.get("old_start")
     if not all(isinstance(value, int) for value in (old_start, start_line, end_line)):
         return False
-    old_end = old_start + max(hunk.get("old_count") or 0, 1) - 1
-    return old_start <= end_line and start_line <= old_end
+    old_count = hunk.get("old_count") or 0
+    first = old_start + (old_count == 0)
+    last = first + old_count - 1
+    tolerance = SITE_TOLERANCE_LINES
+    return first <= end_line + tolerance and start_line - tolerance <= last
 
 
 def read_child_source(repo_path: str | Path, commit_sha: str, file_path: str) -> str | None:
