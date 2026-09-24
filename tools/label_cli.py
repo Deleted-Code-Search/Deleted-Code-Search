@@ -479,7 +479,8 @@ def render_record(view: dict[str, Any]) -> str:
         "== 삭제된 코드 (deleted_body) ==",
         _code(view.get("deleted_body")),
         "",
-        f"== 대체 코드 (replacement, match_method={_one_line(replacement.get('match_method'))}) ==",
+        f"== 대체 코드 (replacement, match_method={_one_line(replacement.get('match_method'))}, "
+        f"confidence={_one_line(replacement.get('confidence'))}) ==",
         _code(replacement.get("code")),
         RULE,
     ]

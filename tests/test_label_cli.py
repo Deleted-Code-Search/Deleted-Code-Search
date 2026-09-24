@@ -199,6 +199,13 @@ def test_context_is_shown_before_code():
     assert rendered.index("deleted_body") < rendered.index("match_method=SAME_LOCATION")
 
 
+def test_replacement_confidence_is_on_screen():
+    """파일에 실려도 화면이 안 찍으면 라벨러는 못 본다 - 가이드 §6.2.2 근거 ① 구간 상한 (#117)."""
+    rendered = label_cli.render_record(label_cli.labeler_view(make_record(0)))
+
+    assert "match_method=SAME_LOCATION, confidence=0.8)" in rendered
+
+
 # --------------------------------------------------------------------------------------
 # 잘못된 입력 거부
 # --------------------------------------------------------------------------------------
