@@ -429,9 +429,23 @@ def unknown_causes(merged: Sequence[dict[str, Any]]) -> dict[str, int]:
 
     "회수율이 낮다"와 "왜 낮다"는 대응이 다르다. 맥락이 안 붙어서면 저장소 재선정,
     맥락은 붙는데 이유가 안 적혀 있어서면 대체 코드 중심으로 축 이동이다 (§11).
+
+    UNKNOWN 라벨 1건은 셋 중 한 곳에만 들어간다:
+        - 원인 태그 4종 중 하나라도 있으면 → 그 태그들 (복수면 각각)
+        - 원인 태그 없이 `filter-miss` 만 있으면 → `filter-miss` 칸. §6.3.2 예외 조항으로
+          유효한 라벨이지만 "무엇이 없어서 못 했나"를 물을 대상이 아니므로 원인 분포에 넣지
+          않는다 (#134). 원인 태그와 함께 달린 `filter-miss` 는 원인 태그로만 센다 — §6.3.2가
+          `filter-miss` 는 "예외 조항에서만 원인 태그의 자리를 대신한다"고 했기 때문이다.
+        - 둘 다 없으면 → `(태그 없음)`. 진짜 태그 누락만 남는다.
     """
+    # label_cli 저장 검증(#88)과 같은 낱말 매칭을 쓴다 — `filter-miss 의심` 이 저장을 통과했다면
+    # 여기서도 filter-miss 로 세져야 한다 (가이드 §6.3.3). tools.label_cli 가 이 모듈을 import
+    # 하므로 순환을 피하려고 함수 안에서 불러온다.
+    from tools.label_cli import has_note_tag
+
     counts = {tag: 0 for tag in UNKNOWN_CAUSE_TAGS}
     counts["(태그 없음)"] = 0
+    counts[FILTER_MISS_TAG] = 0
     for row in merged:
         for label in row["labels"]:
             if label.get("evidence_grade") != "UNKNOWN":
@@ -440,6 +454,8 @@ def unknown_causes(merged: Sequence[dict[str, Any]]) -> dict[str, int]:
             if tags:
                 for tag in tags:
                     counts[tag] += 1
+            elif has_note_tag(label.get("note"), FILTER_MISS_TAG):
+                counts[FILTER_MISS_TAG] += 1
             else:
                 counts["(태그 없음)"] += 1
     return counts
@@ -498,12 +514,19 @@ def format_report(
     if sum(causes.values()):
         lines.append("")
         lines.append("### UNKNOWN 원인 (가이드 §6.3)")
+        filter_miss = causes.pop(FILTER_MISS_TAG)
         for tag, count in sorted(causes.items(), key=lambda item: -item[1]):
             if count:
                 lines.append(f"- {tag}: {count}건")
         lines.append(
             "맥락이 안 붙어서면 저장소 재선정, 맥락은 붙는데 이유가 없어서면 축 이동 (§11)."
         )
+        if filter_miss:
+            lines.append("")
+            lines.append(
+                f"- {FILTER_MISS_TAG} (원인 태그 없이): {filter_miss}건 — "
+                "원인 분포에서 제외(§6.3.2). 태그 누락이 아니다"
+            )
 
     for field_name, classes in (
         ("reason_label", REASON_LABELS),
