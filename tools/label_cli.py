@@ -49,6 +49,7 @@ from classify.labels import (
     FILTER_MISS_TAG,
     REASON_LABELS,
     UNKNOWN_CAUSE_TAGS,
+    has_note_tag,
     is_filled,
 )
 from classify.sampling import (
@@ -256,18 +257,6 @@ def found_in_context(evidence: str, view: dict[str, Any]) -> bool:
 # 집계)는 이 검사를 부르지 않는다. 예비 200건(v1) 파일에 태그 없는 UNKNOWN 이 있고, 그 파일은
 # v1 기준으로 완성된 기록이라 고치지 않는다 (가이드 §10.3 — 200건은 재라벨하지 않는다).
 # --------------------------------------------------------------------------------------
-
-
-def has_note_tag(note: str | None, tag: str) -> bool:
-    """`note` 에 `tag` 가 **낱말로** 들어 있나.
-
-    `note` 는 "태그 + 자유 서술"(가이드 §7.2)이라 태그를 따로 떼어 낼 구분자가 없다. 그렇다고
-    부분 문자열로 보면(`classify.labels.has_tag`) `no-contexts` 같은 오타도 태그로 친다. 그래서
-    앞뒤가 영문·숫자·`-`·`_` 가 아닐 때만 태그로 본다. 한국어 조사가 붙은 `no-context로` 는
-    태그로 친다 — 영문 경계만 보기 때문이다.
-    """
-    pattern = rf"(?<![A-Za-z0-9_-]){re.escape(tag)}(?![A-Za-z0-9_-])"
-    return re.search(pattern, note or "") is not None
 
 
 def requires_unknown_cause_tag(label: Mapping[str, Any]) -> bool:

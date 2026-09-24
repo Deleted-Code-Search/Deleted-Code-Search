@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from collections.abc import Sequence
 from dataclasses import dataclass, field
@@ -95,6 +96,18 @@ def is_filled(row: dict[str, Any]) -> bool:
 def has_tag(row: dict[str, Any], tag: str) -> bool:
     """`note` 는 "태그 + 자유 서술" 형식이라 부분 문자열로 본다 (가이드 §7.2)."""
     return tag in (row.get("note") or "")
+
+
+def has_note_tag(note: str | None, tag: str) -> bool:
+    """`note` 에 `tag` 가 **낱말로** 들어 있나.
+
+    `note` 는 "태그 + 자유 서술"(가이드 §7.2)이라 태그를 따로 떼어 낼 구분자가 없다. 그렇다고
+    부분 문자열로 보면(위 `has_tag`) `no-contexts` 같은 오타도 태그로 친다. 그래서
+    앞뒤가 영문·숫자·`-`·`_` 가 아닐 때만 태그로 본다. 한국어 조사가 붙은 `no-context로` 는
+    태그로 친다 — 영문 경계만 보기 때문이다.
+    """
+    pattern = rf"(?<![A-Za-z0-9_-]){re.escape(tag)}(?![A-Za-z0-9_-])"
+    return re.search(pattern, note or "") is not None
 
 
 def find_label_problems(personal: dict[str, list[dict[str, Any]]]) -> list[str]:
@@ -429,9 +442,20 @@ def unknown_causes(merged: Sequence[dict[str, Any]]) -> dict[str, int]:
 
     "회수율이 낮다"와 "왜 낮다"는 대응이 다르다. 맥락이 안 붙어서면 저장소 재선정,
     맥락은 붙는데 이유가 안 적혀 있어서면 대체 코드 중심으로 축 이동이다 (§11).
+
+    UNKNOWN 라벨 1건은 셋 중 한 곳에만 들어간다:
+        - 원인 태그 4종 중 하나라도 있으면 → 그 태그들 (복수면 각각)
+        - 원인 태그 없이 `filter-miss` 만 있으면 → `filter-miss` 칸. §6.3.2 예외 조항으로
+          유효한 라벨이지만 "무엇이 없어서 못 했나"를 물을 대상이 아니므로 원인 분포에 넣지
+          않는다 (#134). 원인 태그와 함께 달린 `filter-miss` 는 원인 태그로만 센다 — §6.3.2가
+          `filter-miss` 는 "예외 조항에서만 원인 태그의 자리를 대신한다"고 했기 때문이다.
+        - 둘 다 없으면 → `(태그 없음)`. 진짜 태그 누락만 남는다.
     """
+    # label_cli 저장 검증(#88)과 같은 낱말 매칭(`has_note_tag`)을 쓴다 — `filter-miss 의심` 이
+    # 저장을 통과했다면 여기서도 filter-miss 로 세져야 한다 (가이드 §6.3.3).
     counts = {tag: 0 for tag in UNKNOWN_CAUSE_TAGS}
     counts["(태그 없음)"] = 0
+    counts[FILTER_MISS_TAG] = 0
     for row in merged:
         for label in row["labels"]:
             if label.get("evidence_grade") != "UNKNOWN":
@@ -440,6 +464,8 @@ def unknown_causes(merged: Sequence[dict[str, Any]]) -> dict[str, int]:
             if tags:
                 for tag in tags:
                     counts[tag] += 1
+            elif has_note_tag(label.get("note"), FILTER_MISS_TAG):
+                counts[FILTER_MISS_TAG] += 1
             else:
                 counts["(태그 없음)"] += 1
     return counts
@@ -498,12 +524,19 @@ def format_report(
     if sum(causes.values()):
         lines.append("")
         lines.append("### UNKNOWN 원인 (가이드 §6.3)")
+        filter_miss = causes.pop(FILTER_MISS_TAG)
         for tag, count in sorted(causes.items(), key=lambda item: -item[1]):
             if count:
                 lines.append(f"- {tag}: {count}건")
         lines.append(
             "맥락이 안 붙어서면 저장소 재선정, 맥락은 붙는데 이유가 없어서면 축 이동 (§11)."
         )
+        if filter_miss:
+            lines.append("")
+            lines.append(
+                f"- {FILTER_MISS_TAG} (원인 태그 없이): {filter_miss}건 — "
+                "원인 분포에서 제외(§6.3.2). 태그 누락이 아니다"
+            )
 
     for field_name, classes in (
         ("reason_label", REASON_LABELS),

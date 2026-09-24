@@ -389,6 +389,44 @@ def test_unknown_cause_tags_are_counted():
     assert causes["(태그 없음)"] == 1
 
 
+def unknown_rows(*notes: str) -> list[dict]:
+    return [
+        {
+            "record_id": f"r{i}",
+            "labels": [label_row(f"r{i}", "sj", reason="UNK", grade="UNKNOWN", note=note)],
+            "final": None,
+        }
+        for i, note in enumerate(notes)
+    ]
+
+
+def test_filter_miss_only_unknown_is_not_counted_as_missing_tag():
+    """filter-miss만 단 UNKNOWN은 §6.3.2 예외로 유효하다. 태그 누락 칸에 넣지 않는다 (#134)."""
+    causes = labels.unknown_causes(unknown_rows("filter-miss", "filter-miss 재등장: abc1234", ""))
+
+    assert causes["filter-miss"] == 2
+    assert causes["(태그 없음)"] == 1
+    assert all(causes[tag] == 0 for tag in labels.UNKNOWN_CAUSE_TAGS)
+
+
+def test_filter_miss_with_cause_tag_counts_as_cause_only():
+    """원인 태그와 함께 달린 filter-miss는 원인 태그로만 센다 — §6.3.2 "예외 조항에서만
+    원인 태그의 자리를 대신한다". UNKNOWN 1건은 원인 / filter-miss / 태그 없음 중 한 곳에만."""
+    causes = labels.unknown_causes(unknown_rows("filter-miss no-context"))
+
+    assert causes["no-context"] == 1
+    assert causes["filter-miss"] == 0
+    assert causes["(태그 없음)"] == 0
+
+
+def test_filter_miss_uses_the_same_word_match_as_label_cli():
+    """저장 검증(#88)과 판정이 같아야 한다. 낱말이 아닌 `filter-misses` 는 태그가 아니다."""
+    causes = labels.unknown_causes(unknown_rows("filter-misses", "filter-miss로 보임"))
+
+    assert causes["filter-miss"] == 1
+    assert causes["(태그 없음)"] == 1
+
+
 # --------------------------------------------------------------------------------------
 # 리포트 / CLI
 # --------------------------------------------------------------------------------------
@@ -422,6 +460,22 @@ def test_report_contains_gate1_and_kappa_sections():
     assert "통과" in text
     assert "일치도 — reason_label" in text
     assert "UNKNOWN 원인" in text
+
+
+def test_report_prints_filter_miss_apart_from_cause_distribution():
+    """원인 분포(4종 + 태그 없음)와 filter-miss를 분리해 찍는다 (#134)."""
+    lines = labels.format_report(unknown_rows("filter-miss", "no-context", ""))
+    section = lines[lines.index("### UNKNOWN 원인 (가이드 §6.3)") :]
+    footer = next(i for i, line in enumerate(section) if "(§11)" in line)
+
+    distribution = section[1:footer]
+    assert "- no-context: 1건" in distribution
+    assert "- (태그 없음): 1건" in distribution
+    assert not any("filter-miss" in line for line in distribution)
+
+    after = "\n".join(section[footer + 1 :])
+    assert "filter-miss (원인 태그 없이): 1건" in after
+    assert "원인 분포에서 제외(§6.3.2)" in after
 
 
 @pytest.fixture
