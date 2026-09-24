@@ -126,7 +126,7 @@
 - 삭제 자리 허용 폭 **±2줄**, 자리 밖 단일 후보는 신뢰도 **0.7**
 - **맥락 결합 실행에 `--repo-path`가 필수다.** 안 넘기면 조용히 나빠진다 (`code` 39건 → 8건)
 
-**LLM 방침 (#59)**
+**LLM 방침 (#59, 결정 기록: [#59 코멘트](https://github.com/Deleted-Code-Search/Deleted-Code-Search/issues/59#issuecomment-5808309196))**
 - **NVIDIA API를 주력**으로 쓴다. 무료가 막히면 **Claude API 유료로 전환**하고 상한은 **인당 최대 3만 원**이다. Gemini 예비는 두지 않는다
 - **기준선 B와 우리 방식은 같은 모델을 쓴다.** 모델은 **#86 전에 버전까지 고정**하고 `docs/evaluation.md`에 기록한다
 - **응답 캐시는 레포에 커밋**한다
