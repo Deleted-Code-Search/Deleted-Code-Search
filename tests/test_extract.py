@@ -1091,6 +1091,168 @@ def test_extract_repo_with_excluded_does_not_guess_ref(tmp_path: Path):
 
 
 # --------------------------------------------------------------------------------------
+# Issue #64: 커밋당 git diff 1회. 루프는 diff를 한 번 받아 세 단계에 나눠 주고, 공개 함수
+# 세 개는 따로 부르면 각자 diff를 받는다. 결과는 공개 함수를 따로 부르던 때와 같아야 한다.
+# --------------------------------------------------------------------------------------
+
+
+def _build_mixed_history(repo: Path) -> None:
+    """NOISE_TRIVIAL·NOISE_MOVE·유지(PARTIAL/FULL)·제자리 수정·`.py` 변경 없는 커밋이 섞인
+    이력. root 커밋은 walk에서 빠지므로 처리 대상 커밋은 3개다."""
+    _init_repo(repo)
+    _write(
+        repo,
+        "b.py",
+        "def shrink():\n    a = 1\n    b = 2\n    c = 3\n    d = 4\n    return 0\n",
+    )
+    _write(repo, "c.py", "def gone():\n    return 2\n\n\ndef gone_two():\n    return 3\n")
+    _write(repo, "old/a.py", "def moved_func():\n    return 1\n")
+    _write(repo, "lib/b.py", "def moved_two(x):\n    return x * 2\n")
+    _write(
+        repo,
+        "q.py",
+        "def keep():\n    a = 1\n    b = 2\n    c = 3\n    d = 4\n    e = 5\n    return 0\n",
+    )
+    _commit_all(repo, "add functions")
+
+    # 커밋 1: TRIVIAL(shrink) + FULL 삭제(gone) + 이동(moved_func) + 5줄 PARTIAL(keep)
+    _write(repo, "b.py", "def shrink():\n    return 0\n\n\ndef extra():\n    return [1]\n")
+    _write(repo, "c.py", "def gone_two():\n    return 3\n")
+    (repo / "old" / "a.py").unlink()
+    _write(repo, "new/a.py", "def moved_func():\n    return 1\n")
+    _write(repo, "q.py", "def keep():\n    return 0\n")
+    _commit_all(repo, "shrink, delete gone, move moved_func, trim keep")
+
+    # 커밋 2: 이동(moved_two) + FULL 삭제(gone_two) + 제자리 수정(b.py)
+    (repo / "lib" / "b.py").unlink()
+    _write(repo, "lib/d.py", "def moved_two(x):\n    return x * 2\n")
+    _write(repo, "c.py", "")
+    _write(repo, "b.py", "def shrink():\n    return 1\n\n\ndef extra():\n    return [1]\n")
+    _commit_all(repo, "move moved_two, delete gone_two, edit shrink")
+
+    # 커밋 3: `.py` 변경 없음 — diff가 비어도 커밋당 1회는 그대로다
+    _write(repo, "README.md", "docs\n")
+    _commit_all(repo, "docs only")
+
+
+def _extract_repo_with_public_calls(
+    repo: Path,
+) -> tuple[list[extract_module.DeletedFunction], list[extract_module.ExcludedRecord]]:
+    """Issue #64 이전 `extract_repo_with_excluded` 루프를 공개 함수로 그대로 재현한 기준값.
+    커밋마다 공개 함수 세 개를 따로 불러(각자 git diff) 두 필터를 같은 순서로 적용한다."""
+    from pipeline.filter import partition_moved, partition_trivial
+
+    records: list[extract_module.DeletedFunction] = []
+    excluded: list[extract_module.ExcludedRecord] = []
+    for commit in walk_commits(repo, "main"):
+        deletions = extract_module.extract_deletions(repo, _REPO, commit)
+        added = extract_module.collect_added_functions(repo, commit)
+        hunks = extract_module.collect_same_file_hunks(repo, commit)
+        after_move, moved = partition_moved(deletions, added, hunks)
+        commit_kept, trivial = partition_trivial(after_move)
+        position = {record.id: index for index, record in enumerate(deletions)}
+        records.extend(commit_kept)
+        excluded.extend(sorted(moved + trivial, key=lambda item: position[item.record.id]))
+    return records, excluded
+
+
+def _count_git_diff_calls(monkeypatch: pytest.MonkeyPatch) -> list[tuple[str, str]]:
+    """`_run_git_diff`를 감싸 (parent_sha, commit_sha) 호출 기록을 돌려준다. 동작은 그대로다."""
+    calls: list[tuple[str, str]] = []
+    original = extract_module._run_git_diff
+
+    def recording(repo_path: str | Path, parent_sha: str, commit_sha: str) -> str:
+        calls.append((parent_sha, commit_sha))
+        return original(repo_path, parent_sha, commit_sha)
+
+    monkeypatch.setattr(extract_module, "_run_git_diff", recording)
+    return calls
+
+
+@requires_git
+def test_extract_repo_with_excluded_runs_git_diff_once_per_commit(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    """Issue #64: 루프가 커밋마다 git diff를 정확히 한 번, walk 순서대로 실행한다. `.py`
+    변경이 없는 커밋도 1회다. `extract_repo`도 같은 경로라 같다."""
+    repo = tmp_path / "repo"
+    _build_mixed_history(repo)
+    commits = walk_commits(repo, "main")
+    assert len(commits) == 3
+    expected = [(c.parent_sha, c.commit_sha) for c in commits]
+
+    calls = _count_git_diff_calls(monkeypatch)
+    extract_module.extract_repo_with_excluded(repo, _REPO, "main")
+    assert calls == expected  # 커밋 수와 1:1, 같은 커밋 중복 없음
+
+    calls.clear()
+    extract_module.extract_repo(repo, _REPO, "main")
+    assert calls == expected
+
+
+@requires_git
+def test_extract_repo_with_excluded_matches_separate_public_calls(tmp_path: Path):
+    """Issue #64: diff를 한 번 받아 나눠 줘도 kept/excluded의 내용·순서·사유·증거가 공개 함수
+    세 개를 따로 부르던 이전 루프와 같다. 시나리오가 두 필터를 실제로 거치는지도 확인한다 —
+    아무것도 안 걸러지는 이력이면 비교가 무의미하다."""
+    repo = tmp_path / "repo"
+    _build_mixed_history(repo)
+
+    kept, excluded = extract_module.extract_repo_with_excluded(repo, _REPO, "main")
+    expected_kept, expected_excluded = _extract_repo_with_public_calls(repo)
+
+    assert kept == expected_kept
+    assert excluded == expected_excluded
+    assert [(r.function_name, r.deletion_kind) for r in kept] == [
+        ("gone", "FULL_FUNCTION"),
+        ("keep", "PARTIAL"),
+        ("gone_two", "FULL_FUNCTION"),
+    ]
+    assert [(e.record.function_name, e.filter_status) for e in excluded] == [
+        ("shrink", "NOISE_TRIVIAL"),
+        ("moved_func", "NOISE_MOVE"),
+        ("shrink", "NOISE_TRIVIAL"),  # 커밋 2: diff 파일 순서 b.py → lib/b.py
+        ("moved_two", "NOISE_MOVE"),
+    ]
+    # JSONL로 쓴 결과도 같다 (직렬화까지 포함한 동등성)
+    assert [extract_module.to_json_dict(r) for r in kept] == [
+        extract_module.to_json_dict(r) for r in expected_kept
+    ]
+    assert [extract_module.excluded_to_json_dict(e) for e in excluded] == [
+        extract_module.excluded_to_json_dict(e) for e in expected_excluded
+    ]
+
+
+@requires_git
+def test_public_extract_functions_still_fetch_their_own_diff(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    """Issue #64: 공개 함수 세 개는 시그니처 그대로 따로 불러도 각자 diff를 한 번 받아 동작하고,
+    결과는 같은 diff 텍스트를 내부 본체에 넘긴 것과 같다."""
+    repo = tmp_path / "repo"
+    _build_mixed_history(repo)
+    commit = walk_commits(repo, "main")[0]  # TRIVIAL·이동·삭제·제자리 수정이 다 있는 커밋
+    key = (commit.parent_sha, commit.commit_sha)
+    diff_text = extract_module._run_git_diff(repo, *key)
+
+    calls = _count_git_diff_calls(monkeypatch)
+    deletions = extract_module.extract_deletions(repo, _REPO, commit)
+    assert calls == [key]
+    added = extract_module.collect_added_functions(repo, commit)
+    assert calls == [key, key]
+    hunks = extract_module.collect_same_file_hunks(repo, commit)
+    assert calls == [key, key, key]
+
+    assert deletions == extract_module._extract_deletions_from_diff(repo, _REPO, commit, diff_text)
+    assert added == extract_module._collect_added_functions_from_diff(repo, commit, diff_text)
+    assert hunks == extract_module._parse_same_file_hunks(diff_text)
+    # 비어 있는 결과끼리 같다는 비교가 되지 않게 내용도 본다
+    assert [r.function_name for r in deletions] == ["shrink", "gone", "moved_func", "keep"]
+    assert set(added) == {"b.py", "new/a.py"}  # q.py는 줄을 지우기만 했다
+    assert set(hunks) == {"b.py", "c.py", "q.py"}
+
+
+# --------------------------------------------------------------------------------------
 # DeletedFunction / to_json_dict: 내부 필드명 vs JSONL 바깥 계약
 # --------------------------------------------------------------------------------------
 

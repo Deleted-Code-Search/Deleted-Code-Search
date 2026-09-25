@@ -119,7 +119,10 @@ JSONL 저장 (내부 모델과 외부 계약 분리):
 `extract_repo_with_excluded(repo_path, repo, ref)`: 저장소 하나를 처음부터 끝까지
 훑는 최소 순차 루프. `walk_commits()`로 얻은 `CommitPair`마다 `extract_deletions()`와
 이동 필터(`filter.partition_moved`)·사소한 부분 삭제 필터(`filter.partition_trivial`,
-#63)를 돌려 (남은 레코드, 제외 레코드)를 누적한다.
+#63)를 돌려 (남은 레코드, 제외 레코드)를 누적한다. 커밋마다 `git diff`는 한 번만 실행하고
+세 단계(삭제 추출·추가 함수·같은 파일 헝크)가 그 diff 텍스트를 함께 쓴다(Issue #64) —
+공개 함수 세 개는 각자 diff를 받는 wrapper로 남아 있고, 루프는 그 본체(`_..._from_diff`)를
+직접 부른다.
 `extract_repo(repo_path, repo, ref)`는 그 첫 번째 값만 돌려주는 기존 API다. `ref`는
 clone.py·walk.py와 같은 이유로 호출자가 명시한다 — default branch를 이 함수가 추측하지
 않는다. 병렬화·재시도는 넣지 않는다(4주차 범위).
@@ -632,6 +635,15 @@ def extract_deletions(
     `repo`(`"owner/name"`)는 호출자가 명시한다.
     """
     diff_text = _run_git_diff(repo_path, commit.parent_sha, commit.commit_sha)
+    return _extract_deletions_from_diff(repo_path, repo, commit, diff_text)
+
+
+def _extract_deletions_from_diff(
+    repo_path: str | Path, repo: str, commit: CommitPair, diff_text: str
+) -> list[DeletedFunction]:
+    """`extract_deletions()`의 본체. `diff_text`는 `commit`의 부모 대비 `_run_git_diff()` 출력이어야
+    한다 — `extract_repo_with_excluded()`가 커밋당 한 번 받은 diff를 세 단계에 나눠 주려고
+    분리했다 (Issue #64)."""
     file_diffs = parse_file_diffs(diff_text)
 
     records: list[DeletedFunction] = []
@@ -655,6 +667,14 @@ def collect_added_functions(repo_path: str | Path, commit: CommitPair) -> dict[s
     `collect_same_file_hunks()` + 호출자(`filter.py`)의 몫이다.
     """
     diff_text = _run_git_diff(repo_path, commit.parent_sha, commit.commit_sha)
+    return _collect_added_functions_from_diff(repo_path, commit, diff_text)
+
+
+def _collect_added_functions_from_diff(
+    repo_path: str | Path, commit: CommitPair, diff_text: str
+) -> dict[str, list[Function]]:
+    """`collect_added_functions()`의 본체. `diff_text` 조건은 `_extract_deletions_from_diff()`와
+    같다 (Issue #64)."""
     added_functions: dict[str, list[Function]] = {}
     for path, ranges in _parse_added_line_ranges(diff_text).items():
         source = _read_file_at(repo_path, commit.commit_sha, path)
@@ -694,9 +714,11 @@ def extract_repo_with_excluded(
     (`filter._match_moved`의 "호출자가 이미 그 커밋 하나로 좁혀서 줘야 한다" 계약) 커밋별로
     따로 호출한다. NOISE_MOVE는 FULL_FUNCTION만, NOISE_TRIVIAL은 PARTIAL만 보므로 두
     필터의 적용 순서는 판정에 영향이 없다. 한 커밋의 제외 레코드는 두 사유가 섞여도
-    `extract_deletions()` 순서를 유지한다. 제외 레코드는 버리지 않는다(Issue #97) — 파일로
-    쓰는 것은 호출자가 `write_jsonl`·`write_excluded_jsonl`로 한다(경로 정책은 이 모듈이
-    정하지 않는다).
+    `extract_deletions()` 순서를 유지한다. 세 단계는 커밋당 한 번 받은 같은 diff 텍스트를
+    쓴다 — 공개 함수를 그대로 부르면 각자 `git diff`를 다시 실행해 커밋당 3회가 된다
+    (Issue #64). 결과는 공개 함수 세 개를 따로 부른 것과 같다. 제외 레코드는 버리지
+    않는다(Issue #97) — 파일로 쓰는 것은 호출자가 `write_jsonl`·`write_excluded_jsonl`로
+    한다(경로 정책은 이 모듈이 정하지 않는다).
     `ref`는 walk.py와 같은 이유로 호출자가 명시한다 — default branch를 이 함수가
     추측하지 않는다. 병렬화·재시도는 넣지 않는다(4주차 범위, 모듈 독스트링 참고).
 
@@ -711,9 +733,11 @@ def extract_repo_with_excluded(
     records: list[DeletedFunction] = []
     excluded: list[ExcludedRecord] = []
     for commit in walk_commits(repo_path, ref):
-        deletions = extract_deletions(repo_path, repo, commit)
-        added = collect_added_functions(repo_path, commit)
-        hunks = collect_same_file_hunks(repo_path, commit)
+        # 세 단계가 같은 부모→자식 diff를 본다 — 커밋당 한 번만 받아 나눠 준다 (Issue #64)
+        diff_text = _run_git_diff(repo_path, commit.parent_sha, commit.commit_sha)
+        deletions = _extract_deletions_from_diff(repo_path, repo, commit, diff_text)
+        added = _collect_added_functions_from_diff(repo_path, commit, diff_text)
+        hunks = _parse_same_file_hunks(diff_text)
         after_move, moved = partition_moved(deletions, added, hunks)
         commit_kept, trivial = partition_trivial(after_move)
         # 두 필터의 제외 레코드를 커밋 안 입력 순서로 되돌린다 — 레코드는 `id`로 식별한다
