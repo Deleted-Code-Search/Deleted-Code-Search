@@ -34,12 +34,14 @@ ref: `origin/{default_branch}`를 커밋 SHA로 한 번 풀어(`repository_head_
     SUCCESS로 바꾼다(기록도 임시 파일 → `os.replace`). 중간에 끊기면 기록은 RUNNING으로 남는다.
     이전 실행의 kept/excluded 파일은 미리 지우지 않는다 — 새 실행이 실패하면 임시 파일만
     치우고 이전 파일은 바이트 그대로 남는다(버전이 달라도 둔다. 버전 불일치는 조립 단계
-    #101이 거른다). 두 파일은 각각 교체되므로 정확히 두 `os.replace` 사이에서 프로세스가
-    죽으면 새 kept와 이전 excluded가 함께 남을 수 있다 — 그때도 기록이 RUNNING이라 완료로
-    보지 않는다. 건너뛰려면(`is_completed`) SUCCESS이고, `filter_rule_version`이 지금
-    `FILTER_RULE_VERSION`과 같고, 두 출력 파일의 줄 수가 기록된 건수와 같아야 한다. 규칙
-    버전이 바뀌면 다시 돈다. 코드 SHA나 upstream HEAD가 바뀐 것만으로는 다시 돌지 않는다 —
-    그 값은 "무엇으로 무엇을 처리했나"를 남기는 용도다.
+    #101이 거른다). 교체 도중 예외가 나도 쌍이 섞이지 않게 이전 kept를 `.bak`으로 옮겨 두고
+    되돌린다(`_publish_outputs`). 교체 사이에 프로세스가 강제 종료되는 경우까지 다루는
+    다중 파일 트랜잭션은 아니다 — 그때는 기록이 RUNNING이라 완료로 보지 않고, 이전 kept는
+    `.bak`에 남는다. 건너뛰려면(`is_completed`) SUCCESS이고, 기록의 `repo`·`default_branch`·
+    `ref`가 지금 job과 같고, `filter_rule_version`이 지금 `FILTER_RULE_VERSION`과 같고, 두
+    출력 파일의 줄 수가 기록된 건수와 같아야 한다. 선정 CSV의 브랜치나 규칙 버전이 바뀌면
+    다시 돈다. 코드 SHA나 upstream HEAD가 바뀐 것만으로는 다시 돌지 않는다 — 그 값은
+    "무엇으로 무엇을 처리했나"를 남기는 용도다.
 
 재시도:
     어느 단계에서 났는가 + 예외 종류로 가른다(`is_retryable`). 재시도하는 것은 **새로
@@ -56,6 +58,11 @@ clone timeout: 새로 클론하는 `git clone`에만 건다(기본 1800초). 추
 병렬: `workers == 1`이면 풀 없이 입력 순서대로 이 프로세스에서 돈다. 2 이상이면
 `ProcessPoolExecutor`에 저장소 하나를 job 하나로 넘긴다. 워커는 자기 저장소의 파일만 쓰고
 실행 기록을 돌려준다. 요약과 실패 목록은 부모만 쓴다. 풀은 `run_batch()` 안에서만 만든다.
+
+실행 디렉터리는 writer 하나를 전제한다: 같은 `out_dir`·`repos_dir`로 배치를 동시에 둘 이상
+돌리는 것은 지원하지 않는다(잠금 없음). 두 배치는 같은 클론 경로·임시 파일 이름·실행 기록·
+요약을 서로 덮어쓰고, 한쪽의 clone 실패 정리가 다른 쪽이 받는 중인 클론을 지울 수도 있다.
+병렬은 배치 하나 안에서 `--workers`로 한다.
 
 범위 밖: 결과 조립·`filter_status` 부여(#101), 맥락 결합(`context.py`), 끝난 클론 삭제.
 
@@ -140,10 +147,12 @@ class RepoJob:
 
     @property
     def stem(self) -> str:
+        """출력 파일 이름의 stem (`repo_stem`)."""
         return repo_stem(self.repo)
 
     @property
     def ref(self) -> str:
+        """처리할 ref. 로컬 브랜치가 아니라 원격 추적 브랜치다 (모듈 독스트링 "ref")."""
         return f"origin/{self.default_branch}"
 
 
@@ -190,6 +199,7 @@ class _StageFailure(Exception):
     """시도 하나가 `stage`에서 `error`로 끝났다."""
 
     def __init__(self, stage: str, error: BaseException) -> None:
+        """`stage`는 `STAGE_*` 값, `error`는 그 단계에서 난 원래 예외다."""
         super().__init__(stage, error)
         self.stage = stage
         self.error = error
@@ -201,6 +211,7 @@ def repo_stem(repo: str) -> str:
 
 
 def github_clone_url(repo: str) -> str:
+    """CSV 입력의 clone URL. 기존 클론의 origin과 같은 문자열이라야 재사용 검사를 통과한다."""
     return f"https://github.com/{repo}.git"
 
 
@@ -278,6 +289,7 @@ def is_retryable(stage: str, error: BaseException) -> bool:
 
 
 def _run_git(repo_path: Path, *args: str) -> str:
+    """`git -C repo_path ...`의 stdout. 실패하면 `CalledProcessError`가 그대로 올라간다."""
     result = subprocess.run(
         ["git", "-C", str(repo_path), *args],
         capture_output=True,
@@ -310,6 +322,7 @@ def pipeline_code_state(root: str | Path | None = None) -> CodeState:
 
 
 def _count_lines(path: Path) -> int:
+    """줄바꿈 개수 = JSONL 행 수 (writer가 행마다 줄바꿈을 붙인다). 큰 파일도 조각으로 센다."""
     count = 0
     with path.open("rb") as handle:
         while chunk := handle.read(1 << 20):
@@ -318,24 +331,30 @@ def _count_lines(path: Path) -> int:
 
 
 def _is_count(value: Any) -> bool:
+    """실행 기록의 건수 필드로 믿을 수 있는 값인가 — 0 이상의 int (`bool`은 제외)."""
     return isinstance(value, int) and not isinstance(value, bool) and value >= 0
 
 
-def is_completed(out_dir: str | Path, repo: str) -> bool:
-    """이 저장소를 건너뛰어도 되는가. 하나라도 어긋나면 `False`(다시 돈다).
+def is_completed(out_dir: str | Path, job: RepoJob) -> bool:
+    """`job`을 건너뛰어도 되는가. 하나라도 어긋나면 `False`(다시 돈다).
 
-    SUCCESS 기록 · 같은 repo · 지금의 `FILTER_RULE_VERSION` · 건수 필드가 정상이고
-    `excluded_count == noise_move_count + noise_trivial_count` · 두 출력 파일이 있고 줄 수가
-    기록된 건수와 같음. 제외 0건이면 빈 제외 파일이 정상이다.
+    SUCCESS 기록 · 기록의 `repo`·`default_branch`·`ref`가 `job`과 같음 · 지금의
+    `FILTER_RULE_VERSION` · 건수 필드가 정상이고 `excluded_count == noise_move_count +
+    noise_trivial_count` · 두 출력 파일이 있고 줄 수가 기록된 건수와 같음. 제외 0건이면 빈 제외
+    파일이 정상이다. 처리한 SHA(`repository_head_sha`)는 비교하지 않는다 — 같은 ref의 upstream이
+    움직였다는 것만으로는 다시 돌지 않는다.
     """
-    kept_path, excluded_path, run_path = output_paths(out_dir, repo)
+    kept_path, excluded_path, run_path = output_paths(out_dir, job.repo)
     try:
         metadata = json.loads(run_path.read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return False
     if not isinstance(metadata, dict):
         return False
-    if metadata.get("status") != STATUS_SUCCESS or metadata.get("repo") != repo:
+    if metadata.get("status") != STATUS_SUCCESS:
+        return False
+    identity = (metadata.get("repo"), metadata.get("default_branch"), metadata.get("ref"))
+    if identity != (job.repo, job.default_branch, job.ref):
         return False
     if metadata.get("filter_rule_version") != FILTER_RULE_VERSION:
         return False
@@ -357,10 +376,12 @@ def is_completed(out_dir: str | Path, repo: str) -> bool:
 
 
 def _now() -> str:
+    """시간대가 붙은 UTC ISO 8601 시각 (초 단위)."""
     return datetime.now(UTC).isoformat(timespec="seconds")
 
 
 def _write_json_atomic(path: Path, data: dict[str, Any]) -> None:
+    """임시 파일에 다 쓴 뒤 `os.replace`로 바꾼다 — 읽는 쪽은 이전 내용이나 새 내용만 본다."""
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_name(path.name + ".tmp")
     try:
@@ -374,19 +395,46 @@ def _write_outputs(
     out_dir: Path, repo: str, kept: Iterable[DeletedFunction], excluded: Iterable[ExcludedRecord]
 ) -> None:
     """두 JSONL을 임시 파일에 다 쓴 뒤에만 최종 경로로 바꾼다 — 쓰다 끊긴 파일이 최종 경로에
-    남지 않고, 쓰다 실패하면 임시 파일만 지워져 이전 실행의 최종 파일은 그대로다. 형식은
-    기존 writer 그대로다."""
+    남지 않고, 쓰기나 교체가 실패하면 임시 파일만 지워져 이전 실행의 최종 파일 쌍은 그대로다
+    (`_publish_outputs`). 형식은 기존 writer 그대로다."""
     kept_path, excluded_path, _run_path = output_paths(out_dir, repo)
     kept_tmp = kept_path.with_name(kept_path.name + ".tmp")
     excluded_tmp = excluded_path.with_name(excluded_path.name + ".tmp")
     try:
         write_jsonl(kept, kept_tmp)
         write_excluded_jsonl(excluded, excluded_tmp)
-        os.replace(kept_tmp, kept_path)
-        os.replace(excluded_tmp, excluded_path)
+        _publish_outputs(kept_tmp, kept_path, excluded_tmp, excluded_path)
     finally:
         kept_tmp.unlink(missing_ok=True)
         excluded_tmp.unlink(missing_ok=True)
+
+
+def _publish_outputs(
+    kept_tmp: Path, kept_path: Path, excluded_tmp: Path, excluded_path: Path
+) -> None:
+    """임시 파일 두 개를 최종 경로로 바꾼다. 예외가 나면 이전 kept/excluded 쌍을 되돌려 둔다.
+
+    excluded는 마지막에 한 번 `os.replace`하므로 실패하면 이전 파일이 그대로다. kept는 그보다
+    먼저 바뀌므로, 이전 kept를 같은 디렉터리의 `.bak`으로 옮겨 두고(이름 바꾸기라 복사 비용이
+    없다) 뒤 단계가 실패하면 되돌린다. 이전 kept가 없었으면 새 kept를 지운다. `.bak`은 성공했을
+    때만 지운다. 한계: 되돌리기 자체가 OS 오류로 실패하거나 교체 사이에 프로세스가 강제
+    종료되면 이전 kept는 `.bak`에 남는다 — 그때도 실행 기록이 FAILED/RUNNING이라 완료로 보지
+    않는다.
+    """
+    kept_backup = kept_path.with_name(kept_path.name + ".bak")
+    had_previous = kept_path.exists()
+    if had_previous:
+        os.replace(kept_path, kept_backup)
+    try:
+        os.replace(kept_tmp, kept_path)
+        os.replace(excluded_tmp, excluded_path)
+    except BaseException:
+        if had_previous:
+            os.replace(kept_backup, kept_path)
+        else:
+            kept_path.unlink(missing_ok=True)
+        raise
+    kept_backup.unlink(missing_ok=True)
 
 
 def _make_writable_and_retry(func: Callable[[str], object], path: str, exc: BaseException) -> None:
@@ -462,6 +510,7 @@ def _attempt(job: RepoJob, settings: RunSettings, progress: dict[str, Any]) -> N
 
 
 def _describe(error: BaseException) -> str:
+    """실패 사유 문자열. git 오류면 stderr 꼬리(`_STDERR_TAIL_CHARS`)를 붙인다."""
     text = str(error) or type(error).__name__
     stderr = getattr(error, "stderr", None)
     if isinstance(stderr, str) and stderr.strip():
@@ -590,6 +639,7 @@ def _worker_crash_metadata(
 
 
 def _log_stderr(message: str) -> None:
+    """기본 진행 로그. 결과 파일과 섞이지 않게 stderr로 보낸다."""
     print(message, file=sys.stderr, flush=True)
 
 
@@ -617,7 +667,7 @@ def run_batch(
 
     batch_started_at = _now()
     batch_started = time.monotonic()
-    skipped = [job.repo for job in jobs if is_completed(settings.out_dir, job.repo)]
+    skipped = [job.repo for job in jobs if is_completed(settings.out_dir, job)]
     skipped_set = set(skipped)
     pending = [job for job in jobs if job.repo not in skipped_set]
     for repo in skipped:
@@ -626,6 +676,7 @@ def run_batch(
     results: dict[str, dict[str, Any]] = {}
 
     def record(metadata: dict[str, Any]) -> None:
+        """저장소 하나의 최종 실행 기록을 모으고 진행 로그를 남긴다."""
         results[metadata["repo"]] = metadata
         log(
             f"{metadata['repo']}: {metadata['status']} "
@@ -692,9 +743,13 @@ def run_batch(
 
 
 def build_parser() -> argparse.ArgumentParser:
+    """배치 CLI 인자. 기본값은 모듈 상수(`DEFAULT_*`)와 같다."""
     parser = argparse.ArgumentParser(
         prog="python -m pipeline.run",
-        description="저장소 목록을 저장소 단위로 병렬 채굴한다 (Issue #81).",
+        description=(
+            "저장소 목록을 저장소 단위로 병렬 채굴한다 (Issue #81). 같은 --out-dir/--repos-dir로 "
+            "배치를 동시에 둘 이상 실행하지 않는다 — 병렬은 --workers로 한다."
+        ),
     )
     parser.add_argument(
         "--input", type=Path, required=True, help="repo·default_branch 열이 있는 선정 CSV"
