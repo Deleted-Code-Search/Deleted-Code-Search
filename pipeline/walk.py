@@ -19,7 +19,7 @@ pygit2 대신 git CLI(subprocess)를 쓴다 — CHARTER §7이 "pygit2 또는 gi
 새 네이티브 의존성을 추가하지 않는 쪽을 택했다.
 
 범위 밖: 저장소 클론(`clone.py`), diff·헝크 추출(`extract.py`, 다음 단계), 병렬화·재시도
-큐(4주차).
+(`pipeline/run.py`, Issue #81).
 """
 
 from __future__ import annotations

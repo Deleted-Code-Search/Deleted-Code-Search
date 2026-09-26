@@ -125,7 +125,7 @@ JSONL 저장 (내부 모델과 외부 계약 분리):
 직접 부른다.
 `extract_repo(repo_path, repo, ref)`는 그 첫 번째 값만 돌려주는 기존 API다. `ref`는
 clone.py·walk.py와 같은 이유로 호출자가 명시한다 — default branch를 이 함수가 추측하지
-않는다. 병렬화·재시도는 넣지 않는다(4주차 범위).
+않는다. 병렬화·재시도는 이 함수를 저장소 단위로 부르는 `pipeline/run.py`(Issue #81)의 몫이다.
 
 `collect_added_functions(repo_path, commit)`: 이동 탐지 필터(§4.2②, Issue #52)가 쓰는
 added-side 함수 후보를 모은다. `parse_file_diffs`는 옛(부모) 경로로만 섹션을 식별하고
@@ -155,7 +155,8 @@ same-position 판정(팀 추가 결정, Issue #52)의 재료. 부모 함수 범�
 파일에는 "제자리"라는 개념이 없고, 다른 경로는 항상 이동 후보이기 때문이다.
 
 범위 밖: 이동 판정 로직 자체(정규화·유사도 계산·same-position 판정 적용, `filter.py`),
-맥락 결합(`context.py`), 분류, DB 적재, 병렬화·재시도 큐(4주차), 출력 경로/파일명 정책.
+맥락 결합(`context.py`), 분류, DB 적재, 병렬화·재시도·출력 경로/파일명 정책(`pipeline/run.py`,
+Issue #81).
 """
 
 from __future__ import annotations
@@ -720,7 +721,8 @@ def extract_repo_with_excluded(
     않는다(Issue #97) — 파일로 쓰는 것은 호출자가 `write_jsonl`·`write_excluded_jsonl`로
     한다(경로 정책은 이 모듈이 정하지 않는다).
     `ref`는 walk.py와 같은 이유로 호출자가 명시한다 — default branch를 이 함수가
-    추측하지 않는다. 병렬화·재시도는 넣지 않는다(4주차 범위, 모듈 독스트링 참고).
+    추측하지 않는다. 병렬화·재시도는 여기 없다 — `pipeline/run.py`(Issue #81)가 이 함수를
+    저장소 단위로 부른다(모듈 독스트링 참고).
 
     `filter.py`를 함수 안에서(모듈 최상단이 아니라) import한다 — `filter.py`가 이미
     `from pipeline.extract import DeletedFunction, ExcludedRecord, Hunk`로 이 모듈을

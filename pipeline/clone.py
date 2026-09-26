@@ -34,7 +34,7 @@ pygit2 대신 git CLI(subprocess)를 쓴다 — walk.py와 같은 이유 (CHARTE
 의존성 회피).
 
 범위 밖: 커밋 순회(`walk.py`), diff·헝크 추출(`extract.py`), 증분 갱신(fetch/pull),
-병렬화·재시도 큐(4주차), 손상된 디렉터리 자동 정리.
+병렬화·재시도(`pipeline/run.py`, Issue #81), 손상된 디렉터리 자동 정리.
 """
 
 from __future__ import annotations
@@ -48,7 +48,9 @@ from pathlib import Path
 _GIT_ENV = {**os.environ, "GIT_TERMINAL_PROMPT": "0", "GIT_PAGER": "cat"}
 
 
-def _run_git(args: list[str], *, check: bool = True) -> subprocess.CompletedProcess[str]:
+def _run_git(
+    args: list[str], *, check: bool = True, timeout: float | None = None
+) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
         ["git", *args],
         capture_output=True,
@@ -56,6 +58,7 @@ def _run_git(args: list[str], *, check: bool = True) -> subprocess.CompletedProc
         encoding="utf-8",
         env=_GIT_ENV,
         check=check,
+        timeout=timeout,
     )
 
 
@@ -158,7 +161,9 @@ def _verify_reusable(path: Path, repo: str, clone_url: str) -> None:
         )
 
 
-def clone(repo: str, clone_url: str, repos_dir: str | Path) -> Path:
+def clone(
+    repo: str, clone_url: str, repos_dir: str | Path, *, timeout: float | None = None
+) -> Path:
     """`repo`의 전체 히스토리를 `REPOS_DIR/{owner}/{name}`에 클론하고 경로를 돌려준다.
 
     이미 유효하게(git 저장소·non-shallow·origin 일치) 클론돼 있으면 fetch 없이 그대로
@@ -168,11 +173,16 @@ def clone(repo: str, clone_url: str, repos_dir: str | Path) -> Path:
     default branch는 반환하지 않는다 — 호출자가 저장소 선정 단계 산출물(CSV의
     `default_branch`, `docs/repo_final20.md`)에서 가져와 `walk_commits(path, ref)`에
     직접 넘긴다.
+
+    `timeout`(초)은 새로 클론하는 `git clone` 한 번에만 건다 (Issue #81 — 멈춘 clone을
+    끊는 안전장치). 넘으면 `subprocess.TimeoutExpired`가 그대로 올라간다. 끊긴 clone이
+    남긴 디렉터리는 여기서 지우지 않는다 — 이번 호출이 만든 것인지는 호출자만 안다
+    (`pipeline/run.py`). 기본값 `None`은 예전처럼 제한이 없다.
     """
     path = repo_dir(repos_dir, repo)
     if path.exists():
         _verify_reusable(path, repo, clone_url)
         return path
     path.parent.mkdir(parents=True, exist_ok=True)
-    _run_git(["clone", clone_url, str(path)])
+    _run_git(["clone", clone_url, str(path)], timeout=timeout)
     return path
