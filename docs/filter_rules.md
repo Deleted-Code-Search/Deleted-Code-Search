@@ -270,7 +270,7 @@ diff 헝크(`git diff --unified=0`의 `@@ -old_start,old_count +new_start,new_co
 
 **코드.** `pipeline/filter.py:partition_moved`(NOISE_MOVE)와 `partition_trivial`(NOISE_TRIVIAL, #63)이 각각 (남은 레코드, 제외 레코드)를 돌려주고, `pipeline/extract.py:extract_repo_with_excluded`가 커밋별로 둘을 적용해 누적한다. 한 커밋의 제외 레코드는 사유와 무관하게 추출 순서대로 놓인다. 기존 `find_moved`·`exclude_moved`는 반환 계약을 그대로 유지하는 래퍼다 — NOISE_MOVE만 다루고, 판정 결과는 #97 이전과 같다. `extract_repo`는 시그니처와 반환 타입이 그대로이고, #63부터 NOISE_TRIVIAL도 빠진 결과를 돌려준다.
 
-**최종 조립 단계 (미구현).** 추출 JSONL의 행에는 `filter_status = KEPT`를, excluded JSONL의 행에는 그 행의 `filter_status`를 사용해 최종 `DeletionRecord.filter_status`를 구성한다. KEPT 레코드의 `filter_rule_version`은 실행 단위 메타데이터로 추출 시점에 기록한다 — #81에서 구현했다: `pipeline/run.py`가 저장소마다 `<stem>_run.json`에 `filter_rule_version`을 처리 시간·상태·실패 사유와 함께 남긴다. 조립 단계 자체는 #97 범위 밖이고 #101에서 구현한다.
+**최종 조립 단계 (#101).** 추출 JSONL의 행에는 `filter_status = KEPT`를, excluded JSONL의 행에는 그 행의 `filter_status`를 사용해 최종 `DeletionRecord.filter_status`를 구성한다. KEPT 레코드의 `filter_rule_version`은 실행 단위 메타데이터로 추출 시점에 기록한다 — #81에서 구현했다: `pipeline/run.py`가 저장소마다 `<stem>_run.json`에 `filter_rule_version`을 처리 시간·상태·실패 사유와 함께 남긴다. 조립은 `pipeline/assemble.py`(#101)가 한다: 실행 디렉터리 여러 개를 받아 SUCCESS 저장소의 두 파일을 하나의 JSONL로 합친다. kept 행에는 `filter_status`·`filter_rule_version`(실행 기록 값) 두 키만 더하고, excluded 행은 그대로 둔다(행의 버전이 실행 기록과 같은지 확인). FAILED 저장소는 빼고 보고서에 남기며, 실행 기록 없음·RUNNING·같은 저장소 중복·SUCCESS 간 버전 혼합이면 조립을 거부한다. 거부 조건 전체는 모듈 독스트링에 있다. 맥락 결합 이후는 범위 밖이다.
 
 ## 변경 이력
 | 버전 | 날짜 | 변경 | 정밀도 |
