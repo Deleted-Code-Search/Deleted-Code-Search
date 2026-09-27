@@ -459,6 +459,30 @@ def test_rejection_keeps_previous_output_and_leaves_no_temp_files(tmp_path: Path
     assert not list(out.parent.glob("*.tmp"))
 
 
+@pytest.mark.parametrize("has_previous", [False, True])
+def test_report_path_directory_is_rejected_before_publishing_result(
+    tmp_path: Path, has_previous: bool
+):
+    """보고서 경로가 디렉터리면 결과 JSONL을 바꾸기 전에 거부한다 — 결과만 새것으로 바뀌고
+    보고서는 없는 상태가 남지 않는다."""
+    _standard_run(tmp_path / "run")
+    out = tmp_path / "out" / "f.jsonl"
+    out.parent.mkdir(parents=True)
+    if has_previous:
+        out.write_text("previous\n", encoding="utf-8")
+    report_path_for(out).mkdir()
+
+    with pytest.raises(AssemblyError, match="보고서 경로가 디렉터리다"):
+        assemble([tmp_path / "run"], out)
+
+    if has_previous:
+        assert out.read_text(encoding="utf-8") == "previous\n"
+    else:
+        assert not out.exists()
+    assert report_path_for(out).is_dir()
+    assert not list(out.parent.glob("*.tmp"))
+
+
 # --- CLI -----------------------------------------------------------------------------
 
 

@@ -328,6 +328,9 @@ def assemble(run_dirs: Sequence[str | Path], out_path: str | Path) -> AssemblyRe
             json.dumps(report.to_json_dict(), ensure_ascii=False, indent=2) + "\n",
             encoding="utf-8",
         )
+        # 결과를 먼저 바꾸므로, 보고서 교체가 실패할 자리면 결과도 바꾸기 전에 거부한다
+        if report_path.is_dir():
+            raise AssemblyError(f"{report_path}: 보고서 경로가 디렉터리다")
         os.replace(out_tmp, out)
         os.replace(report_tmp, report_path)
     finally:
