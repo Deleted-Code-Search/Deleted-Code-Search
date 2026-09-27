@@ -56,6 +56,7 @@ def _record(repo: str, n: int, kind: str = "FULL_FUNCTION") -> DeletedFunction:
 
 
 def _move(record: DeletedFunction, version: str = _VERSION) -> ExcludedRecord:
+    """`record`를 NOISE_MOVE로 제외한 레코드. evidence는 #97 NOISE_MOVE 키 5개다."""
     evidence = {
         "file_path": "new.py",
         "function_name": record.function_name,
@@ -67,6 +68,7 @@ def _move(record: DeletedFunction, version: str = _VERSION) -> ExcludedRecord:
 
 
 def _trivial(record: DeletedFunction, version: str = _VERSION) -> ExcludedRecord:
+    """`record`를 NOISE_TRIVIAL로 제외한 레코드. evidence는 `line_count` 하나다."""
     return ExcludedRecord(record, NOISE_TRIVIAL, version, {"line_count": 2})
 
 
@@ -127,6 +129,7 @@ def _write_failed(run_dir: Path, repo: str, **overrides) -> dict:
 
 
 def _read_jsonl(path: Path) -> list[dict]:
+    """JSONL 파일을 행별 dict 목록으로 읽는다."""
     return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
 
 
@@ -142,6 +145,8 @@ def _standard_run(run_dir: Path, repo: str = "acme/widgets") -> tuple[list, list
 
 
 def test_kept_gets_kept_status_and_excluded_rows_are_preserved(tmp_path: Path):
+    """kept 행에는 `filter_status`·`filter_rule_version` 두 키만 붙고, excluded 행은 writer
+    출력 그대로다."""
     kept, excluded = _standard_run(tmp_path / "run")
     out = tmp_path / "out" / "filtered.jsonl"
 
@@ -161,6 +166,7 @@ def test_kept_gets_kept_status_and_excluded_rows_are_preserved(tmp_path: Path):
 
 
 def test_merges_multiple_run_dirs_in_repo_order(tmp_path: Path):
+    """실행 디렉터리 여러 개를 합치고, 입력 순서와 무관하게 저장소 이름 순으로 쓴다."""
     _standard_run(tmp_path / "b", "zeta/z")
     _standard_run(tmp_path / "a", "alpha/a")
     out = tmp_path / "out" / "filtered.jsonl"
@@ -174,6 +180,7 @@ def test_merges_multiple_run_dirs_in_repo_order(tmp_path: Path):
 
 
 def test_version_comes_from_metadata_not_code_constant(tmp_path: Path):
+    """버전은 실행 기록에서 읽는다 — 지금 코드의 `FILTER_RULE_VERSION`과 달라도 거부하지 않는다."""
     old = "v0.1"
     assert old != FILTER_RULE_VERSION
     repo = "acme/widgets"
@@ -190,6 +197,7 @@ def test_version_comes_from_metadata_not_code_constant(tmp_path: Path):
 
 
 def test_empty_excluded_file_is_valid(tmp_path: Path):
+    """제외 0건의 빈 excluded 파일은 정상 입력이다 (#97 "0건이어도 빈 파일")."""
     repo = "acme/widgets"
     _write_run(tmp_path / "run", repo, [_record(repo, 1)], [])
 
@@ -199,6 +207,7 @@ def test_empty_excluded_file_is_valid(tmp_path: Path):
 
 
 def test_writes_report_file(tmp_path: Path):
+    """보고서가 `<stem>_assembly.json`에 반환값과 같은 내용으로 남고 임시 파일은 남지 않는다."""
     _standard_run(tmp_path / "run")
     out = tmp_path / "out" / "filtered.jsonl"
 
@@ -215,6 +224,8 @@ def test_writes_report_file(tmp_path: Path):
 
 
 def test_failed_repo_is_excluded_reported_and_its_stale_files_are_not_read(tmp_path: Path):
+    """FAILED 저장소는 옆에 남은 이전 kept/excluded를 읽지 않고 보고만 하며, 그 버전은 혼합
+    판정에 들어가지 않는다."""
     run_dir = tmp_path / "run"
     _standard_run(run_dir, "acme/ok")
     # 이전 성공 실행이 남긴 파일 — 버전도 다르고 내용도 깨졌지만 읽지 않으므로 상관없다
@@ -245,6 +256,7 @@ def test_failed_repo_is_excluded_reported_and_its_stale_files_are_not_read(tmp_p
 
 
 def test_failed_repo_without_version_is_still_only_reported(tmp_path: Path):
+    """FAILED 기록은 `filter_rule_version`이 없어도 거부 사유가 아니다 — 보고만 한다."""
     _standard_run(tmp_path / "run")
     _write_failed(tmp_path / "run", "broken/repo", filter_rule_version=None)
 
@@ -254,6 +266,7 @@ def test_failed_repo_without_version_is_still_only_reported(tmp_path: Path):
 
 
 def test_only_failed_runs_is_rejected(tmp_path: Path):
+    """SUCCESS가 하나도 없으면 조립 결과의 버전을 정할 수 없어 거부한다."""
     _write_failed(tmp_path / "run", "acme/widgets")
 
     with pytest.raises(AssemblyError, match="SUCCESS 실행 기록이 없다"):
@@ -265,6 +278,7 @@ def test_only_failed_runs_is_rejected(tmp_path: Path):
 
 @pytest.mark.parametrize("filename", ["acme__widgets.jsonl", "acme__widgets_excluded.jsonl"])
 def test_jsonl_without_run_metadata_is_rejected(tmp_path: Path, filename: str):
+    """어느 실행 기록에도 속하지 않는 kept/excluded JSONL이 있으면 거부한다."""
     _standard_run(tmp_path / "run", "other/repo")
     (tmp_path / "run" / filename).write_text("", encoding="utf-8")
 
@@ -273,6 +287,7 @@ def test_jsonl_without_run_metadata_is_rejected(tmp_path: Path, filename: str):
 
 
 def test_run_dir_without_any_metadata_is_rejected(tmp_path: Path):
+    """출력 파일만 있고 실행 기록이 하나도 없는 디렉터리는 거부한다."""
     repo = "acme/widgets"
     kept_path, excluded_path, run_path = run_module.output_paths(tmp_path / "run", repo)
     write_jsonl([_record(repo, 1)], kept_path)
@@ -283,12 +298,14 @@ def test_run_dir_without_any_metadata_is_rejected(tmp_path: Path):
 
 
 def test_missing_run_dir_is_rejected(tmp_path: Path):
+    """존재하지 않는 실행 디렉터리는 거부한다."""
     with pytest.raises(AssemblyError, match="실행 디렉터리가 없다"):
         assemble([tmp_path / "nope"], tmp_path / "out" / "f.jsonl")
 
 
 @pytest.mark.parametrize("content", ["not json", "[1, 2]", "{}", '{"repo": ""}'])
 def test_unreadable_run_metadata_is_rejected(tmp_path: Path, content: str):
+    """JSON이 아니거나 객체가 아니거나 `repo`가 없는 실행 기록은 거부한다."""
     _standard_run(tmp_path / "run")
     run_module.output_paths(tmp_path / "run", "acme/widgets")[2].write_text(content, "utf-8")
 
@@ -298,6 +315,7 @@ def test_unreadable_run_metadata_is_rejected(tmp_path: Path, content: str):
 
 @pytest.mark.parametrize("version", [None, "", "   ", 7, "missing"])
 def test_success_without_filter_rule_version_is_rejected(tmp_path: Path, version):
+    """SUCCESS 기록의 `filter_rule_version`이 없음·null·빈 값·공백·문자열 아님이면 거부한다."""
     repo = "acme/widgets"
     metadata = _write_run(tmp_path / "run", repo, [_record(repo, 1)], [])
     if version == "missing":
@@ -312,6 +330,7 @@ def test_success_without_filter_rule_version_is_rejected(tmp_path: Path, version
 
 @pytest.mark.parametrize("status", ["RUNNING", "DONE", None, "missing"])
 def test_running_or_unknown_status_is_rejected(tmp_path: Path, status):
+    """RUNNING·정의되지 않은 값·`status` 없음은 FAILED처럼 빼지 않고 거부한다."""
     repo = "acme/widgets"
     metadata = _write_run(tmp_path / "run", repo, [_record(repo, 1)], [])
     if status == "missing":
@@ -329,6 +348,7 @@ def test_running_or_unknown_status_is_rejected(tmp_path: Path, status):
     [("SUCCESS", "SUCCESS"), ("SUCCESS", "FAILED"), ("FAILED", "SUCCESS"), ("FAILED", "FAILED")],
 )
 def test_same_repo_in_two_run_dirs_is_rejected(tmp_path: Path, first: str, second: str):
+    """같은 repo의 실행 기록이 두 디렉터리에 있으면 상태 조합과 무관하게 거부한다."""
     repo = "acme/widgets"
     for name, status in (("a", first), ("b", second)):
         if status == "SUCCESS":
@@ -343,6 +363,7 @@ def test_same_repo_in_two_run_dirs_is_rejected(tmp_path: Path, first: str, secon
 
 
 def test_same_run_dir_given_twice_is_rejected(tmp_path: Path):
+    """같은 디렉터리를 두 번 주면 같은 기록을 두 번 만나므로 중복으로 거부한다."""
     _standard_run(tmp_path / "run")
 
     with pytest.raises(AssemblyError, match="두 번"):
@@ -350,6 +371,7 @@ def test_same_run_dir_given_twice_is_rejected(tmp_path: Path):
 
 
 def test_mixed_filter_rule_versions_are_rejected(tmp_path: Path):
+    """SUCCESS 기록끼리 `filter_rule_version`이 다르면 거부한다."""
     _write_run(tmp_path / "a", "acme/a", [_record("acme/a", 1)], [], version="v0.6")
     _write_run(tmp_path / "b", "acme/b", [_record("acme/b", 1)], [], version="v0.7")
 
@@ -358,6 +380,7 @@ def test_mixed_filter_rule_versions_are_rejected(tmp_path: Path):
 
 
 def test_excluded_row_version_differing_from_metadata_is_rejected(tmp_path: Path):
+    """excluded 행의 `filter_rule_version`이 실행 기록과 다르면 거부한다."""
     repo = "acme/widgets"
     _write_run(tmp_path / "run", repo, [], [_move(_record(repo, 1), "v0.6")], version="v0.7")
 
@@ -367,6 +390,7 @@ def test_excluded_row_version_differing_from_metadata_is_rejected(tmp_path: Path
 
 @pytest.mark.parametrize("status", ["KEPT", "NOISE_UNKNOWN", None, ["NOISE_MOVE"]])
 def test_excluded_row_without_noise_status_is_rejected(tmp_path: Path, status):
+    """excluded 행의 `filter_status`가 CHARTER §4.4의 NOISE_* 값이 아니면 거부한다."""
     repo = "acme/widgets"
     _write_run(tmp_path / "run", repo, [], [_move(_record(repo, 1))])
     excluded_path = run_module.output_paths(tmp_path / "run", repo)[1]
@@ -379,6 +403,7 @@ def test_excluded_row_without_noise_status_is_rejected(tmp_path: Path, status):
 
 @pytest.mark.parametrize("key", ["kept_count", "excluded_count"])
 def test_row_count_differing_from_metadata_is_rejected(tmp_path: Path, key: str):
+    """파일 행 수가 실행 기록의 `kept_count`·`excluded_count`와 다르면 거부한다."""
     repo = "acme/widgets"
     metadata = _write_run(tmp_path / "run", repo, [_record(repo, 1)], [_move(_record(repo, 2))])
     metadata[key] += 1
@@ -390,6 +415,7 @@ def test_row_count_differing_from_metadata_is_rejected(tmp_path: Path, key: str)
 
 @pytest.mark.parametrize("index", [0, 1])
 def test_success_with_missing_output_file_is_rejected(tmp_path: Path, index: int):
+    """SUCCESS 기록인데 kept나 excluded 파일이 없으면 거부한다."""
     _standard_run(tmp_path / "run")
     run_module.output_paths(tmp_path / "run", "acme/widgets")[index].unlink()
 
@@ -399,6 +425,7 @@ def test_success_with_missing_output_file_is_rejected(tmp_path: Path, index: int
 
 @pytest.mark.parametrize("content", ["\n", "not json\n", "[1]\n"])
 def test_non_object_line_is_rejected(tmp_path: Path, content: str):
+    """빈 줄·JSON이 아닌 줄·객체가 아닌 줄이 있으면 거부한다."""
     _standard_run(tmp_path / "run")
     kept_path = run_module.output_paths(tmp_path / "run", "acme/widgets")[0]
     kept_path.write_text(kept_path.read_text(encoding="utf-8") + content, encoding="utf-8")
@@ -408,6 +435,7 @@ def test_non_object_line_is_rejected(tmp_path: Path, content: str):
 
 
 def test_output_inside_run_dir_is_rejected(tmp_path: Path):
+    """출력 경로가 입력 실행 디렉터리 안이면 거부한다."""
     _standard_run(tmp_path / "run")
 
     with pytest.raises(AssemblyError, match="입력 실행 디렉터리 안"):
@@ -415,6 +443,7 @@ def test_output_inside_run_dir_is_rejected(tmp_path: Path):
 
 
 def test_rejection_keeps_previous_output_and_leaves_no_temp_files(tmp_path: Path):
+    """행을 쓰는 도중 거부돼도 이전 결과·보고서는 바이트 그대로이고 임시 파일은 남지 않는다."""
     _standard_run(tmp_path / "run")
     out = tmp_path / "out" / "f.jsonl"
     assemble([tmp_path / "run"], out)
@@ -434,6 +463,7 @@ def test_rejection_keeps_previous_output_and_leaves_no_temp_files(tmp_path: Path
 
 
 def test_cli_returns_0_and_reports_failed_repos(tmp_path: Path, capsys):
+    """FAILED 저장소가 있어도 조립되면 0을 돌려주고, 제외한 저장소를 stderr에 알린다."""
     _standard_run(tmp_path / "run")
     _write_failed(tmp_path / "run", "broken/repo")
     out = tmp_path / "out" / "f.jsonl"
@@ -447,6 +477,7 @@ def test_cli_returns_0_and_reports_failed_repos(tmp_path: Path, capsys):
 
 
 def test_cli_returns_1_on_rejection(tmp_path: Path, capsys):
+    """거부되면 1을 돌려주고 출력 파일을 만들지 않는다."""
     _write_run(tmp_path / "run", "acme/widgets", [_record("acme/widgets", 1)], [], status="RUNNING")
     out = tmp_path / "out" / "f.jsonl"
 
@@ -458,6 +489,7 @@ def test_cli_returns_1_on_rejection(tmp_path: Path, capsys):
 
 
 def test_cli_accepts_multiple_run_dirs(tmp_path: Path):
+    """`--run-dir`를 여러 번 주면 모두 합친다."""
     _standard_run(tmp_path / "a", "acme/a")
     _standard_run(tmp_path / "b", "acme/b")
     out = tmp_path / "out" / "f.jsonl"
