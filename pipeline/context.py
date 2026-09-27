@@ -26,18 +26,32 @@
     python -m pipeline.context --input hunks.jsonl --out context.jsonl  # #5 출력 연결용
 
     GITHUB_TOKEN 은 .env 에서만 읽는다 (§8.4). 없으면 시간당 60회로 돌아간다.
+
+20개 저장소 실행 (#82, #142):
+    맥락 결합은 `--repo-path` 를 하나만 받으므로 저장소마다, 클론이 있는 노트북에서 돈다.
+    결과는 `pipeline.run` 실행 디렉터리 **밖**에 둔다 - 조립기(#101)가 모르는 JSONL 을 거부한다.
+    맥락은 FULL_FUNCTION 에만 붙인다 (#85 대상, ADR-003). 한도에 걸리면 거기까지만 쓰고 1 로
+    멈추므로 **0 이 나올 때까지 다시 돌린다** - 캐시가 있어 이어 간다.
+
+    python -m pipeline.context --input <run>/<owner>__<name>.jsonl --full-function-only \\
+        --repo-path repos/<owner>/<name> --out data/context/<owner>__<name>.jsonl
+    python -m pipeline.assemble --run-dir <run> ... --out data/assembled/filtered.jsonl
+    python -m pipeline.context --attach data/assembled/filtered.jsonl \\
+        --context-dir data/context --out data/assembled/records.jsonl
 """
 
 from __future__ import annotations
 
 import argparse
 import difflib
+import hashlib
 import json
 import os
 import re
 import subprocess
 import sys
-from collections.abc import Iterable, Sequence
+from collections import Counter
+from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, NamedTuple
@@ -1076,6 +1090,193 @@ def run_targets(
 
 
 # --------------------------------------------------------------------------------------
+# 조립 결과에 붙이기 (Issue #142)
+# --------------------------------------------------------------------------------------
+
+# 맥락을 붙이는 대상 (#85 대상, ADR-003). PARTIAL·제외 레코드는 맥락이 없는 것이 정상이다.
+FULL_FUNCTION = "FULL_FUNCTION"
+KEPT = "KEPT"
+# 맥락 결합이 레코드에 더하는 키. 붙이기가 옮기는 것도 이 둘뿐이다 (`build_output_record`).
+CONTEXT_OUTPUT_KEYS = ("context", "replacement")
+# 조립기(`pipeline.assemble`)가 kept 행에 더하는 키. 맥락 행과 비교할 때 뺀다.
+ASSEMBLY_ADDED_KEYS = ("filter_status", "filter_rule_version")
+ATTACH_REPORT_SUFFIX = "_context.json"
+SHOWN_IDS = 5
+
+
+class AttachError(ValueError):
+    """붙이기를 거부한다. 최종 출력은 만들지 않는다."""
+
+
+def full_function_targets(targets: Sequence[CommitTarget]) -> list[CommitTarget]:
+    """FULL_FUNCTION 레코드만. run 의 kept 파일에는 PARTIAL 이 섞여 있다 (#82, #142).
+
+    PARTIAL 까지 맥락을 붙이면 20개 저장소에서 토큰 하나 기준 수십 시간이다 - pydantic
+    하나만 KEPT 22,691건, 커밋 2,456개. #85 가 FULL_FUNCTION 만 뽑으므로 거기까지만 붙인다.
+    """
+    return [t for t in targets if (t.record or {}).get("deletion_kind") == FULL_FUNCTION]
+
+
+def is_context_target(row: dict[str, Any]) -> bool:
+    """맥락을 붙여야 하는 조립 결과 행인가 - 필터를 통과한 FULL_FUNCTION."""
+    return row.get("filter_status") == KEPT and row.get("deletion_kind") == FULL_FUNCTION
+
+
+def _fingerprint(row: dict[str, Any], drop: Sequence[str]) -> str:
+    """`drop` 키를 뺀 행의 지문. 맥락 행이 **같은 추출 결과**에서 나왔는지 본다.
+
+    `id` 는 `repo|commit_sha|file_path|function_name|start_line` 로만 만들어져서, 추출을 다시
+    돌려 본문이 바뀌어도(#131 같은 파서 수정) 같은 값이다. `id` 만 맞추면 옛 추출로 만든 맥락이
+    조용히 붙는다. 맥락 결합은 입력 행을 그대로 두고 두 키만 더하므로 나머지는 같아야 한다.
+    """
+    rest = {key: value for key, value in row.items() if key not in drop}
+    text = json.dumps(rest, ensure_ascii=False, sort_keys=True)
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def _read_jsonl(path: Path) -> Iterator[tuple[int, dict[str, Any]]]:
+    """(줄 번호, 객체). 객체가 아닌 줄이 있으면 거부한다."""
+    with path.open(encoding="utf-8") as handle:
+        for line_no, line in enumerate(handle, start=1):
+            try:
+                row = json.loads(line)
+            except ValueError as error:
+                raise AttachError(f"{path}:{line_no}: JSON 이 아니다: {error}") from error
+            if not isinstance(row, dict):
+                raise AttachError(f"{path}:{line_no}: JSON 객체가 아니다")
+            yield line_no, row
+
+
+class _ContextRow(NamedTuple):
+    """맥락 결과 한 줄에서 붙이기에 필요한 것만. 행 전체를 들고 있으면 메모리가 모자란다."""
+
+    context: Any
+    replacement: Any
+    fingerprint: str
+
+
+def load_context_rows(context_dirs: Sequence[str | Path]) -> dict[str, _ContextRow]:
+    """맥락 결과 폴더들의 `*.jsonl` 을 `id` 로 모은다. 같은 `id` 가 둘이면 거부한다."""
+    rows: dict[str, _ContextRow] = {}
+    duplicates: list[str] = []
+    for context_dir in map(Path, context_dirs):
+        if not context_dir.is_dir():
+            raise AttachError(f"{context_dir}: 맥락 결과 폴더가 없다")
+        for path in sorted(context_dir.glob("*.jsonl")):
+            for line_no, row in _read_jsonl(path):
+                record_id = row.get("id")
+                if not isinstance(record_id, str) or not record_id:
+                    raise AttachError(f"{path}:{line_no}: id 가 없다")
+                if any(key not in row for key in CONTEXT_OUTPUT_KEYS):
+                    raise AttachError(f"{path}:{line_no}: context·replacement 가 없다")
+                if record_id in rows:
+                    duplicates.append(record_id)
+                    continue
+                rows[record_id] = _ContextRow(
+                    row["context"], row["replacement"], _fingerprint(row, CONTEXT_OUTPUT_KEYS)
+                )
+    if duplicates:
+        raise AttachError(
+            f"같은 id 의 맥락 행이 둘 이상이다: {len(duplicates)}건 {duplicates[:SHOWN_IDS]}"
+        )
+    if not rows:
+        raise AttachError("맥락 결과가 한 줄도 없다")
+    return rows
+
+
+@dataclass
+class _Problem:
+    """거부 사유 하나의 건수·저장소별 건수·앞쪽 id."""
+
+    repos: Counter[str] = field(default_factory=Counter)
+    ids: list[str] = field(default_factory=list)
+
+    def add(self, repo: Any, record_id: Any) -> None:
+        """한 건 더한다."""
+        self.repos[str(repo)] += 1
+        if len(self.ids) < SHOWN_IDS:
+            self.ids.append(str(record_id))
+
+    def describe(self, reason: str) -> str:
+        """사람이 읽을 한 줄."""
+        by_repo = ", ".join(f"{repo} {count}" for repo, count in self.repos.most_common())
+        return f"{reason}: {self.repos.total()}건 ({by_repo}) 예: {self.ids}"
+
+
+def attach_contexts(
+    assembled_path: str | Path, context_dirs: Sequence[str | Path], out_path: str | Path
+) -> dict[str, Any]:
+    """조립 결과에 맥락 결과를 `id` 로 붙여 `out_path` 에 쓰고 보고서를 돌려준다 (#142).
+
+    KEPT·FULL_FUNCTION 행에만 붙이고, PARTIAL·제외 행은 맥락 없이 그대로 둔다. 거부하는 것:
+    맥락이 없는 KEPT·FULL_FUNCTION(한도에 걸려 잘린 맥락 파일이 여기서 잡힌다), 추출 결과가
+    다른 맥락(`_fingerprint`), 대상이 아닌 행을 가리키는 맥락, 조립 결과에 없는 `id` 의 맥락.
+    사유를 모두 모은 뒤 거부하고, 거부하면 최종 경로는 건드리지 않는다 (조립기와 같은 방식).
+    """
+    out = Path(out_path)
+    if any(out.resolve().parent == Path(d).resolve() for d in context_dirs):
+        raise AttachError(f"{out}: 출력이 맥락 결과 폴더 안이다 - 다음 붙이기 때 맥락으로 읽힌다")
+    contexts = load_context_rows(context_dirs)
+
+    problems: dict[str, _Problem] = {}
+    counts: dict[str, Counter[str]] = {}
+    used: set[str] = set()
+    out.parent.mkdir(parents=True, exist_ok=True)
+    tmp = out.with_name(out.name + ".tmp")
+    try:
+        with tmp.open("w", encoding="utf-8") as handle:
+            for _line_no, row in _read_jsonl(Path(assembled_path)):
+                record_id, repo = row.get("id"), row.get("repo")
+                found = contexts.get(record_id) if isinstance(record_id, str) else None
+                if found is not None:
+                    used.add(record_id)
+                if not is_context_target(row):
+                    kind = "partial_kept" if row.get("filter_status") == KEPT else "excluded"
+                    if found is not None:
+                        reason = "FULL_FUNCTION·KEPT 가 아닌 행을 가리키는 맥락"
+                        problems.setdefault(reason, _Problem()).add(repo, record_id)
+                elif found is None:
+                    kind = "missing"
+                    reason = "맥락이 없는 KEPT·FULL_FUNCTION (맥락 결합이 한도에 걸려 잘렸나)"
+                    problems.setdefault(reason, _Problem()).add(repo, record_id)
+                elif found.fingerprint != _fingerprint(row, ASSEMBLY_ADDED_KEYS):
+                    kind = "stale"
+                    reason = "추출 결과가 다른 맥락 (옛 추출로 돌린 맥락)"
+                    problems.setdefault(reason, _Problem()).add(repo, record_id)
+                else:
+                    kind = "attached"
+                    row = {**row, "context": found.context, "replacement": found.replacement}
+                counts.setdefault(str(repo), Counter())[kind] += 1
+                handle.write(json.dumps(row, ensure_ascii=False) + "\n")
+
+        for record_id in contexts.keys() - used:
+            reason = "조립 결과에 없는 id 의 맥락 (다른 추출 결과이거나 실패한 저장소)"
+            problems.setdefault(reason, _Problem()).add("?", record_id)
+        if problems:
+            raise AttachError(
+                "\n".join(problem.describe(reason) for reason, problem in problems.items())
+            )
+
+        total: Counter[str] = Counter()
+        for repo_counts in counts.values():
+            total.update(repo_counts)
+        report = {
+            "out_path": str(out),
+            "assembled_path": str(assembled_path),
+            "context_dirs": [str(d) for d in context_dirs],
+            "totals": dict(sorted(total.items())),
+            "repos": {repo: dict(sorted(c.items())) for repo, c in sorted(counts.items())},
+        }
+        os.replace(tmp, out)
+    finally:
+        tmp.unlink(missing_ok=True)
+    report_path = out.with_name(out.stem + ATTACH_REPORT_SUFFIX)
+    report_text = json.dumps(report, ensure_ascii=False, indent=2) + "\n"
+    report_path.write_text(report_text, encoding="utf-8")
+    return report
+
+
+# --------------------------------------------------------------------------------------
 # CLI
 # --------------------------------------------------------------------------------------
 
@@ -1097,6 +1298,25 @@ def build_parser() -> argparse.ArgumentParser:
         type=Path,
         default=None,
         help="저장소 클론 경로. 주면 대체 코드 본문을 자식 파일에서 온전히 뽑는다 (#107)",
+    )
+    parser.add_argument(
+        "--full-function-only",
+        action="store_true",
+        help="--input 중 FULL_FUNCTION 행만 맥락 결합한다 (#82, #142)",
+    )
+    parser.add_argument(
+        "--attach",
+        type=Path,
+        default=None,
+        help="조립 결과 JSONL. --context-dir 의 맥락 결과를 id 로 붙여 --out 에 쓴다 (#142)",
+    )
+    parser.add_argument(
+        "--context-dir",
+        type=Path,
+        action="append",
+        default=[],
+        dest="context_dirs",
+        help="--attach 용 맥락 결과 폴더. 여러 번 줄 수 있다",
     )
     parser.add_argument("--max-issues", type=int, default=MAX_ISSUES_PER_COMMIT)
     parser.add_argument("--cache-dir", type=Path, default=None)
@@ -1121,6 +1341,21 @@ def main(argv: Sequence[str] | None = None) -> int:
     def log(message: str) -> None:
         print(message, file=sys.stderr)
 
+    if args.attach:
+        if args.out is None or not args.context_dirs:
+            log("--attach 에는 --context-dir 와 --out 이 필요하다.")
+            return 2
+        try:
+            report = attach_contexts(args.attach, args.context_dirs, args.out)
+        except AttachError as error:
+            log(f"붙이기 거부:\n{error}")
+            return 1
+        print(f"JSONL: {args.out} {report['totals']}")
+        return 0
+    if args.full_function_only and not args.input:
+        log("--full-function-only 는 --input 과 함께 쓴다.")
+        return 2
+
     token = os.environ.get("GITHUB_TOKEN", "").strip()
     if not token:
         log("GITHUB_TOKEN 이 없다 (.env, §8.4). 시간당 60회로 돈다.")
@@ -1130,6 +1365,10 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     if args.input:
         targets = parse_targets(args.input.read_text(encoding="utf-8").splitlines())
+        if args.full_function_only:
+            before = len(targets)
+            targets = full_function_targets(targets)
+            log(f"FULL_FUNCTION 만: {before}건 중 {len(targets)}건")
     elif args.sample:
         if not args.repo:
             log("--sample 에는 --repo 가 필요하다.")

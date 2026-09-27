@@ -1326,3 +1326,160 @@ def test_collected_comments_carry_ids_through_the_collector(tmp_path):
 
     comment = result.to_schema_context()["review_comments"][0]
     assert f"review:comment_{comment['comment_id']}" == "review:comment_777"
+
+
+# --------------------------------------------------------------------------------------
+# 조립 결과에 붙이기 (Issue #142)
+# --------------------------------------------------------------------------------------
+
+
+def _kept(record_id, kind="FULL_FUNCTION", repo="a/b", body="def f():\n    pass\n"):
+    """`pipeline.run` kept 파일 한 줄 (필터 키 없음)."""
+    return {
+        "id": record_id,
+        "repo": repo,
+        "commit_sha": f"sha-{record_id}",
+        "deletion_kind": kind,
+        "deleted_body": body,
+    }
+
+
+def _assembled(row, status="KEPT"):
+    """조립기가 kept 행에 두 키를 더한 모양. 제외 행은 원래 두 키가 있다."""
+    return {**row, "filter_status": status, "filter_rule_version": "f1"}
+
+
+def _with_context(row):
+    """맥락 결합 출력 - 입력 행 그대로에 두 키를 더한다 (`build_output_record`)."""
+    replacement = {"code": None, "match_method": "NONE", "confidence": 0.0}
+    return {**row, "context": {"commit_message": f"msg {row['id']}"}, "replacement": replacement}
+
+
+def _jsonl(path, rows):
+    """행들을 JSONL 로 쓴다."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("".join(json.dumps(row) + "\n" for row in rows), encoding="utf-8")
+    return path
+
+
+def _attach_inputs(tmp_path, assembled, contexts, context_dir="context"):
+    """조립 결과 파일과 맥락 폴더를 만들고 (조립 결과, 맥락 폴더, 출력) 경로를 준다."""
+    assembled_path = _jsonl(tmp_path / "assembled" / "filtered.jsonl", assembled)
+    folder = tmp_path / context_dir
+    _jsonl(folder / "a__b.jsonl", contexts)
+    return assembled_path, folder, tmp_path / "assembled" / "records.jsonl"
+
+
+def test_attach_fills_only_kept_full_function_and_keeps_order(tmp_path):
+    """PARTIAL·제외 행은 맥락 없이 그대로다 - FULL_FUNCTION 만 붙이기로 했다 (#142)."""
+    full, partial = _kept("r1"), _kept("r2", kind="PARTIAL")
+    excluded = {**_kept("r3"), "filter_status": "NOISE_MOVE", "filter_rule_version": "f1"}
+    assembled_path, folder, out = _attach_inputs(
+        tmp_path, [_assembled(full), _assembled(partial), excluded], [_with_context(full)]
+    )
+
+    report = ctx.attach_contexts(assembled_path, [folder], out)
+
+    rows = [json.loads(line) for line in out.read_text(encoding="utf-8").splitlines()]
+    assert [row["id"] for row in rows] == ["r1", "r2", "r3"]
+    assert rows[0]["context"] == {"commit_message": "msg r1"}
+    assert rows[0]["filter_status"] == "KEPT"
+    assert "context" not in rows[1] and "context" not in rows[2]
+    assert report["totals"] == {"attached": 1, "excluded": 1, "partial_kept": 1}
+
+
+def test_attach_rejects_a_truncated_context_file_and_keeps_the_old_output(tmp_path):
+    """맥락 결합은 한도에 걸리면 거기까지만 쓰고 멈춘다. 빠진 FULL_FUNCTION 이 있으면 거부."""
+    rows = [_kept("r1"), _kept("r2")]
+    assembled_path, folder, out = _attach_inputs(
+        tmp_path, [_assembled(row) for row in rows], [_with_context(rows[0])]
+    )
+    out.write_text("이전 결과\n", encoding="utf-8")
+
+    with pytest.raises(ctx.AttachError, match="맥락이 없는 KEPT·FULL_FUNCTION.*a/b 1.*r2"):
+        ctx.attach_contexts(assembled_path, [folder], out)
+    assert out.read_text(encoding="utf-8") == "이전 결과\n"
+    assert not out.with_name(out.name + ".tmp").exists()
+
+
+def test_attach_rejects_context_made_from_a_different_extraction(tmp_path):
+    """`id` 는 본문이 바뀌어도 같다. 옛 추출로 돌린 맥락이 조용히 붙으면 안 된다."""
+    old, new = _kept("r1", body="def f():\n    old()\n"), _kept("r1", body="def f():\n    new()\n")
+    assembled_path, folder, out = _attach_inputs(tmp_path, [_assembled(new)], [_with_context(old)])
+
+    with pytest.raises(ctx.AttachError, match="추출 결과가 다른 맥락"):
+        ctx.attach_contexts(assembled_path, [folder], out)
+
+
+def test_attach_rejects_context_on_a_partial_row(tmp_path):
+    """PARTIAL 에 맥락이 있으면 --full-function-only 를 빼고 돌린 것이다."""
+    partial = _kept("r1", kind="PARTIAL")
+    assembled_path, folder, out = _attach_inputs(
+        tmp_path, [_assembled(partial)], [_with_context(partial)]
+    )
+
+    with pytest.raises(ctx.AttachError, match="FULL_FUNCTION·KEPT 가 아닌 행"):
+        ctx.attach_contexts(assembled_path, [folder], out)
+
+
+def test_attach_rejects_context_whose_id_is_not_in_the_assembly(tmp_path):
+    """실패한 저장소나 다른 추출 결과의 맥락이 섞였다."""
+    row = _kept("r1")
+    assembled_path, folder, out = _attach_inputs(
+        tmp_path, [_assembled(row)], [_with_context(row), _with_context(_kept("ghost"))]
+    )
+
+    with pytest.raises(ctx.AttachError, match="조립 결과에 없는 id.*ghost"):
+        ctx.attach_contexts(assembled_path, [folder], out)
+
+
+def test_attach_rejects_the_same_id_in_two_context_folders(tmp_path):
+    """두 사람이 같은 저장소를 돌렸다 - 어느 쪽도 고르지 않는다."""
+    row = _kept("r1")
+    assembled_path, folder, out = _attach_inputs(tmp_path, [_assembled(row)], [_with_context(row)])
+    other = tmp_path / "context_jh"
+    _jsonl(other / "a__b.jsonl", [_with_context(row)])
+
+    with pytest.raises(ctx.AttachError, match="같은 id 의 맥락 행이 둘 이상"):
+        ctx.attach_contexts(assembled_path, [folder, other], out)
+
+
+def test_attach_refuses_to_write_into_a_context_folder(tmp_path):
+    """다음 붙이기 때 출력이 맥락 결과로 읽힌다."""
+    row = _kept("r1")
+    assembled_path, folder, _out = _attach_inputs(tmp_path, [_assembled(row)], [_with_context(row)])
+
+    with pytest.raises(ctx.AttachError, match="맥락 결과 폴더 안"):
+        ctx.attach_contexts(assembled_path, [folder], folder / "records.jsonl")
+
+
+def test_attach_cli_returns_1_on_rejection_and_0_when_complete(tmp_path, capsys):
+    """절차 문서가 종료 코드로 성공을 판단한다."""
+    rows = [_kept("r1"), _kept("r2")]
+    assembled_path, folder, out = _attach_inputs(
+        tmp_path, [_assembled(row) for row in rows], [_with_context(rows[0])]
+    )
+    argv = ["--attach", str(assembled_path), "--context-dir", str(folder), "--out", str(out)]
+
+    assert ctx.main(argv) == 1
+    assert "붙이기 거부" in capsys.readouterr().err
+    _jsonl(folder / "a__b.jsonl", [_with_context(row) for row in rows])
+    assert ctx.main(argv) == 0
+    assert json.loads(out.with_name("records_context.json").read_text("utf-8"))["totals"] == {
+        "attached": 2
+    }
+
+
+def test_full_function_only_drops_partial_rows_from_a_run_kept_file():
+    """run 의 kept 파일에는 PARTIAL 이 섞여 있다. 맥락은 FULL_FUNCTION 에만 붙인다 (#142)."""
+    lines = [json.dumps(_kept("r1")), json.dumps(_kept("r2", kind="PARTIAL"))]
+
+    targets = ctx.full_function_targets(ctx.parse_targets(lines))
+
+    assert [target.record["id"] for target in targets] == ["r1"]
+
+
+def test_full_function_only_needs_an_input_file(capsys):
+    """--sample·--commit 에는 레코드가 없어 걸러 낼 것이 없다."""
+    assert ctx.main(["--repo", "a/b", "--sample", "3", "--full-function-only"]) == 2
+    assert "--input" in capsys.readouterr().err
