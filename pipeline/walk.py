@@ -35,6 +35,13 @@ _FIELD_SEP = "\x1f"
 _RECORD_SEP = "\x1e"
 _LOG_FORMAT = f"%H{_FIELD_SEP}%P{_FIELD_SEP}%aI{_FIELD_SEP}%B{_RECORD_SEP}"
 
+# git log 출력을 UTF-8로 읽다가 깨진 바이트를 만나면 U+FFFD로 바꾼다 (Issue #144). git은
+# encoding 헤더가 없는 커밋의 메시지를 변환하지 않고 그대로 내보낸다. celery `18d2b79f`의
+# 메시지는 잘린 UTF-8 바이트(`\xc3`)로 끝나서, 기본값 `errors="strict"`에서는 순회 전체가
+# 실패했다. 정상 UTF-8 메시지는 그대로이고, 깨진 바이트 열마다 U+FFFD 1자가 된다(원래 바이트는
+# 복원하지 않는다). SHA·부모·날짜 필드와 구분자는 ASCII라서 영향이 없다.
+_GIT_DECODE_ERRORS = "replace"
+
 
 @dataclass(frozen=True)
 class LogEntry:
@@ -104,6 +111,7 @@ def _run_git_log(repo_path: Path, ref: str) -> str:
         capture_output=True,
         text=True,
         encoding="utf-8",
+        errors=_GIT_DECODE_ERRORS,
         env={**os.environ, "GIT_PAGER": "cat"},
         check=True,
     )

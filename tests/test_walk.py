@@ -186,6 +186,41 @@ class TestWalkCommitsOnRealRepo:
         assert pairs[0].commit_message == "second commit\n\nbody line"
         assert pairs[0].author_date  # ISO 8601 문자열, 비어있지 않음
 
+    def test_non_utf8_commit_message_is_replaced_not_fatal(self, tmp_path: Path):
+        """encoding 헤더 없이 깨진 UTF-8 바이트가 든 메시지도 순회를 멈추지 않는다 (Issue #144).
+
+        celery `18d2b79f`처럼 메시지가 잘린 멀티바이트(`\\xc3`)로 끝나는 경우를 재현한다.
+        깨진 바이트만 U+FFFD가 되고, 앞뒤 커밋과 정상 UTF-8 메시지는 그대로다.
+        """
+        repo = _init_repo(tmp_path / "non_utf8_message")
+        root = _commit(repo, "a.txt", "a", "root commit")
+        # `git commit`은 깨진 메시지를 latin-1로 보고 고쳐 저장하므로, 커밋 객체를 직접 쓴다.
+        tree = _git(repo, "rev-parse", "HEAD^{tree}")
+        raw_commit = (
+            f"tree {tree}\nparent {root}\n"
+            "author Test <test@example.com> 1700000000 +0000\n"
+            "committer Test <test@example.com> 1700000000 +0000\n\n"
+        ).encode() + b"99% Coverage for celery.backends.amqp\xc3\n"
+        broken = (
+            subprocess.run(
+                ["git", "hash-object", "-t", "commit", "-w", "--stdin"],
+                cwd=repo,
+                input=raw_commit,
+                capture_output=True,
+                check=True,
+            )
+            .stdout.decode("ascii")
+            .strip()
+        )
+        _git(repo, "reset", "-q", "--hard", broken)
+        after = _commit(repo, "c.txt", "c", "café 한글 commit")
+
+        pairs = walk_commits(repo, "main")
+
+        assert [p.commit_sha for p in pairs] == [broken, after]
+        assert pairs[0].commit_message == "99% Coverage for celery.backends.amqp�"
+        assert pairs[1].commit_message == "café 한글 commit"
+
     def test_checked_out_feature_branch_does_not_affect_explicit_ref(self, tmp_path: Path):
         """저장소가 feature branch에 checkout돼 있어도 ref="main"을 넘기면 main만 돈다.
 

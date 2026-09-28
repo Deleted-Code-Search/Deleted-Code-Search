@@ -179,6 +179,18 @@ from pipeline.walk import CommitPair, walk_commits
 # clone.py와 같은 이유.
 _GIT_ENV = {**os.environ, "GIT_TERMINAL_PROMPT": "0", "GIT_PAGER": "cat"}
 
+# `git diff`·`git show` 출력을 UTF-8로 읽다가 깨진 바이트를 만나면 U+FFFD로 바꾼다 (Issue #144).
+# git은 blob 내용을 변환하지 않고 그대로 내보내므로, UTF-8이 아닌 옛 파일(latin-1 등) 하나가
+# 기본값 `errors="strict"`에서 `UnicodeDecodeError`를 내 저장소 전체 추출이 실패했다. 같은
+# 출력이면 매번 같은 곳에서 실패하므로 재시도로는 풀리지 않는다.
+# - 정상 UTF-8 출력은 바뀌지 않는다 — 깨진 바이트가 없으면 "replace"와 "strict"의 결과가 같다.
+# - 손실: 깨진 바이트 열마다 U+FFFD 1자가 되어(잘린 멀티바이트 열은 여러 바이트가 1자로) 원래
+#   바이트는 복원할 수 없다. 줄바꿈은 건드리지 않으므로 줄 수·헝크 좌표·함수 경계는 그대로다.
+#   diff와 원문 모두 같은 정책으로 읽으므로 이동 탐지에서 같은 바이트는 같은 문자열로 비교된다.
+# - "surrogateescape"는 쓰지 않는다 — `PythonAdapter`의 `encode("utf-8")`와 JSONL 쓰기에서
+#   `UnicodeEncodeError`로 실패 지점만 뒤로 밀린다.
+_GIT_DECODE_ERRORS = "replace"
+
 # "@@ -old_start[,old_count] +new_start[,new_count] @@ ..." — count 생략 시 1
 # (unified diff 관례). 네 값 모두 `parse_file_diffs`(삭제 줄 커서와 `AddedHunk`),
 # added-line 범위(_parse_added_line_ranges), same-position 판정(_parse_same_file_hunks)
@@ -345,6 +357,7 @@ def _run_git_diff(repo_path: str | Path, parent_sha: str, commit_sha: str) -> st
         capture_output=True,
         text=True,
         encoding="utf-8",
+        errors=_GIT_DECODE_ERRORS,
         env=_GIT_ENV,
         check=True,
     )
@@ -367,6 +380,7 @@ def _read_file_at(repo_path: str | Path, sha: str, file_path: str) -> str:
         capture_output=True,
         text=True,
         encoding="utf-8",
+        errors=_GIT_DECODE_ERRORS,
         env=_GIT_ENV,
         check=True,
     )
