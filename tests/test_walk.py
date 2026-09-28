@@ -62,13 +62,11 @@ def _commit(path: Path, filename: str, content: str, message: str) -> str:
 
 
 def test_parse_git_log_splits_records_and_parents():
-    raw = "\x1e".join(
-        [
-            "a1\x1f\x1f2024-01-01T00:00:00+00:00\x1froot\n",
-            "\na2\x1fa1\x1f2024-01-02T00:00:00+00:00\x1fsecond\n",
-            "\na3\x1fa2 a1b\x1f2024-01-03T00:00:00+00:00\x1fmerge\n",
-            "\n",
-        ]
+    # `git log -z --pretty=tformat:...` 출력 모양: 커밋마다 NUL로 끝난다.
+    raw = (
+        "a1\x1f\x1f2024-01-01T00:00:00+00:00\x1froot\n\x00"
+        "a2\x1fa1\x1f2024-01-02T00:00:00+00:00\x1fsecond\n\x00"
+        "a3\x1fa2 a1b\x1f2024-01-03T00:00:00+00:00\x1fmerge\n\x00"
     )
     entries = parse_git_log(raw)
 
@@ -76,6 +74,23 @@ def test_parse_git_log_splits_records_and_parents():
         LogEntry("a1", (), "2024-01-01T00:00:00+00:00", "root"),
         LogEntry("a2", ("a1",), "2024-01-02T00:00:00+00:00", "second"),
         LogEntry("a3", ("a2", "a1b"), "2024-01-03T00:00:00+00:00", "merge"),
+    ]
+
+
+def test_parse_git_log_keeps_control_chars_inside_message():
+    """메시지 안의 0x1e(예전 레코드 구분자)·0x1f(필드 구분자)는 레코드를 쪼개지 않는다.
+
+    Issue #144.
+    """
+    raw = (
+        "a1\x1f\x1f2024-01-01T00:00:00+00:00\x1froot\n\x00"
+        "a2\x1fa1\x1f2024-01-02T00:00:00+00:00\x1fsubject\n\nurl://x\x1e:@y \x1f z\n\x00"
+    )
+    entries = parse_git_log(raw)
+
+    assert entries == [
+        LogEntry("a1", (), "2024-01-01T00:00:00+00:00", "root"),
+        LogEntry("a2", ("a1",), "2024-01-02T00:00:00+00:00", "subject\n\nurl://x\x1e:@y \x1f z"),
     ]
 
 
@@ -220,6 +235,54 @@ class TestWalkCommitsOnRealRepo:
         assert [p.commit_sha for p in pairs] == [broken, after]
         assert pairs[0].commit_message == "99% Coverage for celery.backends.amqp�"
         assert pairs[1].commit_message == "café 한글 commit"
+
+    def test_record_separator_byte_in_commit_message_does_not_split_record(self, tmp_path: Path):
+        """메시지에 literal 0x1e가 든 커밋도 한 레코드로 읽힌다 (Issue #144).
+
+        scikit-learn `27ae0488`의 본문에는 `sql://\\ufffd\\ufffd\\x1e:@...` 처럼 0x1e가 실제로
+        들어 있어, 0x1e를 레코드 구분자로 쓰던 때는 순회 전체가 ValueError로 실패했다.
+        그 모양을 커밋 객체로 직접 써서 재현한다.
+        """
+        repo = _init_repo(tmp_path / "rs_in_message")
+        root = _commit(repo, "a.txt", "a", "root commit")
+        before = _commit(repo, "b.txt", "b", "normal commit before")
+        tree = _git(repo, "rev-parse", "HEAD^{tree}")
+        message = (
+            "Update StatLib database URL\n\n"
+            "Root URL redirect: sql://��\x1e:@localhost\n"
+            "user '��\x1e'@ end\n"
+        )
+        raw_commit = (
+            f"tree {tree}\nparent {before}\n"
+            "author Test <test@example.com> 1700000000 +0000\n"
+            "committer Test <test@example.com> 1700000000 +0000\n\n"
+        ).encode() + message.encode("utf-8")
+        with_rs = (
+            subprocess.run(
+                ["git", "hash-object", "-t", "commit", "-w", "--stdin"],
+                cwd=repo,
+                input=raw_commit,
+                capture_output=True,
+                check=True,
+            )
+            .stdout.decode("ascii")
+            .strip()
+        )
+        # 커밋 객체에 0x1e가 실제로 들어갔는지 확인한다 (mock이 아니라 진짜 재현인지).
+        stored = subprocess.run(
+            ["git", "cat-file", "commit", with_rs], cwd=repo, capture_output=True, check=True
+        ).stdout
+        assert stored.count(b"\x1e") == 2
+        _git(repo, "reset", "-q", "--hard", with_rs)
+        after = _commit(repo, "c.txt", "c", "normal commit after")
+
+        pairs = walk_commits(repo, "main")
+
+        assert [p.commit_sha for p in pairs] == [before, with_rs, after]
+        assert [p.parent_sha for p in pairs] == [root, before, with_rs]
+        assert pairs[0].commit_message == "normal commit before"
+        assert pairs[1].commit_message == message.strip("\n")
+        assert pairs[2].commit_message == "normal commit after"
 
     def test_checked_out_feature_branch_does_not_affect_explicit_ref(self, tmp_path: Path):
         """저장소가 feature branch에 checkout돼 있어도 ref="main"을 넘기면 main만 돈다.
