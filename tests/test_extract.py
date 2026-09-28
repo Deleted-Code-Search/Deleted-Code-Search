@@ -1737,3 +1737,51 @@ def test_record_id_namespace_is_pinned():
         extract_module.make_record_id("a/b", "sha1", "src/x.py", "f", 10)
         == "6b4203d5-ced6-5848-971f-0746dbf7723e"
     )
+
+
+# --------------------------------------------------------------------------------------
+# Issue #144: UTF-8이 아닌 바이트가 든 git 출력
+# --------------------------------------------------------------------------------------
+
+
+@requires_git
+def test_non_utf8_bytes_in_diff_and_source_are_replaced_not_fatal(tmp_path: Path):
+    """latin-1로 저장된 옛 파일도 추출을 멈추지 않는다. 깨진 바이트만 U+FFFD가 된다.
+
+    `git diff`(삭제 줄)와 `git show`(부모 원문, 함수 경계) 둘 다 이 바이트를 지나간다.
+    같은 파일의 정상 UTF-8 문자열과 줄 좌표는 그대로여야 한다.
+    """
+    repo = _init_repo(tmp_path / "repo")
+    (repo / "a.py").write_bytes(
+        "def keep():\n    return '한글'\n\n".encode() + b"def foo():\n    return 'caf\xe9'\n"
+    )
+    _commit_all(repo, "add foo")
+    (repo / "a.py").write_bytes("def keep():\n    return '한글'\n".encode())
+    _commit_all(repo, "delete foo")
+
+    records = extract_module.extract_deletions(repo, _REPO, _last_commit_pair(repo))
+
+    assert [r.function_name for r in records] == ["foo"]
+    assert (records[0].start_line, records[0].end_line) == (4, 5)
+    assert records[0].deletion_kind == "FULL_FUNCTION"
+    assert records[0].deleted_hunk == "def foo():\n    return 'caf�'"
+
+
+@requires_git
+def test_non_utf8_moved_function_is_still_detected_as_move(tmp_path: Path):
+    """diff와 원문을 같은 정책으로 읽으므로, 같은 깨진 바이트를 가진 함수가 옮겨지면 여전히
+    NOISE_MOVE다 (Issue #144). 한쪽만 바꿔 읽으면 본문이 달라져 이동을 놓친다."""
+    repo = _init_repo(tmp_path / "repo")
+    body = b"def moved_func():\n    return 'caf\xe9'\n"
+    (repo / "old.py").write_bytes(body)
+    _commit_all(repo, "add moved_func")
+    (repo / "old.py").unlink()
+    (repo / "new.py").write_bytes(body)
+    _commit_all(repo, "move moved_func")
+
+    records, excluded = extract_module.extract_repo_with_excluded(repo, _REPO, "main")
+
+    assert records == []
+    assert [(e.record.function_name, e.filter_status) for e in excluded] == [
+        ("moved_func", "NOISE_MOVE")
+    ]

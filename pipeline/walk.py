@@ -30,10 +30,22 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
 
-# git log 출력에서 필드/레코드를 나누는 구분자. 커밋 메시지에 나타날 일이 없는 제어 문자.
+# git log 출력에서 필드를 나누는 구분자. 메시지(%B)가 마지막 필드이고 `split(_FIELD_SEP, 3)`
+# 으로 자르므로, 메시지 안에 이 문자가 있어도 메시지 필드에 그대로 남는다.
 _FIELD_SEP = "\x1f"
-_RECORD_SEP = "\x1e"
-_LOG_FORMAT = f"%H{_FIELD_SEP}%P{_FIELD_SEP}%aI{_FIELD_SEP}%B{_RECORD_SEP}"
+# 레코드(커밋) 구분자는 NUL이다. `git log -z`가 tformat의 커밋 종결자를 줄바꿈 대신 NUL로
+# 내보낸다. git은 NUL이 든 커밋 메시지를 만들지 않으므로(`git commit`이 거부) 메시지와 충돌할
+# 수 없다. 예전 구분자 0x1e(RS)는 실제 메시지에 들어 있을 수 있어서, scikit-learn `27ae0488`
+# 의 메시지에 든 0x1e 때문에 레코드가 잘못 쪼개져 순회 전체가 실패했다 (Issue #144).
+_RECORD_SEP = "\x00"
+_LOG_FORMAT = f"%H{_FIELD_SEP}%P{_FIELD_SEP}%aI{_FIELD_SEP}%B"
+
+# git log 출력을 UTF-8로 읽다가 깨진 바이트를 만나면 U+FFFD로 바꾼다 (Issue #144). git은
+# encoding 헤더가 없는 커밋의 메시지를 변환하지 않고 그대로 내보낸다. celery `18d2b79f`의
+# 메시지는 잘린 UTF-8 바이트(`\xc3`)로 끝나서, 기본값 `errors="strict"`에서는 순회 전체가
+# 실패했다. 정상 UTF-8 메시지는 그대로이고, 깨진 바이트 열마다 U+FFFD 1자가 된다(원래 바이트는
+# 복원하지 않는다). SHA·부모·날짜 필드와 구분자는 ASCII라서 영향이 없다.
+_GIT_DECODE_ERRORS = "replace"
 
 
 @dataclass(frozen=True)
@@ -60,7 +72,7 @@ class CommitPair:
 
 
 def parse_git_log(raw: str) -> list[LogEntry]:
-    """`_LOG_FORMAT`으로 뽑은 `git log` 출력을 레코드로 쪼갠다. (순수 함수, 테스트 대상)"""
+    """`-z`와 `_LOG_FORMAT`으로 뽑은 `git log` 출력을 레코드로 쪼갠다. (순수 함수, 테스트 대상)"""
     entries: list[LogEntry] = []
     for chunk in raw.split(_RECORD_SEP):
         chunk = chunk.strip("\n")
@@ -98,12 +110,14 @@ def _run_git_log(repo_path: Path, ref: str) -> str:
             "log",
             "--topo-order",
             "--reverse",
+            "-z",
             f"--pretty=tformat:{_LOG_FORMAT}",
             ref,
         ],
         capture_output=True,
         text=True,
         encoding="utf-8",
+        errors=_GIT_DECODE_ERRORS,
         env={**os.environ, "GIT_PAGER": "cat"},
         check=True,
     )
