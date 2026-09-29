@@ -10,7 +10,9 @@ import json
 import pytest
 
 from classify import baseline_keyword, baseline_llm, classifier, labels, sampling
+from eval import gate1, gate1_bounds, gate1_merge
 from pipeline import context
+from tools import label_cli
 
 MESSAGE = "Deprecate beta decorator  See the migration guide."
 
@@ -69,3 +71,47 @@ def test_baseline_clis_read_one_record(records_file, tmp_path, capsys):
 
     assert len(out.read_text(encoding="utf-8").splitlines()) == 1
     assert "1건 대상" in capsys.readouterr().err
+
+
+def _write_rows(path, rows):
+    """행들을 `ensure_ascii=False` JSONL 로 쓴다 - 파이프라인·라벨 도구가 쓰는 방식 그대로."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows), "utf-8")
+    return path
+
+
+@pytest.fixture
+def label_file(tmp_path):
+    """note 에 U+2028 이 든 개인 라벨 한 줄 (예비 200건 파일 이름 규칙)."""
+    row = {**sampling.empty_label_row("r1", "sj"), "note": MESSAGE}
+    name = sampling.LABEL_FILENAME_TEMPLATE.format(labeler="sj")
+    return _write_rows(tmp_path / "labels" / name, [row])
+
+
+def test_label_cli_reads_the_records_file_whole(tmp_path):
+    """#90 에서 라벨러가 여는 레코드 파일. 커밋 메시지가 맥락에 그대로 실린다."""
+    record = {"id": "r1", "repo": "a/b", "context": {"commit_message": MESSAGE}}
+    path = _write_rows(tmp_path / "records.jsonl", [sampling.build_labeling_record(record)])
+
+    views, problems = label_cli.load_records(path)
+
+    assert problems == []
+    assert views["r1"]["context"]["commit_message"] == MESSAGE
+
+
+def test_label_cli_reads_the_label_file_whole(label_file):
+    """라벨러가 note 에 붙여 넣은 문장에 U+2028 이 섞여도 파일을 연다."""
+    assert [row["note"] for row in label_cli.LabelFile.load(label_file).rows] == [MESSAGE]
+
+
+def test_gate1_readers_see_one_row(label_file, tmp_path):
+    """게이트 판정 스크립트 셋 - JSON 이 아니라는 문제로 줄을 버리지 않는다."""
+    inputs = gate1.load_inputs([label_file])
+    _personal, problems = gate1_merge.load_personal(label_file.parent)
+    merged = _write_rows(
+        tmp_path / "merged.jsonl", [{"record_id": "r1", "labels": [], "n": MESSAGE}]
+    )
+
+    assert not [p for p in inputs.problems if "JSON" in p]
+    assert not [p for p in problems if "JSON" in p]
+    assert len(gate1_bounds.read_merged(merged)) == 1

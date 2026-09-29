@@ -551,7 +551,8 @@ class LabelFile:
     @classmethod
     def load(cls, path: Path) -> LabelFile:
         rows: list[dict[str, Any]] = []
-        for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+        # "\n" 으로만 나눈다. splitlines() 는 U+2028 에서 레코드를 자른다 (#146).
+        for line_number, line in enumerate(path.read_text(encoding="utf-8").split("\n"), 1):
             if not line.strip():
                 continue
             try:
@@ -589,7 +590,8 @@ def load_records(path: Path) -> tuple[dict[str, dict[str, Any]], list[str]]:
     """record_id → 라벨러용 레코드. 문제는 사람이 읽을 문장으로."""
     views: dict[str, dict[str, Any]] = {}
     problems: list[str] = []
-    for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+    # "\n" 으로만 나눈다. splitlines() 는 U+2028 에서 레코드를 자른다 (#146).
+    for line_number, line in enumerate(path.read_text(encoding="utf-8").split("\n"), 1):
         if not line.strip():
             continue
         try:

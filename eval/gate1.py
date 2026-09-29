@@ -390,7 +390,8 @@ def load_inputs(paths: Sequence[Path], batch: str = BATCH) -> Inputs:
     seen_merged: dict[tuple[str, str], str] = {}
 
     for path in paths:
-        for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+        # "\n" 으로만 나눈다. splitlines() 는 U+2028 에서 레코드를 자른다 (#146).
+        for line_number, line in enumerate(path.read_text(encoding="utf-8").split("\n"), 1):
             if not line.strip():
                 continue
             where = f"{path}:{line_number}"

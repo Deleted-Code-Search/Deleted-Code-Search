@@ -176,7 +176,8 @@ def load_personal(
         if not path.is_file():
             problems.append(f"{path}: 파일이 없다")
             continue
-        for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+        # "\n" 으로만 나눈다. splitlines() 는 U+2028 에서 레코드를 자른다 (#146).
+        for line_number, line in enumerate(path.read_text(encoding="utf-8").split("\n"), 1):
             if not line.strip():
                 continue
             where = f"{path}:{line_number}"
