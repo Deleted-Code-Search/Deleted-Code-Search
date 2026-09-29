@@ -20,7 +20,6 @@
 from __future__ import annotations
 
 import argparse
-import json
 import re
 import sys
 from collections.abc import Sequence
@@ -36,6 +35,7 @@ from classify.baselines import (
     summarize,
     write_predictions,
 )
+from classify.labels import read_jsonl
 
 # 규칙을 바꾸면 올린다. 예측 파일에 함께 적히므로 나중에 "어느 규칙으로 낸 숫자인지" 알 수 있다.
 KEYWORD_RULES_VERSION = "a1"
@@ -209,11 +209,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     sys.stdout.reconfigure(encoding="utf-8")
     sys.stderr.reconfigure(encoding="utf-8")
 
-    records = [
-        json.loads(line)
-        for line in args.input.read_text(encoding="utf-8").splitlines()
-        if line.strip()
-    ]
+    records = read_jsonl(args.input)
     if not records:
         print("레코드가 없다.", file=sys.stderr)
         return 1

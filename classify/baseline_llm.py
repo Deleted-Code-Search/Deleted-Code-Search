@@ -48,7 +48,7 @@ from classify.baselines import (
     summarize,
     write_predictions,
 )
-from classify.labels import REASON_LABELS
+from classify.labels import REASON_LABELS, read_jsonl
 from pipeline.select_repos import load_env_file, resolve_cache_dir
 
 # 프롬프트를 고치면 올린다. 캐시 키와 예측 파일에 함께 들어가므로 어느 프롬프트로 낸 답인지 남는다.
@@ -414,11 +414,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     sys.stderr.reconfigure(encoding="utf-8")
     load_env_file(args.env_file)
 
-    records = [
-        json.loads(line)
-        for line in args.input.read_text(encoding="utf-8").splitlines()
-        if line.strip()
-    ]
+    records = read_jsonl(args.input)
     # 음수를 그대로 슬라이스하면 records[:-1] 이 되어 "앞 N건만" 의 정반대가 된다.
     # 마지막 한 건만 빼고 전부 유료 호출하는 셈이라, 비용을 아끼려는 옵션이 비용을 쓴다.
     if args.limit < 0:
