@@ -407,7 +407,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     sys.stdout.reconfigure(encoding="utf-8")
     sys.stderr.reconfigure(encoding="utf-8")
 
-    records = load_records(args.input.read_text(encoding="utf-8").splitlines())
+    # 파일을 줄 단위로 순회한다. `splitlines()` 는 U+2028 에서 레코드를 자른다 (#146).
+    with args.input.open(encoding="utf-8") as handle:
+        records = load_records(handle)
     eligible = [record for record in records if is_eligible(record)]
     print(
         f"입력 {len(records)}건 → 대상 {len(eligible)}건 "

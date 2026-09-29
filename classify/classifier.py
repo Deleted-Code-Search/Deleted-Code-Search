@@ -419,10 +419,13 @@ def _first_line(code: str) -> str:
 
 
 def load_jsonl(path: Path) -> list[dict[str, Any]]:
-    """JSONL 을 읽는다. 빈 줄은 건너뛴다."""
-    return [
-        json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()
-    ]
+    """JSONL 을 읽는다. 빈 줄은 건너뛴다. `splitlines()` 를 쓰지 않는 이유는 `labels.read_jsonl`.
+
+    그 함수와 달리 파일이 없으면 오류다 - 라벨 파일이 없는데 빈 목록으로 읽으면 모델이 조용히
+    학습되지 않는다.
+    """
+    with path.open(encoding="utf-8") as handle:
+        return [json.loads(line) for line in handle if line.strip()]
 
 
 def load_final_labels(rows: Sequence[dict[str, Any]]) -> dict[str, str]:

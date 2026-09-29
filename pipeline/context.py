@@ -1364,7 +1364,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     collector = ContextCollector(client, max_issues=args.max_issues)
 
     if args.input:
-        targets = parse_targets(args.input.read_text(encoding="utf-8").splitlines())
+        # 파일을 줄 단위로 순회한다. `splitlines()` 는 커밋 메시지의 U+2028 에서 레코드를
+        # 잘라 JSON 이 깨진다 - langchain 에서 실제로 멈췄다 (#146).
+        with args.input.open(encoding="utf-8") as handle:
+            targets = parse_targets(handle)
         if args.full_function_only:
             before = len(targets)
             targets = full_function_targets(targets)

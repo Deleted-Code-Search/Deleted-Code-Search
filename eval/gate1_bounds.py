@@ -150,7 +150,8 @@ def compute_bounds(rows: Sequence[dict[str, Any]]) -> tuple[list[TierBound], Cou
 
 def read_merged(path: Path) -> list[dict[str, Any]]:
     rows = []
-    for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+    # "\n" 으로만 나눈다. splitlines() 는 U+2028 에서 레코드를 자른다 (#146).
+    for number, line in enumerate(path.read_text(encoding="utf-8").split("\n"), 1):
         if not line.strip():
             continue
         row = json.loads(line)

@@ -73,11 +73,17 @@ KAPPA_WARN = 0.60
 
 
 def read_jsonl(path: Path) -> list[dict[str, Any]]:
+    """JSONL 을 읽는다. 파일이 없으면 빈 목록, 빈 줄은 건너뛴다.
+
+    **`str.splitlines()` 로 나누지 않는다.** `json.dumps(ensure_ascii=False)` 는 U+2028 같은
+    문자를 이스케이프하지 않고 쓰는데, `splitlines()` 는 그것을 줄바꿈으로 봐서 레코드 하나를
+    둘로 자른다. langchain 커밋 메시지에 실제로 있어 맥락 결합이 멈췄다 (#146). 파일을 줄 단위로
+    순회하면 `\\n`(과 JSON 이 이스케이프하는 `\\r`)에서만 나뉜다.
+    """
     if not path.is_file():
         return []
-    return [
-        json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()
-    ]
+    with path.open(encoding="utf-8") as handle:
+        return [json.loads(line) for line in handle if line.strip()]
 
 
 def load_personal_labels(labels_dir: Path, batch: str = BATCH) -> dict[str, list[dict[str, Any]]]:
