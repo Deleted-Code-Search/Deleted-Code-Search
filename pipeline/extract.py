@@ -168,6 +168,7 @@ import subprocess
 import uuid
 from collections.abc import Iterable
 from dataclasses import dataclass, field
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -717,7 +718,7 @@ def collect_same_file_hunks(repo_path: str | Path, commit: CommitPair) -> dict[s
 
 
 def extract_repo_with_excluded(
-    repo_path: str | Path, repo: str, ref: str
+    repo_path: str | Path, repo: str, ref: str, *, since: datetime | None = None
 ) -> tuple[list[DeletedFunction], list[ExcludedRecord]]:
     """저장소 하나를 처음부터 끝까지 순차로 훑어 (남은 레코드, 제외 레코드)를 돌려준다.
 
@@ -736,7 +737,8 @@ def extract_repo_with_excluded(
     한다(경로 정책은 이 모듈이 정하지 않는다).
     `ref`는 walk.py와 같은 이유로 호출자가 명시한다 — default branch를 이 함수가
     추측하지 않는다. 병렬화·재시도는 여기 없다 — `pipeline/run.py`(Issue #81)가 이 함수를
-    저장소 단위로 부른다(모듈 독스트링 참고).
+    저장소 단위로 부른다(모듈 독스트링 참고). `since`는 `walk_commits`에 그대로 넘긴다 —
+    구간 밖 커밋은 diff를 뜨지 않는다(Issue #148). `None`이면 전체 이력이다.
 
     `filter.py`를 함수 안에서(모듈 최상단이 아니라) import한다 — `filter.py`가 이미
     `from pipeline.extract import DeletedFunction, ExcludedRecord, Hunk`로 이 모듈을
@@ -748,7 +750,7 @@ def extract_repo_with_excluded(
 
     records: list[DeletedFunction] = []
     excluded: list[ExcludedRecord] = []
-    for commit in walk_commits(repo_path, ref):
+    for commit in walk_commits(repo_path, ref, since=since):
         # 세 단계가 같은 부모→자식 diff를 본다 — 커밋당 한 번만 받아 나눠 준다 (Issue #64)
         diff_text = _run_git_diff(repo_path, commit.parent_sha, commit.commit_sha)
         deletions = _extract_deletions_from_diff(repo_path, repo, commit, diff_text)

@@ -42,6 +42,8 @@ _METADATA_KEYS = {
     "repo",
     "default_branch",
     "ref",
+    "recent_only",
+    "mining_since",
     "status",
     "started_at",
     "finished_at",
@@ -568,7 +570,7 @@ def test_extract_error_fails_immediately_and_keeps_clone(tmp_path: Path, monkeyp
     source = _make_source(tmp_path / "source")
     settings = _settings(tmp_path)
 
-    def broken_extract(repo_path, repo, ref):
+    def broken_extract(repo_path, repo, ref, *, since=None):
         raise UnicodeDecodeError("utf-8", b"\xff", 0, 1, "invalid start byte")
 
     monkeypatch.setattr(run_module, "extract_repo_with_excluded", broken_extract)
@@ -726,9 +728,9 @@ def test_filter_rule_version_mismatch_reruns(tmp_path: Path, monkeypatch):
     calls: list[str] = []
     original = run_module.extract_repo_with_excluded
 
-    def counting(repo_path, repo, ref):
+    def counting(repo_path, repo, ref, *, since=None):
         calls.append(ref)
-        return original(repo_path, repo, ref)
+        return original(repo_path, repo, ref, since=since)
 
     monkeypatch.setattr(run_module, "extract_repo_with_excluded", counting)
     summary = _run([_job(source)], settings)
@@ -864,7 +866,7 @@ def test_rerun_keeps_previous_outputs_while_running(tmp_path: Path, monkeypatch)
     observed: list[tuple[str, float, bytes, bytes]] = []
     original = run_module.extract_repo_with_excluded
 
-    def observing(repo_path, repo, ref):
+    def observing(repo_path, repo, ref, *, since=None):
         metadata = json.loads(run_path.read_text(encoding="utf-8"))
         observed.append(
             (
@@ -874,7 +876,7 @@ def test_rerun_keeps_previous_outputs_while_running(tmp_path: Path, monkeypatch)
                 excluded_path.read_bytes(),
             )
         )
-        return original(repo_path, repo, ref)
+        return original(repo_path, repo, ref, since=since)
 
     monkeypatch.setattr(run_module, "extract_repo_with_excluded", observing)
     _run([_job(source)], settings)
@@ -895,7 +897,7 @@ def _fail_clone(monkeypatch) -> None:
 def _fail_extract(monkeypatch) -> None:
     """추출을 `UnicodeDecodeError`로 실패시킨다."""
 
-    def failing(repo_path, repo, ref):
+    def failing(repo_path, repo, ref, *, since=None):
         raise UnicodeDecodeError("utf-8", b"\xff", 0, 1, "invalid start byte")
 
     monkeypatch.setattr(run_module, "extract_repo_with_excluded", failing)
@@ -1252,3 +1254,204 @@ def test_cli_returns_1_when_any_repo_failed(tmp_path: Path, monkeypatch):
     """끝내 실패한 저장소가 있으면 종료 코드 1이다."""
     _capture_run_batch(monkeypatch, failed_count=1)
     assert run_module.main(["--input", str(_csv(tmp_path))]) == 1
+
+
+# --------------------------------------------------------------------------------------
+# 채굴 구간 (recent_only, Issue #148)
+# --------------------------------------------------------------------------------------
+
+_SINCE_2015_TEXT = "2015-01-01T00:00:00+00:00"
+
+
+def _commit_all_at(repo: Path, message: str, committed: str) -> str:
+    """커미터·작성 날짜를 `committed`로 고정해 작업 트리 전체를 커밋한다."""
+    env = {**os.environ, **_GIT_ENV, "GIT_COMMITTER_DATE": committed, "GIT_AUTHOR_DATE": committed}
+    for args in (["add", "-A"], ["commit", "-q", "-m", message]):
+        subprocess.run(["git", *args], cwd=repo, env=env, capture_output=True, check=True)
+    return _git(repo, "rev-parse", "HEAD").stdout.strip()
+
+
+def _make_dated_source(path: Path) -> tuple[Path, list[str]]:
+    """2013 root → 2014 `old_gone` 삭제 → 2016 `new_gone` 삭제 → 2018 추가만.
+    root 제외 diff 대상은 3개이고, 2015년 구간 안은 뒤의 2개다. (저장소, [2014, 2016, 2018 SHA])"""
+    repo = _init_repo(path)
+    _write(repo, "a.py", "def old_gone():\n    return 1\n")
+    _write(repo, "b.py", "def new_gone():\n    return 2\n")
+    _commit_all_at(repo, "root", "2013-05-01T00:00:00+00:00")
+    _write(repo, "a.py", "")
+    old = _commit_all_at(repo, "delete old_gone", "2014-06-01T00:00:00+00:00")
+    _write(repo, "b.py", "")
+    new = _commit_all_at(repo, "delete new_gone", "2016-03-01T00:00:00+00:00")
+    _write(repo, "c.py", "def added():\n    return 3\n")
+    latest = _commit_all_at(repo, "add c", "2018-01-01T00:00:00+00:00")
+    return repo, [old, new, latest]
+
+
+def _recent_job(source: Path | str, year: int = 2015) -> RepoJob:
+    """recent_only 저장소 job (`mining_since_year` = `year`)."""
+    return RepoJob(_REPO, "main", str(source), recent_only=True, mining_since_year=year)
+
+
+def _record_diffs(monkeypatch) -> list[str]:
+    """추출 단계가 `git diff`를 뜬 커밋 SHA를 모은다 (workers=1, 같은 프로세스)."""
+    diffed: list[str] = []
+    original = extract_module._run_git_diff
+
+    def recording(repo_path, parent_sha, commit_sha):
+        diffed.append(commit_sha)
+        return original(repo_path, parent_sha, commit_sha)
+
+    monkeypatch.setattr(extract_module, "_run_git_diff", recording)
+    return diffed
+
+
+def test_load_repo_jobs_reads_recent_only_window(tmp_path: Path):
+    """recent_only=true 행만 mining_since_year를 쓴다. false·빈 값 행은 CSV에 연도가 있어도
+    (최초 커밋 연도) 전체 이력이다."""
+    csv_path = tmp_path / "repos.csv"
+    csv_path.write_text(
+        "repo,default_branch,recent_only,mining_since_year\n"
+        "django/django,main,true,2015\n"
+        "pydantic/pydantic,main,false,2017\n"
+        "a/b,main,,\n",
+        encoding="utf-8",
+    )
+    jobs = run_module.load_repo_jobs(csv_path, tmp_path / "repos")
+
+    assert [(job.recent_only, job.mining_since_year) for job in jobs] == [
+        (True, 2015),
+        (False, None),
+        (False, None),
+    ]
+    assert jobs[0].mining_since_text == _SINCE_2015_TEXT
+    assert jobs[1].mining_since is None and jobs[1].mining_since_text is None
+
+
+def test_load_repo_jobs_selection_csv_recent_only_repos():
+    """선정 산출물의 recent_only 6개(`docs/repo_final20.md` §7)가 2015년 구간으로 읽힌다."""
+    jobs = run_module.load_repo_jobs(_ROOT / "docs" / "repo_final20_v2.csv", Path("repos"))
+    recent = {job.repo: job.mining_since_year for job in jobs if job.recent_only}
+    assert recent == {
+        repo: 2015
+        for repo in (
+            "home-assistant/core",
+            "django/django",
+            "scikit-learn/scikit-learn",
+            "pandas-dev/pandas",
+            "celery/celery",
+            "psf/requests",
+        )
+    }
+
+
+@pytest.mark.parametrize(
+    "content",
+    [
+        "repo,default_branch,recent_only,mining_since_year\na/b,main,yes,2015\n",  # 알 수 없는 값
+        "repo,default_branch,recent_only,mining_since_year\na/b,main,true,\n",  # 구간 없음
+        "repo,default_branch,recent_only\na/b,main,true\n",  # 구간 열 없음
+        "repo,default_branch,recent_only,mining_since_year\na/b,main,true,2015.5\n",
+    ],
+)
+def test_load_repo_jobs_rejects_invalid_window(tmp_path: Path, content: str):
+    """recent_only 값이 모호하거나 구간 연도가 없으면 추측하지 않고 실행 전에 거부한다."""
+    csv_path = tmp_path / "repos.csv"
+    csv_path.write_text(content, encoding="utf-8")
+    with pytest.raises(ValueError):
+        run_module.load_repo_jobs(csv_path, tmp_path / "repos")
+
+
+def test_validate_jobs_rejects_inconsistent_window(tmp_path: Path):
+    """recent_only와 mining_since_year는 함께 있거나 함께 없어야 한다."""
+    for job in (
+        RepoJob(_REPO, "main", "", recent_only=True),
+        RepoJob(_REPO, "main", "", mining_since_year=2015),
+    ):
+        with pytest.raises(ValueError):
+            run_module.validate_jobs([job], tmp_path / "repos")
+
+
+@requires_git
+def test_recent_only_skips_commits_before_window(tmp_path: Path, monkeypatch):
+    """recent_only 저장소는 구간 안 커밋만 diff를 뜨고, 구간 밖 삭제는 결과에 없다. 실행
+    기록에 구간과 구간 안 커밋 수가 남는다."""
+    source, (old, new, latest) = _make_dated_source(tmp_path / "source")
+    settings = _settings(tmp_path)
+    diffed = _record_diffs(monkeypatch)
+
+    summary = _run([_recent_job(source)], settings)
+
+    assert summary["success_count"] == 1
+    assert diffed == [new, latest]
+    assert old not in diffed
+    metadata = _read_metadata(settings)
+    assert set(metadata) == _METADATA_KEYS
+    assert metadata["recent_only"] is True
+    assert metadata["mining_since"] == _SINCE_2015_TEXT
+    assert metadata["commit_count"] == 2
+    kept_path = run_module.output_paths(settings.out_dir, _REPO)[0]
+    assert [row["function_name"] for row in _read_jsonl(kept_path)] == ["new_gone"]
+
+
+@requires_git
+def test_unmarked_repo_walks_full_history(tmp_path: Path, monkeypatch):
+    """recent_only 표시가 없는 저장소는 구간 제한 이전과 같이 전체 이력을 돈다."""
+    source, shas = _make_dated_source(tmp_path / "source")
+    settings = _settings(tmp_path)
+    diffed = _record_diffs(monkeypatch)
+
+    _run([_job(source)], settings)
+
+    assert diffed == shas
+    metadata = _read_metadata(settings)
+    assert (metadata["recent_only"], metadata["mining_since"]) == (False, None)
+    assert metadata["commit_count"] == 3
+    kept_path = run_module.output_paths(settings.out_dir, _REPO)[0]
+    assert sorted(row["function_name"] for row in _read_jsonl(kept_path)) == [
+        "new_gone",
+        "old_gone",
+    ]
+
+
+@requires_git
+def test_window_change_reruns(tmp_path: Path, monkeypatch):
+    """SUCCESS 기록이 있어도 구간(적용 여부·연도)이 지금 job과 다르면 다시 돈다.
+    같으면 건너뛴다 (#81 ref 검증과 같은 방식)."""
+    source, (old, new, latest) = _make_dated_source(tmp_path / "source")
+    settings = _settings(tmp_path)
+    _run([_recent_job(source)], settings)
+
+    assert run_module.is_completed(settings.out_dir, _recent_job(source)) is True
+    assert run_module.is_completed(settings.out_dir, _recent_job(source, year=2017)) is False
+    assert run_module.is_completed(settings.out_dir, _MAIN_JOB) is False
+
+    diffed = _record_diffs(monkeypatch)
+    summary = _run([_recent_job(source, year=2017)], settings)
+
+    assert (summary["skipped_count"], summary["success_count"]) == (0, 1)
+    assert diffed == [latest]
+    metadata = _read_metadata(settings)
+    assert metadata["mining_since"] == "2017-01-01T00:00:00+00:00"
+    assert metadata["commit_count"] == 1
+
+    diffed.clear()
+    summary = _run([_job(source)], settings)
+    assert (summary["skipped_count"], summary["success_count"]) == (0, 1)
+    assert diffed == [old, new, latest]
+    assert _read_metadata(settings)["recent_only"] is False
+
+
+@requires_git
+def test_record_without_window_keys_counts_as_full_history(tmp_path: Path):
+    """구간 키가 없는 기록(구간 제한 이전 실행)은 전체 이력으로 본다 — 표시 없는 저장소는
+    그대로 건너뛰고, recent_only 저장소는 다시 돈다."""
+    source, _shas = _make_dated_source(tmp_path / "source")
+    settings = _settings(tmp_path)
+    _run([_job(source)], settings)
+    run_path = run_module.output_paths(settings.out_dir, _REPO)[2]
+    metadata = json.loads(run_path.read_text(encoding="utf-8"))
+    del metadata["recent_only"], metadata["mining_since"]
+    run_path.write_text(json.dumps(metadata), encoding="utf-8")
+
+    assert run_module.is_completed(settings.out_dir, _MAIN_JOB) is True
+    assert run_module.is_completed(settings.out_dir, _recent_job(source)) is False

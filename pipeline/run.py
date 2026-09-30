@@ -12,13 +12,21 @@ CHARTER.md §4.2 ① "병렬화: 저장소 단위로 워커 분배. 실패한 �
 안의 보장이고, 이 모듈은 커밋 루프 바깥(저장소 단위)만 다룬다.
 
 입력: `select_repos.py`가 만든 CSV(`docs/repo_final20_v2.csv`)의 `repo`·`default_branch`
-두 열만 쓴다. clone URL은 `https://github.com/{repo}.git` — 기존 클론의 origin과 같은
-문자열이라야 `clone.py`의 재사용 검사를 통과한다.
+두 열과, 있으면 `recent_only`·`mining_since_year` 두 열("채굴 구간")을 쓴다. clone URL은
+`https://github.com/{repo}.git` — 기존 클론의 origin과 같은 문자열이라야 `clone.py`의
+재사용 검사를 통과한다.
 
 ref: `origin/{default_branch}`를 커밋 SHA로 한 번 풀어(`repository_head_sha`) walk·추출
 모두 그 SHA로 돈다. 기록한 SHA와 실제로 훑은 이력이 어긋날 수 없게 하려는 것이다. 로컬
 브랜치가 아니라 원격 추적 브랜치를 쓰는 이유: 새 클론에서 로컬 브랜치는 체크아웃된 하나만
 있고, 재사용한 클론의 로컬 브랜치에는 사람이 만든 커밋이 섞여 있을 수 있다.
+
+채굴 구간(Issue #148): 선정 기준 v2(#56, `docs/repo_final20.md` §7)는 최초 커밋이 2015년
+이전인 저장소에 `recent_only=true`를 세우고 채굴 구간을 `mining_since_year`(=2015)부터로
+좁힌다. 그 저장소는 `mining_since_year`-01-01T00:00:00Z 이후 커밋(커미터 날짜)만 walk·추출
+한다 — 구간 밖 커밋은 diff를 뜨지 않는다(`walk.within_window`). `recent_only`가 `false`·빈
+값이거나 열이 없으면 전체 이력이다(구간 제한 이전과 같다). 이때 CSV의 `mining_since_year`
+(최초 커밋 연도)는 쓰지 않는다. 구간 기준(2015년)은 이 모듈이 정하지 않고 CSV 값을 그대로 쓴다.
 
 출력 (`out_dir` 아래, 저장소마다 `stem = repo.replace("/", "__")`):
     <stem>.jsonl            필터 통과 레코드 (`write_jsonl`)
@@ -38,10 +46,12 @@ ref: `origin/{default_branch}`를 커밋 SHA로 한 번 풀어(`repository_head_
     되돌린다(`_publish_outputs`). 교체 사이에 프로세스가 강제 종료되는 경우까지 다루는
     다중 파일 트랜잭션은 아니다 — 그때는 기록이 RUNNING이라 완료로 보지 않고, 이전 kept는
     `.bak`에 남는다. 건너뛰려면(`is_completed`) SUCCESS이고, 기록의 `repo`·`default_branch`·
-    `ref`가 지금 job과 같고, `filter_rule_version`이 지금 `FILTER_RULE_VERSION`과 같고, 두
-    출력 파일의 줄 수가 기록된 건수와 같아야 한다. 선정 CSV의 브랜치나 규칙 버전이 바뀌면
-    다시 돈다. 코드 SHA나 upstream HEAD가 바뀐 것만으로는 다시 돌지 않는다 — 그 값은
-    "무엇으로 무엇을 처리했나"를 남기는 용도다.
+    `ref`·채굴 구간(`recent_only`·`mining_since`)이 지금 job과 같고, `filter_rule_version`이
+    지금 `FILTER_RULE_VERSION`과 같고, 두 출력 파일의 줄 수가 기록된 건수와 같아야 한다. 선정
+    CSV의 브랜치·채굴 구간이나 규칙 버전이 바뀌면 다시 돈다. 구간 키가 없는 기록(구간 제한
+    이전 실행)은 전체 이력으로 본다 — 그때 코드는 늘 전체 이력을 돌았다. 코드 SHA나 upstream
+    HEAD가 바뀐 것만으로는 다시 돌지 않는다 — 그 값은 "무엇으로 무엇을 처리했나"를 남기는
+    용도다.
 
 재시도:
     어느 단계에서 났는가 + 예외 종류로 가른다(`is_retryable`). 재시도하는 것은 **새로
@@ -139,11 +149,16 @@ _STDERR_TAIL_CHARS = 1000
 
 @dataclass(frozen=True)
 class RepoJob:
-    """저장소 하나의 입력. `clone_url`은 CSV에서 읽을 때 GitHub URL로 채운다."""
+    """저장소 하나의 입력. `clone_url`은 CSV에서 읽을 때 GitHub URL로 채운다.
+
+    `recent_only`이면 `mining_since_year`가 있어야 하고, 아니면 `None`이다(`validate_jobs`).
+    """
 
     repo: str  # "owner/name"
     default_branch: str
     clone_url: str
+    recent_only: bool = False
+    mining_since_year: int | None = None
 
     @property
     def stem(self) -> str:
@@ -154,6 +169,19 @@ class RepoJob:
     def ref(self) -> str:
         """처리할 ref. 로컬 브랜치가 아니라 원격 추적 브랜치다 (모듈 독스트링 "ref")."""
         return f"origin/{self.default_branch}"
+
+    @property
+    def mining_since(self) -> datetime | None:
+        """채굴 구간 시작 시각(UTC). 전체 이력이면 `None` (모듈 독스트링 "채굴 구간")."""
+        if not self.recent_only or self.mining_since_year is None:
+            return None
+        return datetime(self.mining_since_year, 1, 1, tzinfo=UTC)
+
+    @property
+    def mining_since_text(self) -> str | None:
+        """실행 기록에 남기는 `mining_since` 값 (ISO 8601)."""
+        since = self.mining_since
+        return since.isoformat() if since is not None else None
 
 
 @dataclass(frozen=True)
@@ -238,6 +266,11 @@ def validate_jobs(jobs: Sequence[RepoJob], repos_dir: str | Path) -> None:
         repo_dir(repos_dir, job.repo)
         if not job.default_branch:
             raise ValueError(f"default_branch가 비어 있다: {job.repo}")
+        if job.recent_only != (job.mining_since_year is not None):
+            raise ValueError(
+                f"recent_only이면 mining_since_year가 있어야 하고, 아니면 없어야 한다: {job.repo} "
+                f"(recent_only={job.recent_only}, mining_since_year={job.mining_since_year})"
+            )
         if job.repo in seen_repos:
             raise ValueError(f"같은 repo가 두 번 있다: {job.repo}")
         seen_repos.add(job.repo)
@@ -246,8 +279,31 @@ def validate_jobs(jobs: Sequence[RepoJob], repos_dir: str | Path) -> None:
             raise ValueError(f"출력 stem이 겹친다: {other} / {job.repo} → {job.stem}")
 
 
+def _parse_recent_only(text: str, where: str) -> bool:
+    """CSV `recent_only` 값. `select_repos.py`가 쓰는 `true`·`false`·빈 값(측정 못 함)만 받는다.
+    빈 값은 표시가 없는 것이라 전체 이력이다."""
+    value = text.strip().lower()
+    if value == "true":
+        return True
+    if value in ("false", ""):
+        return False
+    raise ValueError(f"{where}: recent_only는 true·false·빈 값이어야 한다: {text!r}")
+
+
+def _parse_mining_since_year(text: str, where: str) -> int:
+    """recent_only 저장소의 `mining_since_year`. 비었거나 정수가 아니면 구간을 추측하지 않고
+    거부한다."""
+    try:
+        return int(text.strip())
+    except ValueError as error:
+        raise ValueError(
+            f"{where}: recent_only 저장소의 mining_since_year가 정수가 아니다: {text!r}"
+        ) from error
+
+
 def load_repo_jobs(csv_path: str | Path, repos_dir: str | Path) -> list[RepoJob]:
-    """저장소 선정 CSV에서 `repo`·`default_branch` 두 열만 읽는다. 다른 열은 보지 않는다."""
+    """저장소 선정 CSV에서 `repo`·`default_branch`와, 있으면 `recent_only`·`mining_since_year`를
+    읽는다. 다른 열은 보지 않는다. `mining_since_year`는 `recent_only=true`인 행에서만 쓴다."""
     path = Path(csv_path)
     with path.open(encoding="utf-8-sig", newline="") as handle:
         reader = csv.DictReader(handle)
@@ -260,7 +316,14 @@ def load_repo_jobs(csv_path: str | Path, repos_dir: str | Path) -> list[RepoJob]
             branch = (row.get("default_branch") or "").strip()
             if not repo or not branch:
                 raise ValueError(f"{path}:{line_no}: repo와 default_branch가 모두 있어야 한다")
-            jobs.append(RepoJob(repo, branch, github_clone_url(repo)))
+            where = f"{path}:{line_no}"
+            recent_only = _parse_recent_only(row.get("recent_only") or "", where)
+            since_year = (
+                _parse_mining_since_year(row.get("mining_since_year") or "", where)
+                if recent_only
+                else None
+            )
+            jobs.append(RepoJob(repo, branch, github_clone_url(repo), recent_only, since_year))
     validate_jobs(jobs, repos_dir)
     return jobs
 
@@ -338,7 +401,8 @@ def _is_count(value: Any) -> bool:
 def is_completed(out_dir: str | Path, job: RepoJob) -> bool:
     """`job`을 건너뛰어도 되는가. 하나라도 어긋나면 `False`(다시 돈다).
 
-    SUCCESS 기록 · 기록의 `repo`·`default_branch`·`ref`가 `job`과 같음 · 지금의
+    SUCCESS 기록 · 기록의 `repo`·`default_branch`·`ref`가 `job`과 같음 · 기록의 채굴 구간
+    (`recent_only`·`mining_since`)이 `job`과 같음(키가 없으면 전체 이력) · 지금의
     `FILTER_RULE_VERSION` · 건수 필드가 정상이고 `excluded_count == noise_move_count +
     noise_trivial_count` · 두 출력 파일이 있고 줄 수가 기록된 건수와 같음. 제외 0건이면 빈 제외
     파일이 정상이다. 처리한 SHA(`repository_head_sha`)는 비교하지 않는다 — 같은 ref의 upstream이
@@ -355,6 +419,10 @@ def is_completed(out_dir: str | Path, job: RepoJob) -> bool:
         return False
     identity = (metadata.get("repo"), metadata.get("default_branch"), metadata.get("ref"))
     if identity != (job.repo, job.default_branch, job.ref):
+        return False
+    # 구간 키가 없는 기록은 구간 제한 이전 실행 — 그때는 늘 전체 이력을 돌았다.
+    window = (metadata.get("recent_only", False), metadata.get("mining_since"))
+    if window != (job.recent_only, job.mining_since_text):
         return False
     if metadata.get("filter_rule_version") != FILTER_RULE_VERSION:
         return False
@@ -488,11 +556,14 @@ def _attempt(job: RepoJob, settings: RunSettings, progress: dict[str, Any]) -> N
         progress["repository_head_sha"] = head_sha
 
         # walk·추출 모두 같은 SHA로 돈다 — 기록한 SHA와 처리한 이력이 같다.
+        # 구간 밖 커밋은 walk에서 빠져 추출 단계에서 diff를 뜨지 않는다 (Issue #148).
         stage = STAGE_WALK
-        progress["commit_count"] = len(walk_commits(path, head_sha))
+        progress["commit_count"] = len(walk_commits(path, head_sha, since=job.mining_since))
 
         stage = STAGE_EXTRACT
-        kept, excluded = extract_repo_with_excluded(path, job.repo, head_sha)
+        kept, excluded = extract_repo_with_excluded(
+            path, job.repo, head_sha, since=job.mining_since
+        )
 
         stage = STAGE_COUNT
         move_count, trivial_count = _count_records(excluded)
@@ -533,6 +604,9 @@ def _metadata(
 ) -> dict[str, Any]:
     """저장소별 실행 기록. 키는 상태와 무관하게 늘 같고, 해당 없는 값은 `null`이다.
 
+    `recent_only`·`mining_since`는 이번 실행의 채굴 구간이다. 전체 이력이면 `false`·`null`이고,
+    `commit_count`는 구간 안의 diff 대상 커밋 수다.
+
     `elapsed_seconds`는 재시도 대기를 포함한 wall-clock이고, `retry_wait_seconds`는 그중
     재시도 전에 쉬기로 한 대기(`retry_delays` 값)의 합이다 — 재시도가 없으면 0.0."""
     progress = progress or {}
@@ -540,6 +614,8 @@ def _metadata(
         "repo": job.repo,
         "default_branch": job.default_branch,
         "ref": job.ref,
+        "recent_only": job.recent_only,
+        "mining_since": job.mining_since_text,
         "status": status,
         "started_at": started_at,
         "finished_at": finished_at,
@@ -672,6 +748,9 @@ def run_batch(
     pending = [job for job in jobs if job.repo not in skipped_set]
     for repo in skipped:
         log(f"{repo}: 이미 끝남 — 건너뛴다")
+    for job in pending:
+        if job.recent_only:
+            log(f"{job.repo}: recent_only — {job.mining_since_text} 이후 커밋만 순회한다")
 
     results: dict[str, dict[str, Any]] = {}
 
