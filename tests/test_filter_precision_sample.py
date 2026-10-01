@@ -12,6 +12,7 @@ CSV = (
     "old/repo,main,true,2015\n"
     "new/repo,main,false,\n"
 )
+ONE_EACH = {"KEPT": 1, "NOISE_MOVE": 1, "NOISE_TRIVIAL": 1}
 
 
 # id 에 상태 이름을 넣지 않는다 — 판정용 파일에 상태가 새는지 문자열로 검사한다
@@ -51,6 +52,13 @@ def make_row(index, repo, status, author_date="2020-01-01T00:00:00Z"):
     return row
 
 
+def write_rows(path, rows):
+    path.write_text(
+        "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in rows), encoding="utf-8"
+    )
+    return path
+
+
 @pytest.fixture
 def inputs(tmp_path):
     rows = []
@@ -65,10 +73,7 @@ def inputs(tmp_path):
         rows.append(make_row(i, "old/repo", "NOISE_MOVE", "2014-12-31T23:59:59Z"))
     # 같은 순간의 다른 시간대 표기: 2015-01-01T00:30Z → 모집단 안
     rows.append(make_row(999, "old/repo", "KEPT", "2014-12-31T23:30:00-01:00"))
-    assembled = tmp_path / "filtered.jsonl"
-    assembled.write_text(
-        "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in rows), encoding="utf-8"
-    )
+    assembled = write_rows(tmp_path / "filtered.jsonl", rows)
     csv_path = tmp_path / "sel.csv"
     csv_path.write_text(CSV, encoding="utf-8")
     return assembled, fps.load_recent_only(csv_path)
@@ -84,22 +89,26 @@ def test_same_seed_same_sample(inputs):
     assert [r["record_id"] for r in other.records] != [r["record_id"] for r in first.records]
 
 
-def test_hundred_per_stratum_and_shuffled(inputs):
+def test_stratified_counts_and_shuffled(inputs):
+    """통과 100 + NOISE_MOVE 50 + NOISE_TRIVIAL 50. 층 이름은 filter_status 그대로."""
     assembled, recent = inputs
     result = fps.draw_sample(assembled, recent, seed=1)
     strata = Counter(item["stratum"] for item in result.key["items"])
-    assert strata == {"KEPT": 100, "EXCLUDED": 100}
+    assert strata == {"KEPT": 100, "NOISE_MOVE": 50, "NOISE_TRIVIAL": 50}
+    assert all(item["stratum"] == item["filter_status"] for item in result.key["items"])
+    assert result.key["sample_sizes"] == {"KEPT": 100, "NOISE_MOVE": 50, "NOISE_TRIVIAL": 50}
+    assert fps.DEFAULT_SEED == 20261001
     assert len(result.records) == 200
     assert len({r["record_id"] for r in result.records}) == 200
-    # 섞였다: 앞 100건이 한 층으로만 채워져 있지 않다
-    assert len({item["stratum"] for item in result.key["items"][:100]}) == 2
+    # 섞였다: 앞 100건에 세 층이 다 있다
+    assert len({item["stratum"] for item in result.key["items"][:100]}) == 3
     assert [r["sample_id"] for r in result.records] == [i["sample_id"] for i in result.key["items"]]
 
 
 def test_recent_only_window_applied(inputs):
     assembled, recent = inputs
     result = fps.draw_sample(assembled, recent, seed=3)
-    assert result.key["population"] == {"KEPT": 161, "EXCLUDED": 160}
+    assert result.key["population"] == {"KEPT": 161, "NOISE_MOVE": 80, "NOISE_TRIVIAL": 80}
     assert result.key["out_of_window_by_repo"] == {"old/repo": 100}
     picked = {r["record_id"] for r in result.records}
     for i in range(80, 130):
@@ -149,19 +158,25 @@ def test_refuses_to_overwrite(inputs, tmp_path):
     fps.write_outputs(result, tmp_path, overwrite=True)
 
 
-def test_too_small_population(tmp_path):
-    path = tmp_path / "a.jsonl"
-    path.write_text(json.dumps(make_row(1, "new/repo", "KEPT")) + "\n", encoding="utf-8")
-    with pytest.raises(fps.SampleError, match="표본"):
-        fps.draw_sample(path, {"new/repo": False}, per_stratum=1)
+def test_too_small_stratum(tmp_path):
+    rows = [make_row(1, "new/repo", "KEPT"), make_row(2, "new/repo", "NOISE_MOVE")]
+    path = write_rows(tmp_path / "a.jsonl", rows)
+    with pytest.raises(fps.SampleError, match="NOISE_TRIVIAL 모집단이 0건"):
+        fps.draw_sample(path, {"new/repo": False}, sizes=ONE_EACH)
+
+
+def test_unregistered_status_stops(tmp_path):
+    """사전 등록 층 밖의 사유(아직 미구현인 NOISE_RENAME 등)는 조용히 빼지 않고 멈춘다."""
+    rows = [make_row(i, "new/repo", status) for i, status in enumerate(ONE_EACH)]
+    rows.append({**make_row(9, "new/repo", "KEPT"), "filter_status": "NOISE_RENAME"})
+    path = write_rows(tmp_path / "a.jsonl", rows)
+    with pytest.raises(fps.SampleError, match="NOISE_RENAME"):
+        fps.draw_sample(path, {"new/repo": False}, sizes=ONE_EACH)
 
 
 def test_line_separator_inside_string_is_not_a_line_break(tmp_path):
-    rows = [make_row(1, "new/repo", "KEPT"), make_row(2, "new/repo", "NOISE_MOVE")]
+    rows = [make_row(i, "new/repo", status) for i, status in enumerate(ONE_EACH)]
     rows[0]["commit_message"] = "a b"
-    path = tmp_path / "a.jsonl"
-    path.write_text(
-        "".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows), encoding="utf-8"
-    )
-    result = fps.draw_sample(path, {"new/repo": False}, per_stratum=1)
-    assert result.key["population"] == {"KEPT": 1, "EXCLUDED": 1}
+    path = write_rows(tmp_path / "a.jsonl", rows)
+    result = fps.draw_sample(path, {"new/repo": False}, sizes=ONE_EACH)
+    assert result.key["population"] == ONE_EACH

@@ -7,10 +7,12 @@
 계산:
     최종 판정    3인 다수결 (예/아니오 2값이라 동률이 없다)
     정밀도       통과 표본 중 최종 "예" 비율
-    재현율       표본 비율이 아니라 **모집단 크기로 가중**한다. 표본은 100/100 이지만 모집단은
-                 통과·제외 크기가 다르다 (조립 결과에서 제외가 통과의 2배 넘는다).
-                     재현율 = N_k·p_k / (N_k·p_k + N_e·p_e)
-                 N_k·N_e = 통과·제외 모집단 크기(key.json), p_k·p_e = 각 표본의 최종 "예" 비율
+    재현율       표본 비율이 아니라 **층별 모집단 크기로 가중**한다. 표본은 100/50/50 이지만
+                 모집단은 층마다 크기가 전혀 다르다 (NOISE_TRIVIAL 이 KEPT 의 2배 넘는다).
+                     재현율 = N_k·p_k / (N_k·p_k + N_move·p_move + N_trivial·p_trivial)
+                 N = 층별 모집단 크기(key.json), p = 층별 표본의 최종 "예" 비율
+    이동 오판율  NOISE_MOVE 층의 최종 "예" 비율 — 이동으로 제외됐는데 사람은 배울 게 있다고 본 것.
+                 #80 이 미룬 이동 판단의 근거로 따로 보고한다 (판정 기준은 아니다)
     일치도       3인 Fleiss kappa(판정 기준) + 쌍별 Cohen kappa(보고). Cohen 은
                  `classify.labels.cohens_kappa` 를 그대로 쓴다 — 같은 계산을 두 곳에 두지 않는다
 
@@ -35,7 +37,7 @@ from pathlib import Path
 from typing import Any
 
 from classify.labels import cohens_kappa
-from eval.filter_precision_sample import EXCLUDED, KEPT
+from eval.filter_precision_sample import EXCLUDED_STRATA, KEPT, NOISE_MOVE, STRATA
 
 # 사전 등록 값 (CHARTER §10.1, docs/evaluation.md). 바꾸려면 그 절을 먼저 고친다.
 PRECISION_TARGET = 0.90  # 정밀도 ≥ 90% (경계 포함)
@@ -60,14 +62,15 @@ class FilterPrecisionReport:
     population: dict[str, int]
     precision: float
     precision_ci95: tuple[float, float]
-    excluded_yes_rate: float
+    stratum_yes_rate: dict[str, float]
+    noise_move_error_rate: float
+    noise_move_error_ci95: tuple[float, float]
     weighted_recall: float | None
     fleiss_kappa: float | None
     pairwise_kappa: dict[str, float | None]
     pairwise_agreement: dict[str, float]
     unanimous: int
     confusion: dict[str, dict[str, int]]
-    by_filter_status: dict[str, dict[str, int]]
     yes_by_judge: dict[str, int]
     precision_target: float
     kappa_target: float
@@ -154,12 +157,10 @@ def fleiss_kappa(counts: Sequence[Sequence[int]]) -> float | None:
     return (p_bar - p_e) / (1 - p_e)
 
 
-def weighted_recall(
-    n_kept: int, kept_yes: float, n_excluded: int, excluded_yes: float
-) -> float | None:
-    """N_k·p_k / (N_k·p_k + N_e·p_e). 분모가 0(어디에도 "예"가 없음)이면 None."""
-    kept_part = n_kept * kept_yes
-    denominator = kept_part + n_excluded * excluded_yes
+def weighted_recall(population: Mapping[str, int], yes_rate: Mapping[str, float]) -> float | None:
+    """N_k·p_k / Σ_층 N_s·p_s. 분모가 0(어느 층에도 "예"가 없음)이면 None."""
+    kept_part = population[KEPT] * yes_rate[KEPT]
+    denominator = sum(population[stratum] * yes_rate[stratum] for stratum in STRATA)
     return kept_part / denominator if denominator else None
 
 
@@ -180,7 +181,7 @@ def aggregate(
     """판정과 키로 사전 등록 지표와 판정을 낸다."""
     items = key.get("items") or []
     population = key.get("population") or {}
-    for stratum in (KEPT, EXCLUDED):
+    for stratum in STRATA:
         if not isinstance(population.get(stratum), int):
             raise AggregateError(f"key.json 의 population.{stratum} 가 없다")
     votes = collect_votes(judgment_files, items)
@@ -195,19 +196,19 @@ def aggregate(
         counts.append([yes, len(judges) - yes])
         unanimous += yes in (0, len(judges))
 
-    confusion = {stratum: {YES: 0, NO: 0} for stratum in (KEPT, EXCLUDED)}
-    by_status: dict[str, dict[str, int]] = {}
+    confusion = {stratum: {YES: 0, NO: 0} for stratum in STRATA}
     for item in items:
+        if item.get("stratum") not in confusion:
+            raise AggregateError(f"key.json 의 {item['sample_id']} 층 {item.get('stratum')!r}")
         answer = YES if majority[item["sample_id"]] else NO
         confusion[item["stratum"]][answer] += 1
-        by_status.setdefault(item["filter_status"], {YES: 0, NO: 0})[answer] += 1
     sample_counts = {stratum: sum(cell.values()) for stratum, cell in confusion.items()}
     if not all(sample_counts.values()):
         raise AggregateError(f"표본에 빈 층이 있다: {sample_counts}")
 
-    precision = confusion[KEPT][YES] / sample_counts[KEPT]
-    excluded_yes = confusion[EXCLUDED][YES] / sample_counts[EXCLUDED]
-    recall = weighted_recall(population[KEPT], precision, population[EXCLUDED], excluded_yes)
+    yes_rate = {stratum: confusion[stratum][YES] / sample_counts[stratum] for stratum in STRATA}
+    precision = yes_rate[KEPT]
+    recall = weighted_recall(population, yes_rate)
     fleiss = fleiss_kappa(counts)
 
     pairwise_kappa: dict[str, float | None] = {}
@@ -233,17 +234,20 @@ def aggregate(
     return FilterPrecisionReport(
         judges=judges,
         sample_counts=sample_counts,
-        population={KEPT: population[KEPT], EXCLUDED: population[EXCLUDED]},
+        population={stratum: population[stratum] for stratum in STRATA},
         precision=precision,
         precision_ci95=wilson_interval(confusion[KEPT][YES], sample_counts[KEPT]),
-        excluded_yes_rate=excluded_yes,
+        stratum_yes_rate=yes_rate,
+        noise_move_error_rate=yes_rate[NOISE_MOVE],
+        noise_move_error_ci95=wilson_interval(
+            confusion[NOISE_MOVE][YES], sample_counts[NOISE_MOVE]
+        ),
         weighted_recall=recall,
         fleiss_kappa=fleiss,
         pairwise_kappa=pairwise_kappa,
         pairwise_agreement=pairwise_agreement,
         unanimous=unanimous,
         confusion=confusion,
-        by_filter_status=dict(sorted(by_status.items())),
         yes_by_judge={judge: sum(votes[judge].values()) for judge in judges},
         precision_target=PRECISION_TARGET,
         kappa_target=KAPPA_TARGET,
@@ -259,6 +263,7 @@ def _kappa_text(value: float | None) -> str:
 def format_report(report: FilterPrecisionReport, key: Mapping[str, Any]) -> str:
     """사람이 읽을 Markdown."""
     low, high = report.precision_ci95
+    move_low, move_high = report.noise_move_error_ci95
     recall = "정의 불가" if report.weighted_recall is None else f"{report.weighted_recall:.1%}"
     lines = [
         "# 필터 정밀도 (#89, CHARTER §10.1)",
@@ -275,8 +280,15 @@ def format_report(report: FilterPrecisionReport, key: Mapping[str, Any]) -> str:
         "| 지표 | 값 |",
         "|---|---|",
         f"| 정밀도 (통과 중 예) | {report.precision:.1%} (Wilson 95% {low:.1%}–{high:.1%}) |",
-        f"| 제외 중 예 비율 | {report.excluded_yes_rate:.1%} |",
-        f"| 재현율 (모집단 가중) | {recall} |",
+        f"| NOISE_MOVE 오판율 (이동으로 제외됐는데 예) | {report.noise_move_error_rate:.1%} "
+        f"({report.confusion[NOISE_MOVE][YES]}/{report.sample_counts[NOISE_MOVE]}, "
+        f"Wilson 95% {move_low:.1%}–{move_high:.1%}) |",
+        *(
+            f"| {stratum} 중 예 비율 | {report.stratum_yes_rate[stratum]:.1%} |"
+            for stratum in EXCLUDED_STRATA
+            if stratum != NOISE_MOVE
+        ),
+        f"| 재현율 (층별 모집단 가중) | {recall} |",
         f"| Fleiss kappa (3인) | {_kappa_text(report.fleiss_kappa)} |",
         f"| 만장일치 | {report.unanimous}/{sum(report.sample_counts.values())} |",
         "",
@@ -294,14 +306,6 @@ def format_report(report: FilterPrecisionReport, key: Mapping[str, Any]) -> str:
         *(
             f"| {stratum} | {cell[YES]} | {cell[NO]} |"
             for stratum, cell in report.confusion.items()
-        ),
-        "",
-        "### 사유별",
-        "| filter_status | 예 | 아니오 |",
-        "|---|---:|---:|",
-        *(
-            f"| {status} | {cell[YES]} | {cell[NO]} |"
-            for status, cell in report.by_filter_status.items()
         ),
         "",
         "판정자별 예: " + ", ".join(f"{j} {n}" for j, n in report.yes_by_judge.items()),
