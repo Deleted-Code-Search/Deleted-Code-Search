@@ -1,6 +1,6 @@
 # 필터 규칙
 
-버전: v0.7. 담당: 재헌. 규칙 변경 시 이 문서의 버전을 올리고, `DeletionRecord.filter_rule_version`에 반영하며(코드 상수 `pipeline/filter.py:FILTER_RULE_VERSION`을 같은 PR에서 같은 값으로 올린다 — 테스트가 둘이 같은지 확인한다), PR에 테스트와 정밀도 재측정 결과를 첨부한다. 재측정은 수동 200건 (통과 100 + 제외 100)이다 (CHARTER.md §8.4, §10.1).
+버전: v0.8. 담당: 재헌 (NOISE_FORMAT 사후 필터는 성제). 규칙 변경 시 이 문서의 버전을 올리고, `DeletionRecord.filter_rule_version`에 반영하며(코드 상수 `pipeline/filter.py:FILTER_RULE_VERSION`을 같은 PR에서 같은 값으로 올린다 — 테스트가 둘이 같은지 확인한다), PR에 테스트와 정밀도 재측정 결과를 첨부한다. 재측정은 수동 200건 (통과 100 + 제외 100)이다 (CHARTER.md §8.4, §10.1).
 
 NOISE_MOVE의 정규화·유사도·후보 범위는 ADR-014(`docs/adr/014-move-detection-rules.md`)가 최종 기준이다. 이 문서는 ADR-014의 결정을 요약해 필터 규칙 전체(다른 노이즈 유형 포함)와 나란히 두고, ADR-014가 정하지 않고 #52 구현에서 결정한 세부사항(같은 위치 판정 방법, 1:1 매칭 알고리즘, 실제 added-line 겹침 조건)을 함께 기록한다. ADR-014와 이 문서가 어긋나면 ADR-014가 옳다 — 이 문서를 고친다.
 
@@ -9,7 +9,7 @@ NOISE_MOVE의 정규화·유사도·후보 범위는 ADR-014(`docs/adr/014-move-
 |---|---|---|
 | NOISE_MOVE | 같은 커밋에서, 실제 added line과 겹치는 함수 중 정규화 본문(ADR-014 결정 1)이 완전히 같거나 `SequenceMatcher.ratio() >= 0.9`(ADR-014 결정 2)인 함수가 **다른 위치**(다른 파일, 또는 같은 파일의 다른 자리)에 있으면 이동. 같은 파일 안 같은 위치는 제자리 수정이므로 제외 대상이 아니다(ADR-014 결정 3). 이동은 삭제 함수 1개 : 추가 함수 1개(1:1)로만 성립한다 — 아래 절 참고 | 구현 (`pipeline/filter.py` + `pipeline/extract.py`, Issue #52, ADR-014 정합 완료). FULL_FUNCTION 삭제만 대상(PARTIAL은 함수 전체 원문이 아니라 비교 불가). 회귀 테스트는 `tests/test_filter.py`, `tests/test_extract.py`. **실제 저장소 표본 정밀도 재측정은 아직 안 함**(§8.4) — #5 채굴 실행 후 별도 측정 필요 |
 | NOISE_RENAME | 본문 동일, 이름만 변경 | 미구현 |
-| NOISE_FORMAT | 포맷·주석·독스트링만 변경 | 미구현 |
+| NOISE_FORMAT | 포맷·주석·독스트링만 변경. 구현 범위는 그중 **포맷 커밋의 재포맷**뿐이다: 커밋 메시지 첫 줄에 포맷 키워드가 있고 삭제 줄의 90% 이상이 같은 파일 추가 헝크에 다시 나타나면 제외 — 아래 절 | 일부 구현, **사후 적용** (`pipeline/postfilter.py`, #152, v0.8). KEPT 행만 대상. 타입 표기 현대화·독스트링만 삭제는 미구현. 회귀 테스트는 `tests/test_postfilter.py` |
 | NOISE_BULK | 파일 전체 삭제 + "remove/delete directory/module" 계열 메시지 + 함수 100개 이상 | 미구현 |
 | NOISE_GENERATED | 마이그레이션·자동 생성·vendored 경로 패턴 | 미구현 |
 | NOISE_TRIVIAL | PARTIAL 레코드 중 `deleted_body`가 **4줄 이하**인 것. 줄 수는 `len(deleted_body.splitlines())`(빈 줄 포함, 마지막 빈 줄은 세지 않음 — 아래 절). 5줄 이상 PARTIAL만 데이터셋에 유지한다. FULL_FUNCTION은 대상이 아니다. 라벨링 대상 범위는 바꾸지 않는다 (ADR-015) | 구현 (`pipeline/filter.py:partition_trivial` + `pipeline/extract.py`, #63). 회귀 테스트는 `tests/test_filter.py`, `tests/test_extract.py`. 정밀도 재측정은 §10.1 필터 평가(#89)에서 한다 |
@@ -247,6 +247,31 @@ diff 헝크(`git diff --unified=0`의 `@@ -old_start,old_count +new_start,new_co
   - 빈 줄만 N줄 삭제 → N−1. 빈 줄만 5줄이면 4 → `NOISE_TRIVIAL`, 6줄이어야 유지된다. 빈 줄 1줄만 삭제되면 0이다.
   - 중간·앞쪽 빈 줄은 센다. 빈 줄이 아닌 줄로 끝나면 실제 삭제 줄 수와 같다.
 
+## NOISE_FORMAT — 포맷 커밋의 재포맷 (사후 적용, #152)
+
+근거: `docs/reports/filter_precision_analysis.md`(#89 정밀도 미달 원인 분석, PR #151)의 후보 **A1**. 분석에서 KEPT 중 다수결 "아니오" 43건의 가장 큰 원인이 포맷·주석·독스트링 변경(17건)이었고, A1은 그중 11건을 "예" 손실 0건으로 거른다. 규칙은 분석 그대로이고 새로 고안하지 않았다.
+
+**규칙.** `filter_status == KEPT`인 행에서 아래 둘이 모두 맞으면 `NOISE_FORMAT`.
+1. 커밋 메시지 **첫 줄**에 포맷 키워드가 있다. 대소문자 무시, 낱말 단위: `\b(black|ruff|yapf|isort|reformat\w*|formatting|style|lint\w*|re-?wrap|pep ?8|flake8)\b`.
+2. 삭제 줄 재등장 비율 ≥ 0.9. 같은 파일 추가 헝크(`added_hunks_same_file`의 `added_body`)를 줄바꿈으로 이어 붙여 정규화한 문자열에, 삭제 줄(`deleted_body`) 하나하나를 정규화해 부분 문자열로 있는 줄의 비율이다. 정규화는 공백 전부 제거 → `'`를 `"`로 → 닫는 괄호(`)]}`) 앞 쉼표 제거다. 삭제 줄은 여기에 줄 끝 쉼표도 지운다(black이 매직 쉼표로 펼친 인자를 한 줄로 접는 경우). 공백뿐인 삭제 줄은 세지 않는다.
+
+추가 줄 필드(`added_hunks_same_file`, 옛 형식 `added_hunk_same_file`)가 둘 다 없거나 셀 삭제 줄이 0이면 판정하지 않고 KEPT로 둔다. 이미 `NOISE_*`인 행은 판정·`filter_evidence`를 건드리지 않는다.
+
+**세부의 출처.** 분석 문서는 키워드를 "black, ruff, yapf, isort, reformat, formatting, style, lint, re-wrap 등"으로만 적었다. 첫 줄만 본다는 것, `lint\w*`·`pep ?8`·`flake8`, 줄 끝 쉼표 제거는 분석에 쓴 스크립트의 정의를 그대로 옮긴 것이다. 이 정의로 문서 숫자가 모두 재현된다(A1 11건·"예" 손실 0, A3 16건 중 "예" 2건 fp-042·fp-188, A4 "아니오" 16·"예" 0, fp-009 80%·fp-160 85%·fp-174 38%·fp-062 87%). 첫 줄만 보는 이유: 메시지 본문까지 보면 기능 커밋 본문의 "lint"·"style"이 걸린다 — 표본 KEPT 100건에서 본문 포함 키워드는 "아니오" 18·"예" 4건이다.
+
+**사후 적용.** 규칙이 쓰는 필드가 조립 결과에 이미 있어 추출·맥락 결합을 다시 돌리지 않는다. `pipeline/postfilter.py`가 맥락 결합 뒤의 `records.jsonl`을 줄 단위로 읽어 새 파일로 쓴다(임시 파일에 다 쓴 뒤 교체, 입력은 덮어쓰지 않는다).
+
+    python -m pipeline.postfilter --input data/assembled/records.jsonl --out data/assembled/records_v0.8.jsonl
+
+- 모든 행의 `filter_rule_version`을 v0.8로 올린다. 입력은 v0.7 또는 v0.8 행만 받는다(다른 버전이 섞이면 거부).
+- **v0.8 = v0.7 추출 + 이 사후 필터**다. v0.8 코드로 추출(`pipeline.run`)만 돌린 결과에는 NOISE_FORMAT이 없다 — 추출 결과에 `filter_rule_version` v0.8이 찍혀 있어도 이 단계를 거쳐야 v0.8 데이터다.
+- 맥락 결합(`pipeline.context --attach`) **뒤**에 돌린다. `filtered.jsonl`에 먼저 적용하면 NOISE_FORMAT이 된 FULL_FUNCTION 행을 가리키는 맥락을 붙이기 단계가 거부한다. NOISE_FORMAT 행의 `context`·`replacement`는 그대로 남는다.
+- 보고서 `<out stem>_postfilter.json`: 적용 전후 `filter_status` 건수, NOISE_FORMAT으로 바뀐 건수(저장소별·`deletion_kind`별).
+
+**검증 (#89 표본 200건).** `data/filter_precision/key.json`의 200건을 조립 결과에서 찾아 적용했다. KEPT 100건 중 11건(fp-004, 017, 028, 037, 052, 057, 087, 089, 102, 108, 167)이 NOISE_FORMAT이 됐고 모두 다수결 "아니오"다("예" 손실 0). NOISE_MOVE·NOISE_TRIVIAL 100건은 바뀐 것이 없다. 분석 문서 A1과 같다. 표본 안 정밀도 추정은 57/89 = 64.0%지만 **규칙을 고른 표본으로 센 것이라 낙관적이다** — §8.4대로 새 표본으로 다시 재야 한다.
+
+**한계.** 타입 표기 현대화(fp-027, 143, 재등장 0%), 독스트링만 삭제(fp-174), 포맷 키워드가 없는 커밋의 재들여쓰기(fp-115, 141)는 잡지 않는다. 기능 커밋 첫 줄에 "style"·"lint"가 붙은 경우는 재등장 90% 조건이 막는다.
+
 ## 제외 레코드 보존 (#97)
 
 필터가 제외한 레코드는 버리지 않고 별도 JSONL에 사유와 함께 남긴다. §10.1 필터 평가의 "제외 100건" 표본(#89)과 최종 조립 단계의 재료다. 이 절은 판정 규칙이 아니라 출력 구조를 정한다 — 규칙 버전은 올리지 않는다.
@@ -264,6 +289,7 @@ diff 헝크(`git diff --unified=0`의 `@@ -old_start,old_count +new_start,new_co
 | filter_status | `filter_evidence` | 상태 |
 |---|---|---|
 | NOISE_MOVE | `{"file_path", "function_name", "start_line", "end_line", "similarity"}` — **이동 목적지**(자식 커밋) 함수의 경로·이름·줄 범위와 greedy 매칭이 확정한 유사도(`_move_similarity` 값 그대로, 완전 일치면 1.0). 삭제 쪽 값은 행의 최상위 필드에 있다. 함수 이름에 클래스 한정자가 없어 줄 범위를 함께 남긴다 | 구현 (#97) |
+| NOISE_FORMAT | `{"keywords", "reappear_ratio", "reappeared_lines", "deleted_lines"}` — 커밋 메시지 첫 줄에서 찾은 키워드(소문자, 처음 나온 순서), 재등장 비율(소수 4자리), 재등장한 삭제 줄 수, 센 삭제 줄 수(공백뿐인 줄 제외). 사후 필터가 KEPT 행에 더한다 | 구현 (#152) |
 | NOISE_TRIVIAL | `{"line_count"}` — 판정에 쓴 줄 수 `len(deleted_body.splitlines())` (int, 0~4). 마지막 빈 줄은 세지 않은 값이다(NOISE_TRIVIAL 절 "한계") | 구현 (#63) |
 
 **출력 경로.** writer는 호출자가 준 경로에 쓰기만 한다 (경로 정책을 코드가 정하지 않는다). 운영 시 추출 JSONL이 `<stem>.jsonl`이면 excluded JSONL은 `<stem>_excluded.jsonl`로 둔다. 제외가 0건이어도 **빈 파일을 만든다** — "제외 없음"과 "excluded 출력을 안 돌림"을 구분하기 위해서다. 둘 다 생성 데이터라 `data/` 아래에 두고 커밋하지 않는다 (`.gitignore`).
@@ -283,3 +309,4 @@ diff 헝크(`git diff --unified=0`의 `@@ -old_start,old_count +new_start,new_co
 | v0.5 | 2026-09-17 | NOISE_TRIVIAL 규칙 명세 (ADR-015, #62): PARTIAL 중 `deleted_body` 4줄 이하(빈 줄 포함) 제외. 명세와 버전 표기만 — 구현·테스트·`filter_rule_version` 반영·정밀도 재측정은 #63 | — (#63에서 재측정) |
 | v0.6 | 2026-09-24 | NOISE_TRIVIAL 실제 구현 (Issue #63 / PR #125, ADR-015 후속 메모): PARTIAL만 대상, `len(deleted_body.splitlines()) <= 4`이면 `NOISE_TRIVIAL`로 제외하고 5줄 이상은 유지. FULL_FUNCTION은 비적용. 마지막 빈 줄(trailing empty line)은 보정하지 않는다. 판정 줄 수를 `filter_evidence.line_count`에 기록하고, 제외 레코드는 #97 `ExcludedRecord`로 excluded JSONL에 보존. 기존 NOISE_MOVE 공개 API(`find_moved`·`partition_moved`·`exclude_moved`) 계약 유지. 정밀도 재측정은 #89에서 진행 | — (#89에서 재측정) |
 | v0.7 | 2026-09-24 | NOISE_MOVE 1:1 greedy 매칭의 동점 tie-break 변경 (Issue #80, 283e72d9): 정렬 key를 `(-정규화 유사도, record_key, candidate_key)`에서 `(-정규화 유사도, -원문 유사도, record_key, candidate_key)`로. 원문 유사도는 줄마다 strip·빈 줄 제거한 원문 줄 목록의 `SequenceMatcher(삭제, 추가, autojunk=False).ratio()`이고, threshold를 통과한 pair의 정렬 순서에만 쓴다 — 판정 threshold(0.9)·정규화·후보 범위·1:1·`filter_evidence` 키와 `similarity` 값(정규화 유사도)은 그대로다. 같은 입력의 NOISE_MOVE/KEPT 판정이 바뀔 수 있어 버전을 올린다 (pydantic 사전 분석: 3커밋 24건, 커밋별 NOISE_MOVE 수 불변). ADR-014 결정 내용 변경 없음 | — (#89에서 재측정) |
+| v0.8 | 2026-10-02 | NOISE_FORMAT 사후 필터 (Issue #152, 근거 #151 분석 후보 A1): 커밋 메시지 첫 줄 포맷 키워드 + 삭제 줄 재등장 ≥ 0.9인 KEPT 행을 `NOISE_FORMAT`으로. 추출·NOISE_MOVE·NOISE_TRIVIAL은 v0.7과 같고, 조립·맥락 결합 결과에 `pipeline/postfilter.py`로 **사후 적용**한다 — v0.8 = v0.7 추출 + 사후 필터. 위 "NOISE_FORMAT" 절 | 표본 안 추정 57.0% → 64.0%(같은 표본으로 고른 규칙이라 낙관적). 새 표본 재측정 필요 |
