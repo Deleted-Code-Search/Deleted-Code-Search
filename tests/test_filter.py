@@ -1402,7 +1402,7 @@ def test_partition_trivial_excluded_record_has_status_version_and_line_count():
     assert item.record.added_hunks_same_file is hunks
     assert item.filter_status == "NOISE_TRIVIAL"
     assert item.filter_status == filter_module.NOISE_TRIVIAL
-    assert item.filter_rule_version == "v0.7"
+    assert item.filter_rule_version == "v0.8"
     assert item.filter_rule_version == filter_module.FILTER_RULE_VERSION
     assert item.filter_evidence == {"line_count": 3}
 
