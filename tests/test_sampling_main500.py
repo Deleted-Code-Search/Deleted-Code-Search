@@ -59,6 +59,7 @@ def test_scan_counts_why_each_target_was_left_out():
     overlap, consensus = record(3), record(4)
     no_context = record(5, context=None)
     partial = record(6, deletion_kind="PARTIAL")
+    outsider = record(7, repo="not/selected")
     excluded = {
         m5.overlap_key(r["commit_sha"], r["file_path"], r["function_name"])
         for r in (overlap, consensus)
@@ -68,14 +69,17 @@ def test_scan_counts_why_each_target_was_left_out():
     }
 
     found, stats = m5.scan_candidates(
-        lines([keep, old, overlap, consensus, no_context, partial]),
+        lines([keep, old, overlap, consensus, no_context, partial, outsider]),
+        {"dj/dj", "a/b"},
         {"dj/dj": SINCE},
         excluded,
         agreed,
     )
 
     assert found == [m5.Candidate("dj/dj-0001", "dj/dj")]
-    assert (stats["eligible"], stats["before_window"], stats["missing_context"]) == (5, 1, 1)
+    assert (stats["eligible"], stats["before_window"], stats["missing_context"]) == (6, 1, 1)
+    # 선정 밖 저장소가 섞이면 균등 배분이 그 저장소에도 몫을 준다 (#85 코드래빗)
+    assert stats["not_selected"] == 1
     assert (stats["pre200_overlap"], stats["pre200_keys"], stats["consensus_keys"]) == (2, 2, 1)
 
 
@@ -85,7 +89,7 @@ def test_one_pre200_key_can_exclude_several_same_name_functions():
     second = record(2, function_name="__init__", commit_sha="sha1", file_path="src/m1.py")
     key = m5.overlap_key("sha1", "src/m1.py", "__init__")
 
-    found, stats = m5.scan_candidates(lines([first, second]), {}, {key}, {key})
+    found, stats = m5.scan_candidates(lines([first, second]), {"a/b"}, {}, {key}, {key})
 
     assert found == []
     assert (stats["pre200_overlap"], stats["pre200_keys"], stats["consensus_keys"]) == (2, 1, 1)
@@ -188,8 +192,12 @@ def test_labeler_records_carry_the_added_hunks():
 
 
 def test_main_writes_records_labels_and_assignment(tmp_path, capsys):
-    """끝까지: 600건 입력 → 500건 레코드·빈 틀 3개·배분 파일. 이미 있으면 덮어쓰지 않는다."""
-    rows = [record(i, repo=f"o/r{repo:02d}") for repo in range(20) for i in range(30)]
+    """끝까지: 선정 20개 × 30건 + 선정 밖 1개 → 500건 레코드·빈 틀 3개·배분 파일.
+
+    선정 밖 저장소는 표본에 들어가지 않는다. 이미 있는 출력은 덮어쓰지 않는다.
+    """
+    repos = [f"o/r{repo:02d}" for repo in range(20)]
+    rows = [record(i, repo=repo) for repo in [*repos, "o/outsider"] for i in range(30)]
     source = tmp_path / "records.jsonl"
     source.write_text("".join(lines(rows)), encoding="utf-8")
     pre200 = tmp_path / "pre200"
@@ -197,7 +205,8 @@ def test_main_writes_records_labels_and_assignment(tmp_path, capsys):
     (pre200 / sampling.RECORDS_FILENAME).write_text("", encoding="utf-8")
     (pre200 / m5.PRE200_MERGED).write_text("", encoding="utf-8")
     csv_path = tmp_path / "repos.csv"
-    csv_path.write_text("repo,recent_only,mining_since_year\no/r00,true,2015\n", encoding="utf-8")
+    csv_rows = [f"{repo},{'true' if repo == 'o/r00' else 'false'},2015" for repo in repos]
+    csv_path.write_text("repo,recent_only,mining_since_year\n" + "\n".join(csv_rows), "utf-8")
     out = tmp_path / "out"
     argv = ["--input", str(source), "--out-dir", str(out), "--pre200-dir", str(pre200)]
     argv += ["--repos-csv", str(csv_path)]
@@ -209,6 +218,8 @@ def test_main_writes_records_labels_and_assignment(tmp_path, capsys):
 
     assignment = read(m5.ASSIGNMENT_OUT)
     assert len(read(m5.RECORDS_OUT)) == len(assignment) == 500
+    assert {row["repo"] for row in assignment} == set(repos)
+    assert "선정 CSV 밖 저장소 제외             30건" in capsys.readouterr().out
     assert {len(read(m5.LABEL_OUT_TEMPLATE.format(labeler=x))) for x in "sj jh hs".split()} == {
         333,
         334,

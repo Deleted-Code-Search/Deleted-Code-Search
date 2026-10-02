@@ -38,7 +38,7 @@ import json
 import random
 import sys
 from collections import Counter
-from collections.abc import Callable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Collection, Iterator, Mapping, Sequence
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, NamedTuple
@@ -107,14 +107,21 @@ def pre200_keys(labels_dir: Path) -> tuple[set[Key], set[Key]]:
     return set(by_id.values()), consensus
 
 
-def mining_windows(repos_csv: Path) -> dict[str, datetime]:
-    """recent_only 저장소 → 채굴 구간 시작 (UTC). 선정 CSV 값을 그대로 쓴다 (#148 과 같은 출처)."""
+def read_selection(repos_csv: Path) -> tuple[frozenset[str], dict[str, datetime]]:
+    """선정 CSV 의 저장소 목록과, recent_only 저장소 → 채굴 구간 시작 (UTC).
+
+    목록도 여기서 읽는 이유: 입력에 선정 밖 저장소가 섞이면 균등 배분이 그 저장소에도 25건을
+    준다 - 실행은 성공하는데 "20개 저장소 균등 표본" 이 아니게 된다 (#85 코드래빗). 구간 값은
+    #148 과 같은 출처(`recent_only`·`mining_since_year`)를 그대로 쓴다.
+    """
+    repos: set[str] = set()
     windows: dict[str, datetime] = {}
     with repos_csv.open(encoding="utf-8", newline="") as handle:
         for row in csv.DictReader(handle):
+            repos.add(row["repo"])
             if str(row.get("recent_only", "")).strip().lower() == "true":
                 windows[row["repo"]] = datetime(int(row["mining_since_year"]), 1, 1, tzinfo=UTC)
-    return windows
+    return frozenset(repos), windows
 
 
 def in_window(author_date: Any, since: datetime) -> bool:
@@ -137,13 +144,15 @@ class Candidate(NamedTuple):
 
 def scan_candidates(
     lines: Iterator[str],
+    selected: Collection[str],
     windows: Mapping[str, datetime],
     excluded: set[Key],
     consensus: set[Key],
 ) -> tuple[list[Candidate], Counter[str]]:
     """대상(FULL_FUNCTION·KEPT)을 거르고 그 이유별 건수를 센다.
 
-    맥락이 없는 대상은 따로 센다 - 조립 결과에 맥락을 붙이기(#142) 전 파일을 넣은 것이다.
+    선정 CSV 에 없는 저장소의 대상은 빼고 센다 (`read_selection`). 맥락이 없는 대상도 따로 센다 -
+    조립 결과에 맥락을 붙이기(#142) 전 파일을 넣은 것이다.
 
     예비 200건 겹침은 행 수(`pre200_overlap`)와 맞은 키 수(`pre200_keys`·`consensus_keys`)를 둘
     다 센다. 한 파일에서 같은 이름 함수(`__init__` 등)가 여럿 지워지면 키 하나에 행이 여럿이라,
@@ -162,6 +171,9 @@ def scan_candidates(
             continue
         stats["eligible"] += 1
         repo = str(record.get("repo", ""))
+        if repo not in selected:
+            stats["not_selected"] += 1
+            continue
         since = windows.get(repo)
         if since is not None and not in_window(record.get("author_date"), since):
             stats["before_window"] += 1
@@ -331,6 +343,7 @@ def summarize(
     lines = [
         f"입력 {stats['rows']:,}줄 → 대상({TARGET_DELETION_KIND}·{TARGET_FILTER_STATUS}) "
         f"{stats['eligible']:,}건",
+        f"  선정 CSV 밖 저장소 제외       {stats['not_selected']:>8,}건",
         f"  recent_only 구간 밖 제외      {stats['before_window']:>8,}건",
         f"  예비 200건과 겹쳐 제외        {stats['pre200_overlap']:>8,}건 "
         f"(맞은 키: 예비 200건 중 {stats['pre200_keys']}개, 그중 합의 102건 "
@@ -400,9 +413,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 2
 
     excluded, consensus = pre200_keys(args.pre200_dir)
-    windows = mining_windows(args.repos_csv)
+    selected, windows = read_selection(args.repos_csv)
     with args.input.open(encoding="utf-8") as handle:
-        candidates, stats = scan_candidates(handle, windows, excluded, consensus)
+        candidates, stats = scan_candidates(handle, selected, windows, excluded, consensus)
     if stats["missing_context"]:
         print(
             f"맥락이 없는 대상이 {stats['missing_context']}건이다. 맥락을 붙이기(#142) 전의 조립 "
