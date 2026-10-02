@@ -70,6 +70,10 @@ LABELER_FIELDS: tuple[str, ...] = (
     "function_name",
     "function_signature",
     "deleted_body",
+    # 같은 커밋·같은 파일에 추가된 헝크(#102). "대신 들어간 코드" 다 - `replacement.code` 는 같은
+    # 이름 함수가 있을 때만 채워져 대부분 비어 있다. #89 1차 판정 때 이게 안 보여 다들 커밋
+    # 메시지로 짐작했다 (#85, 성제 요청). 화면 표시는 `tools/label_cli.py` 가 맞춘다.
+    "added_hunks_same_file",
     "is_test_code",
     "source_url",
 )
@@ -323,14 +327,21 @@ def assign_blocks(
     return assignments
 
 
-def label_rows_by_labeler(assignments: Sequence[Assignment]) -> dict[str, list[dict[str, Any]]]:
-    """사람별 빈 틀 묶음. 한 사람이 블록 2개를 맡으므로 파일은 1인당 하나다 (§7.1)."""
-    rows: dict[str, list[dict[str, Any]]] = {labeler: [] for labeler in LABELERS}
-    for assignment in assignments:
-        for labeler in assignment.labelers:
-            rows.setdefault(labeler, []).extend(
-                empty_label_row(record_id, labeler) for record_id in assignment.record_ids
-            )
+def label_rows_by_labeler(
+    assignments: Sequence[Assignment], first_unit: int = 0
+) -> dict[str, list[dict[str, Any]]]:
+    """사람별 빈 틀 묶음. 한 사람이 블록 2개를 맡으므로 파일은 1인당 하나다 (§7.1).
+
+    `first_unit` 을 주면 맡은 블록마다 앞 `first_unit` 건을 파일 맨 앞에 모은다. 500건은 블록당
+    처음 50건을 두 라벨러가 끝내야 중간 점검을 한다(가이드 §8.4.1) - 블록을 하나씩 끝까지 하면
+    두 번째 블록의 50건은 167건 뒤에야 나온다. 0 이면 블록 순서대로 이어 붙인다 (예비 200건).
+    """
+    rows: dict[str, list[dict[str, Any]]] = {}
+    for labeler in LABELERS:
+        mine = [a.record_ids for a in assignments if labeler in a.labelers]
+        ordered = [rid for ids in mine for rid in ids[:first_unit]]
+        ordered += [rid for ids in mine for rid in ids[first_unit:]]
+        rows[labeler] = [empty_label_row(record_id, labeler) for record_id in ordered]
     return rows
 
 
