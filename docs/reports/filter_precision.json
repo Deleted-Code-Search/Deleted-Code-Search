@@ -1,0 +1,97 @@
+{
+  "key": {
+    "issue": 89,
+    "seed": 20261001,
+    "sample_sizes": {
+      "KEPT": 100,
+      "NOISE_MOVE": 50,
+      "NOISE_TRIVIAL": 50
+    },
+    "assembled": "data\\assembled\\filtered.jsonl",
+    "assembled_sha256": "25d83661098117f3b3ef3b9de845652643f3839e557b1eaab4cb506bc1be68c4",
+    "filter_rule_version": "v0.7",
+    "recent_only_since": "2015-01-01T00:00:00+00:00",
+    "population": {
+      "KEPT": 503103,
+      "NOISE_MOVE": 203610,
+      "NOISE_TRIVIAL": 1014860
+    },
+    "out_of_window_by_repo": {
+      "celery/celery": 29358,
+      "django/django": 59276,
+      "home-assistant/core": 2,
+      "pandas-dev/pandas": 41954,
+      "psf/requests": 4457,
+      "scikit-learn/scikit-learn": 40428
+    }
+  },
+  "judges": [
+    "hs",
+    "jh",
+    "sj"
+  ],
+  "sample_counts": {
+    "KEPT": 100,
+    "NOISE_MOVE": 50,
+    "NOISE_TRIVIAL": 50
+  },
+  "population": {
+    "KEPT": 503103,
+    "NOISE_MOVE": 203610,
+    "NOISE_TRIVIAL": 1014860
+  },
+  "precision": 0.57,
+  "precision_ci95": [
+    0.4721538947286719,
+    0.6626670154436687
+  ],
+  "stratum_yes_rate": {
+    "KEPT": 0.57,
+    "NOISE_MOVE": 0.0,
+    "NOISE_TRIVIAL": 0.12
+  },
+  "noise_move_error_rate": 0.0,
+  "noise_move_error_ci95": [
+    0.0,
+    0.07134760017861413
+  ],
+  "weighted_recall": 0.7019149904353646,
+  "fleiss_kappa": 0.4623587091488628,
+  "pairwise_kappa": {
+    "hs+jh": 0.3151466727542518,
+    "hs+sj": 0.5898178308601759,
+    "jh+sj": 0.5101693110424875
+  },
+  "pairwise_agreement": {
+    "hs+jh": 0.7,
+    "hs+sj": 0.83,
+    "jh+sj": 0.77
+  },
+  "unanimous": 130,
+  "confusion": {
+    "KEPT": {
+      "yes": 57,
+      "no": 43
+    },
+    "NOISE_MOVE": {
+      "yes": 0,
+      "no": 50
+    },
+    "NOISE_TRIVIAL": {
+      "yes": 6,
+      "no": 44
+    }
+  },
+  "yes_by_judge": {
+    "hs": 41,
+    "jh": 79,
+    "sj": 71
+  },
+  "precision_target": 0.9,
+  "kappa_target": 0.7,
+  "passed": false,
+  "verdict_lines": [
+    "정밀도 57.0% (목표 ≥ 90%) — 미달",
+    "Fleiss kappa 0.462 (목표 ≥ 0.7) — 미달"
+  ]
+}
