@@ -508,7 +508,9 @@ def test_main_reports_non_object_label_line_with_location(workspace, capsys):
     records_path, label_path = workspace
     label_path.write_text('"just a string"\n', encoding="utf-8")
 
-    code = label_cli.main(["--labeler", "sj", "--labels-dir", str(records_path.parent)])
+    code = label_cli.main(
+        ["--labeler", "sj", "--batch", "pre200", "--labels-dir", str(records_path.parent)]
+    )
 
     assert code == 2
     assert f"{label_path}:1: 한 줄은 JSON 객체여야 한다 (str)" in capsys.readouterr().err
@@ -517,14 +519,18 @@ def test_main_reports_non_object_label_line_with_location(workspace, capsys):
 def test_main_refuses_missing_template(tmp_path):
     write_jsonl(tmp_path / sampling.RECORDS_FILENAME, [])
 
-    assert label_cli.main(["--labeler", "sj", "--labels-dir", str(tmp_path)]) == 2
+    assert (
+        label_cli.main(["--labeler", "sj", "--batch", "pre200", "--labels-dir", str(tmp_path)]) == 2
+    )
 
 
 def test_main_runs_a_session(workspace, monkeypatch):
     records_path, _ = workspace
     monkeypatch.setattr("builtins.input", Script(explicit_bug(0)))
 
-    code = label_cli.main(["--labeler", "sj", "--labels-dir", str(records_path.parent)])
+    code = label_cli.main(
+        ["--labeler", "sj", "--batch", "pre200", "--labels-dir", str(records_path.parent)]
+    )
 
     assert code == 0
     assert read_rows(records_path.parent / "sj_pre200.jsonl")[0]["reason_label"] == "BUG"
@@ -1116,3 +1122,149 @@ def test_quote_check_uses_raw_text_not_escaped_display():
 
     assert label_cli.found_in_context("stop\x1b[0m here", view)
     assert not label_cli.found_in_context("stop\\x1b[0m here", view)
+
+
+# --------------------------------------------------------------------------------------
+# 추가 헝크 표시 (#155, 가이드 §2.1·§6.3.3) · 기본 입력 main500
+# --------------------------------------------------------------------------------------
+
+
+def hunk(new_start, new_count, body, old_start=1, old_count=0):
+    return {
+        "old_start": old_start,
+        "old_count": old_count,
+        "new_start": new_start,
+        "new_count": new_count,
+        "added_body": body,
+    }
+
+
+def render_hunks(hunks):
+    """#85 레코드 파일 경로(화이트리스트)를 거쳐 그린다 — 화면에 안 나오면 라벨러는 못 본다."""
+    row = sampling.build_labeling_record(make_record(0, added_hunks_same_file=hunks))
+    return label_cli.render_record(label_cli.labeler_view(row))
+
+
+def test_added_hunk_header_and_indented_body_with_real_line_breaks():
+    rendered = render_hunks([hunk(534, 2, "        x = f(\n            y,")])
+    lines = rendered.splitlines()
+
+    assert "== 추가 헝크 (added_hunks_same_file, 1개 — 같은 커밋이 이 파일에 추가한 줄) ==" in lines
+    at = lines.index("[1/1] new_start 534 · new_count 2")
+    assert lines[at + 1 : at + 3] == ["            x = f(", "                y,"]
+    assert "\\n" not in rendered
+
+
+def test_several_added_hunks_are_numbered_in_diff_order():
+    rendered = render_hunks([hunk(10, 1, "a = 1"), hunk(20, 2, "b = 2\nc = 3"), hunk(40, 1, "d")])
+    lines = rendered.splitlines()
+
+    headers = [line for line in lines if line.startswith("[") and "new_start" in line]
+    assert headers == [
+        "[1/3] new_start 10 · new_count 1",
+        "[2/3] new_start 20 · new_count 2",
+        "[3/3] new_start 40 · new_count 1",
+    ]
+    assert lines.index(headers[1]) < lines.index("    c = 3") < lines.index(headers[2])
+
+
+def test_added_blank_lines_are_shown_so_line_count_matches_new_count():
+    """추출은 --unified=0 이라 new_count 가 추가 줄 수다. 끝의 빈 줄도 버리지 않는다."""
+    lines = render_hunks([hunk(1, 3, '"""doc."""\n\n')]).splitlines()
+
+    at = lines.index("[1/1] new_start 1 · new_count 3")
+    assert lines[at + 1 : at + 4] == ['    """doc."""', "", ""]
+
+
+def test_no_added_hunks_says_so():
+    rendered = render_hunks([])
+
+    assert "== 추가 헝크 (added_hunks_same_file, 0개) ==" in rendered
+    assert "(이 커밋이 이 파일에 추가한 줄 없음)" in rendered
+
+
+def test_record_without_the_field_is_not_shown_as_no_added_lines():
+    """예비 200건(#85 이전)에는 키가 없다. "추가한 줄 없음"이라고 하면 사실과 다르다."""
+    view = label_cli.labeler_view(sampling.build_labeling_record(make_record(0)))
+    view["added_hunks_same_file"] = None
+
+    rendered = label_cli.render_record(view)
+
+    assert "(이 커밋이 이 파일에 추가한 줄 없음)" not in rendered
+    assert "#85 이전 파일" in rendered
+
+
+def test_added_hunks_come_after_deleted_code_and_before_replacement():
+    rendered = render_hunks([hunk(5, 1, "MARKER_ADDED")])
+
+    assert rendered.index("deleted_body") < rendered.index("MARKER_ADDED")
+    assert rendered.index("MARKER_ADDED") < rendered.index("== 대체 코드")
+
+
+def test_added_hunks_escape_control_characters():
+    """남의 diff 텍스트다 (#110). 머리 줄 값의 줄바꿈도 가짜 줄을 못 만든다."""
+    rendered = render_hunks([hunk("7\n[2/2] new_start 1", 1, "ok()\x1b[2J‮")])
+
+    assert "\x1b" not in rendered and "‮" not in rendered
+    assert "    ok()\\x1b[2J\\u202e" in rendered.splitlines()
+    assert "[1/1] new_start 7\\x0a[2/2] new_start 1 · new_count 1" in rendered
+    assert not any(line.startswith("[2/2]") for line in rendered.splitlines())
+
+
+def test_default_input_is_main500(tmp_path):
+    args = label_cli.build_parser().parse_args(["--labeler", "hs", "--labels-dir", str(tmp_path)])
+
+    assert label_cli.default_paths(args) == (
+        tmp_path / "main500_records.jsonl",
+        tmp_path / "hs_main500.jsonl",
+    )
+
+
+def test_pre200_can_still_be_opened():
+    args = label_cli.build_parser().parse_args(["--labeler", "jh", "--batch", "pre200"])
+
+    assert label_cli.default_paths(args) == (
+        Path("datasets/labels/pre200_records.jsonl"),
+        Path("datasets/labels/jh_pre200.jsonl"),
+    )
+
+
+def test_explicit_paths_override_batch(tmp_path):
+    args = label_cli.build_parser().parse_args(
+        ["--labeler", "sj", "--records", str(tmp_path / "r"), "--labels-file", str(tmp_path / "l")]
+    )
+
+    assert label_cli.default_paths(args) == (tmp_path / "r", tmp_path / "l")
+
+
+def test_main_without_batch_labels_main500(tmp_path, monkeypatch, capsys):
+    records = [make_record(0, added_hunks_same_file=[hunk(3, 1, "    return None")])]
+    write_jsonl(
+        tmp_path / "main500_records.jsonl",
+        [sampling.build_labeling_record(record) for record in records],
+    )
+    label_path = tmp_path / "sj_main500.jsonl"
+    write_jsonl(label_path, [sampling.empty_label_row("rec-000", "sj")])
+    monkeypatch.setattr("builtins.input", Script(explicit_bug(0)))
+
+    code = label_cli.main(["--labeler", "sj", "--labels-dir", str(tmp_path)])
+
+    assert code == 0
+    assert read_rows(label_path)[0]["reason_label"] == "BUG"
+    assert "[1/1] new_start 3 · new_count 1" in capsys.readouterr().out
+
+
+def test_real_main500_files_show_added_hunks():
+    """저장소의 본 라벨링 레코드 그대로. 기본 경로로 열리고 헝크가 화면에 나온다."""
+    labels_dir = Path(__file__).resolve().parent.parent / "datasets" / "labels"
+    records_path = labels_dir / "main500_records.jsonl"
+    if not records_path.is_file():
+        pytest.skip("본 라벨링 레코드 파일이 없다")
+    records, problems = label_cli.load_records(records_path)
+    assert problems == []
+    for labeler in sampling.LABELERS:
+        label_file = label_cli.LabelFile.load(labels_dir / f"{labeler}_main500.jsonl")
+        assert label_cli.find_label_file_problems(label_file.rows, labeler, records.keys()) == []
+
+    with_hunks = next(view for view in records.values() if view["added_hunks_same_file"])
+    assert "[1/" in label_cli.render_record(with_hunks)

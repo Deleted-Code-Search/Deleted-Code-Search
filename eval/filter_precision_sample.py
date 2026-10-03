@@ -31,6 +31,8 @@
       `len(deleted_body.splitlines())` 다
     - `similar_function` 은 NOISE_MOVE 의 `filter_evidence`(같은 커밋의 비슷한 함수)다. 이것은
       제외 건에만 있어 가릴 수 없다 — 사전 등록 "알려진 한계"에 적었다
+    - `added_hunks_same_file`(같은 커밋·같은 파일의 추가 헝크)은 조립 결과의 값을 그대로
+      **모든** 건에 넣는다 (#155). 판정을 diff 로 하게 하려는 것이다 (가이드 §6.3.3)
 
 사용:
     python -m eval.filter_precision_sample --assembled data/assembled/filtered.jsonl \\
@@ -84,6 +86,9 @@ JUDGE_FIELDS = (
     "deletion_kind",
     "deleted_line_count",
     "deleted_body",
+    # 같은 커밋·같은 파일의 추가 헝크 — "대신 들어간 코드" (#155). 1차 판정은 이게 없어 커밋
+    # 메시지로 짐작했다 (#151). 층과 무관하게 모든 건에 같은 모양으로 들어간다
+    "added_hunks_same_file",
     "commit_message",
     "similar_function",
 )

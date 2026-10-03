@@ -7,7 +7,8 @@
     `eval/filter_precision_sample.py` 가 만든 판정용 파일(`records.jsonl`)만 읽는다. 그 파일에는
     `filter_status` 가 없고, 들어 있으면 시작하지 않는다 — 키 파일이나 조립 결과를 잘못 넣은 것이다.
     NOISE_MOVE 근거는 "참고: 같은 커밋의 비슷한 함수"로, 삭제 줄 수는 모든 건에 같은 모양으로
-    보여 준다. "필터가 이동으로 봤다" 같은 말은 쓰지 않는다.
+    보여 준다. "필터가 이동으로 봤다" 같은 말은 쓰지 않는다. 같은 커밋·같은 파일의 추가 헝크도
+    모든 건에 삭제된 본문 바로 아래 보여 준다 (#155) — 1차 판정은 이게 없어 커밋 메시지로 짐작했다.
 
     표시는 `tools/label_cli.py` 의 것을 그대로 쓴다 (#109·#110). 레코드에서 온 텍스트는 모두
     `escape_control` 을 거친다 — 커밋 메시지·코드는 남의 텍스트다 (CWE-150).
@@ -38,6 +39,7 @@ from typing import Any
 from classify.sampling import LABELERS
 from eval.filter_precision_sample import HIDDEN_KEYS, RECORDS_FILENAME
 from tools.label_cli import (
+    ADDED_HUNKS_FIELD,
     RULE,
     QuitRequested,
     UndoRequested,
@@ -45,6 +47,7 @@ from tools.label_cli import (
     _one_line,
     _replace_atomically,
     _text_lines,
+    added_hunks_lines,
 )
 
 JUDGMENT_FILENAME_TEMPLATE = "{judge}_judgments.jsonl"
@@ -62,17 +65,19 @@ START_SCREEN = "\n".join(
         "  ** key.json 은 열지 않는다. **",
         "",
         "질문: 배울 게 있는 의미 있는 삭제인가?  y = 예 / n = 아니오",
-        "경계 (라벨 가이드 §6.3.3):",
-        "  n  순수 이동 — 본문이 거의 그대로 다른 파일·위치에 있다",
-        "  n  리네임·이동+리네임 — 본문이 거의 그대로이고 이름만 바뀌었다",
-        "     (유사도 0.9에 조금 못 미쳐도 눈으로 보아 그렇다면 n)",
-        "  n  가까운 다른 커밋에서 그대로 다시 나타났다 (note 에 SHA)",
-        "  y  같은 자리에서 크게 다시 썼다",
-        "  y  옮기면서 크게 다시 썼다",
-        "  y  실제 삭제 — 대응 코드가 어디에도 없다",
-        "  그 밖(아주 짧은 부분 삭제 등)은 질문 그대로 판단하고, 이유를 note 에 짧게 적는다.",
+        "기준 (라벨 가이드 §6.3.3, #155). n 은 아래 네 가지뿐이고 나머지는 전부 y:",
+        "  n1  순수 이동·리네임 — 본문이 거의 그대로 다른 곳으로 갔다",
+        "      (유사도 0.9에 조금 못 미쳐도, 가까운 다른 커밋에서 다시 나타나도 — note 에 SHA)",
+        "  n2  기계적 포맷·스타일 변환 — 포매터, 따옴표·줄바꿈·import 정렬, 문법만 최신으로",
+        "  n3  생성·벤더링 코드 — 자동 생성 파일, 다른 프로젝트 코드를 복사해 넣은 것",
+        "  n4  다른 저장소로 분리 — 코드가 통째로 다른 레포로 옮겨 갔다",
+        "헷갈렸던 경우:",
+        "  같은 로직이 다른 모양으로 — 포매터만이면 n, 구조·알고리즘·인터페이스가 바뀌었으면 y",
+        "  revert 로 지워짐 y · 폴더·모듈 통째 삭제 y (다른 레포로 옮겼으면 n4) · 테스트 삭제 y",
         "",
-        "'참고' 항목은 판단 재료일 뿐 정답이 아니다. 의심스러우면 source 링크로 GitHub 에서 본다.",
+        "** 판정은 '추가 헝크'(diff)를 보고 한다. 커밋 메시지만으로 판정하지 않는다. **",
+        "추가 헝크는 같은 파일만 담는다. 다른 파일·저장소로 갔는지는 source 링크로 본다.",
+        "n 이면 note 에 몇 번인지와 근거를 적는다. '참고' 항목은 판단 재료일 뿐 정답이 아니다.",
         RULE,
     ]
 )
@@ -178,6 +183,8 @@ def render_record(record: Mapping[str, Any]) -> str:
         "",
         f"== 삭제된 본문 (deleted_body, {_one_line(record.get('deleted_line_count'))}줄) ==",
         _code(record.get("deleted_body")),
+        "",
+        *added_hunks_lines(record.get(ADDED_HUNKS_FIELD)),
     ]
     similar = record.get("similar_function")
     if isinstance(similar, Mapping):

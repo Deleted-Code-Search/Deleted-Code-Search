@@ -33,6 +33,15 @@ def make_row(index, repo, status, author_date="2020-01-01T00:00:00Z"):
         "function_signature": f"def fn_{index}():",
         "deletion_kind": "PARTIAL" if status == "NOISE_TRIVIAL" else "FULL_FUNCTION",
         "deleted_body": "line1\nline2\nline3",
+        "added_hunks_same_file": [
+            {
+                "old_start": 1,
+                "old_count": 3,
+                "new_start": 1,
+                "new_count": 1,
+                "added_body": f"added {index}",
+            }
+        ],
         "author_date": author_date,
         "commit_message": f"msg {index}",
         "source_url": f"https://github.com/{repo}/commit/sha{index}",
@@ -147,6 +156,43 @@ def test_judge_file_hides_filter_status(inputs, tmp_path):
     assert {r["sample_id"] for r in moves} == key_moves
     key = json.loads(key_path.read_text(encoding="utf-8"))
     assert key["seed"] == 5 and len(key["assembled_sha256"]) == 64
+
+
+def test_judge_file_has_added_hunks_for_every_stratum(inputs, tmp_path):
+    """판정을 diff 로 하게 한다 (#155). 층과 무관하게 모든 건에 조립 결과 값 그대로."""
+    assembled, recent = inputs
+    result = fps.draw_sample(assembled, recent, seed=5)
+    records_path, _ = fps.write_outputs(result, tmp_path / "out")
+
+    rows = [json.loads(line) for line in records_path.read_text(encoding="utf-8").splitlines()]
+    assert "added_hunks_same_file" in fps.JUDGE_FIELDS
+    assert fps.HIDDEN_KEYS.isdisjoint(fps.JUDGE_FIELDS)
+    for row in rows:
+        index = int(row["commit_sha"].removeprefix("sha"))
+        assert row["added_hunks_same_file"] == [
+            {
+                "old_start": 1,
+                "old_count": 3,
+                "new_start": 1,
+                "new_count": 1,
+                "added_body": f"added {index}",
+            }
+        ]
+        assert fps.HIDDEN_KEYS.isdisjoint(row)
+
+
+def test_missing_added_hunks_stays_missing():
+    """조립 결과에 키가 없으면 None — 빈 목록("추가한 줄 없음")으로 바꿔 말하지 않는다."""
+    row = make_row(1, "new/repo", "KEPT")
+    del row["added_hunks_same_file"]
+
+    assert fps.judge_record(row, "fp-1")["added_hunks_same_file"] is None
+    assert (
+        fps.judge_record(make_row(2, "new/repo", "KEPT") | {"added_hunks_same_file": []}, "fp-2")[
+            "added_hunks_same_file"
+        ]
+        == []
+    )
 
 
 def test_refuses_to_overwrite(inputs, tmp_path):
