@@ -155,6 +155,85 @@ def test_refuses_other_judges_file(records_path, tmp_path):
         cli.load_judgments(out, "sj", cli.load_records(records_path))
 
 
+def hunk(new_start, new_count, body):
+    return {
+        "old_start": 1,
+        "old_count": 0,
+        "new_start": new_start,
+        "new_count": new_count,
+        "added_body": body,
+    }
+
+
+def test_display_shows_added_hunks_after_deleted_body():
+    """판정은 diff 로 한다 (#155, 가이드 §6.3.3). 라벨 화면과 같은 모양."""
+    record = make_record(1) | {
+        "added_hunks_same_file": [hunk(10, 2, "def g():\n    return 2"), hunk(30, 1, "x\x1b[1A")]
+    }
+
+    lines = cli.render_record(record).splitlines()
+
+    assert "== 추가 헝크 (added_hunks_same_file, 2개 — 같은 커밋이 이 파일에 추가한 줄) ==" in lines
+    at = lines.index("[1/2] new_start 10 · new_count 2")
+    assert lines[at + 1 : at + 3] == ["    def g():", "        return 2"]
+    assert "[2/2] new_start 30 · new_count 1" in lines
+    assert "    x\\x1b[1A" in lines
+    assert lines.index("== 삭제된 본문 (deleted_body, 2줄) ==") < at
+
+
+def test_display_without_added_lines():
+    empty = cli.render_record(make_record(1) | {"added_hunks_same_file": []})
+    missing = cli.render_record(make_record(1))
+
+    assert "(이 커밋이 이 파일에 추가한 줄 없음)" in empty
+    assert "(이 커밋이 이 파일에 추가한 줄 없음)" not in missing
+
+
+def test_added_hunks_do_not_let_filter_status_in(tmp_path):
+    """추가 헝크를 넣어도 판정용 파일 규칙은 그대로다 — filter_status 가 있으면 거부한다."""
+    path = tmp_path / "records.jsonl"
+    good = make_record(1) | {"added_hunks_same_file": [hunk(1, 1, "a")]}
+    path.write_text(json.dumps(good) + "\n", encoding="utf-8")
+    shown = cli.render_record(cli.load_records(path)[0])
+    assert "filter_status" not in shown and "NOISE" not in shown and "KEPT" not in shown
+
+    path.write_text(json.dumps(good | {"filter_status": "KEPT"}) + "\n", encoding="utf-8")
+    with pytest.raises(cli.JudgeFileError, match="filter_status"):
+        cli.load_records(path)
+
+
+def test_display_marks_malformed_added_hunks():
+    """목록이 아닌 값은 "추가 줄 없음"도 "필드 없음"도 아니다 — 형식 오류로 보인다."""
+    for bad in ("def g(): pass", {"added_body": "x"}, 3):
+        shown = cli.render_record(make_record(1) | {"added_hunks_same_file": bad})
+        assert "(형식 오류)" in shown
+        assert "(이 커밋이 이 파일에 추가한 줄 없음)" not in shown
+        assert "#85 이전 파일" not in shown
+    assert "def g(): pass" not in cli.render_record(
+        make_record(1) | {"added_hunks_same_file": "def g(): pass"}
+    )
+    missing = cli.render_record(make_record(1) | {"added_hunks_same_file": None})
+    assert "#85 이전 파일" in missing and "(형식 오류)" not in missing
+
+
+def test_start_screen_states_the_five_no_cases():
+    """가이드 §6.3.3 (#155): n 은 다섯 가지뿐(5번은 부분 삭제만), diff 를 보고 판정."""
+    for text in (
+        "다섯 가지뿐",
+        "순수 이동·리네임",
+        "기계적 포맷·스타일 변환",
+        "생성·벤더링 코드",
+        "다른 저장소로 분리",
+        "n5  사소한 다듬기 (부분 삭제 PARTIAL 에만)",
+        "FULL_FUNCTION 에는 쓰지 않는다",
+        "부분 삭제는 n5 까지 보고 판단한다",
+    ):
+        assert text in cli.START_SCREEN
+    assert "네 가지" not in cli.START_SCREEN
+    assert "revert 로 지워짐 y" in cli.START_SCREEN
+    assert "커밋 메시지만으로 판정하지 않는다" in cli.START_SCREEN
+
+
 def test_parse_answer():
     assert cli.parse_answer("예") is True
     assert cli.parse_answer("N") is False

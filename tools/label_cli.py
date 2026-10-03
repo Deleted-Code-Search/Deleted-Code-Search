@@ -15,16 +15,17 @@ UNKNOWN 원인 태그 (#88, 가이드 v2 §6.3.2):
     게이트 1에서 UNKNOWN 62건 중 43건이 태그 없이 저장되어 §11 대응 분기를 가를 수 없었다.
     강제는 새로 저장하는 라벨에만 한다. 기존 줄(예비 200건 v1)은 읽기·표시·집계에서 검사하지 않는다.
 
-파일 (#33 산출물):
-    읽기  datasets/labels/pre200_records.jsonl    라벨러가 보는 레코드
-    쓰기  datasets/labels/{labeler}_pre200.jsonl  빈 틀의 줄을 한 줄씩 채운다
+파일 (기본은 본 라벨링 500건, #85 산출물. --batch pre200 이면 예비 200건, #33 산출물):
+    읽기  datasets/labels/main500_records.jsonl    라벨러가 보는 레코드
+    쓰기  datasets/labels/{labeler}_main500.jsonl  빈 틀의 줄을 한 줄씩 채운다
 
     끝에 덧붙이지(append) 않고 **제자리에서** 채운다. 같은 record_id 에 줄이 두 개 생기면 #34
     병합이 그 레코드를 3인 라벨로 보고 쌍별 kappa 에서 조용히 뺀다. 되돌리기도 제자리 수정이다.
     저장은 건마다 임시 파일 → 교체라, 도중에 꺼져도 앞서 채운 줄은 남는다.
 
 실행:
-    python -m tools.label_cli --labeler sj
+    python -m tools.label_cli --labeler sj                  # 본 라벨링 500건
+    python -m tools.label_cli --labeler sj --batch pre200   # 예비 200건 (v1, 다시 보기용)
     입력 칸 어디서나:  :q 종료(지금 건은 저장 안 함)  ·  :u 직전 건 수정  ·  :r 지금 건 처음부터
 """
 
@@ -44,6 +45,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from classify import sampling, sampling_main500
 from classify.labels import (
     EVIDENCE_GRADES,
     FILTER_MISS_TAG,
@@ -54,12 +56,10 @@ from classify.labels import (
 )
 from classify.sampling import (
     GUIDE_VERSION,
-    LABEL_FILENAME_TEMPLATE,
     LABELER_CONTEXT_FIELDS,
     LABELER_FIELDS,
     LABELER_REPLACEMENT_FIELDS,
     LABELERS,
-    RECORDS_FILENAME,
     build_labeling_record,
 )
 from eval.gate1 import INFERRED_MIN_CONFIDENCE, INFERRED_STRONG_CONFIDENCE
@@ -105,6 +105,11 @@ NOTE_TAGS = (
     FILTER_MISS_TAG,
     "anchored",
     *UNKNOWN_CAUSE_TAGS,
+)
+# 가이드 §6.3.3 "아니오" 중 라벨링에 쓰는 1~4번 (#155). 5번(사소한 다듬기)은 부분 삭제에만
+# 쓰므로 FULL_FUNCTION 만 다루는 라벨링 화면에는 없다. 가이드 표를 고치면 여기도 고친다.
+FILTER_MISS_CASES = (
+    "1 순수 이동·리네임 / 2 기계적 포맷·스타일 변환 / 3 생성·벤더링 코드 / 4 다른 저장소로 분리"
 )
 # 가이드 §6.1 "EXPLICIT 이면 1.0 으로 고정" (가이드 §11-3 [팀 확정 필요])
 EXPLICIT_CONFIDENCE = 1.0
@@ -291,7 +296,8 @@ def unknown_cause_tag_violations(label: Mapping[str, Any]) -> list[str]:
     return [
         f"UNKNOWN 이면 note 가 필수다 — {what}. "
         f"원인 태그 {' '.join(UNKNOWN_CAUSE_TAGS)} 중 1개 이상(여러 개 가능), "
-        f"또는 이동·리네임이 필터를 통과한 건이면 {FILTER_MISS_TAG} (가이드 §6.3.2)"
+        f"또는 배울 게 없는 삭제가 필터를 통과한 건({FILTER_MISS_CASES})이면 "
+        f"{FILTER_MISS_TAG} (가이드 §6.3.2·§6.3.3)"
     ]
 
 
@@ -439,6 +445,50 @@ def _code(value: object) -> str:
     return "\n".join(_text_lines(str(value or "(없음)")))
 
 
+ADDED_HUNKS_FIELD = "added_hunks_same_file"
+NO_ADDED_LINES = "(이 커밋이 이 파일에 추가한 줄 없음)"
+ADDED_HUNKS_MISSING = f"(레코드에 {ADDED_HUNKS_FIELD} 가 없다 — #85 이전 파일. source 링크로 본다)"
+HUNK_FORMAT_ERROR = "(형식 오류)"
+HUNK_INDENT = "    "
+
+
+def added_hunks_lines(value: object) -> list[str]:
+    """같은 커밋·같은 파일의 추가 헝크 (#85, 가이드 §2.1·§6.3.3). "대신 들어간 코드"를 보는 곳.
+
+    헝크마다 `[k/N] new_start · new_count` 머리 줄 + 들여쓴 본문(실제 줄바꿈). 판정을 diff 로
+    하게 하려고 넣었다 — #89 1차 판정은 이게 없어 커밋 메시지로 짐작했다 (#151).
+    값마다 뜻을 가른다 — 같은 말로 뭉개면 판정자가 사실과 다른 것을 본다:
+        None(키 없음, 예비 200건 등 옛 파일)  필드가 없다고 적는다
+        []                                   "추가한 줄 없음"
+        그 밖의 목록 아닌 값(옛 문자열 등)    "(형식 오류)". 내용은 찍지 않는다
+        목록 안의 객체 아닌 항목              그 헝크 머리 줄에 "(형식 오류)"
+    모든 텍스트는 `escape_control` 을 거친다 (#110).
+    """
+    title = f"== 추가 헝크 ({ADDED_HUNKS_FIELD}"
+    if value is None:
+        return [f"{title}) ==", ADDED_HUNKS_MISSING]
+    if not isinstance(value, list):
+        return [f"{title}) ==", f"{HUNK_FORMAT_ERROR} 목록이 아니다 ({type(value).__name__})"]
+    if not value:
+        return [f"{title}, 0개) ==", NO_ADDED_LINES]
+    total = len(value)
+    lines = [f"{title}, {total}개 — 같은 커밋이 이 파일에 추가한 줄) =="]
+    for position, hunk in enumerate(value, start=1):
+        if not isinstance(hunk, Mapping):
+            lines.append(f"[{position}/{total}] {HUNK_FORMAT_ERROR} ({type(hunk).__name__})")
+            continue
+        body = hunk.get("added_body")
+        header = (
+            f"new_start {_shown(hunk.get('new_start'))} · new_count {_shown(hunk.get('new_count'))}"
+        )
+        lines.append(f"[{position}/{total}] {header}")
+        # `_text_lines`(splitlines)는 끝의 빈 줄을 버린다. 추가된 빈 줄도 줄이므로 "\n" 으로만
+        # 나눠 `new_count` 와 줄 수를 맞춘다 (추출이 `--unified=0`, `pipeline/extract.py`).
+        body_lines = str(body or "").split("\n")
+        lines.extend(f"{HUNK_INDENT}{escape_control(line)}".rstrip() for line in body_lines)
+    return lines
+
+
 def render_record(view: dict[str, Any]) -> str:
     """레코드 1건 화면. 레코드에서 온 텍스트는 모두 `escape_control` 을 거친다 (CWE-150)."""
     context = view.get("context") or {}
@@ -462,6 +512,8 @@ def render_record(view: dict[str, Any]) -> str:
         "",
         "== 삭제된 코드 (deleted_body) ==",
         _code(view.get("deleted_body")),
+        "",
+        *added_hunks_lines(view.get(ADDED_HUNKS_FIELD)),
         "",
         f"== 대체 코드 (replacement, match_method={_one_line(replacement.get('match_method'))}, "
         f"confidence={_one_line(replacement.get('confidence'))}) ==",
@@ -939,7 +991,9 @@ class LabelSession:
             self.say(
                 "UNKNOWN — 무엇이 없어서 판단하지 못했는지 원인 태그 필수 (가이드 §6.3.2).\n"
                 f"  원인 태그(1개 이상, 여러 개 가능): {' '.join(UNKNOWN_CAUSE_TAGS)}\n"
-                f"  이동·리네임이 필터를 통과한 건이면 대신: {FILTER_MISS_TAG}\n"
+                "  배울 게 없는 삭제가 필터를 통과한 건이면 대신 "
+                f"{FILTER_MISS_TAG} + 몇 번인지와 근거 (가이드 §6.3.3):\n"
+                f"    {FILTER_MISS_CASES}\n"
                 "  태그 뒤에 자유 서술을 이어 써도 된다"
             )
 
@@ -989,23 +1043,53 @@ class LabelSession:
 # --------------------------------------------------------------------------------------
 
 
+# 묶음 → (레코드 파일 이름, 라벨 파일 이름 틀). 기본은 본 라벨링 500건 (#85, #90).
+# 예비 200건(#33, v1)은 다시 볼 때 연다 — 그 파일에 새로 저장하면 v2 줄이 섞인다.
+BATCH_FILES: dict[str, tuple[str, str]] = {
+    sampling_main500.BATCH: (sampling_main500.RECORDS_OUT, sampling_main500.LABEL_OUT_TEMPLATE),
+    sampling.BATCH: (sampling.RECORDS_FILENAME, sampling.LABEL_FILENAME_TEMPLATE),
+}
+DEFAULT_BATCH = sampling_main500.BATCH
+BATCH_MAKERS = {
+    sampling_main500.BATCH: "classify.sampling_main500 (#85)",
+    sampling.BATCH: "classify.sampling (#33)",
+}
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="python -m tools.label_cli",
         description="라벨링 CLI — 한 건씩 보여주고 가이드 §7.2 개인 라벨을 채운다 (#37).",
     )
     parser.add_argument("--labeler", required=True, choices=LABELERS)
+    parser.add_argument(
+        "--batch",
+        choices=tuple(BATCH_FILES),
+        default=DEFAULT_BATCH,
+        help=f"기본 {DEFAULT_BATCH} (본 라벨링). {sampling.BATCH} 는 예비 200건",
+    )
     parser.add_argument("--labels-dir", type=Path, default=Path("datasets/labels"))
     parser.add_argument(
-        "--records", type=Path, default=None, help=f"기본: <labels-dir>/{RECORDS_FILENAME}"
+        "--records",
+        type=Path,
+        default=None,
+        help="기본: <labels-dir>/<batch>_records.jsonl",
     )
     parser.add_argument(
         "--labels-file",
         type=Path,
         default=None,
-        help="기본: <labels-dir>/<labeler>_pre200.jsonl (#33 이 만든 빈 틀)",
+        help="기본: <labels-dir>/<labeler>_<batch>.jsonl (빈 틀)",
     )
     return parser
+
+
+def default_paths(args: argparse.Namespace) -> tuple[Path, Path]:
+    """(레코드 파일, 라벨 파일). `--records`·`--labels-file` 을 주면 그것이 이긴다."""
+    records_name, label_template = BATCH_FILES[args.batch]
+    records_path = args.records or args.labels_dir / records_name
+    label_path = args.labels_file or args.labels_dir / label_template.format(labeler=args.labeler)
+    return records_path, label_path
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -1016,14 +1100,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         if reconfigure:
             reconfigure(encoding="utf-8")
 
-    records_path = args.records or args.labels_dir / RECORDS_FILENAME
-    label_path = args.labels_file or args.labels_dir / LABEL_FILENAME_TEMPLATE.format(
-        labeler=args.labeler
-    )
+    records_path, label_path = default_paths(args)
     for path in (records_path, label_path):
         if not path.is_file():
             print(
-                f"파일이 없다: {path} — 먼저 python -m classify.sampling 으로 만든다 (#33)",
+                f"파일이 없다: {path} — 먼저 python -m {BATCH_MAKERS[args.batch]} 로 만든다",
                 file=sys.stderr,
             )
             return 2
