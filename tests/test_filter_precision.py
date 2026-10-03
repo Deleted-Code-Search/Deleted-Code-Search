@@ -256,3 +256,18 @@ def test_round_one_key_has_no_format_rate():
     assert report.weighted_recall == pytest.approx(1 / 3)
     text = fp.format_report(report, key)
     assert "NOISE_FORMAT" not in text and "#80 에서 보류한 항목" in text
+
+
+def test_round_two_key_without_sample_sizes_is_rejected():
+    """층 fallback 은 1차 형식 키(round 1 또는 없음)만. 2차 키는 sample_sizes 가 있어야 한다."""
+    files, key = build_v2(four_strata_votes(), V2_POPULATION)
+    del key["sample_sizes"]
+    with pytest.raises(fp.AggregateError, match="2차인데 sample_sizes 가 없다"):
+        fp.aggregate(files, key)
+
+
+def test_round_one_key_without_sample_sizes_falls_back():
+    files, key = build(VOTES, POPULATION)
+    key["round"] = 1
+    assert fp.key_strata(key) == ("KEPT", "NOISE_MOVE", "NOISE_TRIVIAL")
+    assert fp.aggregate(files, key).weighted_recall == pytest.approx(1 / 3)

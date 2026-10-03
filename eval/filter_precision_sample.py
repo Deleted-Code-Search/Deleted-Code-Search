@@ -82,6 +82,8 @@ class Round:
     assembled: Path
     out_dir: Path
     exclude: Path | None  # 모집단에서 뺄 record_id 목록 (JSONL, `record_id` 키)
+    # 제외 목록의 고유 record_id 수. 정해져 있으면 출력 전에 검증한다 (`check_exclusion`)
+    exclude_count: int | None = None
 
 
 # 사전 등록 값 (docs/evaluation.md). 바꾸면 그 절을 먼저 고친다. 지난 차수는 재현용으로 둔다.
@@ -102,6 +104,7 @@ ROUNDS: dict[int, Round] = {
         assembled=Path("data/assembled/records_v0.8.jsonl"),
         out_dir=Path("data/filter_precision_v2"),
         exclude=Path("datasets/labels/main500_assignment.jsonl"),
+        exclude_count=500,
     ),
 }
 CURRENT_ROUND = 2
@@ -368,6 +371,25 @@ def draw_sample(
     return SampleResult(records, key)
 
 
+def check_exclude_count(exclude_ids: Collection[str], expected: int) -> None:
+    """제외 목록의 고유 record_id 가 사전 등록 수(2차: 500)와 같은지. 조립 결과를 훑기 전에 본다."""
+    if len(exclude_ids) != expected:
+        raise SampleError(
+            f"제외 목록의 고유 record_id 가 {len(exclude_ids)}개 — {expected}개여야 한다"
+        )
+
+
+def check_exclusion_found(key: Mapping[str, Any]) -> None:
+    """제외 목록의 모든 record_id 가 조립 결과에 있었는지. 출력 전에 본다.
+
+    recent_only 구간 밖 레코드도 조립 결과에는 있으므로 허용한다. 그래서 모집단 안에서 뺀 건수를
+    목록 크기로 강제하지 않는다 — 없는 id 만 거부한다 (다른 조립 결과나 잘못된 목록).
+    """
+    missing = key["excluded_ids"]["not_in_assembled"]
+    if missing:
+        raise SampleError(f"제외 목록의 record_id {missing}개가 조립 결과에 없다")
+
+
 def write_outputs(result: SampleResult, out_dir: Path, *, overwrite: bool = False) -> list[Path]:
     """판정용 파일과 키 파일을 쓴다. 이미 있으면 `overwrite` 없이는 거부한다.
 
@@ -426,6 +448,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     exclude = args.exclude or plan.exclude
     try:
         exclude_ids = load_exclude_ids(exclude) if exclude else frozenset()
+        # 2차: 제외 목록이 사전 등록 크기인지 먼저, 모두 조립 결과에 있는지 출력 전에 본다
+        if plan.exclude_count is not None:
+            check_exclude_count(exclude_ids, plan.exclude_count)
         result = draw_sample(
             assembled,
             load_recent_only(args.selection_csv),
@@ -434,6 +459,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             exclude_ids,
             round_number=plan.number,
         )
+        if plan.exclude_count is not None:
+            check_exclusion_found(result.key)
         result.key["excluded_ids"]["source"] = str(exclude) if exclude else None
         paths = write_outputs(result, out_dir, overwrite=args.overwrite)
     except (SampleError, OSError) as error:

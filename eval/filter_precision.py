@@ -165,8 +165,16 @@ def fleiss_kappa(counts: Sequence[Sequence[int]]) -> float | None:
 
 
 def key_strata(key: Mapping[str, Any]) -> tuple[str, ...]:
-    """키가 정한 층. `sample_sizes` 가 없으면(1차 형식의 손 키) 1차 층이다."""
-    sizes = key.get("sample_sizes") or ROUNDS[1].sizes
+    """키가 정한 층. `sample_sizes` 가 없으면 1차 형식 키(`round` 1 또는 없음)만 1차 층으로 본다.
+
+    2차부터는 층이 차수마다 다르므로 `sample_sizes` 없이 층을 짐작하지 않는다.
+    """
+    sizes = key.get("sample_sizes")
+    if not sizes:
+        round_number = key.get("round", 1)
+        if round_number != 1:
+            raise AggregateError(f"key.json 이 {round_number}차인데 sample_sizes 가 없다")
+        sizes = ROUNDS[1].sizes
     strata = tuple(sizes)
     if KEPT not in strata or NOISE_MOVE not in strata:
         raise AggregateError(f"key.json 의 층에 {KEPT}·{NOISE_MOVE} 가 있어야 한다: {strata}")

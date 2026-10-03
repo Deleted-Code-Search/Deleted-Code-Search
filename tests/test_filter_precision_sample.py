@@ -1,5 +1,6 @@
 """필터 정밀도 표본 추출 테스트 (이슈 #89)."""
 
+import dataclasses
 import json
 from collections import Counter
 
@@ -388,20 +389,89 @@ def test_round_two_judge_file_hides_filter_status(v2_inputs, tmp_path):
     )
 
 
-def test_main_round_two_writes_v2_outputs(v2_inputs, tmp_path):
-    assembled, _ = v2_inputs
-    csv_path = tmp_path / "sel.csv"
-    exclude = tmp_path / "ex.jsonl"
-    exclude.write_text(
-        json.dumps({"record_id": row_id("new/repo", "KEPT", 0)}) + "\n", encoding="utf-8"
-    )
+def write_exclude(path, ids):
+    path.write_text("".join(json.dumps({"record_id": i}) + "\n" for i in ids), encoding="utf-8")
+    return path
+
+
+def run_main(tmp_path, assembled, exclude, *extra):
     out = tmp_path / "filter_precision_v2"
-    argv = ["--assembled", str(assembled), "--selection-csv", str(csv_path)]
-    argv += ["--out-dir", str(out), "--exclude", str(exclude)]
-    assert fps.main(argv) == 0
+    argv = ["--assembled", str(assembled), "--selection-csv", str(tmp_path / "sel.csv")]
+    argv += ["--out-dir", str(out), "--exclude", str(exclude), *extra]
+    return fps.main(argv), out
+
+
+@pytest.fixture
+def expect_exclude(monkeypatch):
+    """2차 사전 등록의 제외 목록 크기(500)를 테스트 크기로 바꾼다."""
+
+    def set_count(count):
+        plan = dataclasses.replace(fps.ROUNDS[2], exclude_count=count)
+        monkeypatch.setitem(fps.ROUNDS, 2, plan)
+
+    return set_count
+
+
+def test_main_round_two_writes_v2_outputs(v2_inputs, tmp_path, expect_exclude):
+    assembled, _ = v2_inputs
+    expect_exclude(1)
+    exclude = write_exclude(tmp_path / "ex.jsonl", [row_id("new/repo", "KEPT", 0)])
+    code, out = run_main(tmp_path, assembled, exclude)
+    assert code == 0
     key = json.loads((out / "key.json").read_text(encoding="utf-8"))
     assert key["round"] == 2 and key["seed"] == 20261004
     assert key["excluded_ids"]["source"] == str(exclude)
     assert key["excluded_ids"]["in_population_by_stratum"]["KEPT"] == 1
     assert key["population"]["KEPT"] == 119
     assert sum(key["sample_sizes"].values()) == 200
+
+
+def test_round_two_registers_500_exclusions():
+    assert fps.ROUNDS[2].exclude_count == 500
+    assert fps.ROUNDS[1].exclude_count is None
+
+
+def test_main_round_two_stops_on_exclude_count_mismatch(v2_inputs, tmp_path):
+    """사전 등록은 500개 — 다른 개수면 조립 결과를 훑기 전에 멈추고 아무것도 쓰지 않는다."""
+    assembled, _ = v2_inputs
+    exclude = write_exclude(tmp_path / "ex.jsonl", [row_id("new/repo", "KEPT", 0)])
+    code, out = run_main(tmp_path, assembled, exclude)
+    assert code == 1
+    assert not out.exists()
+
+
+def test_exclude_count_counts_unique_ids():
+    fps.check_exclude_count({"a", "b"}, 2)
+    with pytest.raises(fps.SampleError, match="고유 record_id 가 1개 — 2개"):
+        fps.check_exclude_count(frozenset(["a", "a"]), 2)
+
+
+def test_main_round_two_stops_on_id_missing_from_assembled(v2_inputs, tmp_path, expect_exclude):
+    assembled, _ = v2_inputs
+    expect_exclude(2)
+    exclude = write_exclude(tmp_path / "ex.jsonl", [row_id("new/repo", "KEPT", 0), "missing"])
+    code, out = run_main(tmp_path, assembled, exclude)
+    assert code == 1
+    assert not (out / "records.jsonl").exists() and not (out / "key.json").exists()
+
+
+def test_main_round_two_allows_out_of_window_ids(v2_inputs, tmp_path, expect_exclude):
+    """구간 밖 id 는 조립 결과에 있으므로 통과. 모집단 안 제외 건수는 목록 크기와 달라도 된다."""
+    assembled, _ = v2_inputs
+    expect_exclude(2)
+    ids = [row_id("new/repo", "KEPT", 0), row_id("old/repo", "NOISE_FORMAT", 500)]
+    code, out = run_main(tmp_path, assembled, write_exclude(tmp_path / "ex.jsonl", ids))
+    assert code == 0
+    excluded = json.loads((out / "key.json").read_text(encoding="utf-8"))["excluded_ids"]
+    assert sum(excluded["in_population_by_stratum"].values()) == 1
+    assert excluded["out_of_window"] == 1 and excluded["not_in_assembled"] == 0
+
+
+def test_main_round_one_skips_exclusion_checks(inputs, tmp_path):
+    """1차 실행에는 제외 목록 검증을 적용하지 않는다."""
+    assembled, _ = inputs
+    exclude = write_exclude(tmp_path / "ex.jsonl", ["missing"])
+    code, out = run_main(tmp_path, assembled, exclude, "--round", "1")
+    assert code == 0
+    key = json.loads((out / "key.json").read_text(encoding="utf-8"))
+    assert key["round"] == 1 and key["excluded_ids"]["not_in_assembled"] == 1
