@@ -202,15 +202,34 @@ def test_added_hunks_do_not_let_filter_status_in(tmp_path):
         cli.load_records(path)
 
 
-def test_start_screen_states_the_four_no_cases():
-    """가이드 §6.3.3 (#155): n 은 네 가지뿐, diff 를 보고 판정."""
+def test_display_marks_malformed_added_hunks():
+    """목록이 아닌 값은 "추가 줄 없음"도 "필드 없음"도 아니다 — 형식 오류로 보인다."""
+    for bad in ("def g(): pass", {"added_body": "x"}, 3):
+        shown = cli.render_record(make_record(1) | {"added_hunks_same_file": bad})
+        assert "(형식 오류)" in shown
+        assert "(이 커밋이 이 파일에 추가한 줄 없음)" not in shown
+        assert "#85 이전 파일" not in shown
+    assert "def g(): pass" not in cli.render_record(
+        make_record(1) | {"added_hunks_same_file": "def g(): pass"}
+    )
+    missing = cli.render_record(make_record(1) | {"added_hunks_same_file": None})
+    assert "#85 이전 파일" in missing and "(형식 오류)" not in missing
+
+
+def test_start_screen_states_the_five_no_cases():
+    """가이드 §6.3.3 (#155): n 은 다섯 가지뿐(5번은 부분 삭제만), diff 를 보고 판정."""
     for text in (
+        "다섯 가지뿐",
         "순수 이동·리네임",
         "기계적 포맷·스타일 변환",
         "생성·벤더링 코드",
         "다른 저장소로 분리",
+        "n5  사소한 다듬기 (부분 삭제 PARTIAL 에만)",
+        "FULL_FUNCTION 에는 쓰지 않는다",
+        "부분 삭제는 n5 까지 보고 판단한다",
     ):
         assert text in cli.START_SCREEN
+    assert "네 가지" not in cli.START_SCREEN
     assert "revert 로 지워짐 y" in cli.START_SCREEN
     assert "커밋 메시지만으로 판정하지 않는다" in cli.START_SCREEN
 

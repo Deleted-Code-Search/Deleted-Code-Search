@@ -1194,6 +1194,50 @@ def test_record_without_the_field_is_not_shown_as_no_added_lines():
     assert "#85 이전 파일" in rendered
 
 
+def test_non_list_added_hunks_is_a_format_error_not_empty():
+    """None = 필드 없음, [] = 추가 줄 없음, 그 밖의 비목록 값 = 형식 오류. 셋을 섞지 않는다."""
+    for bad in ("def g():\n    pass", {"added_body": "x"}, 0, True):
+        view = label_cli.labeler_view(sampling.build_labeling_record(make_record(0)))
+        view["added_hunks_same_file"] = bad
+
+        rendered = label_cli.render_record(view)
+
+        assert "(형식 오류) 목록이 아니다" in rendered
+        assert "(이 커밋이 이 파일에 추가한 줄 없음)" not in rendered
+        assert "#85 이전 파일" not in rendered
+        assert "def g():" not in rendered
+
+
+def test_non_object_hunk_inside_list_is_a_format_error():
+    rendered = render_hunks([hunk(1, 1, "ok = 1"), "stray string"])
+    lines = rendered.splitlines()
+
+    assert "[1/2] new_start 1 · new_count 1" in lines
+    assert "[2/2] (형식 오류) (str)" in lines
+    assert "stray string" not in rendered
+
+
+def test_unknown_note_prompt_lists_the_filter_miss_cases_of_guide_633(workspace):
+    """화면과 가이드가 같은 말을 한다 (#155). 옛 안내 "이동·리네임이면 filter-miss" 는 없다."""
+    output, _ = run_session(workspace, ["8", ":q"])
+
+    assert "이동·리네임이 필터를 통과한 건이면" not in output
+    for case in (
+        "순수 이동·리네임",
+        "기계적 포맷·스타일 변환",
+        "생성·벤더링 코드",
+        "다른 저장소로 분리",
+    ):
+        assert case in output
+    assert "사소한 다듬기" not in output  # 5번은 부분 삭제에만 — 라벨링(FULL_FUNCTION)에 없다
+
+    violation = label_cli.unknown_cause_tag_violations(
+        {"reason_label": "UNK", "evidence_grade": "UNKNOWN", "note": ""}
+    )[0]
+    assert "이동·리네임이 필터를 통과한 건이면" not in violation
+    assert label_cli.FILTER_MISS_CASES in violation
+
+
 def test_added_hunks_come_after_deleted_code_and_before_replacement():
     rendered = render_hunks([hunk(5, 1, "MARKER_ADDED")])
 

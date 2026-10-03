@@ -106,6 +106,11 @@ NOTE_TAGS = (
     "anchored",
     *UNKNOWN_CAUSE_TAGS,
 )
+# 가이드 §6.3.3 "아니오" 중 라벨링에 쓰는 1~4번 (#155). 5번(사소한 다듬기)은 부분 삭제에만
+# 쓰므로 FULL_FUNCTION 만 다루는 라벨링 화면에는 없다. 가이드 표를 고치면 여기도 고친다.
+FILTER_MISS_CASES = (
+    "1 순수 이동·리네임 / 2 기계적 포맷·스타일 변환 / 3 생성·벤더링 코드 / 4 다른 저장소로 분리"
+)
 # 가이드 §6.1 "EXPLICIT 이면 1.0 으로 고정" (가이드 §11-3 [팀 확정 필요])
 EXPLICIT_CONFIDENCE = 1.0
 # 가이드 §6.3 "UNKNOWN: confidence = 0.0"
@@ -291,7 +296,8 @@ def unknown_cause_tag_violations(label: Mapping[str, Any]) -> list[str]:
     return [
         f"UNKNOWN 이면 note 가 필수다 — {what}. "
         f"원인 태그 {' '.join(UNKNOWN_CAUSE_TAGS)} 중 1개 이상(여러 개 가능), "
-        f"또는 이동·리네임이 필터를 통과한 건이면 {FILTER_MISS_TAG} (가이드 §6.3.2)"
+        f"또는 배울 게 없는 삭제가 필터를 통과한 건({FILTER_MISS_CASES})이면 "
+        f"{FILTER_MISS_TAG} (가이드 §6.3.2·§6.3.3)"
     ]
 
 
@@ -442,6 +448,7 @@ def _code(value: object) -> str:
 ADDED_HUNKS_FIELD = "added_hunks_same_file"
 NO_ADDED_LINES = "(이 커밋이 이 파일에 추가한 줄 없음)"
 ADDED_HUNKS_MISSING = f"(레코드에 {ADDED_HUNKS_FIELD} 가 없다 — #85 이전 파일. source 링크로 본다)"
+HUNK_FORMAT_ERROR = "(형식 오류)"
 HUNK_INDENT = "    "
 
 
@@ -450,28 +457,30 @@ def added_hunks_lines(value: object) -> list[str]:
 
     헝크마다 `[k/N] new_start · new_count` 머리 줄 + 들여쓴 본문(실제 줄바꿈). 판정을 diff 로
     하게 하려고 넣었다 — #89 1차 판정은 이게 없어 커밋 메시지로 짐작했다 (#151).
-    빈 목록은 "추가한 줄 없음", 키가 없는 옛 파일(예비 200건)은 그렇다고 따로 적는다 —
-    없는 필드를 "추가한 줄 없음"으로 보이면 사실과 다르다. 옛 문자열 형식(#102 이전)은
-    머리 줄 없이 본문만 찍는다. 모든 텍스트는 `escape_control` 을 거친다 (#110).
+    값마다 뜻을 가른다 — 같은 말로 뭉개면 판정자가 사실과 다른 것을 본다:
+        None(키 없음, 예비 200건 등 옛 파일)  필드가 없다고 적는다
+        []                                   "추가한 줄 없음"
+        그 밖의 목록 아닌 값(옛 문자열 등)    "(형식 오류)". 내용은 찍지 않는다
+        목록 안의 객체 아닌 항목              그 헝크 머리 줄에 "(형식 오류)"
+    모든 텍스트는 `escape_control` 을 거친다 (#110).
     """
     title = f"== 추가 헝크 ({ADDED_HUNKS_FIELD}"
     if value is None:
         return [f"{title}) ==", ADDED_HUNKS_MISSING]
-    if isinstance(value, str):
-        value = [value] if value else []
-    if not isinstance(value, list) or not value:
+    if not isinstance(value, list):
+        return [f"{title}) ==", f"{HUNK_FORMAT_ERROR} 목록이 아니다 ({type(value).__name__})"]
+    if not value:
         return [f"{title}, 0개) ==", NO_ADDED_LINES]
     total = len(value)
     lines = [f"{title}, {total}개 — 같은 커밋이 이 파일에 추가한 줄) =="]
     for position, hunk in enumerate(value, start=1):
-        if isinstance(hunk, Mapping):
-            body = hunk.get("added_body")
-            header = (
-                f"new_start {_shown(hunk.get('new_start'))} · "
-                f"new_count {_shown(hunk.get('new_count'))}"
-            )
-        else:
-            body, header = hunk, "-"
+        if not isinstance(hunk, Mapping):
+            lines.append(f"[{position}/{total}] {HUNK_FORMAT_ERROR} ({type(hunk).__name__})")
+            continue
+        body = hunk.get("added_body")
+        header = (
+            f"new_start {_shown(hunk.get('new_start'))} · new_count {_shown(hunk.get('new_count'))}"
+        )
         lines.append(f"[{position}/{total}] {header}")
         # `_text_lines`(splitlines)는 끝의 빈 줄을 버린다. 추가된 빈 줄도 줄이므로 "\n" 으로만
         # 나눠 `new_count` 와 줄 수를 맞춘다 (추출이 `--unified=0`, `pipeline/extract.py`).
@@ -982,7 +991,9 @@ class LabelSession:
             self.say(
                 "UNKNOWN — 무엇이 없어서 판단하지 못했는지 원인 태그 필수 (가이드 §6.3.2).\n"
                 f"  원인 태그(1개 이상, 여러 개 가능): {' '.join(UNKNOWN_CAUSE_TAGS)}\n"
-                f"  이동·리네임이 필터를 통과한 건이면 대신: {FILTER_MISS_TAG}\n"
+                "  배울 게 없는 삭제가 필터를 통과한 건이면 대신 "
+                f"{FILTER_MISS_TAG} + 몇 번인지와 근거 (가이드 §6.3.3):\n"
+                f"    {FILTER_MISS_CASES}\n"
                 "  태그 뒤에 자유 서술을 이어 써도 된다"
             )
 
