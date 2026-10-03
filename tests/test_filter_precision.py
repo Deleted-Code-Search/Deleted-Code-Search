@@ -179,3 +179,95 @@ def test_main_writes_reports_and_exit_code(tmp_path):
     report = md_out.read_text(encoding="utf-8")
     assert "미달" in report
     assert "NOISE_MOVE 오판율" in report and "0/2" in report
+
+
+# ── 2차 재측정: 4층 (NOISE_FORMAT 추가). 층은 key.json 의 sample_sizes 에서 읽는다 ──
+
+
+def build_v2(votes, population):
+    files, key = build(votes, population)
+    key["round"] = 2
+    key["sample_sizes"] = {"KEPT": 100, "NOISE_MOVE": 34, "NOISE_TRIVIAL": 33, "NOISE_FORMAT": 33}
+    return files, key
+
+
+def four_strata_votes():
+    votes = unanimous("k", "KEPT", 9, 10)
+    votes += unanimous("m", "NOISE_MOVE", 1, 5)
+    votes += unanimous("t", "NOISE_TRIVIAL", 1, 4)
+    votes += unanimous("f", "NOISE_FORMAT", 2, 5)
+    return votes
+
+
+V2_POPULATION = {"KEPT": 1000, "NOISE_MOVE": 500, "NOISE_TRIVIAL": 2000, "NOISE_FORMAT": 100}
+
+
+def test_four_strata_weighted_recall_hand_calculation():
+    """표본 p: KEPT 9/10=0.9, MOVE 1/5=0.2, TRIVIAL 1/4=0.25, FORMAT 2/5=0.4
+    모집단 N: 1000 / 500 / 2000 / 100
+        재현율 = 1000·0.9 / (1000·0.9 + 500·0.2 + 2000·0.25 + 100·0.4)
+               = 900 / (900 + 100 + 500 + 40) = 900 / 1540 = 45/77 ≈ 0.584
+    NOISE_FORMAT 층을 빼고 3층으로 내면 900 / 1500 = 0.6 — 그 값과 다르다.
+    """
+    files, key = build_v2(four_strata_votes(), V2_POPULATION)
+    report = fp.aggregate(files, key)
+    assert report.sample_counts == {
+        "KEPT": 10,
+        "NOISE_MOVE": 5,
+        "NOISE_TRIVIAL": 4,
+        "NOISE_FORMAT": 5,
+    }
+    assert report.weighted_recall == pytest.approx(45 / 77)
+    assert report.weighted_recall != pytest.approx(0.6)
+    assert report.population == V2_POPULATION
+    assert report.precision == pytest.approx(0.9)
+    assert report.noise_move_error_rate == pytest.approx(0.2)
+    # 포맷으로 제외됐는데 예 = 2/5, 구간과 함께 따로 보고
+    assert report.noise_format_error_rate == pytest.approx(0.4)
+    low, high = report.noise_format_error_ci95
+    assert low < 0.4 < high
+    assert report.confusion["NOISE_FORMAT"] == {"yes": 2, "no": 3}
+    assert report.fleiss_kappa == pytest.approx(1.0)
+    assert report.passed  # 목표는 1차와 같다: 정밀도 ≥ 0.9, Fleiss ≥ 0.7
+
+
+def test_four_strata_report_shows_format_error_rate(tmp_path):
+    files, key = build_v2(four_strata_votes(), V2_POPULATION)
+    report = fp.aggregate(files, key)
+    text = fp.format_report(report, key)
+    assert "2차 재측정" in text
+    assert "NOISE_FORMAT 오판율" in text and "2/5" in text
+    assert "NOISE_TRIVIAL 중 예 비율 | 25.0%" in text
+    assert "| NOISE_FORMAT | 2 | 3 |" in text
+
+
+def test_four_strata_key_requires_format_population():
+    files, key = build_v2(four_strata_votes(), {"KEPT": 1, "NOISE_MOVE": 1, "NOISE_TRIVIAL": 1})
+    with pytest.raises(fp.AggregateError, match="population.NOISE_FORMAT"):
+        fp.aggregate(files, key)
+
+
+def test_round_one_key_has_no_format_rate():
+    """1차 키(3층)는 그대로 읽힌다 — NOISE_FORMAT 오판율은 None, 보고서에 줄이 없다."""
+    files, key = build(VOTES, POPULATION)
+    key["sample_sizes"] = {"KEPT": 100, "NOISE_MOVE": 50, "NOISE_TRIVIAL": 50}
+    report = fp.aggregate(files, key)
+    assert report.noise_format_error_rate is None and report.noise_format_error_ci95 is None
+    assert report.weighted_recall == pytest.approx(1 / 3)
+    text = fp.format_report(report, key)
+    assert "NOISE_FORMAT" not in text and "#80 에서 보류한 항목" in text
+
+
+def test_round_two_key_without_sample_sizes_is_rejected():
+    """층 fallback 은 1차 형식 키(round 1 또는 없음)만. 2차 키는 sample_sizes 가 있어야 한다."""
+    files, key = build_v2(four_strata_votes(), V2_POPULATION)
+    del key["sample_sizes"]
+    with pytest.raises(fp.AggregateError, match="2차인데 sample_sizes 가 없다"):
+        fp.aggregate(files, key)
+
+
+def test_round_one_key_without_sample_sizes_falls_back():
+    files, key = build(VOTES, POPULATION)
+    key["round"] = 1
+    assert fp.key_strata(key) == ("KEPT", "NOISE_MOVE", "NOISE_TRIVIAL")
+    assert fp.aggregate(files, key).weighted_recall == pytest.approx(1 / 3)
