@@ -251,6 +251,118 @@ python -m eval.filter_precision data/filter_precision/sj_judgments.jsonl \
 # 종료 코드: 0 통과 / 3 미달 / 1 숫자를 못 냄(판정 누락·판정자 수·record_id 불일치)
 ```
 
+## 필터 정밀도 2차 재측정 사전 등록 (2026-10-03, 표본 추출 전, #89)
+
+**확정일: 2026-10-03.** 위 1차 사전 등록과 1차 결과(정밀도 57.0%, Fleiss kappa 0.462, **미달** —
+`docs/reports/filter_precision.md`, 원인 분석 `docs/reports/filter_precision_analysis.md`)는 그대로 두고 고치지 않는다.
+이 절과 도구 변경(`eval/filter_precision_sample.py`, `eval/filter_precision.py`)이 담긴 커밋 **뒤에** 표본을 뽑고,
+판정은 **#90 본 라벨링이 끝난 뒤** 한다. 표본·판정 결과를 보고 아래 기준을 바꾸지 않는다. 판정에 쓰는 숫자는
+`eval/filter_precision_sample.py` 의 `ROUNDS[2]` 와 `eval/filter_precision.py` 상단 상수에만 있고,
+`tests/test_filter_precision*.py` 가 고정한다. 1차 값(`ROUNDS[1]`)은 재현용으로 코드에 남긴다.
+
+### 1차와 달라진 것
+
+| 항목 | 1차 (2026-10-01) | 2차 (이 절) |
+|---|---|---|
+| 입력 | `data/assembled/filtered.jsonl` (규칙 v0.7) | `data/assembled/records_v0.8.jsonl` (규칙 v0.8 = v0.7 + 포맷 사후 필터, #152) |
+| 층과 표본 | KEPT 100 + NOISE_MOVE 50 + NOISE_TRIVIAL 50 | KEPT **100** + NOISE_MOVE **34** + NOISE_TRIVIAL **33** + NOISE_FORMAT **33** |
+| 시드 | 20261001 | **20261004** |
+| 모집단에서 빼는 것 | 없음 | #90 본 라벨 500건 |
+| 판정 기준 | 가이드 §6.3.3 (#132 이동·리네임 경계) | 가이드 §6.3.3 **1~5번** (#155) |
+| 판정 화면 | 추가된 코드 없음 | 삭제 본문 아래 `added_hunks_same_file`(같은 커밋·같은 파일의 추가 헝크) (#155) |
+| `sample_id` | `fp-001` … | `fp2-001` … (판정 파일이 다른 차수 표본에 섞이지 않게) |
+| 출력 | `data/filter_precision/` | `data/filter_precision_v2/` (1차 폴더는 건드리지 않는다) |
+
+v0.8 은 v0.7 조립 결과(1,897,048건)의 KEPT 중 포맷 커밋의 재포맷 37,576건을 NOISE_FORMAT 으로 바꾼 것이다
+(`data/assembled/records_v0.8_postfilter.json`, `recent_only` 거르기 전). NOISE_MOVE·NOISE_TRIVIAL 건수는 v0.7 과 같다.
+
+### 모집단과 표본
+
+| 항목 | 값 |
+|---|---|
+| 모집단 | `data/assembled/records_v0.8.jsonl` 전체 (저장소 20개, 규칙 `v0.8`, KEPT + NOISE_MOVE + NOISE_TRIVIAL + NOISE_FORMAT) |
+| `recent_only` 저장소 | 1차와 같다. 선정 CSV(`docs/repo_final20_v2.csv`) `recent_only=true` 저장소는 `author_date` ≥ **2015-01-01T00:00:00Z** 레코드만 |
+| 빼는 레코드 | `datasets/labels/main500_assignment.jsonl` 의 `record_id` 500건 (#90 본 라벨). 같은 판정자(sj·jh·hs)가 같은 레코드를 두 번 보지 않게 한다. 층별 모집단 크기 N 도 이 500건을 뺀 값이다. 뺀 건수는 층별로 `key.json` 의 `excluded_ids` 에 남는다 |
+| 층과 표본 | `filter_status` 로 층화: KEPT **100** + NOISE_MOVE **34** + NOISE_TRIVIAL **33** + NOISE_FORMAT **33** = 200. 층마다 저수지 표본 추출(Algorithm R) |
+| 시드 | **20261004** (1차와 다르게). 네 층의 저수지와 200건 섞기가 같은 `random.Random(20261004)` 을 파일 순서대로 나눠 쓴다 (Python 3.12). 제외 확인은 난수를 쓰지 않는다 |
+| 재현 | 같은 시드 + 같은 입력 + 같은 제외 목록이면 같은 표본이다. 입력은 `key.json` 의 `assembled_sha256` 으로 확인한다 |
+
+- 제외 100건을 사유 세 개로 34/33/33 나눈다. KEPT 100건은 1차와 같아 정밀도 구간 폭을 1차와 맞춘다
+- 사전 등록 층(위 네 개) 밖의 `filter_status`(NOISE_RENAME 등)가 있으면 표본 추출이 멈춘다 (1차와 같다)
+- 1차 표본 200건은 빼지 않는다. 층마다 모집단이 수만~수십만 건이라 겹칠 기댓값이 1건에 못 미친다. 겹친 건수는 결과와 함께 적는다
+- 표본 파일은 커밋하지 않는다 (`data/`, `.gitignore`)
+
+### 판정
+
+- 질문·판정자·다수결은 1차와 같다: **"배울 게 있는 의미 있는 삭제인가?" 예/아니오**, 3인(sj·jh·hs)이 독립으로
+  200건 전부, 최종 판정은 3인 다수결. 판정이 끝날 때까지 서로의 파일을 보지 않고 개별 건을 이야기하지 않는다
+- **경계는 라벨 가이드 §6.3.3 1~5번 그대로다.** "아니오"는 ① 순수 이동·리네임 ② 기계적 포맷·스타일 변환
+  ③ 생성·벤더링 코드 ④ 다른 저장소로 분리 ⑤ 사소한 다듬기 — **5번은 `deletion_kind = PARTIAL` 에만** 쓴다.
+  나머지는 전부 "예"다 (가이드의 "헷갈렸던 경우" 표 포함). 판정은 추가 헝크(diff)를 보고 하고, 커밋 메시지만으로
+  하지 않는다. "아니오"면 `note` 에 몇 번인지 적는다
+- 판정자가 보는 것: 1차 목록 + **`added_hunks_same_file`**(모든 건에, 조립 결과 값 그대로).
+  `filter_status`·`filter_rule_version`·`filter_evidence` 는 판정용 파일에 없다 (NOISE_FORMAT 의 근거
+  `keywords`·`reappear_ratio` 도 없다)
+
+### 지표와 목표
+
+1차와 같다. 정밀도 **≥ 90%**(통과 표본 100건 중 최종 "예", 경계 포함), Fleiss kappa **≥ 0.7**(3인 200건, 정의 불가면
+미달), 통과 = 둘 다 충족. 보고 지표도 1차와 같고 아래만 다르다.
+
+| 지표 | 2차 정의 |
+|---|---|
+| 재현율 | **네 층** 모집단 가중: N_k·p_k / (N_k·p_k + N_move·p_move + N_trivial·p_trivial + N_format·p_format). N = `recent_only` 거르고 500건 뺀 층별 모집단, p = 층별 표본의 최종 "예" 비율 |
+| NOISE_MOVE 오판율 | NOISE_MOVE 층 34건 중 최종 "예" 비율 + Wilson 95% 구간. 따로 보고 |
+| **NOISE_FORMAT 오판율** | NOISE_FORMAT 층 33건 중 최종 "예" 비율 + Wilson 95% 구간. 따로 보고 — v0.8 사후 필터(#152)가 배울 게 있는 삭제를 빼는지 본다 |
+| 혼동표 | 네 층 × 예/아니오 |
+
+### 미달 시
+
+- kappa 미달: 1차와 같다. 정밀도 숫자는 kappa 가 충족될 때까지 확정하지 않는다. 불일치 건을 §6.3.3 1~5번 중 어디서
+  갈렸는지로 나눠 기록한다
+- 정밀도 미달: 1차 원인 분석과 같은 방식으로 KEPT "아니오" 건을 §6.3.3 번호별로 나눠 기록한다. 1차 분석에서 #80 보류
+  항목(이동+리네임 0.9 미만, 커밋 간 이동)으로 고쳐지는 건이 0건이었으므로 그 절차를 다시 등록하지 않는다. 필터를 고치면
+  규칙 버전을 올리고 **새 시드로 새 표본**을 뽑아 다시 잰다 (§8.4) — 같은 표본으로 규칙을 고르고 같은 표본으로 재지 않는다
+
+### 알려진 한계 (결과 기록에 함께 적는다)
+
+- **1차와의 차이를 어느 하나 덕으로 돌릴 수 없다.** 판정 기준(§6.3.3 1~5번), 판정 화면(추가 헝크), 필터(v0.8
+  NOISE_FORMAT)가 동시에 바뀌었다. 판정자도 1차 판정과 원인 분석(#151)을 겪었고, #90 라벨링으로 같은 기준을 더 익힌 뒤
+  판정한다. 표본도 다르다. 정밀도·kappa 가 올라도 "필터가 좋아졌다"나 "기준이 명확해졌다" 중 하나로 설명하지 않는다
+- **NOISE_FORMAT 층은 판정자가 필터 결과를 짐작하기 쉽다.** 규칙의 입력(커밋 메시지 첫 줄의 포맷 키워드, 삭제 줄이
+  추가 헝크에 다시 나타남)이 판정 화면에 그대로 보인다. 그리고 가이드 2번(기계적 포맷 변환)이 규칙과 거의 같은 것을
+  묻는다. 그래서 NOISE_FORMAT 오판율은 낮게 나오기 쉽고, 필터의 독립적인 정확도라기보다 규칙과 판정 기준이 얼마나
+  같은지를 잰다
+- 1차 한계는 그대로 남는다 — "참고: 비슷한 함수"는 NOISE_MOVE 건에만 있고, PARTIAL 이면서 4줄 이하인 건은 정의상
+  NOISE_TRIVIAL 이다. 추가 헝크는 **같은 파일**만 담으므로 다른 파일로 간 이동은 화면만으로 보이지 않는다
+  (통과 건 쪽으로 기우는 1차의 비대칭이 줄지만 없어지지는 않는다)
+- 제외 층이 작아 구간이 넓다. 34·33건에서 0건이면 Wilson 95% 상한이 약 10%, 3건이면 약 3–23%다. 1차(50건)보다 넓다.
+  층 오판율은 방향을 보는 데만 쓴다. 정밀도 구간 폭은 1차와 같다 (90/100 이면 82.6–94.5%)
+- 500건을 뺀 모집단이라 #90 라벨 데이터와 같은 레코드로 맞대어 볼 수 없다. 대신 같은 판정자가 같은 건을 두 번 보지 않는다
+
+### 실행
+
+```bash
+# 1. 표본 추출 (이 절이 들어간 커밋 뒤 1회). 기본값이 모두 2차 사전 등록 값이다
+python -m eval.filter_precision_sample
+#    = --round 2 --assembled data/assembled/records_v0.8.jsonl --seed 20261004 \
+#      --exclude datasets/labels/main500_assignment.jsonl --out-dir data/filter_precision_v2
+# → data/filter_precision_v2/records.jsonl (판정용), key.json (정답 대조용 — 판정자는 열지 않는다)
+
+# 2. 판정 (#90 본 라벨링이 끝난 뒤, 각자)
+python -m tools.filter_judge_cli --judge sj --records data/filter_precision_v2/records.jsonl
+# → data/filter_precision_v2/sj_judgments.jsonl
+
+# 3. 집계 (층은 key.json 의 sample_sizes 에서 읽는다)
+python -m eval.filter_precision data/filter_precision_v2/sj_judgments.jsonl \
+    data/filter_precision_v2/jh_judgments.jsonl data/filter_precision_v2/hs_judgments.jsonl \
+    --key data/filter_precision_v2/key.json --json-out docs/reports/filter_precision_v2.json \
+    --md-out docs/reports/filter_precision_v2.md
+```
+
+1차 표본 재현: `python -m eval.filter_precision_sample --round 1 --out-dir <다른 폴더>` (시드 20261001, 3층, 제외 없음).
+같은 200건이 같은 순서로 나온다. 판정용 파일에는 #155 이후 `added_hunks_same_file` 이 더 들어 있다.
+
 ## 측정 기록
 (측정마다 날짜·조건·결과·해석을 아래에 추가)
 
