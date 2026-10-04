@@ -15,11 +15,12 @@
     새 `labels[]` 로 갱신하되 기존 `final` 은 그대로 옮긴다.
 
 실행:
-    python -m classify.labels --labels-dir datasets/labels
-    python -m classify.labels --labels-dir datasets/labels --no-write     # 리포트만
+    python -m classify.labels                          # 본 라벨링 500건 병합 + 리포트
+    python -m classify.labels --interim                # 블록당 처음 50건 중간 점검 (§8.4.1)
+    python -m classify.labels --batch pre200 --no-write   # 예비 200건 리포트만
 
-    `--records` 를 주면 그 파일의 `repo` 로 저장소별 회수율까지 낸다 (기본: 라벨 폴더의
-    `pre200_records.jsonl`).
+    파일은 묶음(`--batch`)에서 정해진다 (`BATCH_FILES`). 본 라벨링은 배분 파일
+    (`main500_assignment.jsonl`, #85)에서 `split` 을 읽어 병합 행에 넣는다 (#158).
 """
 
 from __future__ import annotations
@@ -28,11 +29,12 @@ import argparse
 import json
 import re
 import sys
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from classify import sampling_main500
 from classify.sampling import (
     BATCH,
     GUIDE_VERSION,
@@ -43,6 +45,20 @@ from classify.sampling import (
 
 # 병합·확정 파일 (가이드 §7.1). 경로·파일명은 팀 확정 전이라 sampling 과 같이 상수로 둔다 (§11-5).
 MERGED_FILENAME = "labeled_500.jsonl"
+
+# 묶음 → (레코드 파일, 개인 라벨 파일 틀, 배분 파일). `tools/label_cli.py` 의 `BATCH_FILES` 와 같은
+# 묶음이고 여기에 배분 파일이 더 있다. 예비 200건은 분할이 없어 배분 파일도 없다 (#158).
+BATCH_FILES: dict[str, tuple[str, str, str | None]] = {
+    sampling_main500.BATCH: (
+        sampling_main500.RECORDS_OUT,
+        sampling_main500.LABEL_OUT_TEMPLATE,
+        sampling_main500.ASSIGNMENT_OUT,
+    ),
+    BATCH: (RECORDS_FILENAME, LABEL_FILENAME_TEMPLATE, None),
+}
+# CLI 기본값. `label_cli` 와 같이 본 라벨링이다. 함수 기본값은 예비 200건 그대로 둔다 -
+# `eval/gate1.py` 가 그 기본값으로 게이트 1 을 재현한다.
+DEFAULT_BATCH = sampling_main500.BATCH
 
 REASON_LABELS = ("BUG", "PERF", "SEC", "LIB", "DEAD", "DESIGN", "FEAT", "UNK")
 EVIDENCE_GRADES = ("EXPLICIT", "INFERRED", "UNKNOWN")
@@ -87,11 +103,23 @@ def read_jsonl(path: Path) -> list[dict[str, Any]]:
 
 
 def load_personal_labels(labels_dir: Path, batch: str = BATCH) -> dict[str, list[dict[str, Any]]]:
-    """`{labeler}_{batch}.jsonl` 을 사람별로 읽는다. 없는 파일은 빈 목록."""
+    """`{labeler}_{batch}.jsonl` 을 사람별로 읽는다. 없는 파일은 빈 목록.
+
+    파일 이름 틀은 `batch` 에서 정한다. 전에는 `batch` 를 받고도 예비 200건 틀을 썼다 -
+    `--batch main500` 으로 돌려도 `*_pre200.jsonl` 을 읽었다 (#158).
+    """
+    template = BATCH_FILES[batch][1]
     return {
-        labeler: read_jsonl(labels_dir / LABEL_FILENAME_TEMPLATE.format(labeler=labeler))
-        for labeler in LABELERS
+        labeler: read_jsonl(labels_dir / template.format(labeler=labeler)) for labeler in LABELERS
     }
+
+
+def load_assignment(labels_dir: Path, batch: str) -> dict[str, dict[str, Any]]:
+    """record_id → 배분 행 (블록·split·`interim`, #85). 배분 파일이 없는 묶음이면 빈 사전."""
+    name = BATCH_FILES[batch][2]
+    if name is None:
+        return {}
+    return {row["record_id"]: row for row in read_jsonl(labels_dir / name)}
 
 
 def is_filled(row: dict[str, Any]) -> bool:
@@ -188,17 +216,67 @@ def build_final(labels: Sequence[dict[str, Any]]) -> dict[str, Any] | None:
     }
 
 
+def check_assignment(
+    personal: Mapping[str, Sequence[dict[str, Any]]],
+    batch: str,
+    assignment: Mapping[str, Mapping[str, Any]] | None,
+) -> None:
+    """배분과 맞지 않는 라벨이면 `ValueError` (#158). 확인을 병합 함수 안에 두는 이유는 CLI 를
+    거치지 않고 `merge_labels` 를 바로 부르는 쪽(#86)도 같은 보호를 받게 하려는 것이다.
+
+    - 배분 파일이 있는 묶음(main500)인데 배분 정보가 없다 - `split` 을 `null` 로 지어내게 된다
+    - 배분에 없는 레코드에 라벨이 있다 - train/val/test 어디에도 속하지 않아 #86 이 조용히
+      빼거나 잘못 넣는다
+    - 그 블록을 맡지 않은 사람의 라벨이다 - 엉뚱한 쌍으로 자동 확정되고 블록 kappa 가 다른
+      쌍으로 계산된다. 파일 주인과 줄의 `labeler` 를 둘 다 본다
+    """
+    if assignment is None:
+        if BATCH_FILES.get(batch, (None, None, None))[2] is not None:
+            raise ValueError(f"{batch} 병합에는 배분 정보가 필요하다 - split 을 지어내지 않는다")
+        return
+    stray: set[str] = set()
+    unassigned: set[tuple[str, str]] = set()
+    for owner, rows in personal.items():
+        for row in rows:
+            if not is_filled(row):
+                continue
+            record_id = str(row.get("record_id"))
+            assigned = assignment.get(record_id)
+            if assigned is None:
+                stray.add(record_id)
+                continue
+            labelers = assigned.get("labelers")
+            for who in {owner, str(row.get("labeler"))}:
+                if labelers is not None and who not in labelers:
+                    unassigned.add((record_id, who))
+    problems = []
+    if stray:
+        problems.append(
+            f"배분 파일에 없는 레코드에 라벨이 있다: {len(stray)}건 {sorted(stray)[:3]}"
+        )
+    if unassigned:
+        shown = sorted(unassigned)[:3]
+        problems.append(f"그 블록을 맡지 않은 사람의 라벨이 있다: {len(unassigned)}건 {shown}")
+    if problems:
+        raise ValueError(" / ".join(problems))
+
+
 def merge_labels(
     personal: dict[str, list[dict[str, Any]]],
     *,
     batch: str = BATCH,
     existing: Sequence[dict[str, Any]] = (),
+    assignment: Mapping[str, Mapping[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
     """개인 라벨 → 레코드 1건 = 1줄 (가이드 §7.3).
 
     개별 라벨은 `labels[]` 에 그대로 보존한다. 고치면 kappa 를 다시 계산할 수 없다 (§8.3 5번).
     `existing` 에 이전 병합 결과를 주면 사람이 채운 `final` 을 이어받는다.
+
+    `assignment`(배분 파일, #85)를 주면 `split` 을 거기서 넣는다. 배분과 맞지 않는 라벨은
+    `check_assignment` 가 거부한다.
     """
+    check_assignment(personal, batch, assignment)
     kept_finals = {
         row.get("record_id"): row.get("final")
         for row in existing
@@ -225,7 +303,7 @@ def merge_labels(
                 "record_id": record_id,
                 "batch": batch,
                 # 예비 200건은 학습/검증/테스트 분할이 없다 (가이드 §7.3)
-                "split": None,
+                "split": assignment[record_id]["split"] if assignment is not None else None,
                 "labels": labels,
                 "final": kept_finals.get(record_id) or build_final(labels),
                 "guide_version": GUIDE_VERSION,
@@ -485,12 +563,14 @@ def unknown_causes(merged: Sequence[dict[str, Any]]) -> dict[str, int]:
 def format_report(
     merged: Sequence[dict[str, Any]],
     repo_of: dict[str, str] | None = None,
+    batch: str = BATCH,
 ) -> list[str]:
+    """병합 결과 리포트 - 확정·불일치 건수, 이유 회수율, UNKNOWN 원인, 쌍별 일치도."""
     lines: list[str] = []
     overall, per_repo = recovery_rate(merged, repo_of)
     disagreements = find_disagreements(merged)
 
-    lines.append(f"## 라벨 {len(merged)}건 (batch={BATCH}, guide={GUIDE_VERSION})")
+    lines.append(f"## 라벨 {len(merged)}건 (batch={batch}, guide={GUIDE_VERSION})")
     confirmed = sum(1 for row in merged if row.get("final"))
     lines.append(f"- 라벨 확정 {confirmed}건 / 토론 대상 {len(merged) - confirmed}건 (§8.3)")
     lines.append(
@@ -576,33 +656,104 @@ def format_report(
     return lines
 
 
+# 가이드 §8.4.1 중간 점검 기준 - reason·grade kappa 둘 다 이 값 이상이면 통과.
+INTERIM_KAPPA = KAPPA_WARN
+
+
+def _kappa_text(result: Agreement | None) -> str:
+    """kappa 와 p_o 를 한 칸에. p_o 를 같이 보지 않으면 한 클래스 과반일 때 잘못 읽는다 (§8.4)."""
+    if result is None:
+        return "-"
+    kappa = "정의 불가" if result.kappa is None else f"{result.kappa:.3f}"
+    return f"{kappa} (p_o {result.observed:.0%})"
+
+
+def format_interim_report(
+    merged: Sequence[dict[str, Any]], assignment: Mapping[str, Mapping[str, Any]]
+) -> list[str]:
+    """블록당 처음 50건 중간 점검 (가이드 §8.4.1). 블록(= 라벨러 쌍)마다 따로 판정한다.
+
+    배분 파일의 `interim` 레코드만 센다. 두 사람이 51번째 건부터 더 라벨했어도 여기 들어오지
+    않는다 - 그냥 "둘 다 라벨한 건" 을 세면 점검 표본이 사람마다 진행 속도에 따라 달라진다.
+    `anchored` 라벨은 `pair_labels` 처럼 빼고, 그래서 kappa 분모가 50보다 작을 수 있어 함께 적는다.
+    50건을 두 사람이 다 끝내기 전에는 판정하지 않는다.
+    """
+    lines = [f"## 중간 점검 - 블록당 처음 50건 (가이드 §8.4.1, 기준 kappa ≥ {INTERIM_KAPPA})"]
+    by_id = {row["record_id"]: row for row in merged}
+    for block in sorted({row["block"] for row in assignment.values()}):
+        ids = [rid for rid, row in assignment.items() if row["block"] == block and row["interim"]]
+        labelers = next(row["labelers"] for row in assignment.values() if row["block"] == block)
+        rows = [by_id[rid] for rid in ids if rid in by_id]
+        done = sum(1 for row in rows if len(row["labels"]) >= 2)
+        reason = next(iter(agreement_for(rows, "reason_label", REASON_LABELS)), None)
+        grade = next(iter(agreement_for(rows, "evidence_grade", EVIDENCE_GRADES)), None)
+        counted = reason.total if reason else 0
+
+        if done < len(ids):
+            verdict = "진행 중 - 아직 판정하지 않는다"
+        elif reason is None or grade is None or reason.kappa is None or grade.kappa is None:
+            verdict = "판단 보류 - kappa 정의 불가, p_o 와 혼동 쌍으로 본다"
+        elif reason.kappa >= INTERIM_KAPPA and grade.kappa >= INTERIM_KAPPA:
+            verdict = "통과"
+        else:
+            verdict = "미달 - 가이드 보강 후 이 50건 재라벨 (§8.4.1)"
+
+        lines.append("")
+        lines.append(f"### 블록 {block} ({' + '.join(labelers)}) - {verdict}")
+        lines.append(
+            f"- 2인 완료 {done}/{len(ids)}건, kappa 분모 {counted}건"
+            + (f" (anchored 제외 {done - counted}건)" if done > counted else "")
+        )
+        lines.append(f"- reason_label kappa {_kappa_text(reason)}")
+        lines.append(f"- evidence_grade kappa {_kappa_text(grade)}")
+        for name, result in (("reason_label", reason), ("evidence_grade", grade)):
+            if result and result.confusions:
+                pairs = ", ".join(f"{a} vs {b} {n}건" for a, b, n in result.confusions)
+                lines.append(f"- {name} 혼동 쌍 상위: {pairs}")
+    return lines
+
+
 # --------------------------------------------------------------------------------------
 # CLI
 # --------------------------------------------------------------------------------------
 
 
 def build_parser() -> argparse.ArgumentParser:
+    """CLI 인자. 실행 방법은 모듈 독스트링 "실행" 절."""
     parser = argparse.ArgumentParser(
         prog="python -m classify.labels",
-        description="라벨 병합 + kappa + 이유 회수율 → 게이트 1 판정 (#34).",
+        description="라벨 병합 + kappa + 이유 회수율 (#34) / 500건 중간 점검 (#158).",
     )
     parser.add_argument("--labels-dir", type=Path, default=Path("datasets/labels"))
-    parser.add_argument("--records", type=Path, default=None, help="저장소별 회수율용 레코드 파일")
+    parser.add_argument(
+        "--records", type=Path, default=None, help="저장소별 회수율용 레코드 파일 (기본: 묶음의 것)"
+    )
     parser.add_argument("--out", type=Path, default=None, help=f"기본: datasets/{MERGED_FILENAME}")
-    parser.add_argument("--batch", default=BATCH)
+    parser.add_argument(
+        "--batch",
+        choices=tuple(BATCH_FILES),
+        default=DEFAULT_BATCH,
+        help=f"기본 {DEFAULT_BATCH} (본 라벨링). {BATCH} 는 예비 200건",
+    )
     parser.add_argument("--no-write", action="store_true", help="병합 파일을 쓰지 않고 리포트만")
+    parser.add_argument(
+        "--interim",
+        action="store_true",
+        help="블록당 처음 50건 중간 점검만 (가이드 §8.4.1). 병합 파일은 쓰지 않는다",
+    )
     return parser
 
 
-def repo_index(records_path: Path | None, labels_dir: Path) -> dict[str, str]:
+def repo_index(records_path: Path | None, labels_dir: Path, batch: str = BATCH) -> dict[str, str]:
     """record_id → repo. 저장소별 회수율에 쓴다. 파일이 없으면 빈 사전."""
-    path = records_path or (labels_dir / RECORDS_FILENAME)
+    path = records_path or (labels_dir / BATCH_FILES[batch][0])
     return {
         row["record_id"]: row.get("repo", "") for row in read_jsonl(path) if row.get("record_id")
     }
 
 
 def main(argv: Sequence[str] | None = None) -> int:
+    """병합하고 리포트를 낸다. 라벨이 없으면 1, 거부하면 2, 정상이면 0."""
     args = build_parser().parse_args(argv)
     sys.stdout.reconfigure(encoding="utf-8")
     sys.stderr.reconfigure(encoding="utf-8")
@@ -631,9 +782,44 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
         return 2
 
+    assignment: dict[str, dict[str, Any]] | None = None
+    if BATCH_FILES[args.batch][2] is not None:
+        assignment = load_assignment(args.labels_dir, args.batch)
+        if not assignment:
+            print(
+                f"배분 파일이 없다: {args.labels_dir / BATCH_FILES[args.batch][2]} "
+                "(#85 가 만든다). split·중간 점검에 필요하다.",
+                file=sys.stderr,
+            )
+            return 2
+    elif args.interim:
+        print(f"{args.batch} 에는 배분 파일이 없어 중간 점검을 할 수 없다.", file=sys.stderr)
+        return 2
+
     out_path = args.out or Path("datasets") / MERGED_FILENAME
-    existing = read_jsonl(out_path)
-    merged = merge_labels(personal, batch=args.batch, existing=existing)
+    # 중간 점검은 토론 확정(`final`)을 쓰지 않아 기존 병합 파일을 읽지 않는다.
+    existing = [] if args.interim else read_jsonl(out_path)
+    # 기본 출력 경로는 묶음과 상관없이 같다. 다른 묶음의 병합 파일이면 거기 쌓인 토론 확정을
+    # 덮어써 잃는다 - 쓰기 전에 멈춘다 (#158).
+    other_batches = sorted({str(row.get("batch")) for row in existing} - {args.batch})
+    if other_batches:
+        print(
+            f"{out_path} 는 다른 묶음({', '.join(other_batches)})의 병합 파일이다. 덮어쓰면 그 "
+            "토론 확정 결과가 사라진다. --out 으로 다른 경로를 줘라.",
+            file=sys.stderr,
+        )
+        return 2
+    try:
+        merged = merge_labels(personal, batch=args.batch, existing=existing, assignment=assignment)
+    except ValueError as error:
+        print(f"{error} - 다른 묶음의 라벨이 섞였나 확인해라.", file=sys.stderr)
+        return 2
+
+    if args.interim:
+        assert assignment is not None  # 위에서 배분 파일 없는 묶음은 걸렀다
+        for line in format_interim_report(merged, assignment):
+            print(line)
+        return 0
     if existing:
         carried = sum(
             1
@@ -649,7 +835,8 @@ def main(argv: Sequence[str] | None = None) -> int:
                 handle.write(json.dumps(row, ensure_ascii=False) + "\n")
         print(f"병합: {out_path} ({len(merged)}건)", file=sys.stderr)
 
-    for line in format_report(merged, repo_index(args.records, args.labels_dir)):
+    repo_of = repo_index(args.records, args.labels_dir, args.batch)
+    for line in format_report(merged, repo_of, args.batch):
         print(line)
 
     disagreements = find_disagreements(merged)

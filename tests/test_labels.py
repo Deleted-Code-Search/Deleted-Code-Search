@@ -509,7 +509,9 @@ def labels_dir(tmp_path):
 
 def test_cli_writes_merged_file_and_prints_report(tmp_path, labels_dir, capsys):
     out = tmp_path / "merged.jsonl"
-    exit_code = labels.main(["--labels-dir", str(labels_dir), "--out", str(out)])
+    exit_code = labels.main(
+        ["--batch", "pre200", "--labels-dir", str(labels_dir), "--out", str(out)]
+    )
 
     assert exit_code == 0
     merged = [json.loads(line) for line in out.read_text("utf-8").splitlines()]
@@ -525,13 +527,18 @@ def test_cli_writes_merged_file_and_prints_report(tmp_path, labels_dir, capsys):
 
 def test_cli_no_write_leaves_no_file(tmp_path, labels_dir):
     out = tmp_path / "merged.jsonl"
-    assert labels.main(["--labels-dir", str(labels_dir), "--out", str(out), "--no-write"]) == 0
+    assert (
+        labels.main(
+            ["--batch", "pre200", "--labels-dir", str(labels_dir), "--out", str(out), "--no-write"]
+        )
+        == 0
+    )
     assert not out.exists()
 
 
 def test_cli_rerun_preserves_discussed_final(tmp_path, labels_dir):
     out = tmp_path / "merged.jsonl"
-    labels.main(["--labels-dir", str(labels_dir), "--out", str(out)])
+    labels.main(["--batch", "pre200", "--labels-dir", str(labels_dir), "--out", str(out)])
 
     rows = [json.loads(line) for line in out.read_text("utf-8").splitlines()]
     for row in rows:
@@ -544,7 +551,7 @@ def test_cli_rerun_preserves_discussed_final(tmp_path, labels_dir):
             }
     out.write_text("\n".join(json.dumps(row, ensure_ascii=False) for row in rows), encoding="utf-8")
 
-    labels.main(["--labels-dir", str(labels_dir), "--out", str(out)])
+    labels.main(["--batch", "pre200", "--labels-dir", str(labels_dir), "--out", str(out)])
     after = {
         json.loads(line)["record_id"]: json.loads(line)
         for line in out.read_text("utf-8").splitlines()
@@ -622,7 +629,9 @@ def test_cli_stops_on_undefined_label_and_writes_nothing(tmp_path, labels_dir):
     )
 
     out = tmp_path / "merged.jsonl"
-    assert labels.main(["--labels-dir", str(labels_dir), "--out", str(out)]) == 2
+    assert (
+        labels.main(["--batch", "pre200", "--labels-dir", str(labels_dir), "--out", str(out)]) == 2
+    )
     assert not out.exists()
 
 
@@ -633,4 +642,242 @@ def test_cli_stops_when_nothing_is_labelled(tmp_path):
         path = directory / labels.LABEL_FILENAME_TEMPLATE.format(labeler=labeler)
         path.write_text(json.dumps(empty_row("r1", labeler)), encoding="utf-8")
 
-    assert labels.main(["--labels-dir", str(directory), "--no-write"]) == 1
+    assert labels.main(["--batch", "pre200", "--labels-dir", str(directory), "--no-write"]) == 1
+
+
+# --------------------------------------------------------------------------------------
+# 본 라벨링 500건 - 배분 파일·split·중간 점검 (#158)
+# --------------------------------------------------------------------------------------
+
+
+def assignment_rows(block, labelers, count, test_ids=()):
+    """`main500_assignment.jsonl` 한 블록. 앞 50건이 `interim` 이다 (#85)."""
+    return [
+        {
+            "record_id": f"{block}{position:03d}",
+            "batch": "main500",
+            "repo": "a/b",
+            "block": block,
+            "labelers": list(labelers),
+            "block_position": position,
+            "interim": position <= 50,
+            "split": "test" if f"{block}{position:03d}" in test_ids else "train",
+        }
+        for position in range(1, count + 1)
+    ]
+
+
+def write_main500(directory, assignment, labels_by_labeler):
+    """배분 파일과 개인 라벨 파일(`{labeler}_main500.jsonl`)을 쓴다."""
+    directory.mkdir(parents=True, exist_ok=True)
+    (directory / "main500_assignment.jsonl").write_text(
+        "".join(json.dumps(row) + "\n" for row in assignment), encoding="utf-8"
+    )
+    for labeler, rows in labels_by_labeler.items():
+        (directory / f"{labeler}_main500.jsonl").write_text(
+            "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in rows), encoding="utf-8"
+        )
+    return directory
+
+
+def block_labels(assignment, reason_of):
+    """블록의 두 라벨러가 각자 라벨한 줄. `reason_of(record_id, labeler)` 가 이유를 정한다.
+
+    등급도 이유에 따라 둘로 갈라 둔다 - 한 등급만 쓰면 등급 kappa 가 정의되지 않는다.
+    """
+
+    def row(record_id, labeler):
+        """한 사람의 라벨 한 줄. DEAD 는 INFERRED(0.7), 나머지는 EXPLICIT."""
+        reason = reason_of(record_id, labeler)
+        if reason == "DEAD":
+            return label_row(record_id, labeler, reason, "INFERRED", confidence=0.7)
+        return label_row(record_id, labeler, reason)
+
+    return {
+        labeler: [row(item["record_id"], labeler) for item in assignment]
+        for labeler in assignment[0]["labelers"]
+    }
+
+
+def test_personal_labels_are_read_from_the_batch_files(tmp_path):
+    """전에는 `batch` 를 받고도 `*_pre200.jsonl` 을 읽었다 (#158)."""
+    (tmp_path / "hs_pre200.jsonl").write_text(json.dumps(label_row("old", "hs")), "utf-8")
+    (tmp_path / "hs_main500.jsonl").write_text(json.dumps(label_row("new", "hs")), "utf-8")
+
+    assert [row["record_id"] for row in labels.load_personal_labels(tmp_path, "main500")["hs"]] == [
+        "new"
+    ]
+    assert [row["record_id"] for row in labels.load_personal_labels(tmp_path, "pre200")["hs"]] == [
+        "old"
+    ]
+
+
+def test_merge_takes_split_from_the_assignment():
+    """#86 이 train/val/test 를 나눌 수 있게. 예비 200건은 그대로 null (가이드 §7.3)."""
+    personal = {"jh": [label_row("r1", "jh")], "hs": [label_row("r1", "hs")]}
+
+    with_split = labels.merge_labels(
+        personal, batch="main500", assignment={"r1": {"split": "test"}}
+    )
+
+    assert with_split[0]["split"] == "test"
+    assert labels.merge_labels(personal)[0]["split"] is None
+
+
+def test_merge_refuses_labels_outside_the_assignment():
+    """배분 파일에 없는 레코드는 어느 split 에도 속하지 않는다 - null 로 두면 조용히 빠진다."""
+    personal = {"hs": [label_row("stray", "hs")]}
+
+    with pytest.raises(ValueError, match="배분 파일에 없는"):
+        labels.merge_labels(personal, batch="main500", assignment={"r1": {"split": "train"}})
+
+
+def _alternating(record_id, labeler):
+    """두 사람이 같은 이유를 붙이되 클래스가 둘이라 kappa 가 정의된다."""
+    return "BUG" if int(record_id[1:]) % 2 else "DEAD"
+
+
+def test_interim_counts_only_the_first_50_of_each_block():
+    """51번째부터는 두 사람이 다 라벨했어도 점검 표본이 아니다 (가이드 §8.4.1)."""
+    assignment = assignment_rows("B", ("jh", "hs"), 52)
+    personal = block_labels(
+        assignment,
+        lambda rid, labeler: (
+            "SEC" if rid in {"B051", "B052"} and labeler == "hs" else _alternating(rid, labeler)
+        ),
+    )
+    merged = labels.merge_labels(
+        personal, batch="main500", assignment={r["record_id"]: r for r in assignment}
+    )
+
+    text = "\n".join(labels.format_interim_report(merged, {r["record_id"]: r for r in assignment}))
+
+    assert "블록 B (jh + hs) - 통과" in text
+    assert "2인 완료 50/50건, kappa 분모 50건" in text
+    assert "reason_label kappa 1.000" in text
+
+
+def test_interim_waits_until_both_labelers_finish_the_first_50():
+    """한 사람이 30건에서 멈췄으면 아직 판정하지 않는다."""
+    assignment = assignment_rows("C", ("hs", "sj"), 50)
+    personal = block_labels(assignment, _alternating)
+    personal["sj"] = personal["sj"][:30]
+    by_id = {r["record_id"]: r for r in assignment}
+
+    text = "\n".join(
+        labels.format_interim_report(labels.merge_labels(personal, assignment=by_id), by_id)
+    )
+
+    assert "진행 중" in text and "2인 완료 30/50건" in text
+
+
+def test_interim_fails_a_block_below_the_threshold():
+    """reason 이 절반쯤 갈리면 kappa 가 0.6 밑이다 - 가이드 보강 후 그 50건 재라벨."""
+    assignment = assignment_rows("A", ("sj", "jh"), 50)
+    personal = block_labels(
+        assignment,
+        lambda rid, labeler: (
+            "DESIGN" if labeler == "jh" and int(rid[1:]) % 3 else _alternating(rid, labeler)
+        ),
+    )
+    by_id = {r["record_id"]: r for r in assignment}
+
+    text = "\n".join(
+        labels.format_interim_report(labels.merge_labels(personal, assignment=by_id), by_id)
+    )
+
+    assert "블록 A (sj + jh) - 미달" in text
+    assert "혼동 쌍 상위" in text
+
+
+def test_cli_interim_prints_the_check_and_writes_nothing(tmp_path, capsys):
+    """기본 묶음이 main500 이다. `--interim` 은 병합 파일을 쓰지 않는다."""
+    assignment = assignment_rows("B", ("jh", "hs"), 50)
+    directory = write_main500(
+        tmp_path / "labels", assignment, block_labels(assignment, _alternating)
+    )
+    out = tmp_path / "merged.jsonl"
+
+    assert labels.main(["--labels-dir", str(directory), "--out", str(out), "--interim"]) == 0
+    assert "블록 B (jh + hs) - 통과" in capsys.readouterr().out
+    assert not out.exists()
+
+
+def test_cli_merge_writes_split_for_main500(tmp_path):
+    """병합 파일의 `split` 이 배분 파일과 같다."""
+    assignment = assignment_rows("B", ("jh", "hs"), 4, test_ids={"B002"})
+    directory = write_main500(
+        tmp_path / "labels", assignment, block_labels(assignment, _alternating)
+    )
+    out = tmp_path / "merged.jsonl"
+
+    assert labels.main(["--labels-dir", str(directory), "--out", str(out)]) == 0
+    merged = [json.loads(line) for line in out.read_text("utf-8").splitlines()]
+    assert {row["record_id"]: row["split"] for row in merged} == {
+        "B001": "train",
+        "B002": "test",
+        "B003": "train",
+        "B004": "train",
+    }
+    assert all(row["batch"] == "main500" for row in merged)
+
+
+@pytest.mark.parametrize(
+    ("argv", "message"),
+    [
+        (["--interim"], "배분 파일이 없다"),
+        (["--batch", "pre200", "--interim"], "중간 점검을 할 수 없다"),
+    ],
+)
+def test_cli_refuses_checks_it_cannot_do(tmp_path, capsys, argv, message):
+    """배분 파일이 없으면 split·중간 점검을 지어내지 않는다."""
+    directory = tmp_path / "labels"
+    directory.mkdir()
+    for labeler in labels.LABELERS:
+        for batch in ("main500", "pre200"):
+            (directory / f"{labeler}_{batch}.jsonl").write_text(
+                json.dumps(label_row("r1", labeler)), "utf-8"
+            )
+
+    assert labels.main(["--labels-dir", str(directory), "--no-write", *argv]) == 2
+    assert message in capsys.readouterr().err
+
+
+def test_main500_merge_without_assignment_is_refused():
+    """CLI 를 거치지 않고 함수를 바로 불러도 split 을 null 로 지어내지 않는다 (#158 코드래빗)."""
+    personal = {"jh": [label_row("B001", "jh")], "hs": [label_row("B001", "hs")]}
+
+    with pytest.raises(ValueError, match="배분 정보가 필요"):
+        labels.merge_labels(personal, batch="main500")
+
+
+def test_labels_from_someone_not_assigned_to_the_block_are_refused():
+    """블록 B 는 jh·hs 몫이다. sj 라벨이 섞이면 엉뚱한 쌍으로 확정되고 kappa 가 틀린다."""
+    assignment = {r["record_id"]: r for r in assignment_rows("B", ("jh", "hs"), 2)}
+    personal = {"hs": [label_row("B001", "hs")], "sj": [label_row("B001", "sj")]}
+
+    with pytest.raises(ValueError, match="맡지 않은 사람"):
+        labels.merge_labels(personal, batch="main500", assignment=assignment)
+    # 파일 주인은 맞아도 줄의 labeler 가 다르면 같은 문제다
+    mislabeled = {"hs": [label_row("B001", "sj")]}
+    with pytest.raises(ValueError, match="맡지 않은 사람"):
+        labels.merge_labels(mislabeled, batch="main500", assignment=assignment)
+
+
+def test_cli_will_not_overwrite_another_batchs_merged_file(tmp_path, capsys):
+    """기본 출력 경로는 묶음과 상관없이 같다. 거기 예비 200건 토론 확정이 있으면 지키고 멈춘다."""
+    assignment = assignment_rows("B", ("jh", "hs"), 4)
+    directory = write_main500(
+        tmp_path / "labels", assignment, block_labels(assignment, _alternating)
+    )
+    out = tmp_path / "merged.jsonl"
+    old = json.dumps(
+        {"record_id": "p1", "batch": "pre200", "labels": [], "final": {"method": "DISCUSSED"}}
+    )
+    out.write_text(old + "\n", encoding="utf-8")
+
+    assert labels.main(["--labels-dir", str(directory), "--out", str(out)]) == 2
+    assert "다른 묶음(pre200)" in capsys.readouterr().err
+    assert out.read_text("utf-8") == old + "\n"
+    # 중간 점검은 병합 파일을 읽지도 쓰지도 않으니 막지 않는다
+    assert labels.main(["--labels-dir", str(directory), "--out", str(out), "--interim"]) == 0
