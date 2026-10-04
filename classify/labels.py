@@ -216,6 +216,51 @@ def build_final(labels: Sequence[dict[str, Any]]) -> dict[str, Any] | None:
     }
 
 
+def check_assignment(
+    personal: Mapping[str, Sequence[dict[str, Any]]],
+    batch: str,
+    assignment: Mapping[str, Mapping[str, Any]] | None,
+) -> None:
+    """배분과 맞지 않는 라벨이면 `ValueError` (#158). 확인을 병합 함수 안에 두는 이유는 CLI 를
+    거치지 않고 `merge_labels` 를 바로 부르는 쪽(#86)도 같은 보호를 받게 하려는 것이다.
+
+    - 배분 파일이 있는 묶음(main500)인데 배분 정보가 없다 - `split` 을 `null` 로 지어내게 된다
+    - 배분에 없는 레코드에 라벨이 있다 - train/val/test 어디에도 속하지 않아 #86 이 조용히
+      빼거나 잘못 넣는다
+    - 그 블록을 맡지 않은 사람의 라벨이다 - 엉뚱한 쌍으로 자동 확정되고 블록 kappa 가 다른
+      쌍으로 계산된다. 파일 주인과 줄의 `labeler` 를 둘 다 본다
+    """
+    if assignment is None:
+        if BATCH_FILES.get(batch, (None, None, None))[2] is not None:
+            raise ValueError(f"{batch} 병합에는 배분 정보가 필요하다 - split 을 지어내지 않는다")
+        return
+    stray: set[str] = set()
+    unassigned: set[tuple[str, str]] = set()
+    for owner, rows in personal.items():
+        for row in rows:
+            if not is_filled(row):
+                continue
+            record_id = str(row.get("record_id"))
+            assigned = assignment.get(record_id)
+            if assigned is None:
+                stray.add(record_id)
+                continue
+            labelers = assigned.get("labelers")
+            for who in {owner, str(row.get("labeler"))}:
+                if labelers is not None and who not in labelers:
+                    unassigned.add((record_id, who))
+    problems = []
+    if stray:
+        problems.append(
+            f"배분 파일에 없는 레코드에 라벨이 있다: {len(stray)}건 {sorted(stray)[:3]}"
+        )
+    if unassigned:
+        shown = sorted(unassigned)[:3]
+        problems.append(f"그 블록을 맡지 않은 사람의 라벨이 있다: {len(unassigned)}건 {shown}")
+    if problems:
+        raise ValueError(" / ".join(problems))
+
+
 def merge_labels(
     personal: dict[str, list[dict[str, Any]]],
     *,
@@ -228,22 +273,10 @@ def merge_labels(
     개별 라벨은 `labels[]` 에 그대로 보존한다. 고치면 kappa 를 다시 계산할 수 없다 (§8.3 5번).
     `existing` 에 이전 병합 결과를 주면 사람이 채운 `final` 을 이어받는다.
 
-    `assignment`(배분 파일, #85)를 주면 `split` 을 거기서 넣는다. 배분 파일에 없는 레코드에
-    라벨이 있으면 `ValueError` - 그 레코드는 train/val/test 어디에도 속하지 않아, `null` 로
-    두면 #86 이 조용히 빼거나 잘못 넣는다 (#158).
+    `assignment`(배분 파일, #85)를 주면 `split` 을 거기서 넣는다. 배분과 맞지 않는 라벨은
+    `check_assignment` 가 거부한다.
     """
-    if assignment is not None:
-        stray = sorted(
-            {
-                row.get("record_id")
-                for rows in personal.values()
-                for row in rows
-                if is_filled(row) and row.get("record_id") not in assignment
-            },
-            key=str,
-        )
-        if stray:
-            raise ValueError(f"배분 파일에 없는 레코드에 라벨이 있다: {len(stray)}건 {stray[:3]}")
+    check_assignment(personal, batch, assignment)
     kept_finals = {
         row.get("record_id"): row.get("final")
         for row in existing
@@ -720,6 +753,7 @@ def repo_index(records_path: Path | None, labels_dir: Path, batch: str = BATCH) 
 
 
 def main(argv: Sequence[str] | None = None) -> int:
+    """병합하고 리포트를 낸다. 라벨이 없으면 1, 거부하면 2, 정상이면 0."""
     args = build_parser().parse_args(argv)
     sys.stdout.reconfigure(encoding="utf-8")
     sys.stderr.reconfigure(encoding="utf-8")
@@ -763,7 +797,18 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 2
 
     out_path = args.out or Path("datasets") / MERGED_FILENAME
-    existing = read_jsonl(out_path)
+    # 중간 점검은 토론 확정(`final`)을 쓰지 않아 기존 병합 파일을 읽지 않는다.
+    existing = [] if args.interim else read_jsonl(out_path)
+    # 기본 출력 경로는 묶음과 상관없이 같다. 다른 묶음의 병합 파일이면 거기 쌓인 토론 확정을
+    # 덮어써 잃는다 - 쓰기 전에 멈춘다 (#158).
+    other_batches = sorted({str(row.get("batch")) for row in existing} - {args.batch})
+    if other_batches:
+        print(
+            f"{out_path} 는 다른 묶음({', '.join(other_batches)})의 병합 파일이다. 덮어쓰면 그 "
+            "토론 확정 결과가 사라진다. --out 으로 다른 경로를 줘라.",
+            file=sys.stderr,
+        )
+        return 2
     try:
         merged = merge_labels(personal, batch=args.batch, existing=existing, assignment=assignment)
     except ValueError as error:

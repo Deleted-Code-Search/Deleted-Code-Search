@@ -687,6 +687,7 @@ def block_labels(assignment, reason_of):
     """
 
     def row(record_id, labeler):
+        """한 사람의 라벨 한 줄. DEAD 는 INFERRED(0.7), 나머지는 EXPLICIT."""
         reason = reason_of(record_id, labeler)
         if reason == "DEAD":
             return label_row(record_id, labeler, reason, "INFERRED", confidence=0.7)
@@ -840,3 +841,43 @@ def test_cli_refuses_checks_it_cannot_do(tmp_path, capsys, argv, message):
 
     assert labels.main(["--labels-dir", str(directory), "--no-write", *argv]) == 2
     assert message in capsys.readouterr().err
+
+
+def test_main500_merge_without_assignment_is_refused():
+    """CLI 를 거치지 않고 함수를 바로 불러도 split 을 null 로 지어내지 않는다 (#158 코드래빗)."""
+    personal = {"jh": [label_row("B001", "jh")], "hs": [label_row("B001", "hs")]}
+
+    with pytest.raises(ValueError, match="배분 정보가 필요"):
+        labels.merge_labels(personal, batch="main500")
+
+
+def test_labels_from_someone_not_assigned_to_the_block_are_refused():
+    """블록 B 는 jh·hs 몫이다. sj 라벨이 섞이면 엉뚱한 쌍으로 확정되고 kappa 가 틀린다."""
+    assignment = {r["record_id"]: r for r in assignment_rows("B", ("jh", "hs"), 2)}
+    personal = {"hs": [label_row("B001", "hs")], "sj": [label_row("B001", "sj")]}
+
+    with pytest.raises(ValueError, match="맡지 않은 사람"):
+        labels.merge_labels(personal, batch="main500", assignment=assignment)
+    # 파일 주인은 맞아도 줄의 labeler 가 다르면 같은 문제다
+    mislabeled = {"hs": [label_row("B001", "sj")]}
+    with pytest.raises(ValueError, match="맡지 않은 사람"):
+        labels.merge_labels(mislabeled, batch="main500", assignment=assignment)
+
+
+def test_cli_will_not_overwrite_another_batchs_merged_file(tmp_path, capsys):
+    """기본 출력 경로는 묶음과 상관없이 같다. 거기 예비 200건 토론 확정이 있으면 지키고 멈춘다."""
+    assignment = assignment_rows("B", ("jh", "hs"), 4)
+    directory = write_main500(
+        tmp_path / "labels", assignment, block_labels(assignment, _alternating)
+    )
+    out = tmp_path / "merged.jsonl"
+    old = json.dumps(
+        {"record_id": "p1", "batch": "pre200", "labels": [], "final": {"method": "DISCUSSED"}}
+    )
+    out.write_text(old + "\n", encoding="utf-8")
+
+    assert labels.main(["--labels-dir", str(directory), "--out", str(out)]) == 2
+    assert "다른 묶음(pre200)" in capsys.readouterr().err
+    assert out.read_text("utf-8") == old + "\n"
+    # 중간 점검은 병합 파일을 읽지도 쓰지도 않으니 막지 않는다
+    assert labels.main(["--labels-dir", str(directory), "--out", str(out), "--interim"]) == 0
