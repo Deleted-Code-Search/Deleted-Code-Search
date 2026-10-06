@@ -1,0 +1,124 @@
+{
+  "key": {
+    "issue": 89,
+    "round": 2,
+    "seed": 20261004,
+    "sample_sizes": {
+      "KEPT": 100,
+      "NOISE_MOVE": 34,
+      "NOISE_TRIVIAL": 33,
+      "NOISE_FORMAT": 33
+    },
+    "assembled": "data\\assembled\\records_v0.8.jsonl",
+    "assembled_sha256": "28100c446a5eae133f5c63737f339bb71e16a72550ac695bd70ab094ac4977e1",
+    "filter_rule_version": "v0.8",
+    "recent_only_since": "2015-01-01T00:00:00+00:00",
+    "population": {
+      "KEPT": 465621,
+      "NOISE_MOVE": 203610,
+      "NOISE_TRIVIAL": 1014860,
+      "NOISE_FORMAT": 36982
+    },
+    "out_of_window_by_repo": {
+      "celery/celery": 29358,
+      "django/django": 59276,
+      "home-assistant/core": 2,
+      "pandas-dev/pandas": 41954,
+      "psf/requests": 4457,
+      "scikit-learn/scikit-learn": 40428
+    },
+    "excluded_ids": {
+      "count": 500,
+      "in_population_by_stratum": {
+        "KEPT": 500,
+        "NOISE_MOVE": 0,
+        "NOISE_TRIVIAL": 0,
+        "NOISE_FORMAT": 0
+      },
+      "out_of_window": 0,
+      "not_in_assembled": 0,
+      "source": "datasets\\labels\\main500_assignment.jsonl"
+    }
+  },
+  "judges": [
+    "hs",
+    "jh",
+    "sj"
+  ],
+  "sample_counts": {
+    "KEPT": 100,
+    "NOISE_MOVE": 34,
+    "NOISE_TRIVIAL": 33,
+    "NOISE_FORMAT": 33
+  },
+  "population": {
+    "KEPT": 465621,
+    "NOISE_MOVE": 203610,
+    "NOISE_TRIVIAL": 1014860,
+    "NOISE_FORMAT": 36982
+  },
+  "precision": 0.76,
+  "precision_ci95": [
+    0.667676635719002,
+    0.8330867449211199
+  ],
+  "stratum_yes_rate": {
+    "KEPT": 0.76,
+    "NOISE_MOVE": 0.029411764705882353,
+    "NOISE_TRIVIAL": 0.3939393939393939,
+    "NOISE_FORMAT": 0.0
+  },
+  "noise_move_error_rate": 0.029411764705882353,
+  "noise_move_error_ci95": [
+    0.005210906218596753,
+    0.14915573433878604
+  ],
+  "noise_format_error_rate": 0.0,
+  "noise_format_error_ci95": [
+    0.0,
+    0.10426999901587139
+  ],
+  "weighted_recall": 0.4658331853333434,
+  "fleiss_kappa": 0.7626555453836503,
+  "pairwise_kappa": {
+    "hs+jh": 0.8300000000000001,
+    "hs+sj": 0.7406639004149378,
+    "jh+sj": 0.72
+  },
+  "pairwise_agreement": {
+    "hs+jh": 0.915,
+    "hs+sj": 0.875,
+    "jh+sj": 0.86
+  },
+  "unanimous": 165,
+  "confusion": {
+    "KEPT": {
+      "yes": 76,
+      "no": 24
+    },
+    "NOISE_MOVE": {
+      "yes": 1,
+      "no": 33
+    },
+    "NOISE_TRIVIAL": {
+      "yes": 13,
+      "no": 20
+    },
+    "NOISE_FORMAT": {
+      "yes": 0,
+      "no": 33
+    }
+  },
+  "yes_by_judge": {
+    "hs": 85,
+    "jh": 100,
+    "sj": 76
+  },
+  "precision_target": 0.9,
+  "kappa_target": 0.7,
+  "passed": false,
+  "verdict_lines": [
+    "정밀도 76.0% (목표 ≥ 90%) — 미달",
+    "Fleiss kappa 0.763 (목표 ≥ 0.7) — 충족"
+  ]
+}
