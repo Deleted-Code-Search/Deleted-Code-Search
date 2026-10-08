@@ -254,6 +254,34 @@ def test_explicit_text_not_found_in_context_asks_before_keeping(workspace):
     assert rows[0]["evidence_text"] == "fn_0 raised IndexError on empty header list"
 
 
+def test_text_not_on_screen_is_not_kept_as_evidence_under_v3(workspace):
+    """v3 규칙 5 (#164): 화면 밖(GitHub 원본) 문장을 "그대로 두라"고 안내하지 않는다."""
+    answers = ["1", "e", "header 버그 요약", "n"] + explicit_bug(0)[2:]
+    output, _ = run_session(workspace, answers)
+
+    assert "그대로 두고 note 에 off-record-evidence" not in output
+    assert "화면 밖에서 가져온 문장이면 근거가 아니다 (v3 규칙 5" in output
+    assert "E2 이 함수·파일·기능을 이름으로 가리킴" in output  # EXPLICIT 안내의 v3 규칙 3
+
+
+def test_inferred_guide_shows_the_v3_cap(workspace):
+    """v3 §6.4.7: E2·E3 미충족 문장 + 화면 근거, 테스트 대상의 삭제 ⑤ 는 0.79 를 넘지 않는다."""
+    answers = ["4", "i", "0.7", "json.loads 호출이 대체", "", "", "", "y"]
+    output, rows = run_session(workspace, answers)
+
+    assert f"{gate1.INFERRED_MIN_CONFIDENCE} ~ {label_cli.INFERRED_V3_CAP}" in output
+    assert "v3 규칙 5" in output
+    assert rows[0]["confidence"] == 0.7
+
+
+def test_screen_points_at_v3_order_and_test_rule():
+    """맥락 머리 줄이 v3 판정 순서를, 테스트 레코드 줄이 규칙 2 를 가리킨다 (#164)."""
+    rendered = label_cli.render_record(label_cli.labeler_view(make_record(0, is_test_code=True)))
+
+    assert "§6.4.7: filter-miss → 명시 → 테스트 → 추론 → UNK" in rendered
+    assert "지워졌다는 것 자체는 ③ 근거가 아니다 (v3 규칙 2" in rendered
+
+
 def test_found_in_context_allows_whitespace_and_ellipsis():
     view = label_cli.labeler_view(make_record(0))
 

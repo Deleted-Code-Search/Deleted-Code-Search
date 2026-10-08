@@ -17,6 +17,7 @@
 실행:
     python -m classify.labels                          # 본 라벨링 500건 병합 + 리포트
     python -m classify.labels --interim                # 블록당 처음 50건 중간 점검 (§8.4.1)
+    python -m classify.labels --interim v3             # v3 점검 - 블록별 51~100번 (§8.4.1.1)
     python -m classify.labels --batch pre200 --no-write   # 예비 200건 리포트만
 
     파일은 묶음(`--batch`)에서 정해진다 (`BATCH_FILES`). 본 라벨링은 배분 파일
@@ -696,7 +697,8 @@ def format_interim_report(
         elif reason.kappa >= INTERIM_KAPPA and grade.kappa >= INTERIM_KAPPA:
             verdict = "통과"
         else:
-            verdict = "미달 - 가이드 보강 후 이 50건 재라벨 (§8.4.1)"
+            # v3 는 이 50건을 재라벨하지 않는다 - 갈린 건만 재판정한다 (가이드 §8.4.1 v3 머리말)
+            verdict = "미달 - 재라벨하지 않는다. 갈린 건만 v3 재판정 (§8.4.1.1)"
 
         lines.append("")
         lines.append(f"### 블록 {block} ({' + '.join(labelers)}) - {verdict}")
@@ -704,12 +706,102 @@ def format_interim_report(
             f"- 2인 완료 {done}/{len(ids)}건, kappa 분모 {counted}건"
             + (f" (anchored 제외 {done - counted}건)" if done > counted else "")
         )
+        # 재판정 라벨(v3)이 들어오면 이 수치는 2026-10-08 v2 점검 기록(가이드 §6.4.1 표)이 아니다.
+        rejudged = sum(
+            1
+            for row in rows
+            if any(label.get("guide_version") == INTERIM_V3_VERSION for label in row["labels"])
+        )
+        if rejudged:
+            lines.append(
+                f"- {INTERIM_V3_VERSION} 재판정 라벨이 든 레코드 {rejudged}건 - v2 점검 기록과 "
+                "다른 수치다 (v2 원본: datasets/labels/snapshots/v2_interim/)"
+            )
         lines.append(f"- reason_label kappa {_kappa_text(reason)}")
         lines.append(f"- evidence_grade kappa {_kappa_text(grade)}")
-        for name, result in (("reason_label", reason), ("evidence_grade", grade)):
-            if result and result.confusions:
-                pairs = ", ".join(f"{a} vs {b} {n}건" for a, b, n in result.confusions)
-                lines.append(f"- {name} 혼동 쌍 상위: {pairs}")
+        lines.extend(_confusion_lines(reason, grade))
+    return lines
+
+
+def _confusion_lines(reason: Agreement | None, grade: Agreement | None) -> list[str]:
+    lines = []
+    for name, result in (("reason_label", reason), ("evidence_grade", grade)):
+        if result and result.confusions:
+            pairs = ", ".join(f"{a} vs {b} {n}건" for a, b, n in result.confusions)
+            lines.append(f"- {name} 혼동 쌍 상위: {pairs}")
+    return lines
+
+
+# 가이드 v3 §8.4.1.1 4번 / `docs/evaluation.md` "500건 라벨링 v3 사전 등록" 2번 - v3 점검은
+# 블록별 51~100번(`block_position`), 두 라벨이 모두 이 버전인 쌍만.
+INTERIM_V3_POSITIONS = range(51, 101)
+INTERIM_V3_VERSION = "v3"
+
+
+def format_interim_v3_report(
+    merged: Sequence[dict[str, Any]], assignment: Mapping[str, Mapping[str, Any]]
+) -> list[str]:
+    """v3 점검 - 블록별 51~100번, 두 라벨이 모두 v3 인 쌍만 (가이드 §8.4.1.1 4번).
+
+    **결과는 보고만 한다.** 0.6 미만이어도 가이드를 고치지 않고 블록 정지·재라벨도 없다
+    (v3 사전 등록 3번). 계산은 `format_interim_report` 와 같다(§8.4).
+
+    둘 다 라벨했지만 kappa 쌍에 넣지 않는 레코드는 까닭별로 센다 - 분모와 함께 적지 않으면
+    블록끼리 수치를 비교할 수 없다 (§8.4.1):
+        혼재      두 라벨의 `guide_version` 이 다르다 (§8.4.2.1). jh 블록 A 51번(v2)이 그렇다
+        v3 아님   두 라벨이 같은 버전이지만 v3 가 아니다
+        anchored  `anchored` 를 빼면 독립 라벨이 2개가 안 된다 (§8.4)
+    """
+    first, last = INTERIM_V3_POSITIONS[0], INTERIM_V3_POSITIONS[-1]
+    lines = [
+        f"## v3 점검 - 블록별 {first}~{last}번, 두 라벨이 모두 {INTERIM_V3_VERSION} 인 쌍만 "
+        f"(가이드 §8.4.1.1, 기준 kappa ≥ {INTERIM_KAPPA}, 보고만 한다)"
+    ]
+    by_id = {row["record_id"]: row for row in merged}
+    for block in sorted({row["block"] for row in assignment.values()}):
+        ids = [
+            rid
+            for rid, row in assignment.items()
+            if row["block"] == block and row.get("block_position") in INTERIM_V3_POSITIONS
+        ]
+        labelers = next(row["labelers"] for row in assignment.values() if row["block"] == block)
+        rows = [by_id[rid] for rid in ids if rid in by_id]
+        done = [row for row in rows if len(row["labels"]) >= 2]
+        paired: list[dict[str, Any]] = []
+        skipped = {"혼재": 0, f"{INTERIM_V3_VERSION} 아님": 0, "anchored": 0}
+        for row in done:
+            independent = [label for label in row["labels"] if not has_tag(label, ANCHORED_TAG)]
+            versions = {label.get("guide_version") for label in independent}
+            if len(independent) != 2:
+                skipped["anchored"] += 1
+            elif len(versions) > 1:
+                skipped["혼재"] += 1
+            elif versions != {INTERIM_V3_VERSION}:
+                skipped[f"{INTERIM_V3_VERSION} 아님"] += 1
+            else:
+                paired.append(row)
+        reason = next(iter(agreement_for(paired, "reason_label", REASON_LABELS)), None)
+        grade = next(iter(agreement_for(paired, "evidence_grade", EVIDENCE_GRADES)), None)
+
+        if len(done) < len(ids):
+            verdict = "진행 중 - 아직 판정하지 않는다"
+        elif reason is None or grade is None or reason.kappa is None or grade.kappa is None:
+            verdict = "판단 보류 - kappa 정의 불가, p_o 와 혼동 쌍으로 본다"
+        elif reason.kappa >= INTERIM_KAPPA and grade.kappa >= INTERIM_KAPPA:
+            verdict = "통과 - 보고만 한다"
+        else:
+            verdict = "미달 - 보고만 한다. 가이드·라벨을 고치지 않고 끝까지 진행 (v3 사전 등록 3번)"
+
+        lines.append("")
+        lines.append(f"### 블록 {block} ({' + '.join(labelers)}) - {verdict}")
+        excluded = ", ".join(f"{name} {count}건" for name, count in skipped.items() if count)
+        lines.append(
+            f"- 2인 완료 {len(done)}/{len(ids)}건, kappa 분모 {len(paired)}쌍"
+            + (f" (제외: {excluded})" if excluded else "")
+        )
+        lines.append(f"- reason_label kappa {_kappa_text(reason)}")
+        lines.append(f"- evidence_grade kappa {_kappa_text(grade)}")
+        lines.extend(_confusion_lines(reason, grade))
     return lines
 
 
@@ -738,8 +830,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--no-write", action="store_true", help="병합 파일을 쓰지 않고 리포트만")
     parser.add_argument(
         "--interim",
-        action="store_true",
-        help="블록당 처음 50건 중간 점검만 (가이드 §8.4.1). 병합 파일은 쓰지 않는다",
+        nargs="?",
+        const="v2",
+        choices=("v2", "v3"),
+        default=None,
+        help="중간 점검만. 값 없이 = v2, 블록당 처음 50건 (§8.4.1) / v3 = 블록별 51~100번, "
+        "v3 쌍만 (§8.4.1.1). 병합 파일은 쓰지 않는다",
     )
     return parser
 
@@ -817,7 +913,8 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     if args.interim:
         assert assignment is not None  # 위에서 배분 파일 없는 묶음은 걸렀다
-        for line in format_interim_report(merged, assignment):
+        report = format_interim_v3_report if args.interim == "v3" else format_interim_report
+        for line in report(merged, assignment):
             print(line)
         return 0
     if existing:

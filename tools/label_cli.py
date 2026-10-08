@@ -129,17 +129,31 @@ REASON_PROMPT = (
     + " ".join(f"{index}={code}" for index, code in enumerate(REASON_LABELS, start=1))
     + "]: "
 )
+# 가이드 v3 §6.4.7 — E2·E3 미충족 문장 + 화면 근거, 테스트 대상의 삭제 ⑤ 의 상한 (규칙 2·3).
+# ADR-012 0.5~0.8 구간(0.8 미만)의 위 끝이다. 경계를 바꾸지 않는다.
+INFERRED_V3_CAP = 0.79
+# 가이드 §6.2.2 "INFERRED에 1.0을 쓰지 않는다 … 그만큼 강하면 0.9"
+INFERRED_MAX = 0.9
 EXPLICIT_GUIDE = (
-    "EXPLICIT — 이유가 적힌 원문을 그대로 복사한다. 요약·번역·다듬기 금지 (가이드 §6.1).\n"
+    "EXPLICIT — 화면에서 이유가 적힌 원문을 그대로 복사한다. 요약·번역·다듬기 금지 (가이드 §6.1).\n"
+    "  E1 이유 서술 · E2 이 함수·파일·기능을 이름으로 가리킴 · E3 커밋 목표만이 아님 — 셋 다 ○일 "
+    "때만 (§6.1.1, v3 규칙 3).\n"
     "  여러 곳에 있으면 가장 구체적인 한 곳. 앞뒤를 자르면 … 로 표시. confidence 는 1.0 고정."
 )
 INFERRED_GUIDE = (
-    "INFERRED — 신뢰도는 라벨러의 확신도가 아니라 근거의 강도다 (가이드 §6.2)\n"
-    f"  {INFERRED_STRONG_CONFIDENCE} 이상          대체 코드가 이유를 거의 증명한다 "
-    "(삭제된 일을 무엇이 이어받았는지 diff 에서 특정된다)\n"
-    f"  {INFERRED_MIN_CONFIDENCE} 이상 {INFERRED_STRONG_CONFIDENCE} 미만  정황이 한 방향으로 "
-    "일치하지만 다른 설명도 가능하다 (테스트 추가, 호출자 소멸)\n"
-    f"  {INFERRED_MIN_CONFIDENCE} 미만          INFERRED 를 쓰지 않는다 → UNK + UNKNOWN"
+    "INFERRED — 화면에 보이는 근거 ①~⑥(§6.2.1)만. 신뢰도는 확신도가 아니라 근거의 강도다 "
+    "(§6.2.2, §6.4.7)\n"
+    f"  {INFERRED_STRONG_CONFIDENCE} 이상 {INFERRED_MAX} 이하   "
+    "이유 문장이 없고(E1 ✕) ① 대체 코드가 구간 상한(§6.2.2)을 채우거나 ⑥ 삭제 본문이 "
+    "직접 드러낼 때만\n"
+    f"  {INFERRED_MIN_CONFIDENCE} ~ {INFERRED_V3_CAP}      "
+    "그 밖의 근거. E1 ○·E2/E3 ✕ 문장 + 화면 근거(규칙 3), 테스트 대상의 삭제 ⑤(규칙 2)는 "
+    "여기를 넘지 않는다\n"
+    f"  {INFERRED_MIN_CONFIDENCE} 미만         INFERRED 를 쓰지 않는다 → UNK + UNKNOWN\n"
+    "  화면 밖(GitHub 원본, 다른 레코드를 라벨하며 본 기억, 감싸는 클래스, 파일 헤더)은 근거가 "
+    "아니다 (v3 규칙 5).\n"
+    "  테스트 레코드가 지워졌다는 것 자체는 ③ 이 아니고, 파일·함수 이름 낱말만으로는 ⑥ 이 아니다 "
+    "(규칙 2·4)."
 )
 
 Ask = Callable[[str], str]
@@ -231,7 +245,8 @@ def required_text(message: str) -> Callable[[str], str]:
 def found_in_context(evidence: str, view: dict[str, Any]) -> bool:
     """EXPLICIT 인용이 수집된 맥락에 실제로 있나. 공백 차이와 `…` 생략은 허용한다 (§6.1).
 
-    못 찾았다고 막지는 않는다. GitHub 원본에서 가져온 문장일 수 있다 (§2.3 off-record-evidence).
+    못 찾았다고 막지는 않는다 — 화면 문장인데 이 검사가 놓칠 수 있다(따옴표·기호 차이 등).
+    화면 밖(GitHub 원본) 문장은 근거가 아니다 (v3 규칙 5, §2.3). 그 안내는 묻는 문구가 한다.
 
     인용은 **한 곳**에서 나와야 한다 (§6.1 "가장 구체적인 한 곳"). 그래서 필드마다, 목록이면
     항목마다 따로 본다. 전부 이어 붙여 찾으면 코멘트 1 "alpha" 와 코멘트 2 "beta" 로 어디에도
@@ -493,7 +508,12 @@ def render_record(view: dict[str, Any]) -> str:
     """레코드 1건 화면. 레코드에서 온 텍스트는 모두 `escape_control` 을 거친다 (CWE-150)."""
     context = view.get("context") or {}
     replacement = view.get("replacement") or {}
-    test_code = "예 — 가이드 §5 테스트 코드 특례" if view.get("is_test_code") else "아니오"
+    test_code = (
+        "예 — 가이드 §5 테스트 코드 특례. 이 테스트가 지워졌다는 것 자체는 ③ 근거가 아니다 "
+        "(v3 규칙 2, §6.4.4)"
+        if view.get("is_test_code")
+        else "아니오"
+    )
     function = view.get("function_signature") or view.get("function_name")
     lines = [
         RULE,
@@ -504,7 +524,8 @@ def render_record(view: dict[str, Any]) -> str:
         f"test code  {test_code}",
         f"source     {_one_line(view.get('source_url'))}",
         "",
-        "== 맥락 — 먼저 읽는다 (가이드 §3: 명시 → 추론 → UNK) ==",
+        "== 맥락 — 먼저 읽는다 (가이드 §6.4.7: filter-miss → 명시 → 테스트 → 추론 → UNK. "
+        "화면에 있는 것만 근거다) ==",
     ]
     for key in LABELER_CONTEXT_FIELDS:
         lines.extend(_block(key, context.get(key)))
@@ -916,9 +937,11 @@ class LabelSession:
             if found_in_context(text, view):
                 break
             if self.confirm(
-                "  수집된 맥락에서 이 문장을 찾지 못했다. 요약·번역했다면 원문을 다시 복사한다.\n"
-                "  GitHub 원본에서 가져왔다면 그대로 두고 note 에 off-record-evidence (§2.3).\n"
-                "  그대로 둘까? [y/N]: ",
+                "  화면의 맥락에서 이 문장을 찾지 못했다. 요약·번역했다면 원문을 다시 복사한다.\n"
+                "  GitHub 원본 등 화면 밖에서 가져온 문장이면 근거가 아니다 (v3 규칙 5, §2.3) —\n"
+                "  :r 로 돌아가 화면에 있는 것만으로 다시 판정하고, 본 내용은 note 에 "
+                "off-record-evidence 로 적는다.\n"
+                "  화면에 있는 문장인데 못 찾은 경우만 그대로 둔다. 그대로 둘까? [y/N]: ",
                 default=False,
             ):
                 break
@@ -991,8 +1014,10 @@ class LabelSession:
             self.say(
                 "UNKNOWN — 무엇이 없어서 판단하지 못했는지 원인 태그 필수 (가이드 §6.3.2).\n"
                 f"  원인 태그(1개 이상, 여러 개 가능): {' '.join(UNKNOWN_CAUSE_TAGS)}\n"
-                "  배울 게 없는 삭제가 필터를 통과한 건이면 대신 "
-                f"{FILTER_MISS_TAG} + 몇 번인지와 근거 (가이드 §6.3.3):\n"
+                "  배울 게 없는 삭제가 필터를 통과한 건이고 그 증거가 화면에 있으면 반드시 대신 "
+                f"{FILTER_MISS_TAG} + 몇 번 + 화면 증거(경로 낱말·저장소 이름·헝크 위치)\n"
+                "  (v3 규칙 1, §6.4.3). 증거가 화면에 없으면 달지 않고 note 에 그 낱말도 쓰지 "
+                "않는다:\n"
                 f"    {FILTER_MISS_CASES}\n"
                 "  태그 뒤에 자유 서술을 이어 써도 된다"
             )
