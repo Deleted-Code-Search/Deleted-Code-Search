@@ -766,12 +766,12 @@ def test_run_reasks_when_save_is_refused(workspace):
     assert not labels.is_filled(rows[1])
 
 
-def test_new_label_is_stamped_guide_version_v2(workspace):
-    """새로 저장하는 줄의 guide_version 은 classify.sampling.GUIDE_VERSION(#100 에서 v2)."""
+def test_new_label_is_stamped_guide_version_v3(workspace):
+    """새로 저장하는 줄의 guide_version 은 classify.sampling.GUIDE_VERSION (#100 v2 → #162 v3)."""
     _, rows = run_session(workspace, ["8", "no-context", "y"])
 
-    assert sampling.GUIDE_VERSION == "v2"
-    assert rows[0]["guide_version"] == "v2"
+    assert sampling.GUIDE_VERSION == "v3"
+    assert rows[0]["guide_version"] == "v3"
 
 
 # ---- 기존 v1 파일 호환: 읽기·표시·집계 경로는 검사하지 않는다 ----
@@ -800,7 +800,7 @@ def test_labeling_other_records_keeps_the_v1_row_as_is(workspace):
 
     assert after[0] == v1_untagged_unknown_row("rec-000")
     assert after[1]["reason_label"] == "BUG"
-    assert after[1]["guide_version"] == "v2"
+    assert after[1]["guide_version"] == "v3"
 
 
 def test_v1_row_is_shown_on_undo_and_relabel_requires_a_tag(workspace):
@@ -811,7 +811,7 @@ def test_v1_row_is_shown_on_undo_and_relabel_requires_a_tag(workspace):
 
     assert "[직전 건 수정] 저장된 값: UNK / UNKNOWN" in output
     assert "UNKNOWN 이면 note 가 필수다" in output
-    assert (after[0]["note"], after[0]["guide_version"]) == ("vague-message", "v2")
+    assert (after[0]["note"], after[0]["guide_version"]) == ("vague-message", "v3")
 
 
 def test_real_pre200_label_files_still_load():

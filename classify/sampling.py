@@ -56,7 +56,7 @@ LABEL_FILENAME_TEMPLATE = "{labeler}_" + f"{BATCH}.jsonl"
 # 가이드 문서 상단의 `guide_version` 과 **항상 같아야 한다**: 가이드 §10.3 이 이 값으로 재검토
 # 범위를 특정하고, §8.4.2.1 이 버전이 같은 쌍만 그 버전 kappa 에 넣기 때문이다. 틀린 값이
 # 박히면 둘 다 조용히 깨진다 - 라벨은 그대로 남고 집계만 어긋난다.
-GUIDE_VERSION = "v2"
+GUIDE_VERSION = "v3"
 
 # 라벨 파일의 `record_id` 는 §4.4 의 `DeletionRecord.id` 다 — 두 문서가 이름을 다르게 쓴다
 # (가이드 §7.2가 "record_id = DeletionRecord.id"로 연결해 둔다). 옮길 때 이름을 바꿔 준다.
