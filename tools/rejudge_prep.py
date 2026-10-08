@@ -235,9 +235,20 @@ def check_snapshot(data: bytes, snapshot: bytes, cleared: Collection[str]) -> li
     파일 전체가 같을 필요는 없다 — 스냅샷 뒤에 51번 이후를 더 라벨했을 수 있다. 지워지는 줄만
     보존돼 있으면 v2 라벨은 잃지 않는다(선행 조건 12). 다르면 그 줄은 스냅샷 뒤에 다시 저장된
     것(예: v3 재판정 라벨)이라 지우면 안 된다.
+
+    지울 record_id 가 스냅샷에 두 번 있으면 거부한다 (`plan_clear` 와 같다). 사전으로 모으면
+    마지막 줄만 남아, 앞 줄이 지울 줄과 다른데도 보존 검사를 통과할 수 있다.
     """
-    kept = {_record_id(line): line for line in split_lines(snapshot)}
+    kept: dict[str | None, bytes] = {}
     problems = []
+    for number, line in enumerate(split_lines(snapshot), start=1):
+        record_id = _record_id(line)
+        if record_id in cleared and record_id in kept:
+            problems.append(f"스냅샷 {number}번째 줄: 대상 {record_id} 가 두 번 있다")
+            continue
+        kept[record_id] = line
+    if problems:
+        return problems
     for line in split_lines(data):
         record_id = _record_id(line)
         if record_id in cleared and kept.get(record_id) != line:

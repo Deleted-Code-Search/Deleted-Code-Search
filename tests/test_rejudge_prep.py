@@ -272,6 +272,20 @@ def test_apply_will_not_erase_a_label_saved_after_the_snapshot(workspace, capsys
     assert f"{A1}: 스냅샷과 다르다" in capsys.readouterr().err
 
 
+def test_apply_refuses_a_snapshot_with_a_duplicated_target(workspace, capsys):
+    """스냅샷에 A1 이 두 번 있다 — 마지막 줄이 지울 줄과 같아도 앞 줄을 보존했는지 알 수 없다."""
+    labels_dir, _ = workspace
+    snapshot = labels_dir / rejudge_prep.SNAPSHOT_SUBDIR / "sj_main500.jsonl"
+    snapshot.write_bytes(line(label(A1, reason="PERF")) + snapshot.read_bytes())
+    path = labels_dir / "sj_main500.jsonl"
+    before = path.read_bytes()
+
+    assert run(workspace, "--apply") == 2
+
+    assert path.read_bytes() == before
+    assert f"대상 {A1} 가 두 번 있다" in capsys.readouterr().err
+
+
 def test_dry_run_and_apply_are_exclusive(workspace):
     with pytest.raises(SystemExit):
         run(workspace, "--dry-run", "--apply")
