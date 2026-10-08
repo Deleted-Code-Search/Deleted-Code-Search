@@ -772,7 +772,7 @@ def test_interim_waits_until_both_labelers_finish_the_first_50():
 
 
 def test_interim_fails_a_block_below_the_threshold():
-    """reason 이 절반쯤 갈리면 kappa 가 0.6 밑이다 - 가이드 보강 후 그 50건 재라벨."""
+    """reason 이 절반쯤 갈리면 kappa 가 0.6 밑이다. v3 부터 재라벨을 지시하지 않는다 (§8.4.1.1)."""
     assignment = assignment_rows("A", ("sj", "jh"), 50)
     personal = block_labels(
         assignment,
@@ -788,6 +788,103 @@ def test_interim_fails_a_block_below_the_threshold():
 
     assert "블록 A (sj + jh) - 미달" in text
     assert "혼동 쌍 상위" in text
+    assert "재라벨하지 않는다" in text and "가이드 보강" not in text
+
+
+def test_interim_v2_check_flags_rejudged_v3_labels():
+    """재판정 뒤 1~50번을 다시 돌리면 v2 점검 기록(가이드 §6.4.1 표)과 다른 수치다 - 적어 둔다."""
+    assignment = assignment_rows("A", ("sj", "jh"), 50)
+    personal = block_labels(assignment, _alternating)
+    personal["sj"][0]["guide_version"] = "v3"
+    by_id = {r["record_id"]: r for r in assignment}
+
+    text = "\n".join(
+        labels.format_interim_report(labels.merge_labels(personal, assignment=by_id), by_id)
+    )
+
+    assert "v3 재판정 라벨이 든 레코드 1건" in text
+
+
+def v3_block(block, labelers, reason_of):
+    """100건 블록. 1~50번은 v2, 51~100번은 v3 로 둘 다 라벨했다."""
+    assignment = assignment_rows(block, labelers, 100)
+    personal = block_labels(assignment, reason_of)
+    for rows in personal.values():
+        for row in rows:
+            row["guide_version"] = "v2" if int(row["record_id"][1:]) <= 50 else "v3"
+    return assignment, personal
+
+
+def test_interim_v3_counts_only_51_to_100_and_only_v3_pairs():
+    """1~50번이 다 갈려도 v3 점검에 안 들어온다. 버전이 다른 쌍은 `혼재`로 빼고 센다 (§8.4.2.1)."""
+    assignment, personal = v3_block(
+        "A",
+        ("sj", "jh"),
+        lambda rid, labeler: (
+            "SEC" if int(rid[1:]) <= 50 and labeler == "jh" else _alternating(rid, labeler)
+        ),
+    )
+    # jh 블록 A 51번처럼, 한쪽이 v3 전에 v2 로 저장한 51번
+    next(row for row in personal["jh"] if row["record_id"] == "A051")["guide_version"] = "v2"
+    by_id = {r["record_id"]: r for r in assignment}
+    merged = labels.merge_labels(personal, batch="main500", assignment=by_id)
+
+    text = "\n".join(labels.format_interim_v3_report(merged, by_id))
+
+    assert "51~100번" in text
+    assert "블록 A (sj + jh) - 통과 - 보고만 한다" in text
+    assert "2인 완료 50/50건, kappa 분모 49쌍 (제외: 혼재 1건)" in text
+    assert "reason_label kappa 1.000" in text
+
+
+def test_interim_v3_below_threshold_is_reported_without_relabel_orders():
+    """v3 사전 등록 3번: 0.6 미만이어도 가이드·라벨을 고치지 않고 진행한다."""
+    assignment, personal = v3_block(
+        "C",
+        ("hs", "sj"),
+        lambda rid, labeler: (
+            "DESIGN" if labeler == "sj" and int(rid[1:]) % 3 else _alternating(rid, labeler)
+        ),
+    )
+    by_id = {r["record_id"]: r for r in assignment}
+
+    text = "\n".join(
+        labels.format_interim_v3_report(labels.merge_labels(personal, assignment=by_id), by_id)
+    )
+
+    assert "블록 C (hs + sj) - 미달 - 보고만 한다" in text
+    assert "고치지 않고 끝까지 진행" in text
+    assert "재라벨 (" not in text
+
+
+def test_interim_v3_waits_for_51_to_100():
+    """51~100번을 두 사람이 다 끝내기 전에는 판정하지 않는다. 1~50번만 끝난 블록이 지금 상태다."""
+    assignment = assignment_rows("B", ("jh", "hs"), 100)
+    personal = block_labels(assignment[:50], _alternating)
+    by_id = {r["record_id"]: r for r in assignment}
+
+    text = "\n".join(
+        labels.format_interim_v3_report(labels.merge_labels(personal, assignment=by_id), by_id)
+    )
+
+    assert "진행 중" in text and "2인 완료 0/50건, kappa 분모 0쌍" in text
+
+
+def test_cli_interim_v3_and_plain_interim_keep_their_ranges(tmp_path, capsys):
+    """`--interim` 은 그대로 1~50번(v2 점검), `--interim v3` 은 51~100번."""
+    assignment, personal = v3_block("B", ("jh", "hs"), _alternating)
+    directory = write_main500(tmp_path / "labels", assignment, personal)
+    out = tmp_path / "merged.jsonl"
+    argv = ["--labels-dir", str(directory), "--out", str(out)]
+
+    assert labels.main([*argv, "--interim"]) == 0
+    plain = capsys.readouterr().out
+    assert labels.main([*argv, "--interim", "v3"]) == 0
+    v3 = capsys.readouterr().out
+
+    assert "블록당 처음 50건" in plain and "51~100번" not in plain
+    assert "51~100번" in v3 and "kappa 분모 50쌍" in v3
+    assert not out.exists()
 
 
 def test_cli_interim_prints_the_check_and_writes_nothing(tmp_path, capsys):
