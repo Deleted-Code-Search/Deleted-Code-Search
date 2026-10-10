@@ -1,6 +1,6 @@
 # 라벨링 AI 보조 프롬프트 (가이드 v3)
 
-- 작성: 2026-10-08, 성제(sj) (#162). 기준: `docs/labeling_guide.md` v3 — 특히 §6.4(경계 규칙 5개), §6.4.7(판정 순서·구간), §5(헷갈리는 쌍)
+- 작성: 2026-10-08, 성제(sj) (#162). 2026-10-10 confidence 고정값 반영 (#166, 가이드 §6.4.7) — 질문과 규칙 R1~R5는 그대로다. 기준: `docs/labeling_guide.md` v3 — 특히 §6.4(경계 규칙 5개), §6.4.7(판정 순서·구간), §5(헷갈리는 쌍)
 - 가이드와 이 문서가 다르면 **가이드가 이긴다.** 가이드 §6.4가 바뀌지 않는 한(v3가 마지막 개정이다) 이 프롬프트도 고치지 않는다 — 셋이 같은 프롬프트를 써야 AI가 사람마다 다른 쪽으로 끌지 않는다 (가이드 §9-1)
 
 ## 이 문서를 쓰는 법
@@ -108,7 +108,7 @@ R5 E1 아니오:
      I1 예이고 confidence < 0.8, 같은 방향의 I2~I8 예가 있음 → 0.8~0.9, 없음 → 0.5~0.79
      I2~I6·I8 중 예 ≥ 1                    → 이유 / INFERRED / 0.5~0.79
      I 모두 아니오                         → UNK / UNKNOWN / 0.0, note: 원인 태그
-- 구간 안의 숫자는 사람이 고른다. 너는 구간만 낸다. INFERRED에 1.0을 쓰지 않는다. 0.5 미만이 되면 INFERRED가 아니라 UNKNOWN이다.
+- 구간 안의 숫자는 고정값이다: 0.5~0.79 구간은 0.65, 0.8~0.9 구간은 0.85. 다른 숫자를 고르지 않는다. INFERRED에 1.0을 쓰지 않는다. 0.5 미만이 되면 INFERRED가 아니라 UNKNOWN이다.
 - 테스트이고 T1 아니오인데 I도 모두 아니오이면 원인 태그에 no-caller-info를 넣는다.
 
 [note 태그] (해당하는 것을 다 쓴다. 띄어쓰기로 구분, 뒤에 자유 서술 가능)
@@ -142,7 +142,7 @@ I1 … I8 …
              evidence_source: commit / pr / issue / review
              evidence_locator: commit:message · pr:#<번호>#title · pr:#<번호>#body · issue:#<번호>#title · issue:#<번호>#body ·
                                review:comment_<id> (리뷰는 코멘트 머리 줄의 locator 값 그대로)
-3-INFERRED)  confidence 구간: 0.5~0.79 또는 0.8~0.9    (숫자는 사람이 고른다)
+3-INFERRED)  confidence: 0.65 (0.5~0.79 구간) 또는 0.85 (0.8~0.9 구간)    (구간마다 고정값)
              evidence_text: <무엇을 보고 판단했는지 한 문장 초안 — 맨 앞에 근거 번호 ①~⑥>
              evidence_source: diff / commit / pr / issue / review   (실제로 본 곳. ①을 쓴 때만 diff:replacement)
              evidence_locator: <위와 같은 형식>
