@@ -978,3 +978,224 @@ def test_cli_will_not_overwrite_another_batchs_merged_file(tmp_path, capsys):
     assert out.read_text("utf-8") == old + "\n"
     # 중간 점검은 병합 파일을 읽지도 쓰지도 않으니 막지 않는다
     assert labels.main(["--labels-dir", str(directory), "--out", str(out), "--interim"]) == 0
+
+
+# --------------------------------------------------------------------------------------
+# 제3자 판정 병합 (#166, 가이드 §8.3 v3)
+# --------------------------------------------------------------------------------------
+
+
+def ruling_for(row, chosen, judge, **final_overrides):
+    """`tools/adjudicate_cli.py` 가 쓰는 판정 1줄 - `chosen` 의 라벨을 통째로 옮긴다."""
+    source = next(label for label in row["labels"] if label["labeler"] == chosen)
+    final = {name: source[name] for name in labels.CHOSEN_LABEL_FIELDS}
+    final |= {
+        "method": "THIRD_PARTY",
+        "adjudicated_by": [judge],
+        "adjudicated_at": "2026-10-10T09:15:14+09:00",
+        "note": source["note"],
+    }
+    final |= final_overrides
+    return {
+        "record_id": row["record_id"],
+        "batch": "main500",
+        "block": "B",
+        "final": final,
+        "chosen_labeler": chosen,
+    }
+
+
+def _split_on_even(record_id, labeler):
+    """jh 는 늘 BUG, hs 는 짝수 번호에서만 DEAD - 짝수 번호의 이유와 등급이 갈린다."""
+    return "DEAD" if labeler == "hs" and int(record_id[1:]) % 2 == 0 else "BUG"
+
+
+@pytest.fixture
+def split_block():
+    """블록 B(jh + hs) 4건. 짝수 번호 2건은 이유가 갈린다 → 토론 대상 2건."""
+    assignment = assignment_rows("B", ("jh", "hs"), 4)
+    personal = block_labels(assignment, _split_on_even)
+    by_id = {row["record_id"]: row for row in assignment}
+    merged = labels.merge_labels(personal, batch="main500", assignment=by_id)
+    targets = [row for row in merged if not row["final"]]
+    assert [row["record_id"] for row in targets] == ["B002", "B004"]
+    return assignment, personal, by_id, targets
+
+
+def test_adjudication_fills_final_for_every_disagreement(split_block):
+    _, personal, by_id, targets = split_block
+    rulings = [ruling_for(targets[0], "jh", "sj"), ruling_for(targets[1], "hs", "sj")]
+
+    merged = labels.merge_labels(personal, batch="main500", assignment=by_id, adjudication=rulings)
+
+    finals = {row["record_id"]: row["final"] for row in merged}
+    assert [finals[rid]["method"] for rid in sorted(finals)] == [
+        "AGREED",
+        "THIRD_PARTY",
+        "AGREED",
+        "THIRD_PARTY",
+    ]
+    assert finals["B002"] == rulings[0]["final"]
+    assert finals["B002"]["adjudicated_by"] == ["sj"]
+    # 개별 라벨은 그대로다 - kappa 는 판정 전 라벨로 다시 계산할 수 있어야 한다 (§8.3 5번)
+    plain = labels.merge_labels(personal, batch="main500", assignment=by_id)
+    assert [row["labels"] for row in merged] == [row["labels"] for row in plain]
+    assert labels.find_disagreements(merged)["reason_label"] == ["B002", "B004"]
+    assert labels.third_party_choices(merged) == {("sj", ("hs", "jh")): {"hs": 1, "jh": 1}}
+
+
+def test_merge_without_adjudication_is_unchanged(split_block):
+    _, personal, by_id, _ = split_block
+
+    merged = labels.merge_labels(personal, batch="main500", assignment=by_id, adjudication=[])
+
+    assert merged == labels.merge_labels(personal, batch="main500", assignment=by_id)
+    assert labels.third_party_choices(merged) == {}
+
+
+def _problem_cases():
+    return [
+        ("판정이 없는 토론 대상 1건", lambda t: [ruling_for(t[0], "jh", "sj")]),
+        (
+            "같은 레코드의 판정이 두 번",
+            lambda t: [ruling_for(t[0], "jh", "sj")] * 2 + [ruling_for(t[1], "jh", "sj")],
+        ),
+        (
+            "토론 대상이 아닌 레코드의 판정 1건",
+            lambda t: [
+                ruling_for(t[0], "jh", "sj"),
+                ruling_for(t[1], "jh", "sj"),
+                ruling_for({**t[0], "record_id": "B001"}, "jh", "sj"),
+            ],
+        ),
+        (
+            "THIRD_PARTY 가 아니다",
+            lambda t: [
+                ruling_for(t[0], "jh", "sj", method="DISCUSSED"),
+                ruling_for(t[1], "jh", "sj"),
+            ],
+        ),
+        (
+            "라벨하지 않은 한 사람이 아니다",
+            lambda t: [ruling_for(t[0], "jh", "hs"), ruling_for(t[1], "jh", "sj")],
+        ),
+        (
+            "통째로 옮긴 것이 아니다",  # 한쪽의 이유 + 다른 쪽의 등급
+            lambda t: [
+                ruling_for(t[0], "jh", "sj", evidence_grade="INFERRED"),
+                ruling_for(t[1], "jh", "sj"),
+            ],
+        ),
+        (
+            "인데 final 은 jh 의 라벨이다",
+            lambda t: [
+                {**ruling_for(t[0], "jh", "sj"), "chosen_labeler": "hs"},
+                ruling_for(t[1], "jh", "sj"),
+            ],
+        ),
+    ]
+
+
+@pytest.mark.parametrize(
+    ("message", "build"),
+    _problem_cases(),
+    ids=["missing", "duplicate", "extra", "method", "judge", "mixed", "chosen"],
+)
+def test_adjudication_that_does_not_match_the_targets_is_not_used(split_block, message, build):
+    """하나라도 어긋나면 한 건도 옮기지 않는다 - 판정 없이 병합한 것과 같다."""
+    _, personal, by_id, targets = split_block
+    rulings = build(targets)
+    plain = labels.merge_labels(personal, batch="main500", assignment=by_id)
+
+    assert any(message in problem for problem in labels.find_adjudication_problems(plain, rulings))
+    assert (
+        labels.merge_labels(personal, batch="main500", assignment=by_id, adjudication=rulings)
+        == plain
+    )
+
+
+def test_discussed_final_is_not_an_adjudication_target(split_block):
+    """토론으로 이미 확정한 건(`DISCUSSED`)은 제3자 대상이 아니다. 그 건의 판정이 오면 어긋난 것."""
+    _, personal, by_id, targets = split_block
+    discussed = {"record_id": "B002", "final": {"method": "DISCUSSED", "reason_label": "BUG"}}
+    rulings = [ruling_for(targets[0], "jh", "sj"), ruling_for(targets[1], "hs", "sj")]
+
+    merged = labels.merge_labels(
+        personal, batch="main500", assignment=by_id, existing=[discussed], adjudication=rulings
+    )
+
+    finals = {row["record_id"]: row["final"] for row in merged}
+    assert finals["B002"]["method"] == "DISCUSSED"
+    assert finals["B004"] is None
+
+
+def write_adjudication(directory, rulings):
+    name = labels.ADJUDICATION_FILENAME_TEMPLATE.format(batch="main500")
+    (directory / name).write_text(
+        "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in rulings), encoding="utf-8"
+    )
+
+
+def test_cli_merges_the_adjudication_file_and_rerun_is_stable(tmp_path, split_block, capsys):
+    assignment, personal, _, targets = split_block
+    directory = write_main500(tmp_path / "labels", assignment, personal)
+    write_adjudication(
+        directory, [ruling_for(targets[0], "jh", "sj"), ruling_for(targets[1], "hs", "sj")]
+    )
+    out = tmp_path / "merged.jsonl"
+    argv = ["--labels-dir", str(directory), "--out", str(out)]
+
+    assert labels.main(argv) == 0
+    captured = capsys.readouterr()
+    first = out.read_text("utf-8")
+    assert "제3자 판정 2건을 final 에 넣었다" in captured.err
+    assert "라벨 확정 4건 / 토론 대상 0건" in captured.out
+    assert "| sj | hs + jh | 2 | hs 1건, jh 1건 |" in captured.out
+    assert [json.loads(line)["final"]["method"] for line in first.splitlines()] == [
+        "AGREED",
+        "THIRD_PARTY",
+        "AGREED",
+        "THIRD_PARTY",
+    ]
+
+    # 다시 병합해도 같은 파일이다. 이어받은 THIRD_PARTY 때문에 판정이 "대상 밖" 이 되지 않는다
+    assert labels.main(argv) == 0
+    captured = capsys.readouterr()
+    assert out.read_text("utf-8") == first
+    assert "맞지 않아" not in captured.err
+    assert "토론 확정 0건을 이어받았다" in captured.err
+
+
+def test_cli_ignores_a_mismatched_adjudication_file_and_says_why(tmp_path, split_block, capsys):
+    assignment, personal, _, targets = split_block
+    directory = write_main500(tmp_path / "labels", assignment, personal)
+    write_adjudication(directory, [ruling_for(targets[0], "jh", "sj")])
+    out = tmp_path / "merged.jsonl"
+
+    assert labels.main(["--labels-dir", str(directory), "--out", str(out)]) == 0
+    captured = capsys.readouterr()
+    assert "한 건도 쓰지 않았다" in captured.err
+    assert "판정이 없는 토론 대상 1건" in captured.err
+    assert "라벨 확정 2건 / 토론 대상 2건" in captured.out
+    assert "제3자 판정" not in captured.out
+
+
+def test_interim_check_does_not_read_the_adjudication_file(tmp_path, split_block, capsys):
+    """중간 점검은 확정 전 개별 라벨만 본다. 판정 파일이 깨져 있어도 상관없다."""
+    assignment, personal, _, _ = split_block
+    directory = write_main500(tmp_path / "labels", assignment, personal)
+    write_adjudication(directory, [{"record_id": "nope"}])
+
+    assert labels.main(["--labels-dir", str(directory), "--interim"]) == 0
+    assert "맞지 않아" not in capsys.readouterr().err
+
+
+def test_adjudicate_cli_writes_the_file_the_merge_reads():
+    """판정 CLI(`tools/adjudicate_cli.py`)와 병합이 같은 파일 이름·값을 쓴다."""
+    from tools import adjudicate_cli
+
+    assert adjudicate_cli.OUT_FILENAME == labels.ADJUDICATION_FILENAME_TEMPLATE.format(
+        batch=adjudicate_cli.BATCH
+    )
+    assert adjudicate_cli.METHOD == labels.THIRD_PARTY
+    assert adjudicate_cli.CHOSEN_FIELDS == labels.CHOSEN_LABEL_FIELDS

@@ -9,6 +9,11 @@
     뽑아 준다 — 확정은 두 사람이 근거를 먼저 말하고 나서 하는 토론이다 (§8.3). 기계가
     다수결로 고르거나 한쪽을 택하지 않는다.
 
+    500건 본 라벨링(v3)은 토론 대신 그 블록에 들어가지 않은 제3자가 두 라벨 중 하나를 통째로
+    고른다 (가이드 §8.3 v3). 그 결과가 판정 파일(`adjudication_{batch}.jsonl`,
+    `tools/adjudicate_cli.py`)이고, 병합은 그것을 `final` 로 옮기기만 한다 (`THIRD_PARTY`, #166).
+    판정이 토론 대상과 정확히 맞지 않으면 한 건도 옮기지 않는다.
+
 왜 기존 병합 파일의 `final` 을 이어받나:
     `final` 에는 사람이 토론해서 정한 결과와 "왜 그렇게 정했는지" 한 줄이 들어 있다 (§8.3 3번).
     라벨을 더 채우고 다시 병합할 때 그걸 덮어쓰면 토론을 다시 해야 한다. 그래서 재병합은
@@ -22,6 +27,7 @@
 
     파일은 묶음(`--batch`)에서 정해진다 (`BATCH_FILES`). 본 라벨링은 배분 파일
     (`main500_assignment.jsonl`, #85)에서 `split` 을 읽어 병합 행에 넣는다 (#158).
+    제3자 판정 파일은 라벨 폴더의 `adjudication_{batch}.jsonl` 이 기본이다 (`--adjudication`).
 """
 
 from __future__ import annotations
@@ -60,6 +66,21 @@ BATCH_FILES: dict[str, tuple[str, str, str | None]] = {
 # CLI 기본값. `label_cli` 와 같이 본 라벨링이다. 함수 기본값은 예비 200건 그대로 둔다 -
 # `eval/gate1.py` 가 그 기본값으로 게이트 1 을 재현한다.
 DEFAULT_BATCH = sampling_main500.BATCH
+
+# 제3자 판정 파일 (가이드 §8.3 v3). `tools/adjudicate_cli.py` 가 쓴다 - 판정 1건 = 1줄,
+# `{"record_id", "batch", "block", "final": {...§7.3 final...}, "chosen_labeler"}`.
+ADJUDICATION_FILENAME_TEMPLATE = "adjudication_{batch}.jsonl"
+THIRD_PARTY = "THIRD_PARTY"
+# 제3자가 고른 라벨에서 `final` 로 통째로 옮겨지는 값 (가이드 §8.3 v3). 판정의 `final` 이 두 라벨
+# 중 하나와 이 값들에서 모두 같아야 "새 라벨을 만들지 않았다" 가 성립한다.
+CHOSEN_LABEL_FIELDS = (
+    "reason_label",
+    "evidence_grade",
+    "evidence_text",
+    "evidence_source",
+    "evidence_locator",
+    "confidence",
+)
 
 REASON_LABELS = ("BUG", "PERF", "SEC", "LIB", "DEAD", "DESIGN", "FEAT", "UNK")
 EVIDENCE_GRADES = ("EXPLICIT", "INFERRED", "UNKNOWN")
@@ -121,6 +142,11 @@ def load_assignment(labels_dir: Path, batch: str) -> dict[str, dict[str, Any]]:
     if name is None:
         return {}
     return {row["record_id"]: row for row in read_jsonl(labels_dir / name)}
+
+
+def load_adjudication(labels_dir: Path, batch: str) -> list[dict[str, Any]]:
+    """제3자 판정 파일을 읽는다 (가이드 §8.3 v3). 없으면 빈 목록 - 병합은 전과 같이 동작한다."""
+    return read_jsonl(labels_dir / ADJUDICATION_FILENAME_TEMPLATE.format(batch=batch))
 
 
 def is_filled(row: dict[str, Any]) -> bool:
@@ -262,12 +288,97 @@ def check_assignment(
         raise ValueError(" / ".join(problems))
 
 
+def is_adjudication_target(row: Mapping[str, Any]) -> bool:
+    """제3자가 골라야 하는 레코드인가 - `final` 이 비었거나, 이미 제3자 판정이 들어가 있다.
+
+    뒤쪽을 대상으로 치는 것은 다시 병합할 때 때문이다. 기존 병합 파일의 `THIRD_PARTY` 를
+    이어받은 행을 대상에서 빼면, 두 번째 실행부터 판정 파일이 "대상에 없는 레코드" 가 된다.
+    """
+    final = row.get("final")
+    return not final or final.get("method") == THIRD_PARTY
+
+
+def chosen_labeler(row: Mapping[str, Any], final: Mapping[str, Any]) -> str | None:
+    """`final` 이 `labels[]` 중 누구의 라벨을 통째로 옮긴 것인가. 딱 한 사람이 아니면 None.
+
+    제3자는 새 라벨을 만들지 않고 한쪽의 이유와 다른 쪽의 등급을 섞지도 않는다 (가이드 §8.3
+    v3). 그래서 옮겨지는 값 전부가 한 라벨과 같아야 한다.
+    """
+    matches = [
+        str(label.get("labeler"))
+        for label in row.get("labels") or []
+        if all(final.get(name) == label.get(name) for name in CHOSEN_LABEL_FIELDS)
+    ]
+    return matches[0] if len(matches) == 1 else None
+
+
+def find_adjudication_problems(
+    merged: Sequence[dict[str, Any]], adjudication: Sequence[dict[str, Any]]
+) -> list[str]:
+    """판정 파일이 병합의 토론 대상과 **정확히** 맞는지 본다 (#166). 비어 있으면 문제 없음.
+
+    하나라도 어긋나면 판정을 한 건도 쓰지 않는다 (`merge_labels`). 일부만 옮기면 확정 라벨에
+    "제3자가 고른 건" 과 "아직 안 고른 건" 이 섞이고, 그 상태로 낸 회수율은 어느 쪽도 아니다.
+
+    - 판정 대상(`is_adjudication_target`)과 판정의 `record_id` 집합이 같다 (빠진 건·남는 건 없음)
+    - 같은 레코드를 두 번 판정하지 않았다
+    - `final.method` 가 `THIRD_PARTY` 이고, 판정자는 그 레코드를 라벨하지 않은 한 사람이다
+    - `final` 이 두 라벨 중 하나를 통째로 옮긴 것이다 (`chosen_labeler`)
+    """
+    problems: list[str] = []
+    targets = {row["record_id"]: row for row in merged if is_adjudication_target(row)}
+    seen: set[str] = set()
+    for line_number, ruling in enumerate(adjudication, start=1):
+        record_id = str(ruling.get("record_id"))
+        where = f"판정 {line_number}번째 줄 {record_id}"
+        if record_id in seen:
+            problems.append(f"{where}: 같은 레코드의 판정이 두 번 있다")
+            continue
+        seen.add(record_id)
+        row = targets.get(record_id)
+        if row is None:
+            continue  # 아래에서 건수로 한 번에 보고한다
+        final = ruling.get("final")
+        if not isinstance(final, dict) or final.get("method") != THIRD_PARTY:
+            problems.append(f"{where}: final.method 가 {THIRD_PARTY} 가 아니다")
+            continue
+        labelers = {str(label.get("labeler")) for label in row["labels"]}
+        judges = final.get("adjudicated_by")
+        if (
+            not isinstance(judges, list)
+            or len(judges) != 1
+            or judges[0] not in LABELERS
+            or judges[0] in labelers
+        ):
+            problems.append(
+                f"{where}: 판정자 {judges!r} 가 그 레코드를 라벨하지 않은 한 사람이 아니다 "
+                f"(라벨러 {'+'.join(sorted(labelers))})"
+            )
+        chosen = chosen_labeler(row, final)
+        if chosen is None:
+            problems.append(f"{where}: final 이 두 라벨 중 하나를 통째로 옮긴 것이 아니다")
+        elif ruling.get("chosen_labeler") not in (None, chosen):
+            problems.append(
+                f"{where}: chosen_labeler={ruling.get('chosen_labeler')!r} 인데 final 은 "
+                f"{chosen} 의 라벨이다"
+            )
+
+    missing = sorted(set(targets) - seen)
+    extra = sorted(seen - set(targets))
+    if missing:
+        problems.append(f"판정이 없는 토론 대상 {len(missing)}건 {missing[:3]}")
+    if extra:
+        problems.append(f"토론 대상이 아닌 레코드의 판정 {len(extra)}건 {extra[:3]}")
+    return problems
+
+
 def merge_labels(
     personal: dict[str, list[dict[str, Any]]],
     *,
     batch: str = BATCH,
     existing: Sequence[dict[str, Any]] = (),
     assignment: Mapping[str, Mapping[str, Any]] | None = None,
+    adjudication: Sequence[dict[str, Any]] = (),
 ) -> list[dict[str, Any]]:
     """개인 라벨 → 레코드 1건 = 1줄 (가이드 §7.3).
 
@@ -276,6 +387,11 @@ def merge_labels(
 
     `assignment`(배분 파일, #85)를 주면 `split` 을 거기서 넣는다. 배분과 맞지 않는 라벨은
     `check_assignment` 가 거부한다.
+
+    `adjudication`(제3자 판정 파일의 줄들, `load_adjudication`)을 주면 2인 라벨이 갈린 건의
+    `final` 을 그 판정으로 채운다 (`THIRD_PARTY`, 가이드 §8.3 v3). 판정이 토론 대상과 정확히
+    맞을 때만이다 - 어긋나면(`find_adjudication_problems`) 판정을 주지 않은 것과 같은 결과를
+    낸다. 왜 어긋났는지는 부르는 쪽이 같은 함수로 확인해 알린다.
     """
     check_assignment(personal, batch, assignment)
     kept_finals = {
@@ -310,7 +426,33 @@ def merge_labels(
                 "guide_version": GUIDE_VERSION,
             }
         )
+    if adjudication and not find_adjudication_problems(merged, adjudication):
+        rulings = {ruling["record_id"]: ruling["final"] for ruling in adjudication}
+        for row in merged:
+            if row["record_id"] in rulings:
+                row["final"] = dict(rulings[row["record_id"]])
     return merged
+
+
+def third_party_choices(
+    merged: Sequence[dict[str, Any]],
+) -> dict[tuple[str, tuple[str, str]], dict[str, int]]:
+    """(판정자, 라벨러 쌍) → 고른 라벨의 주인별 건수 (v3 사전 등록 "보고서 한계" 5번).
+
+    블록마다 제3자가 한 사람으로 고정이라, 그 사람이 어느 라벨러 쪽을 얼마나 골랐는지가 그 블록
+    갈린 건의 정답 기준이다. 숨기지 않고 센다.
+    """
+    counts: dict[tuple[str, tuple[str, str]], dict[str, int]] = {}
+    for row in merged:
+        final = row.get("final") or {}
+        if final.get("method") != THIRD_PARTY:
+            continue
+        first, second = sorted(str(label.get("labeler")) for label in row["labels"])[:2]
+        judge = "+".join(final.get("adjudicated_by") or [])
+        bucket = counts.setdefault((judge, (first, second)), {first: 0, second: 0})
+        chosen = chosen_labeler(row, final) or "(어느 쪽도 아님)"
+        bucket[chosen] = bucket.get(chosen, 0) + 1
+    return counts
 
 
 def find_disagreements(merged: Sequence[dict[str, Any]]) -> dict[str, list[str]]:
@@ -625,6 +767,18 @@ def format_report(
                 "원인 분포에서 제외(§6.3.2). 태그 누락이 아니다"
             )
 
+    choices = third_party_choices(merged)
+    if choices:
+        total = sum(sum(bucket.values()) for bucket in choices.values())
+        lines.append("")
+        lines.append(f"### 제3자 판정 {total}건 (가이드 §8.3 v3, {THIRD_PARTY})")
+        lines.append("| 판정자 | 라벨러 쌍 | 건수 | 고른 쪽 |")
+        lines.append("|---|---|---|---|")
+        for (judge, pair), bucket in sorted(choices.items()):
+            picked = ", ".join(f"{who} {count}건" for who, count in bucket.items())
+            lines.append(f"| {judge} | {' + '.join(pair)} | {sum(bucket.values())} | {picked} |")
+        lines.append("제3자는 두 라벨 중 하나를 통째로 골랐다. 새 라벨은 없다.")
+
     for field_name, classes in (
         ("reason_label", REASON_LABELS),
         ("evidence_grade", EVIDENCE_GRADES),
@@ -827,6 +981,12 @@ def build_parser() -> argparse.ArgumentParser:
         default=DEFAULT_BATCH,
         help=f"기본 {DEFAULT_BATCH} (본 라벨링). {BATCH} 는 예비 200건",
     )
+    parser.add_argument(
+        "--adjudication",
+        type=Path,
+        default=None,
+        help="제3자 판정 파일. 기본 <labels-dir>/adjudication_<batch>.jsonl, 없으면 판정 없이 병합",
+    )
     parser.add_argument("--no-write", action="store_true", help="병합 파일을 쓰지 않고 리포트만")
     parser.add_argument(
         "--interim",
@@ -905,8 +1065,21 @@ def main(argv: Sequence[str] | None = None) -> int:
             file=sys.stderr,
         )
         return 2
+    # 중간 점검은 확정 전 개별 라벨만 본다 - 판정 파일도 읽지 않는다.
+    if args.interim:
+        adjudication = []
+    elif args.adjudication is not None:
+        adjudication = read_jsonl(args.adjudication)
+    else:
+        adjudication = load_adjudication(args.labels_dir, args.batch)
     try:
-        merged = merge_labels(personal, batch=args.batch, existing=existing, assignment=assignment)
+        merged = merge_labels(
+            personal,
+            batch=args.batch,
+            existing=existing,
+            assignment=assignment,
+            adjudication=adjudication,
+        )
     except ValueError as error:
         print(f"{error} - 다른 묶음의 라벨이 섞였나 확인해라.", file=sys.stderr)
         return 2
@@ -917,11 +1090,32 @@ def main(argv: Sequence[str] | None = None) -> int:
         for line in report(merged, assignment):
             print(line)
         return 0
+    adjudicated: set[str] = set()
+    if adjudication:
+        problems = find_adjudication_problems(merged, adjudication)
+        if problems:
+            print(
+                f"제3자 판정 {len(adjudication)}건이 토론 대상과 맞지 않아 한 건도 쓰지 않았다 "
+                "(판정 없이 병합한 것과 같다):",
+                file=sys.stderr,
+            )
+            for problem in problems[:10]:
+                print(f"  - {problem}", file=sys.stderr)
+            if len(problems) > 10:
+                print(f"  ... 외 {len(problems) - 10}건", file=sys.stderr)
+        else:
+            adjudicated = {ruling["record_id"] for ruling in adjudication}
+            print(
+                f"제3자 판정 {len(adjudicated)}건을 final 에 넣었다 ({THIRD_PARTY}, §8.3 v3).",
+                file=sys.stderr,
+            )
     if existing:
         carried = sum(
             1
             for row in merged
-            if row.get("final") and (row["final"].get("method") or "") != "AGREED"
+            if row.get("final")
+            and (row["final"].get("method") or "") != "AGREED"
+            and row["record_id"] not in adjudicated
         )
         print(f"기존 병합 파일에서 토론 확정 {carried}건을 이어받았다.", file=sys.stderr)
 
@@ -936,7 +1130,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     for line in format_report(merged, repo_of, args.batch):
         print(line)
 
-    disagreements = find_disagreements(merged)
+    # 제3자 판정이나 토론으로 이미 확정된 건은 더 토론할 건이 아니다 (#166)
+    disagreements = find_disagreements([row for row in merged if not row.get("final")])
     if disagreements["reason_label"] or disagreements["evidence_grade"]:
         print("", file=sys.stderr)
         print("토론이 필요한 건 (§8.3):", file=sys.stderr)
