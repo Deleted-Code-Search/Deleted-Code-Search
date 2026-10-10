@@ -170,3 +170,129 @@ def test_invalid_input_is_asked_again_and_label_files_are_not_modified(workspace
     assert screen.count("! 1 또는 2") == 3
     assert [path.read_bytes() for path in paths] == before
     assert json.loads(json.dumps(rows[0]))["final"]["method"] == "THIRD_PARTY"
+
+
+# --------------------------------------------------------------------------------------
+# 병합 뒤에도 같은 대상, 이어하기 검증, 병합 경로 (#166 CodeRabbit)
+# --------------------------------------------------------------------------------------
+
+
+def adjudicate_all_and_merge(workspace):
+    """세 블록을 모두 판정하고 `classify.labels` 로 병합 파일을 쓴다 → 병합 파일 경로."""
+    for block in PAIRS:
+        run_block(workspace, block, ["1", "2", ""])
+    merged_path = workspace / "merged.jsonl"
+    assert labels.main(["--labels-dir", str(workspace), "--out", str(merged_path)]) == 0
+    assert {row["final"]["method"] for row in read_rows(merged_path)} == {"AGREED", "THIRD_PARTY"}
+    return merged_path
+
+
+def test_targets_stay_the_same_after_rulings_are_merged(workspace):
+    """병합 파일에 THIRD_PARTY 가 들어간 뒤에도 대상은 그대로다. 전에는 0건이 되어 멈췄다."""
+    before = adjudicate_cli.load_targets(workspace, None, expected_total=6)
+    merged_path = adjudicate_all_and_merge(workspace)
+
+    after = adjudicate_cli.load_targets(workspace, merged_path, expected_total=6)
+
+    assert {block: [row["record_id"] for row in rows] for block, rows in after.items()} == {
+        block: [row["record_id"] for row in rows] for block, rows in before.items()
+    }
+    assert all(row["final"]["method"] == "THIRD_PARTY" for rows in after.values() for row in rows)
+
+
+def test_resume_after_merge_asks_nothing_new(workspace):
+    merged_path = adjudicate_all_and_merge(workspace)
+    blocks = adjudicate_cli.load_targets(workspace, merged_path, expected_total=6)
+    records, _ = label_cli.load_records(workspace / sampling_main500.RECORDS_OUT)
+    out_path = workspace / adjudicate_cli.OUT_FILENAME
+    before = out_path.read_bytes()
+    transcript = []
+
+    for block in PAIRS:
+        session = adjudicate_cli.AdjudicationSession(
+            block,
+            blocks[block],
+            records,
+            out_path,
+            ask=Script([], transcript),
+            say=transcript.append,
+        )
+        assert (len(session.done), session.invalid) == (2, [])
+        assert session.run() == 0
+
+    assert "어느 라벨?" not in "\n".join(transcript)
+    assert out_path.read_bytes() == before
+
+
+def _break_ruling(kind, row):
+    final = dict(row["final"])
+    if kind == "method":
+        final["method"] = "DISCUSSED"
+    elif kind == "judge":
+        final["adjudicated_by"] = ["sj"]  # 블록 A 의 라벨러다. 제3자는 hs
+    elif kind == "mixed":
+        final["evidence_grade"] = "UNKNOWN"  # 두 라벨 어느 쪽과도 통째로 같지 않다
+    elif kind == "chosen":
+        return {**row, "chosen_labeler": "jh" if row["chosen_labeler"] == "sj" else "sj"}
+    return {**row, "final": final}
+
+
+@pytest.mark.parametrize("kind", ["method", "judge", "mixed", "chosen"])
+def test_resume_asks_again_for_an_invalid_ruling(workspace, kind):
+    """판정 파일에 있어도 병합이 거부할 줄은 끝난 건이 아니다 - 다시 묻고 그 줄을 교체한다."""
+    rows, _ = run_block(workspace, "A", ["1", "1", ""])
+    out_path = workspace / adjudicate_cli.OUT_FILENAME
+    write_jsonl(out_path, [_break_ruling(kind, rows[0]), rows[1]])
+
+    fixed, screen = run_block(workspace, "A", ["1", ""])
+
+    assert "[2/2]" in screen and "[1/2]" not in screen  # 유효한 1건은 끝난 건, 깨진 1건만 다시
+    assert sorted(row["record_id"] for row in fixed) == ["rec-002", "rec-003"]
+    assert fixed[-1]["record_id"] == rows[0]["record_id"]  # 다시 판정한 줄이 끝으로 간다
+    assert fixed[-1] == rows[0]
+    personal = labels.load_personal_labels(workspace, "main500")
+    assignment = labels.load_assignment(workspace, "main500")
+    merged = labels.merge_labels(personal, batch="main500", assignment=assignment)
+    targets = [row for row in merged if assignment[row["record_id"]]["block"] == "A"]
+    assert not [
+        problem
+        for problem in labels.find_adjudication_problems(targets, fixed)
+        if "판정이 없는" not in problem
+    ]
+
+
+def test_default_merged_file_is_only_used_with_the_default_labels_dir(tmp_path):
+    default_dir = adjudicate_cli.DEFAULT_LABELS_DIR
+    explicit = tmp_path / "other.jsonl"
+
+    assert (
+        adjudicate_cli.resolve_merged_path(default_dir, None) == adjudicate_cli.DEFAULT_MERGED_PATH
+    )
+    assert adjudicate_cli.resolve_merged_path(tmp_path, None) is None
+    assert adjudicate_cli.resolve_merged_path(tmp_path, explicit) == explicit
+    assert adjudicate_cli.resolve_merged_path(default_dir, explicit) == explicit
+    assert adjudicate_cli.DEFAULT_MERGED_PATH.name == labels.MERGED_FILENAME
+    args = adjudicate_cli.build_parser().parse_args(["--block", "A", "--merged", str(explicit)])
+    assert (args.merged, args.labels_dir) == (explicit, default_dir)
+
+
+def test_another_labels_dir_does_not_inherit_the_default_merged_file(workspace, monkeypatch):
+    """`--labels-dir` 만 바꾼 실행이 현재 폴더의 기본 병합 파일(다른 묶음의 확정)을 읽지 않는다."""
+    merged_path = adjudicate_all_and_merge(workspace)
+    stale = [
+        {**row, "final": {**row["final"], "method": "DISCUSSED"}}
+        if row["final"]["method"] == "THIRD_PARTY"
+        else row
+        for row in read_rows(merged_path)
+    ]
+    cwd = workspace / "cwd"
+    (cwd / "datasets").mkdir(parents=True)
+    write_jsonl(cwd / adjudicate_cli.DEFAULT_MERGED_PATH, stale)
+    monkeypatch.chdir(cwd)
+
+    # 기본 병합 파일을 읽으면 DISCUSSED 6건이 대상에서 빠져 "0건 vs 6건" 으로 멈춘다
+    with pytest.raises(adjudicate_cli.TargetError, match="세 블록 합 0건"):
+        adjudicate_cli.load_targets(workspace, adjudicate_cli.DEFAULT_MERGED_PATH, expected_total=6)
+    path = adjudicate_cli.resolve_merged_path(workspace, None)
+    blocks = adjudicate_cli.load_targets(workspace, path, expected_total=6)
+    assert {block: len(rows) for block, rows in blocks.items()} == {"A": 2, "B": 2, "C": 2}

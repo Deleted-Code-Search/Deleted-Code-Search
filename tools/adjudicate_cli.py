@@ -6,9 +6,11 @@
     이유와 다른 쪽의 등급을 섞지도 않는다. 그래서 입력은 1 또는 2 뿐이다.
 
 대상:
-    `classify.labels` 병합에서 `final` 이 비는 레코드 — `python -m classify.labels --no-write` 가
-    "토론 대상"으로 세는 것과 같은 함수(`merge_labels`)로 뽑는다. 시작할 때 세 블록 합이 그
-    리포트의 건수와 같은지, 그리고 `EXPECTED_TOTAL` 과 같은지 확인하고 다르면 멈춘다.
+    `classify.labels` 병합에서 `final` 이 비었거나 이미 제3자 판정(`THIRD_PARTY`)이 들어간 레코드 —
+    `classify.labels.is_adjudication_target` 과 같은 계약이다. 판정을 병합한 뒤(`labeled_500.jsonl`
+    에 `THIRD_PARTY` 가 들어간 뒤)에도 같은 150건이 대상이어야 이어하기·다시 판정(`:u`)이 된다.
+    시작할 때 세 블록 합이 병합 리포트의 건수(토론 대상 + 이미 판정된 건)와 같은지, 그리고
+    `EXPECTED_TOTAL` 과 같은지 확인하고 다르면 멈춘다.
 
 누가 어느 라벨을 붙였는지 가린다:
     화면에는 "라벨 1 / 라벨 2" 만 나온다. 1·2 순서는 record_id 해시로 정한다 — 실행마다 같고
@@ -24,10 +26,18 @@
     "왜 그쪽을 골랐는지 한 줄"을 묻지 않는다. 판정은 건마다 임시 파일 → 교체로 바로 쓴다.
     쓰기 직전에 파일을 다시 읽어, 다른 블록 판정이 옆 터미널에서 돌아도 서로 덮어쓰지 않는다.
 
+이어하기:
+    판정 파일에 이미 있는 건은 다시 묻지 않는다. 단 **유효한 판정만** 그렇다 - `final.method`,
+    판정자, `final` 이 두 라벨 중 하나를 통째로 옮긴 것인지를 확인하고, 어긋난 줄은 다시 묻는다.
+    병합(`classify.labels.find_adjudication_problems`)이 거부할 줄을 "끝난 건" 으로 세지 않는다.
+
 실행:
     python -m tools.adjudicate_cli --block A      # 판정자 hs
     python -m tools.adjudicate_cli --block B      # 판정자 sj
     python -m tools.adjudicate_cli --block C      # 판정자 jh
+    --merged <경로>   병합 파일. `classify.labels --out` 과 같은 뜻이고 기본은
+                      datasets/labeled_500.jsonl 이다. `--labels-dir` 을 바꾸면 기본 병합 파일은
+                      읽지 않는다 - 다른 라벨 묶음의 확정을 이어받지 않게.
     입력: 1 또는 2  ·  :u 직전 건 다시  ·  :q 종료(판정한 건은 이미 저장됨)
 """
 
@@ -46,8 +56,10 @@ from typing import Any
 from classify import sampling_main500
 from classify.labels import (
     MERGED_FILENAME,
+    chosen_labeler,
     find_label_problems,
     format_report,
+    is_adjudication_target,
     load_assignment,
     load_personal_labels,
     merge_labels,
@@ -65,6 +77,8 @@ from tools.label_cli import (
 
 BATCH = sampling_main500.BATCH
 OUT_FILENAME = f"adjudication_{BATCH}.jsonl"
+DEFAULT_LABELS_DIR = Path("datasets/labels")
+DEFAULT_MERGED_PATH = Path("datasets") / MERGED_FILENAME
 
 # 가이드 §8.3 v3 표 — 블록 → (라벨러 쌍, 제3자). 고정이다.
 BLOCK_ADJUDICATORS: dict[str, tuple[frozenset[str], str]] = {
@@ -112,11 +126,16 @@ class TargetError(ValueError):
 
 
 def discussion_total(merged: Sequence[dict[str, Any]]) -> int:
-    """`classify.labels` 리포트가 찍는 "토론 대상 N건" 의 N. 리포트 줄에서 직접 읽는다."""
+    """`classify.labels` 리포트 기준의 판정 대상 수 - "토론 대상 N건" + 이미 `THIRD_PARTY` 인 건.
+
+    리포트는 `final` 이 있는 건을 확정으로 세므로, 판정을 병합한 뒤에는 "토론 대상" 이 0 이 된다.
+    이미 제3자 판정이 들어간 건을 더해야 병합 전후에 같은 수가 나온다 (#166 CodeRabbit).
+    """
+    adjudicated = sum(1 for row in merged if (row.get("final") or {}).get("method") == METHOD)
     for line in format_report(merged, batch=BATCH):
         found = re.search(r"토론 대상 (\d+)건", line)
         if found:
-            return int(found.group(1))
+            return int(found.group(1)) + adjudicated
     raise TargetError("classify.labels 리포트에서 '토론 대상' 줄을 찾지 못했다")
 
 
@@ -126,11 +145,15 @@ def targets_by_block(
     *,
     expected_total: int = EXPECTED_TOTAL,
 ) -> dict[str, list[dict[str, Any]]]:
-    """블록 → `final` 이 빈 병합 행 (블록 안 순서 = `block_position`). 어긋나면 `TargetError`."""
+    """블록 → 판정 대상인 병합 행 (블록 안 순서 = `block_position`). 어긋나면 `TargetError`.
+
+    대상은 `classify.labels.is_adjudication_target` 그대로다 - `final` 이 비었거나 `THIRD_PARTY`.
+    `final` 이 빈 행만 세면 판정을 병합한 뒤에는 대상이 0건이 되어 이 CLI 가 다시 뜨지 않는다.
+    """
     blocks: dict[str, list[dict[str, Any]]] = {block: [] for block in BLOCK_ADJUDICATORS}
     problems: list[str] = []
     for row in merged:
-        if row.get("final"):
+        if not is_adjudication_target(row):
             continue
         record_id = row["record_id"]
         assigned = assignment[record_id]
@@ -156,16 +179,30 @@ def targets_by_block(
     reported = discussion_total(merged)
     if total != reported or total != expected_total:
         raise TargetError(
-            f"대상 건수가 맞지 않는다: 세 블록 합 {total}건, classify.labels 토론 대상 "
-            f"{reported}건, 기대 {expected_total}건"
+            f"대상 건수가 맞지 않는다: 세 블록 합 {total}건, classify.labels 토론 대상"
+            f"(+ 이미 판정된 건) {reported}건, 기대 {expected_total}건"
         )
     return blocks
 
 
+def resolve_merged_path(labels_dir: Path, merged: Path | None) -> Path | None:
+    """이어받을 병합 파일. `--merged` 를 주면 그것, 아니면 기본 라벨 폴더일 때만 기본 병합 파일.
+
+    `--labels-dir` 만 바꾸면 None 이다. 다른 라벨 묶음을 보면서 `datasets/labeled_500.jsonl` 의
+    확정(`final`)을 이어받으면 그 묶음에 없는 판정이 대상을 가린다.
+    """
+    if merged is not None:
+        return merged
+    return DEFAULT_MERGED_PATH if labels_dir == DEFAULT_LABELS_DIR else None
+
+
 def load_targets(
-    labels_dir: Path, merged_path: Path, *, expected_total: int = EXPECTED_TOTAL
+    labels_dir: Path, merged_path: Path | None, *, expected_total: int = EXPECTED_TOTAL
 ) -> dict[str, list[dict[str, Any]]]:
-    """`python -m classify.labels --no-write` 와 같은 입력·같은 병합으로 대상을 뽑는다."""
+    """`python -m classify.labels --no-write` 와 같은 입력·같은 병합으로 대상을 뽑는다.
+
+    `merged_path` 가 None 이면 기존 병합 파일 없이 병합한다.
+    """
     personal = load_personal_labels(labels_dir, BATCH)
     problems = find_label_problems(personal)
     if problems:
@@ -173,7 +210,7 @@ def load_targets(
     assignment = load_assignment(labels_dir, BATCH)
     if not assignment:
         raise TargetError(f"배분 파일이 없다: {labels_dir / sampling_main500.ASSIGNMENT_OUT}")
-    existing = read_jsonl(merged_path)
+    existing = read_jsonl(merged_path) if merged_path is not None else []
     if {str(row.get("batch")) for row in existing} - {BATCH}:
         raise TargetError(f"{merged_path} 는 다른 묶음의 병합 파일이다")
     try:
@@ -247,12 +284,34 @@ class AdjudicationSession:
         self.say = say
         self.now = now
         self.history: list[str] = []
-        # 이어하기: 이 블록에서 이미 판정한 건. 파일 순서 = 판정한 순서 (다시 판정하면 끝으로 간다)
-        self.done = [
-            row["record_id"]
-            for row in read_jsonl(out_path)
-            if row.get("block") == block and row.get("record_id") in self.targets
-        ]
+        # 이어하기: 이 블록에서 이미 판정한 건. 파일 순서 = 판정한 순서 (다시 판정하면 끝으로 간다).
+        # 유효한 판정만 끝난 건으로 친다 - 어긋난 줄(`invalid`)은 다시 묻고, 저장할 때 교체된다.
+        self.done: list[str] = []
+        self.invalid: list[str] = []
+        for row in read_jsonl(out_path):
+            record_id = row.get("record_id")
+            if row.get("block") != block or record_id not in self.targets:
+                continue
+            if self.is_valid_ruling(row):
+                self.done.append(record_id)
+            elif record_id not in self.invalid:
+                self.invalid.append(record_id)
+        self.invalid = [rid for rid in self.invalid if rid not in self.done]
+
+    def is_valid_ruling(self, ruling: Mapping[str, Any]) -> bool:
+        """판정 파일의 한 줄이 이 블록의 유효한 판정인가.
+
+        `classify.labels.find_adjudication_problems` 가 줄마다 보는 것과 같다 - `final.method`,
+        판정자(이 블록의 제3자 한 사람), `final` 이 두 라벨 중 하나를 통째로 옮긴 것인가, 그리고
+        `chosen_labeler` 가 그 라벨의 주인인가.
+        """
+        final = ruling.get("final")
+        if not isinstance(final, dict) or final.get("method") != METHOD:
+            return False
+        if final.get("adjudicated_by") != [self.adjudicator]:
+            return False
+        chosen = chosen_labeler(self.targets[ruling["record_id"]], final)
+        return chosen is not None and ruling.get("chosen_labeler") in (None, chosen)
 
     @property
     def header(self) -> str:
@@ -366,7 +425,14 @@ def build_parser() -> argparse.ArgumentParser:
         description="제3자 판정 CLI — 갈린 레코드의 두 라벨 중 하나를 고른다 (#90, 가이드 §8.3).",
     )
     parser.add_argument("--block", required=True, choices=tuple(BLOCK_ADJUDICATORS))
-    parser.add_argument("--labels-dir", type=Path, default=Path("datasets/labels"))
+    parser.add_argument("--labels-dir", type=Path, default=DEFAULT_LABELS_DIR)
+    parser.add_argument(
+        "--merged",
+        type=Path,
+        default=None,
+        help=f"병합 파일 (classify.labels --out 과 같은 뜻). 기본 {DEFAULT_MERGED_PATH.as_posix()}"
+        " - 단 --labels-dir 을 바꾸면 기본 파일은 읽지 않는다",
+    )
     parser.add_argument("--out", type=Path, default=None, help=f"기본: <labels-dir>/{OUT_FILENAME}")
     return parser
 
@@ -386,7 +452,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         if problems:
             raise TargetError(" / ".join(problems[:5]))
-        blocks = load_targets(args.labels_dir, Path("datasets") / MERGED_FILENAME)
+        blocks = load_targets(args.labels_dir, resolve_merged_path(args.labels_dir, args.merged))
         missing = [
             row["record_id"]
             for rows in blocks.values()
@@ -406,6 +472,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     total = sum(len(rows) for rows in blocks.values())
     print(f"대상: {counts} · 합 {total}건 (classify.labels 토론 대상 {EXPECTED_TOTAL}건과 일치)")
     print(f"이 블록 판정 완료 {len(session.done)}/{len(session.targets)}건 → {out_path}")
+    if session.invalid:
+        print(
+            f"판정 파일의 {len(session.invalid)}건은 유효한 판정이 아니라 다시 묻는다 "
+            f"(method·판정자·고른 라벨 확인): {session.invalid[:3]}"
+        )
     session.run()
     return 0
 
