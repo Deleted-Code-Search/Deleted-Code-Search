@@ -39,6 +39,13 @@
     예전 동작이 필요하면 `--no-wait-on-limit` 을 준다: 한도에 걸리면 **출력을 쓰지 않고** 1 로
     멈추고, 0 이 나올 때까지 사람이 다시 돌린다 (캐시가 있어 이어 간다).
 
+    종료 코드:
+        0  끝까지 수집하고 출력을 썼다
+        1  한도에 걸려 멈췄다 (`--no-wait-on-limit` 일 때만). 출력은 쓰지 않았다. 다시 돌리면
+           이어 간다
+        2  다시 돌려도 소용없다. 출력은 쓰지 않았다. 한도가 아닌 401·403(토큰·권한 문제),
+           한도 대기 뒤 재시도가 연속 10번 실패, 인자 오류. 원인을 고친 뒤 돌린다
+
     python -m pipeline.context --input <run>/<owner>__<name>.jsonl --full-function-only \\
         --repo-path repos/<owner>/<name> --out data/context/<owner>__<name>.jsonl
     python -m pipeline.assemble --run-dir <run> ... --out data/assembled/filtered.jsonl
@@ -50,6 +57,7 @@ from __future__ import annotations
 
 import argparse
 import difflib
+import email.utils
 import functools
 import hashlib
 import json
@@ -101,8 +109,12 @@ CODE_FENCE_RE = re.compile(r"```.*?```", re.DOTALL)
 INLINE_CODE_RE = re.compile(r"`[^`\n]*`")
 
 # GitHubClient 는 한도 소진(403)·과다 요청(429)을 재시도한 뒤 "HTTP 403: {url}" 로 올린다.
-RATE_LIMIT_STATUS = frozenset({403, 429})
 HTTP_STATUS_RE = re.compile(r"HTTP (\d{3})")
+# 한도는 403 이나 429 로 온다. 429 는 그 자체로 한도고, 403 은 권한 거부와 같은 코드라
+# 헤더·본문으로 가른다 (`is_rate_limit_error`).
+RATE_LIMIT_PHRASE = "rate limit"
+# 한도가 아니면 다시 해도 같은 답이 오는 상태 코드. 401 은 토큰, 403 은 권한·차단이다.
+ACCESS_DENIED_STATUS = frozenset({401, 403})
 
 
 # --------------------------------------------------------------------------------------
@@ -110,15 +122,93 @@ HTTP_STATUS_RE = re.compile(r"HTTP (\d{3})")
 # --------------------------------------------------------------------------------------
 
 
-def is_rate_limit_error(error: Exception) -> bool:
-    """GitHubClient 가 올린 RuntimeError 가 한도 소진인가.
+class ApiStopError(RuntimeError):
+    """다시 해도 소용없어 실행을 끝내야 하는 API 오류 (종료 코드 2).
 
-    GitHubClient(select_repos, 성제 담당)는 403/429 를 재시도한 뒤 네트워크 오류와 같은
-    RuntimeError 로 올린다. 그 파일에 전용 예외를 넣는 게 맞지만 담당 영역 밖이라,
-    여기서 메시지의 상태 코드로 가른다. 포맷이 바뀌면 테스트가 먼저 깨지게 해 뒀다.
+    한도 오류와 달리 기다려도 풀리지 않는다 - 무인 실행이 영구 오류를 한도로 알고 끝없이
+    기다리지 않게, 원인을 찍고 멈춘다.
     """
+
+
+def error_status(error: Exception) -> int | None:
+    """GitHubClient 가 올린 RuntimeError 의 HTTP 상태 코드. 없으면 `None`.
+
+    GitHubClient(select_repos, 성제 담당)는 HTTP 오류를 네트워크 오류와 같은 RuntimeError 로
+    올린다. 그 파일에 전용 예외를 넣는 게 맞지만 건드리지 않기로 해, 원인(`__cause__`)의
+    `HTTPError` 에서 읽고 없으면 메시지의 "HTTP 403" 에서 읽는다. 포맷이 바뀌면 테스트가
+    먼저 깨지게 해 뒀다.
+    """
+    code = getattr(error.__cause__, "code", None)
+    if isinstance(code, int):
+        return code
     match = HTTP_STATUS_RE.search(str(error))
-    return bool(match) and int(match.group(1)) in RATE_LIMIT_STATUS
+    return int(match.group(1)) if match else None
+
+
+def limit_headers(error: Exception) -> dict[str, str]:
+    """오류에 딸린 응답 헤더 (키는 소문자). 없으면 빈 dict.
+
+    헤더는 감싸인 원인(`HTTPError`)에만 있다.
+    """
+    headers = getattr(error.__cause__, "headers", None)
+    if not headers:
+        return {}
+    return {key.lower(): str(value) for key, value in headers.items()}
+
+
+def error_body(error: Exception) -> str:
+    """오류 응답 본문. 읽을 수 없으면 빈 문자열.
+
+    응답은 한 번만 읽을 수 있어서 읽은 것을 원인 객체에 붙여 둔다.
+    """
+    cause = error.__cause__
+    if cause is None or not hasattr(cause, "read"):
+        return ""
+    body = getattr(cause, "_context_body", None)
+    if body is None:
+        try:
+            body = cause.read().decode("utf-8", errors="replace")
+        except Exception:  # noqa: BLE001 - 닫힌 응답 등. 본문을 못 읽어도 분류는 계속한다
+            body = ""
+        cause._context_body = body
+    return body
+
+
+def error_message(error: Exception) -> str:
+    """오류 응답의 메시지 첫 줄. GitHub 은 `{"message": ...}` 로 준다."""
+    body = error_body(error)
+    try:
+        message = json.loads(body).get("message") or ""
+    except (ValueError, AttributeError):
+        message = body
+    lines = str(message).strip().splitlines()
+    return lines[0].strip() if lines else ""
+
+
+def is_rate_limit_error(error: Exception) -> bool:
+    """GitHubClient 가 올린 RuntimeError 가 한도 소진인가 - 기다리면 풀리는 오류인가.
+
+    429 는 그 자체로 한도다. 403 은 권한 거부도 같은 코드라 다음 중 하나가 있어야 한도다:
+    남은 횟수 0(`x-ratelimit-remaining`), `Retry-After` 헤더, 본문의 "rate limit" 문구
+    (2차 한도는 남은 횟수가 있는 채로 온다). 전에는 403 을 전부 한도로 봤는데, 그러면
+    권한이 없는 저장소나 막힌 토큰을 한도로 알고 끝없이 기다린다 (#128).
+    """
+    status = error_status(error)
+    if status == 429:
+        return True
+    if status != 403:
+        return False
+    headers = limit_headers(error)
+    return (
+        headers.get("x-ratelimit-remaining") == "0"
+        or "retry-after" in headers
+        or RATE_LIMIT_PHRASE in error_body(error).lower()
+    )
+
+
+def is_access_denied_error(error: Exception) -> bool:
+    """한도가 아닌 401·403 인가 - 다시 해도 같은 답이 오는 거부."""
+    return error_status(error) in ACCESS_DENIED_STATUS and not is_rate_limit_error(error)
 
 
 @dataclass(frozen=True, order=True)
@@ -385,6 +475,8 @@ class AttachmentReport:
     cache_hits: int = 0
     stopped_reason: str = ""
     """비어 있지 않으면 표본을 다 돌기 전에 멈춘 것. 비율을 전체 표본 값으로 읽으면 안 된다."""
+    fatal: bool = False
+    """멈춘 이유가 다시 돌려도 풀리지 않는 것인가 (`ApiStopError`). 종료 코드 2 로 간다."""
     skipped: dict[str, int] = field(default_factory=dict)
     """건너뛴 조회 종류별 횟수. 실패를 조용히 삼키면 무엇을 잃었는지 모른다 (#50)."""
 
@@ -466,6 +558,12 @@ class ContextCollector:
         """
         if is_rate_limit_error(error):
             raise error
+        if is_access_denied_error(error):
+            # 조각만 포기하고 넘어가면 토큰이 막힌 실행이 전부 "맥락 없음" 으로 끝난다 -
+            # 한도 소진을 삼키면 안 되는 것과 같은 이유다.
+            raise ApiStopError(
+                f"API 거부 HTTP {error_status(error)}: {error_message(error) or '(메시지 없음)'}"
+            ) from error
         self.skipped[kind] = self.skipped.get(kind, 0) + 1
 
     def get_json(self, kind: str, path: str) -> Any:
@@ -1084,32 +1182,38 @@ LIMIT_BACKOFF_START_SECONDS = 60
 LIMIT_BACKOFF_MAX_SECONDS = 900
 # 기다리는 동안 남은 시간을 다시 알리는 간격.
 LIMIT_ANNOUNCE_SECONDS = 300
+# 한도 대기 뒤 다시 했는데 요청이 하나도 성공하지 못한 일이 연속으로 이만큼이면 포기한다.
+# 한도로 보이지만 풀리지 않는 것(계정 정지 등)에 무인 실행이 끝없이 매달리지 않게 한다.
+LIMIT_MAX_FRUITLESS_RETRIES = 10
 
 
-def limit_headers(error: Exception) -> dict[str, str]:
-    """한도 오류에 딸린 응답 헤더 (키는 소문자). 없으면 빈 dict.
+def _retry_after_seconds(value: str, now: float) -> float | None:
+    """`Retry-After` 헤더가 말하는 대기 초. 못 읽거나 이미 지난 시각이면 `None`.
 
-    GitHubClient 는 `HTTPError` 를 `RuntimeError` 로 감싸 올리면서 원인(`__cause__`)으로
-    남긴다. 헤더는 거기에만 있다 - `is_rate_limit_error` 와 같은 이유로 그 파일은 건드리지
-    않고 여기서 꺼낸다.
+    초(`120`)와 HTTP 날짜(`Wed, 21 Oct 2026 07:28:00 GMT`) 두 형식이 있다 (RFC 9110).
     """
-    headers = getattr(error.__cause__, "headers", None)
-    if not headers:
-        return {}
-    return {key.lower(): str(value) for key, value in headers.items()}
+    value = value.strip()
+    if value.isdigit():
+        return float(value)
+    try:
+        seconds = email.utils.parsedate_to_datetime(value).timestamp() - now
+    except (TypeError, ValueError):
+        return None
+    return seconds if seconds > 0 else None
 
 
 def limit_wait_seconds(headers: dict[str, str], now: float, attempt: int = 0) -> float:
     """한도가 풀릴 때까지 기다릴 초 (순수 함수 - 테스트 대상).
 
-    GitHub 문서의 순서를 따른다: `Retry-After` 가 있으면(2차 한도) 그만큼, 없고 남은 횟수가
-    0 이면(1차 한도) `X-RateLimit-Reset` 시각까지. 둘 다 `LIMIT_WAIT_MARGIN_SECONDS` 를
-    더한다. 남은 횟수가 있는데 걸린 것은 리셋 시각과 무관한 2차 한도라 그 시각을 믿지 않는다.
-    어느 쪽도 아니면 `attempt`(같은 자리에서 이미 기다린 횟수)에 따라 간격을 늘린다.
+    GitHub 문서의 순서를 따른다: `Retry-After` 가 있으면(2차 한도) 그만큼 - 초든 날짜든 -,
+    없고 남은 횟수가 0 이면(1차 한도) `X-RateLimit-Reset` 시각까지. 둘 다
+    `LIMIT_WAIT_MARGIN_SECONDS` 를 더한다. 남은 횟수가 있는데 걸린 것은 리셋 시각과 무관한
+    2차 한도라 그 시각을 믿지 않는다. 어느 쪽도 아니거나 `Retry-After` 를 못 읽으면
+    `attempt`(성과 없이 이미 기다린 횟수)에 따라 간격을 늘린다.
     """
-    retry_after = headers.get("retry-after", "")
-    if retry_after.isdigit():
-        return int(retry_after) + LIMIT_WAIT_MARGIN_SECONDS
+    retry_after = _retry_after_seconds(headers.get("retry-after", ""), now)
+    if retry_after is not None:
+        return retry_after + LIMIT_WAIT_MARGIN_SECONDS
     reset = headers.get("x-ratelimit-reset", "")
     if reset.isdigit() and headers.get("x-ratelimit-remaining", "0") == "0":
         return max(0.0, int(reset) - now) + LIMIT_WAIT_MARGIN_SECONDS
@@ -1144,15 +1248,62 @@ class LimitWait:
             self.sleep(min(remaining, LIMIT_ANNOUNCE_SECONDS))
 
 
+class _LimitRetry:
+    """한도 대기와 "기다려도 소용없다"의 판정. `run_targets` 한 번에 하나.
+
+    요청이 성공했는지는 클라이언트의 fetcher 를 감싸서 센다 - 캐시에서 나온 응답은 한도가
+    풀렸다는 증거가 아니라서 `collect` 가 조각을 돌려줬는지로는 알 수 없다. 404 는 성공으로
+    센다: 서버가 요청을 받아 답한 것이다.
+    """
+
+    def __init__(self, limit_wait: LimitWait, client: GitHubClient) -> None:
+        self.limit_wait = limit_wait
+        self.client = client
+        self.fruitless = 0
+        self._successes = 0
+        self._waited = False
+        self._fetcher = client.fetcher
+        client.fetcher = self._counting_fetch
+
+    def _counting_fetch(self, url: str, headers: dict[str, str]) -> Any:
+        try:
+            result = self._fetcher(url, headers)
+        except Exception as error:
+            if getattr(error, "code", None) == 404:
+                self._successes += 1
+            raise
+        self._successes += 1
+        return result
+
+    def close(self) -> None:
+        """클라이언트의 fetcher 를 되돌린다."""
+        self.client.fetcher = self._fetcher
+
+    def wait(self, error: Exception) -> None:
+        """한도가 풀릴 때까지 기다린다. 기다려도 소용없으면 `ApiStopError`."""
+        if self._waited and self._successes == 0:
+            self.fruitless += 1
+            if self.fruitless >= LIMIT_MAX_FRUITLESS_RETRIES:
+                raise ApiStopError(
+                    f"한도 대기 뒤 재시도가 연속 {self.fruitless}번 실패했다"
+                    f" (성공한 요청 0건, 마지막 오류: {error})"
+                ) from error
+        else:
+            self.fruitless = 0
+        self._successes = 0
+        self._waited = True
+        seconds = limit_wait_seconds(limit_headers(error), self.limit_wait.clock(), self.fruitless)
+        self.limit_wait.wait(seconds)
+
+
 def _collect_through_limit(
-    collector: ContextCollector, target: CommitTarget, limit_wait: LimitWait | None
+    collector: ContextCollector, target: CommitTarget, retry: _LimitRetry | None
 ) -> CommitContext:
-    """대상 하나를 수집한다. `limit_wait` 가 있으면 한도 오류를 기다렸다가 같은 대상을 다시 한다.
+    """대상 하나를 수집한다. `retry` 가 있으면 한도 오류를 기다렸다가 같은 대상을 다시 한다.
 
     다시 할 때 그 커밋에서 이미 받은 응답은 캐시에서 나오므로 걸린 호출부터 이어진다.
-    `limit_wait` 가 없으면 한도 오류를 그대로 올린다 (지금까지의 동작).
+    `retry` 가 없으면 한도 오류를 그대로 올린다 (`--no-wait-on-limit`).
     """
-    attempt = 0
     while True:
         try:
             return collector.collect(
@@ -1162,10 +1313,9 @@ def _collect_through_limit(
                 commit_message=target.commit_message,
             )
         except RuntimeError as error:
-            if limit_wait is None or not is_rate_limit_error(error):
+            if retry is None or not is_rate_limit_error(error):
                 raise
-            limit_wait.wait(limit_wait_seconds(limit_headers(error), limit_wait.clock(), attempt))
-            attempt += 1
+            retry.wait(error)
 
 
 def run_targets(
@@ -1188,12 +1338,30 @@ def run_targets(
 
     `limit_wait` 를 주면 한도에서 멈추지 않는다 - 풀릴 때까지 기다렸다가 걸린 대상부터 이어
     가서 끝까지 간다 (`LimitWait`).
+
+    다시 해도 풀리지 않는 오류(`ApiStopError`: 한도가 아닌 401·403, 기다려도 계속 실패)는
+    어느 쪽이든 그 자리에서 멈추고 `report.fatal` 을 세운다.
     """
+    retry = None if limit_wait is None else _LimitRetry(limit_wait, collector.client)
+    try:
+        return _run_targets(collector, targets, log, retry)
+    finally:
+        if retry is not None:
+            retry.close()
+
+
+def _run_targets(
+    collector: ContextCollector,
+    targets: Sequence[CommitTarget],
+    log: object,
+    retry: _LimitRetry | None,
+) -> tuple[list[CommitContext], AttachmentReport]:
+    """`run_targets` 의 본체."""
     contexts: list[CommitContext] = []
     report = AttachmentReport()
     for index, target in enumerate(targets, start=1):
         try:
-            context = _collect_through_limit(collector, target, limit_wait)
+            context = _collect_through_limit(collector, target, retry)
             marks = "".join(
                 mark if flag else "-"
                 for mark, flag in (
@@ -1202,6 +1370,13 @@ def run_targets(
                     ("R", context.has_review),
                 )
             )
+        except ApiStopError as error:
+            remaining = len(targets) - index + 1
+            report.stopped_reason = f"{error} ({remaining}건 남기고 중단)"
+            report.fatal = True
+            if callable(log):
+                log(f"[{index}/{len(targets)}] {report.stopped_reason}")
+            break
         except RuntimeError as error:
             if is_rate_limit_error(error):
                 remaining = len(targets) - index + 1
@@ -1553,11 +1728,12 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    """맥락을 모으고 결과를 낸다. 정상이면 0, 한도 소진으로 멈췄으면 1.
+    """맥락을 모으고 결과를 낸다. 종료 코드는 0·1·2 (모듈 독스트링 "종료 코드").
 
     한도에 걸리면 기본으로는 멈추지 않고 기다렸다 이어 간다 (`LimitWait`). 1 로 멈추는 것은
     `--no-wait-on-limit` 을 줬을 때뿐이다. 팀원이 옵션 없이 돌려도 밤새 멈춰 있지 않게 하려고
-    기다리는 쪽을 기본으로 했다.
+    기다리는 쪽을 기본으로 했다. 기다려도 풀리지 않는 오류(한도가 아닌 401·403, 대기 뒤 연속
+    실패)는 2 로 끝낸다 - 다시 돌리기 전에 원인을 고쳐야 한다는 뜻이다.
 
     `--out` 으로 레코드를 쓸 때 **`--repo-path` 를 꼭 준다.** 없으면 에러 없이 대체 코드
     본문이 크게 줄어든다 - 예비 200건에서 39건 -> 8건 (#107). 헝크에는 추가된 줄만 있어서
@@ -1633,7 +1809,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         limit_wait=LimitWait() if args.wait_on_limit else None,
     )
 
-    if args.out and report.stopped_reason:
+    if report.fatal:
+        log(f"중단: {report.stopped_reason}")
+        if args.out:
+            log(f"{args.out} 은 쓰지 않았다. 원인을 고친 뒤 다시 돌린다 (캐시로 이어 간다).")
+    elif args.out and report.stopped_reason:
         log(
             f"{args.out} 은 쓰지 않았다: 한도에 걸려 멈췄다 (--no-wait-on-limit). 다시 돌리면"
             " 캐시로 이어 가고, 파싱은 수집이 끝난 실행에서 한 번만 한다."
@@ -1653,6 +1833,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(json.dumps(contexts[0].to_schema_context(), ensure_ascii=False, indent=2))
     for line in report.format_lines():
         print(line)
+    if report.fatal:
+        return 2
     return 1 if report.stopped_reason else 0
 
 
