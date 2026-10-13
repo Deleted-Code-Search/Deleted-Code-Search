@@ -249,49 +249,82 @@ def summarize_tree(tree: Sequence[dict[str, Any]]) -> tuple[int, int, int]:
 # --------------------------------------------------------------------------------------
 
 
+Poster = Callable[[str, dict[str, str]], dict[str, Any]]
+
+
+def _urlopen_post(payload: str, headers: dict[str, str]) -> dict[str, Any]:
+    request = urllib.request.Request(GRAPHQL_URL, payload.encode("utf-8"), headers)
+    with urllib.request.urlopen(request, timeout=60) as response:
+        return json.loads(response.read().decode("utf-8"))
+
+
 class GraphQLClient:
-    """POST 전용 GraphQL 클라이언트. 성공 응답을 디스크에 캐시한다."""
+    """POST 전용 GraphQL 클라이언트. **오류 없는** 응답만 디스크에 캐시한다.
+
+    GraphQL 은 HTTP 200 에 `errors` 와 부분 `data` 를 같이 줄 수 있다 (예: 타임아웃으로
+    `history` 만 null). 그 응답을 캐시하면 그 해의 커밋 수가 0 으로 굳어 어림이 조용히 작아진다.
+    그래서 `errors` 가 있으면 `data` 가 있어도 쓰지 않고 실패로 올리고, 이미 캐시에 있는
+    그런 응답도 없는 것으로 본다 (#171 리뷰).
+    """
 
     def __init__(
-        self, token: str, cache_dir: Path, *, log: Callable[[str], None] | None = None
+        self,
+        token: str,
+        cache_dir: Path,
+        *,
+        poster: Poster | None = None,
+        sleep: Callable[[float], None] = time.sleep,
+        log: Callable[[str], None] | None = None,
     ) -> None:
         self.token = token
         self.cache_dir = cache_dir
+        self.poster = poster or _urlopen_post
+        self.sleep = sleep
         self.log = log or (lambda message: None)
         self.api_calls = 0
         self.cache_hits = 0
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
+    def _read_cache(self, path: Path) -> dict[str, Any] | None:
+        if not path.is_file():
+            return None
+        try:
+            body = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return None
+        if not isinstance(body, dict) or body.get("errors"):
+            return None
+        return body
+
     def query(self, query: str, variables: dict[str, Any]) -> dict[str, Any]:
         payload = json.dumps({"query": query, "variables": variables}, sort_keys=True)
         path = self.cache_dir / f"{hashlib.sha256(payload.encode('utf-8')).hexdigest()[:32]}.json"
-        if path.is_file():
+        cached = self._read_cache(path)
+        if cached is not None:
             self.cache_hits += 1
-            return json.loads(path.read_text(encoding="utf-8"))
+            return cached
         headers = {
             "Authorization": f"Bearer {self.token}",
             "User-Agent": sr.USER_AGENT,
             "Content-Type": "application/json",
         }
         for attempt in range(4):
-            request = urllib.request.Request(GRAPHQL_URL, payload.encode("utf-8"), headers)
             self.api_calls += 1
             try:
-                with urllib.request.urlopen(request, timeout=60) as response:
-                    body = json.loads(response.read().decode("utf-8"))
+                body = self.poster(payload, headers)
             except (urllib.error.URLError, http.client.HTTPException, OSError) as error:
                 # 502/504 는 질의가 무거워서 나는 것이라 같은 질의를 오래 붙잡지 않는다.
                 if getattr(error, "code", None) in (502, 504) and attempt >= 1:
                     raise RuntimeError(f"GraphQL {error}") from error
                 wait = self._retry_wait(error, attempt)
                 self.log(f"GraphQL 재시도 ({error}), {wait}초 대기")
-                time.sleep(wait)
+                self.sleep(wait)
                 continue
-            if body.get("errors") and not body.get("data"):
+            if body.get("errors"):
                 kinds = {error.get("type") for error in body["errors"]}
                 if "RATE_LIMITED" in kinds and attempt < 3:
                     self.log("GraphQL 한도 소진, 10분 대기")
-                    time.sleep(600)
+                    self.sleep(600)
                     continue
                 raise RuntimeError(f"GraphQL 오류: {body['errors']}")
             path.write_text(json.dumps(body, ensure_ascii=False), encoding="utf-8")

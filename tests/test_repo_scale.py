@@ -1,4 +1,8 @@
-"""tools/repo_scale.py 의 순수 계산 테스트 (네트워크 없음, 이슈 #171)."""
+"""tools/repo_scale.py 의 순수 계산·GraphQL 캐시 테스트 (네트워크 없음, 이슈 #171)."""
+
+import json
+
+import pytest
 
 from tools import repo_scale as rs
 
@@ -89,3 +93,54 @@ def test_summarize_tree_counts_python_blobs_only():
         {"type": "tree", "path": "pkg"},
     ]
     assert rs.summarize_tree(tree) == (2, 400, 300)
+
+
+OK_BODY = {"data": {"repository": {"object": {"history": {"totalCount": 3, "nodes": []}}}}}
+PARTIAL_ERROR_BODY = {
+    "data": {"repository": {"object": {"history": None}}},
+    "errors": [{"type": "TIMEOUT", "message": "timed out"}],
+}
+
+
+def graphql_client(tmp_path, responses):
+    calls = []
+
+    def poster(payload, headers):
+        calls.append(payload)
+        return responses.pop(0)
+
+    client = rs.GraphQLClient("token", tmp_path, poster=poster, sleep=lambda seconds: None)
+    return client, calls
+
+
+def test_graphql_caches_clean_response(tmp_path):
+    client, calls = graphql_client(tmp_path, [OK_BODY])
+    assert client.query("q", {"a": 1}) == OK_BODY
+    assert client.query("q", {"a": 1}) == OK_BODY
+    assert (len(calls), client.cache_hits) == (1, 1)
+
+
+def test_graphql_does_not_cache_errors_with_partial_data(tmp_path):
+    client, calls = graphql_client(tmp_path, [PARTIAL_ERROR_BODY])
+    with pytest.raises(RuntimeError):
+        client.query("q", {"a": 1})
+    assert len(calls) == 1
+    assert list(tmp_path.glob("*.json")) == []
+
+
+def test_graphql_ignores_cached_error_response(tmp_path):
+    client, calls = graphql_client(tmp_path, [OK_BODY, OK_BODY])
+    client.query("q", {"a": 1})
+    (cache_file,) = tmp_path.glob("*.json")
+    cache_file.write_text(json.dumps(PARTIAL_ERROR_BODY), encoding="utf-8")
+
+    assert client.query("q", {"a": 1}) == OK_BODY
+    assert (len(calls), client.cache_hits) == (2, 0)
+    assert "errors" not in json.loads(cache_file.read_text(encoding="utf-8"))
+
+
+def test_graphql_rate_limit_error_is_retried_not_cached(tmp_path):
+    limited = {"data": None, "errors": [{"type": "RATE_LIMITED", "message": "slow down"}]}
+    client, calls = graphql_client(tmp_path, [limited, OK_BODY])
+    assert client.query("q", {"a": 1}) == OK_BODY
+    assert len(calls) == 2
