@@ -1661,7 +1661,7 @@ def test_rate_limit_skips_parsing_and_leaves_the_output_alone(tmp_path, monkeypa
 
 
 # --------------------------------------------------------------------------------------
-# 한도 시 자동 대기 후 재개 (`--wait-on-limit`, Issue #128)
+# 한도 시 자동 대기 후 재개 (기본. 끄려면 `--no-wait-on-limit`, Issue #128)
 # --------------------------------------------------------------------------------------
 
 # `main` 테스트가 `ctx` 의 이름을 바꿔 끼우므로 진짜를 먼저 잡아 둔다.
@@ -1869,10 +1869,23 @@ def _main_on_two_records(tmp_path, monkeypatch, failures, *extra_args):
     return code, out_path, fake
 
 
-def test_main_waits_then_parses_once_and_exits_zero(tmp_path, monkeypatch, capsys):
-    """`--wait-on-limit`: 기다렸다 끝까지 수집하고, 마지막에 한 번 파싱해 0 으로 끝난다."""
+def test_wait_on_limit_is_on_by_default():
+    """팀원이 옵션 없이 돌려도 멈추지 않게 기본이 켜짐이다. 옛 플래그는 써도 된다."""
+    parser = ctx.build_parser()
+
+    assert parser.parse_args([]).wait_on_limit is True
+    assert parser.parse_args(["--wait-on-limit"]).wait_on_limit is True
+    assert parser.parse_args(["--no-wait-on-limit"]).wait_on_limit is False
+
+
+@pytest.mark.parametrize("flags", [(), ("--wait-on-limit",)])
+def test_main_waits_then_parses_once_and_exits_zero(tmp_path, monkeypatch, capsys, flags):
+    """기본 동작: 기다렸다 끝까지 수집하고, 마지막에 한 번 파싱해 0 으로 끝난다.
+
+    `--wait-on-limit` 은 기본과 같다 - 이미 그렇게 돌리던 명령이 깨지지 않게 남겨 뒀다.
+    """
     hit = [_limit_error(403, Retry_After=90)]
-    code, out_path, fake = _main_on_two_records(tmp_path, monkeypatch, hit, "--wait-on-limit")
+    code, out_path, fake = _main_on_two_records(tmp_path, monkeypatch, hit, *flags)
 
     assert code == 0
     assert sum(fake.sleeps) == 120  # Retry-After 90 + 여유 30
@@ -1883,9 +1896,12 @@ def test_main_waits_then_parses_once_and_exits_zero(tmp_path, monkeypatch, capsy
     assert "중단" not in capsys.readouterr().out
 
 
-def test_main_without_the_option_exits_one_and_writes_nothing(tmp_path, monkeypatch):
-    """기본은 꺼짐 - 한도에 걸리면 기다리지 않고 파싱 없이 1 로 끝난다."""
-    code, out_path, fake = _main_on_two_records(tmp_path, monkeypatch, [_limit_error(403)])
+def test_no_wait_on_limit_exits_one_and_writes_nothing(tmp_path, monkeypatch, capsys):
+    """`--no-wait-on-limit`: 예전 동작 - 한도에 걸리면 기다리지 않고 파싱 없이 1 로 끝난다."""
+    code, out_path, fake = _main_on_two_records(
+        tmp_path, monkeypatch, [_limit_error(403)], "--no-wait-on-limit"
+    )
+    assert "--no-wait-on-limit" in capsys.readouterr().err
 
     assert code == 1
     assert not out_path.exists()
@@ -1893,14 +1909,13 @@ def test_main_without_the_option_exits_one_and_writes_nothing(tmp_path, monkeypa
 
 
 def test_output_is_the_same_with_and_without_the_option(tmp_path, monkeypatch):
-    """한도에 걸렸다 이어 쓴 파일 = 옵션 없이 다시 돌려 쓴 파일 = 한 번도 안 걸린 파일."""
+    """기다렸다 이어 쓴 파일 = 대기를 끄고 다시 돌려 쓴 파일 = 한 번도 안 걸린 파일."""
     hit = [_limit_error(403, Retry_After=90)]
-    waited_code, waited, _fake = _main_on_two_records(
-        tmp_path / "waited", monkeypatch, hit, "--wait-on-limit"
-    )
-    first_code, _out, _fake = _main_on_two_records(tmp_path / "rerun", monkeypatch, hit)
-    # 옵션 없이 걸렸으니 사람이 다시 돌린다 - 같은 캐시 폴더로 이어 간다.
-    rerun_code, rerun, _fake = _main_on_two_records(tmp_path / "rerun", monkeypatch, [])
+    off = "--no-wait-on-limit"
+    waited_code, waited, _fake = _main_on_two_records(tmp_path / "waited", monkeypatch, hit)
+    first_code, _out, _fake = _main_on_two_records(tmp_path / "rerun", monkeypatch, hit, off)
+    # 대기를 끄고 걸렸으니 사람이 다시 돌린다 - 같은 캐시 폴더로 이어 간다.
+    rerun_code, rerun, _fake = _main_on_two_records(tmp_path / "rerun", monkeypatch, [], off)
     clean_code, clean, _fake = _main_on_two_records(tmp_path / "clean", monkeypatch, [])
 
     assert (waited_code, first_code, rerun_code, clean_code) == (0, 1, 0, 0)

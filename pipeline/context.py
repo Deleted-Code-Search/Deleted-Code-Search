@@ -30,11 +30,14 @@
 20개 저장소 실행 (#82, #142):
     맥락 결합은 `--repo-path` 를 하나만 받으므로 저장소마다, 클론이 있는 노트북에서 돈다.
     결과는 `pipeline.run` 실행 디렉터리 **밖**에 둔다 - 조립기(#101)가 모르는 JSONL 을 거부한다.
-    맥락은 FULL_FUNCTION 에만 붙인다 (#85 대상, ADR-003). 한도에 걸리면 **출력을 쓰지 않고**
-    1 로 멈추므로 **0 이 나올 때까지 다시 돌린다** - 캐시가 있어 이어 간다. 자식 파일 읽기와
-    대체 코드 매칭은 수집이 끝까지 간 마지막 실행에서 한 번만 한다 (#128). `--workers N` 을
-    주면 그 단계를 프로세스 N 개로 나눈다 (기본 1 = 순차, 출력은 같다). `--wait-on-limit` 을
-    주면 한도에 걸려도 멈추지 않고 풀릴 때까지 기다렸다가 그 자리부터 이어 간다.
+    맥락은 FULL_FUNCTION 에만 붙인다 (#85 대상, ADR-003). **한도에 걸려도 멈추지 않는다** -
+    풀릴 때까지 기다렸다가 걸린 자리부터 이어 가고, 기다리는 동안 "한도 — HH:MM까지 대기"를
+    찍는다. 그래서 **한 번 돌리면 0 으로 끝난다. 다시 돌릴 필요가 없다** (#128). 자식 파일
+    읽기와 대체 코드 매칭은 수집이 끝난 뒤 한 번만 한다. `--workers N` 을 주면 그 단계를
+    프로세스 N 개로 나눈다 (기본 1 = 순차, 출력은 같다).
+
+    예전 동작이 필요하면 `--no-wait-on-limit` 을 준다: 한도에 걸리면 **출력을 쓰지 않고** 1 로
+    멈추고, 0 이 나올 때까지 사람이 다시 돌린다 (캐시가 있어 이어 간다).
 
     python -m pipeline.context --input <run>/<owner>__<name>.jsonl --full-function-only \\
         --repo-path repos/<owner>/<name> --out data/context/<owner>__<name>.jsonl
@@ -1120,7 +1123,7 @@ def _announce(message: str) -> None:
 
 @dataclass
 class LimitWait:
-    """한도에 걸리면 멈추지 않고 기다린다 (`--wait-on-limit`, #128).
+    """한도에 걸리면 멈추지 않고 기다린다 (CLI 의 기본. 끄려면 `--no-wait-on-limit`, #128).
 
     저장소 100개를 돌릴 때 한도에 걸릴 때마다 사람이 다시 시작하지 않게 하려는 것이다.
     시계·잠들기·알림을 주입받는 것은 테스트가 실제로 기다리지 않게 하려는 것이다.
@@ -1535,8 +1538,12 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--wait-on-limit",
-        action="store_true",
-        help="API 한도에 걸리면 종료하지 않고 풀릴 때까지 기다렸다가 이어서 수집한다 (#128)",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help=(
+            "API 한도에 걸리면 풀릴 때까지 기다렸다가 이어서 수집한다 (기본, #128)."
+            " --no-wait-on-limit 이면 예전처럼 파싱 없이 종료 코드 1"
+        ),
     )
     parser.add_argument("--max-issues", type=int, default=MAX_ISSUES_PER_COMMIT)
     parser.add_argument("--cache-dir", type=Path, default=None)
@@ -1546,16 +1553,20 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    """맥락을 모으고 결과를 낸다. 한도 소진으로 멈췄으면 1, 정상이면 0.
+    """맥락을 모으고 결과를 낸다. 정상이면 0, 한도 소진으로 멈췄으면 1.
+
+    한도에 걸리면 기본으로는 멈추지 않고 기다렸다 이어 간다 (`LimitWait`). 1 로 멈추는 것은
+    `--no-wait-on-limit` 을 줬을 때뿐이다. 팀원이 옵션 없이 돌려도 밤새 멈춰 있지 않게 하려고
+    기다리는 쪽을 기본으로 했다.
 
     `--out` 으로 레코드를 쓸 때 **`--repo-path` 를 꼭 준다.** 없으면 에러 없이 대체 코드
     본문이 크게 줄어든다 - 예비 200건에서 39건 -> 8건 (#107). 헝크에는 추가된 줄만 있어서
     자식 파일 원문 없이는 함수가 헝크 안에서 끝난 것이 확인된 후보만 채울 수 있기 때문이다.
 
-    **한도에 걸려 멈추면 `--out` 을 쓰지 않는다** (#128). 전에는 거기까지 모은 것을 매번
-    파싱해 썼는데, 그 파일은 붙이기(`attach_contexts`)가 어차피 거부하고, 0 이 나올 때까지
-    다시 돌리는 동안 같은 레코드를 실행마다 다시 읽고 파싱했다. 수집한 응답은 캐시에 남으므로
-    잃는 것은 없다. 이미 있던 `--out` 파일은 건드리지 않는다.
+    **한도에 걸려 멈추면(`--no-wait-on-limit`) `--out` 을 쓰지 않는다** (#128). 전에는
+    거기까지 모은 것을 매번 파싱해 썼는데, 그 파일은 붙이기(`attach_contexts`)가 어차피
+    거부하고, 0 이 나올 때까지 다시 돌리는 동안 같은 레코드를 실행마다 다시 읽고 파싱했다.
+    수집한 응답은 캐시에 남으므로 잃는 것은 없다. 이미 있던 `--out` 파일은 건드리지 않는다.
     """
     args = build_parser().parse_args(argv)
     load_env_file(args.env_file)
@@ -1624,8 +1635,8 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     if args.out and report.stopped_reason:
         log(
-            f"{args.out} 은 쓰지 않았다: 한도에 걸려 멈췄다. 다시 돌리면 캐시로 이어 가고,"
-            " 파싱은 수집이 끝난 실행에서 한 번만 한다."
+            f"{args.out} 은 쓰지 않았다: 한도에 걸려 멈췄다 (--no-wait-on-limit). 다시 돌리면"
+            " 캐시로 이어 가고, 파싱은 수집이 끝난 실행에서 한 번만 한다."
         )
     elif args.out:
         if args.repo_path is None:
