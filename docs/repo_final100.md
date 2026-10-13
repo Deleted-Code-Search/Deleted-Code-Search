@@ -11,19 +11,23 @@ ADR-020(저장소 목표 500 → 100)의 100개 목록 초안이다. 확정 20�
 
 | 파일 | 내용 |
 |---|---|
-| `docs/repo_final100.csv` | **파이프라인 입력.** 100개, `repo_final20_v2.csv`와 같은 열 (`select_repos.py` v2 출력 그대로) |
+| `docs/repo_final100.csv` | 100개 전체 목록. `repo_final20_v2.csv`와 같은 열 (`select_repos.py` v2 출력 그대로). **실행 입력으로 쓰지 않는다** |
+| `docs/repo_final100_sj.csv` · `_jh.csv` · `_hs.csv` | **파이프라인 실행 입력.** 담당별 신규 저장소만 (합쳐서 80개, 위와 같은 열). 분할은 §7.2 |
 | `docs/repo_candidates_100.csv` | 1단계 원본. 검색 500개 + §4.3 예시의 v1 평가 (502행, 제외 사유 포함) |
 | `docs/repo_candidates_100_v2.csv` | 2단계 원본. PR 게이트 통과 155개 + celery의 v2 평가 |
 | `docs/repo_final100_scale.csv` | 100개의 예상 규모·API 부담 어림 (`tools/repo_scale.py` 출력) |
 
+> **실행할 때: 기존 20개는 다시 돌리지 않는다. `pipeline.run`의 입력은 담당별 CSV(`repo_final100_sj.csv` · `_jh.csv` · `_hs.csv`)다.**
+> `repo_final100.csv`를 그대로 넣으면 기존 20개가 다시 추출된다 (실행 기록이 필터 v0.7, 지금은 v0.8 — home-assistant만 약 15시간). 이유와 절차는 §7.
+
 ## 0. 요약
 
 - **100개 = 기존 20 + 신규 80.** 신규 80은 PR 게이트를 통과한 후보 중 `score_v2` 상위 80개다
-- 라이선스: Apache-2.0 50 / MIT 40 / BSD-3-Clause 9 / BSD-2-Clause 1. 수동 확인은 celery 하나뿐이다 (기존 그대로)
-- `recent_only`(최초 커밋 2015년 이전, 채굴 구간을 2015년부터로 좁힘) 19개, 2015년 이후 시작 81개, 그중 2020년 이후 시작 51개
-- 신규 80개의 예상 규모 (**어림**, §5): 클론 합계 약 44.9GB, 순회 커밋 약 685,423개, 추출 시간 36시간~125시간 (노트북 1대 직렬 환산, 중간값 71시간)
-- 신규 80개의 맥락 결합 API 호출 (**어림**, §6): 50,735~199,766회, 중간값 118,908회. 토큰 하나(5,000회/시간)로 23.8시간, 셋으로 나누면 한 사람당 7.9시간 안팎이다
-- 초대형(XL) 신규 3개: `zulip/zulip`, `roboflow/supervision`, `ccxt/ccxt`. `ccxt/ccxt` 하나가 신규 80개 클론 합계의 23.9%다
+- 라이선스: Apache-2.0 51 / MIT 39 / BSD-3-Clause 9 / BSD-2-Clause 1. 수동 확인은 celery 하나뿐이다 (기존 그대로)
+- `recent_only`(최초 커밋 2015년 이전, 채굴 구간을 2015년부터로 좁힘) 19개, 2015년 이후 시작 81개, 그중 2020년 이후 시작 52개
+- 신규 80개의 예상 규모 (**어림**, §5): 클론 합계 약 34.5GB, 순회 커밋 약 608,203개, 추출 시간 32시간~111시간 (노트북 1대 직렬 환산, 중간값 63시간)
+- 신규 80개의 맥락 결합 API 호출 (**어림**, §6): 46,268~182,183회, 중간값 108,443회. 토큰 하나(5,000회/시간)로 21.7시간, 셋으로 나누면 한 사람당 7.2시간 안팎이다
+- 초대형(XL) 신규 2개: `zulip/zulip`, `roboflow/supervision`. `ccxt/ccxt`(단독 클론 약 10.7GB)는 팀 결정으로 뺐다 (§1.4)
 - 3분할 초안은 §7에 있다
 
 ## 1. 방법
@@ -35,7 +39,7 @@ ADR-020(저장소 목표 500 → 100)의 100개 목록 초안이다. 확정 20�
 1. **1단계 (v1).** 검색 `language:Python is:public archived:false stars:>=1000` 별 수 내림차순 500개 + §4.3 초기 후보 예시를 `select_repos.py`로 평가했다. 언어·라이선스·커밋 수·최근 1년 활동으로 거르고, 남은 저장소마다 최근 1년 커밋 표본 30건(병합·봇 제외)에서 `pr_ratio`·`issue_ref_ratio`를 쟀다
 2. **PR 게이트.** `pr_ratio ≥ 0.70`인 후보만 다음 단계로 넘겼다
 3. **2단계 (v2).** 게이트 통과 후보와 celery를 `--history-per-year 5`로 다시 평가했다. 최초 커밋 날짜, `recent_only`, 연도별 PR 연결 비율, `score_v2`가 여기서 나온다
-4. **선례 적용.** `repo_final20.md` §2에서 사람이 뺀 두 부류(신생, 예제·목록 모음)를 같은 이유로 뺐다 (§1.4)
+4. **선례 적용.** `repo_final20.md` §2에서 사람이 뺀 두 부류(신생, 예제·목록 모음)를 같은 이유로 뺐다. 여기에 팀 결정으로 `ccxt/ccxt`를 더 뺐다 (§1.4)
 5. **확정 20개는 그대로 넣고, 나머지를 `score_v2` 내림차순으로 80개 채웠다**
 
 별 수는 검색 범위를 정하는 데만 썼다 (ADR-006). 순위에는 들어가지 않는다.
@@ -86,12 +90,13 @@ python -m tools.repo_scale --input docs/repo_final100.csv --out docs/repo_final1
 
 ### 1.4 기준 밖에서 한 판단 — `repo_final20.md` §2의 선례
 
-§4.3에 없는 판단이 둘 들어갔다. 둘 다 20개를 고를 때 사람이 한 판단을 그대로 따른 것이다. 새 기준을 만든 것이 아니지만, **기준에 없는 제외라는 사실은 같다.** 팀이 되돌리려면 §4.3의 표에서 고르면 된다.
+§4.3에 없는 판단이 셋 들어갔다. 앞의 둘은 20개를 고를 때 사람이 한 판단을 그대로 따른 것이고, 셋째는 이번에 팀이 정했다 (2026-10-13, PR #172). 새 기준을 만든 것이 아니지만, **기준에 없는 제외라는 사실은 같다.** 팀이 되돌리려면 §4.3의 표에서 고르면 된다.
 
 - **신생 저장소.** `repo_final20.md` §2.1은 첫 커밋 후 18개월이 안 된 저장소 4개를 뺐다. 같은 선(2026-10-13 기준 첫 커밋이 2025-04-13 이후)을 적용했다. 그때 뺀 4개는 날짜와 무관하게 그대로 뺐다 — `bytedance/deer-flow`(첫 커밋 2025-04-07)는 오늘 기준으로는 18개월을 6일 넘겼지만 이미 사람이 내린 결정이라 뒤집지 않았다
 - **예제·목록 모음.** §2.2가 이름을 적어 둔 `TheAlgorithms/Python`·`public-apis/public-apis`·`Shubhamsaboo/awesome-llm-apps`를 뺐다. 같은 유형으로 본 `geekcomputers/Python`("My Python Examples")·`keon/algorithms`("Minimal examples of data structures and algorithms")도 뺐다. **이 둘은 Claude가 저장소 설명만 보고 한 판단이다. 사람이 확인해야 한다** (자동 규칙은 #25)
+- **생성 코드 위주 저장소 — `ccxt/ccxt`.** TypeScript 원본에서 Python 등 다른 언어로 트랜스파일한 산출물이 대부분이다. 생성 코드를 거르는 `NOISE_GENERATED`가 미구현이라(`filter_rules.md`) 지금 필터로는 그 삭제가 그대로 통과한다. 크기도 단독으로 클론 약 10.7GB — 넣었을 때 신규 80개 클론 합계(44.9GB)의 24%였다. 기준(§4.3)은 모두 통과했고 `score_v2` 0.5800으로 신규 70위였다. 빈 자리는 81번째였던 `confident-ai/deepeval`(0.5196)로 채웠다. 근거로 쓴 측정값: 바이트 기준 Python 23%(TypeScript·C#·PHP·Go가 비슷하게 있다), 표본에서 변경 파일 50개 이상인 커밋이 변경 줄의 95%, 순회 커밋 약 8.6만, 채굴 구간 PR 연결 0.540. **"생성 코드가 대부분"이라는 판단 자체는 저장소 구조에 대한 팀의 판단이고, 생성 파일 비율을 재지는 않았다.** 같은 유형의 저장소가 100개 안에 더 있는지도 보지 않았다 (§8 ⑤)
 
-이 판단으로 빠진 29개 중 25개는 점수로는 80개 안에 들었다 (§4.3 표의 "넣었다면 신규 순위").
+이 판단으로 빠진 30개 중 26개는 점수로는 80개 안에 들었다 (§4.3 표의 "넣었다면 신규 순위").
 
 ## 2. 목록
 
@@ -202,25 +207,25 @@ python -m tools.repo_scale --input docs/repo_final100.csv --out docs/repo_final1
 | 67 | `soxoj/maigret` | MIT | 2020-01-08 |  | 1,698 | 1.000 (30) | 0.857 (35) | 0.433 | 0.5856 |  |
 | 68 | `jax-ml/jax` | Apache-2.0 | 2018-11-18 |  | 39,022 | 0.967 (30) | 0.733 (45) | 0.100 | 0.5840 | **L** |
 | 69 | `getzep/graphiti` | Apache-2.0 | 2024-08-13 |  | 1,014 | 1.000 (30) | 0.800 (15) | 0.600 | 0.5807 |  |
-| 70 | `ccxt/ccxt` | MIT | 2017-06-28 |  | 101,243 | 1.000 (30) | 0.540 (50) | 0.367 | 0.5800 | **XL**, 구간 PR < 0.70 |
-| 71 | `plotly/plotly.py` | MIT | 2013-11-21 | ✓ | 8,234 | 1.000 (30) | 0.883 (60) | 0.100 | 0.5795 |  |
-| 72 | `pyscript/pyscript` | Apache-2.0 | 2022-02-21 |  | 1,339 | 0.967 (30) | 1.000 (25) | 0.200 | 0.5749 |  |
-| 73 | `microsoft/qlib` | MIT | 2020-08-14 |  | 2,070 | 1.000 (29) | 0.971 (35) | 0.172 | 0.5746 |  |
-| 74 | `ManimCommunity/manim` | MIT | 2015-03-22 |  | 6,358 | 1.000 (30) | 0.583 (60) | 0.567 | 0.5562 | 구간 PR < 0.70 |
-| 75 | `Huanshere/VideoLingo` | Apache-2.0 | 2024-08-09 |  | 1,091 | 0.967 (30) | 0.533 (15) | 0.933 | 0.5511 | 구간 PR < 0.70 |
-| 76 | `Textualize/textual` | MIT | 2021-04-08 |  | 13,104 | 0.967 (30) | 0.833 (30) | 0.000 | 0.5482 |  |
-| 77 | `3b1b/manim` | MIT | 2015-03-22 |  | 6,478 | 0.867 (30) | 0.733 (60) | 0.267 | 0.5422 |  |
-| 78 | `tornadoweb/tornado` | Apache-2.0 | 2009-09-09 | ✓ | 2,727 | 1.000 (30) | 0.933 (60) | 0.067 | 0.5380 |  |
-| 79 | `nginx-proxy/nginx-proxy` | MIT | 2014-05-05 | ✓ | 1,652 | 0.767 (30) | 0.867 (60) | 0.233 | 0.5290 |  |
-| 80 | `huggingface/smolagents` | Apache-2.0 | 2024-12-05 |  | 1,059 | 1.000 (30) | 0.800 (15) | 0.400 | 0.5229 |  |
+| 70 | `plotly/plotly.py` | MIT | 2013-11-21 | ✓ | 8,234 | 1.000 (30) | 0.883 (60) | 0.100 | 0.5795 |  |
+| 71 | `pyscript/pyscript` | Apache-2.0 | 2022-02-21 |  | 1,339 | 0.967 (30) | 1.000 (25) | 0.200 | 0.5749 |  |
+| 72 | `microsoft/qlib` | MIT | 2020-08-14 |  | 2,070 | 1.000 (29) | 0.971 (35) | 0.172 | 0.5746 |  |
+| 73 | `ManimCommunity/manim` | MIT | 2015-03-22 |  | 6,358 | 1.000 (30) | 0.583 (60) | 0.567 | 0.5562 | 구간 PR < 0.70 |
+| 74 | `Huanshere/VideoLingo` | Apache-2.0 | 2024-08-09 |  | 1,091 | 0.967 (30) | 0.533 (15) | 0.933 | 0.5511 | 구간 PR < 0.70 |
+| 75 | `Textualize/textual` | MIT | 2021-04-08 |  | 13,104 | 0.967 (30) | 0.833 (30) | 0.000 | 0.5482 |  |
+| 76 | `3b1b/manim` | MIT | 2015-03-22 |  | 6,478 | 0.867 (30) | 0.733 (60) | 0.267 | 0.5422 |  |
+| 77 | `tornadoweb/tornado` | Apache-2.0 | 2009-09-09 | ✓ | 2,727 | 1.000 (30) | 0.933 (60) | 0.067 | 0.5380 |  |
+| 78 | `nginx-proxy/nginx-proxy` | MIT | 2014-05-05 | ✓ | 1,652 | 0.767 (30) | 0.867 (60) | 0.233 | 0.5290 |  |
+| 79 | `huggingface/smolagents` | Apache-2.0 | 2024-12-05 |  | 1,059 | 1.000 (30) | 0.800 (15) | 0.400 | 0.5229 |  |
+| 80 | `confident-ai/deepeval` | Apache-2.0 | 2023-08-10 |  | 10,366 | 0.967 (30) | 0.800 (20) | 0.000 | 0.5196 |  |
 
 ### 2.3 읽을 때 주의할 것
 
-- **컷 경계가 좁다.** 80번째 `huggingface/smolagents`(0.5229)와 81번째 `confident-ai/deepeval`(0.5196)의 차이는 0.0033이다. 표본 커밋 1건이 바꾸는 최대 폭(0.027, `repo_final20.md` §3.3)보다 작다. 70위 아래는 점수가 확실히 가려 줬다고 보기 어렵다 (§4.4에 81위 이하가 있다)
+- **컷 경계가 좁다.** 80번째 `confident-ai/deepeval`(0.5196)와 81번째 `huggingface/sentence-transformers`(0.5098)의 차이는 0.0098이다. 표본 커밋 1건이 바꾸는 최대 폭(0.027, `repo_final20.md` §3.3)보다 작다. 70위 아래는 점수가 확실히 가려 줬다고 보기 어렵다 (§4.4에 81위 이하가 있다)
 - **`issue_ref_ratio`는 측정 시점에 따라 크게 흔들린다.** 최근 사람 커밋 30건만 보기 때문이다. pandas는 0.367(9/10) → 0.233(9/15) → 0.933(10/13)이었다. 점수로는 0.3 × 0.7 = 0.21이 움직인다. 순위를 그대로 믿으면 안 된다 (§8 ④)
-- **채굴 구간 PR 연결이 0.70 미만인 저장소가 10개다:** `zulip/zulip` 0.667, `keras-team/keras` 0.683, `modelscope/FunASR` 0.680, `agno-agi/agno` 0.650, `unclecode/crawl4ai` 0.600, `ccxt/ccxt` 0.540, `ManimCommunity/manim` 0.583, `Huanshere/VideoLingo` 0.533, `unslothai/unsloth` 0.250, `commaai/openpilot` 0.273. 최근 1년 게이트는 통과했지만 과거 구간에는 PR이 덜 연결돼 있다. v2에는 이 값으로 거르는 규칙이 없다 (§8 ③)
+- **채굴 구간 PR 연결이 0.70 미만인 저장소가 9개다:** `zulip/zulip` 0.667, `keras-team/keras` 0.683, `modelscope/FunASR` 0.680, `agno-agi/agno` 0.650, `unclecode/crawl4ai` 0.600, `ManimCommunity/manim` 0.583, `Huanshere/VideoLingo` 0.533, `unslothai/unsloth` 0.250, `commaai/openpilot` 0.273. 최근 1년 게이트는 통과했지만 과거 구간에는 PR이 덜 연결돼 있다. v2에는 이 값으로 거르는 규칙이 없다 (§8 ③)
 - **최근 1년 표본이 10건 미만인 저장소가 4개다:** `mkdocs/mkdocs` 2, `RasaHQ/rasa` 1, `FoundationAgents/MetaGPT` 1, `encode/httpx` 4. `pr_ratio`·`issue_ref_ratio`를 믿기 어렵다 (httpx와 같은 사정, `repo_final20.md` §3.2). 기준에 최소 표본 수가 없어 그대로 뒀다 (§8 ①)
-- 라이선스 분포: Apache-2.0 50 / MIT 40 / BSD-3-Clause 9 / BSD-2-Clause 1 (신규 80: Apache-2.0 41 / MIT 34 / BSD-3-Clause 4 / BSD-2-Clause 1)
+- 라이선스 분포: Apache-2.0 51 / MIT 39 / BSD-3-Clause 9 / BSD-2-Clause 1 (신규 80: Apache-2.0 42 / MIT 33 / BSD-3-Clause 4 / BSD-2-Clause 1)
 
 ## 3. 라이선스 확인 방법
 
@@ -285,9 +290,9 @@ python -m tools.repo_scale --input docs/repo_final100.csv --out docs/repo_final1
 | `hankcs/HanLP` | 0.000 | 11 | 1,812 | Apache-2.0 |
 | `abi/screenshot-to-code` | 0.000 | 30 | 1,457 | MIT |
 
-### 4.3 선례에 따른 판단 제외 — 29개
+### 4.3 선례·팀 결정에 따른 수동 제외 — 30개
 
-§1.4의 두 부류다. "넣었다면 신규 순위"는 이 저장소를 빼지 않았을 때 신규 후보 중 몇 번째였을지다.
+§1.4의 세 부류다. "넣었다면 신규 순위"는 이 저장소를 빼지 않았을 때 신규 후보 중 몇 번째였을지다.
 
 | 저장소 | 사유 | 최초 커밋 | score_v2 | 넣었다면 신규 순위 | 설명 (GitHub) |
 |---|---|---|---:|---:|---|
@@ -310,52 +315,52 @@ python -m tools.repo_scale --input docs/repo_final100.csv --out docs/repo_final1
 | `anthropics/knowledge-work-plugins` | 신생 — 첫 커밋 후 18개월 미만 | 2026-01-29 | 0.6147 | 55 | Open source repository of plugins primarily intended for kno |
 | `HKUDS/Vibe-Trading` | 신생 — 첫 커밋 후 18개월 미만 | 2026-04-01 | 0.6060 | 58 | "Vibe-Trading: Your Personal Trading Agent" |
 | `alirezarezvani/claude-skills` | 신생 — 첫 커밋 후 18개월 미만 | 2025-10-19 | 0.6007 | 62 | 380 Claude Code skills & agent skills & plugins (30+ Agents, |
-| `anthropics/claude-plugins-official` | 신생 — 첫 커밋 후 18개월 미만 | 2025-11-20 | 0.5755 | 72 | Official, Anthropic-managed directory of high quality Claude |
-| `rohitg00/ai-engineering-from-scratch` | 신생 — 첫 커밋 후 18개월 미만 | 2026-03-18 | 0.5723 | 74 |  |
-| `NandhaKishorM/laya` | 신생 — 첫 커밋 후 18개월 미만 | 2026-09-18 | 0.5263 | 80 | Non-autoregressive System 1 decision engine. Typed choice, s |
+| `anthropics/claude-plugins-official` | 신생 — 첫 커밋 후 18개월 미만 | 2025-11-20 | 0.5755 | 71 | Official, Anthropic-managed directory of high quality Claude |
+| `rohitg00/ai-engineering-from-scratch` | 신생 — 첫 커밋 후 18개월 미만 | 2026-03-18 | 0.5723 | 73 |  |
+| `NandhaKishorM/laya` | 신생 — 첫 커밋 후 18개월 미만 | 2026-09-18 | 0.5263 | 79 | Non-autoregressive System 1 decision engine. Typed choice, s |
 | `bojieli/ai-agent-book` | 신생 — 첫 커밋 후 18개월 미만 | 2025-09-09 | 0.4704 | 컷 아래 | 《深入理解 AI Agent：设计原理与工程实践》（李博杰 著）开源主仓库：全书正文、编译版 PDF 与按章配套代码 |
 | `davila7/claude-code-templates` | 신생 — 첫 커밋 후 18개월 미만 | 2025-07-04 | 0.4209 | 컷 아래 | CLI tool for configuring and monitoring Claude Code |
 | `TheAlgorithms/Python` | 예제·목록 모음 — final20 §2.2에 이름이 있음 | 2016-07-16 | 0.7064 | 30 | All Algorithms implemented in Python |
 | `public-apis/public-apis` | 예제·목록 모음 — final20 §2.2에 이름이 있음 | 2016-03-20 | 0.4490 | 컷 아래 | A collective list of free APIs |
 | `Shubhamsaboo/awesome-llm-apps` | 예제·목록 모음 — final20 §2.2에 이름이 있음 | 2024-04-29 | 0.3962 | 컷 아래 | 100+ AI Agents, Agent Skills and RAG Apps - Free and Open So |
 | `geekcomputers/Python` | 예제·목록 모음 — 같은 유형으로 판단 (확인 필요) | 2011-11-30 | 0.6000 | 62 | My Python Examples |
-| `keon/algorithms` | 예제·목록 모음 — 같은 유형으로 판단 (확인 필요) | 2016-11-17 | 0.5589 | 74 | Minimal examples of data structures and algorithms in Python |
+| `keon/algorithms` | 예제·목록 모음 — 같은 유형으로 판단 (확인 필요) | 2016-11-17 | 0.5589 | 73 | Minimal examples of data structures and algorithms in Python |
+| `ccxt/ccxt` | 생성 코드 위주 — 트랜스파일 산출물이 대부분, 단독 10.7GB (2026-10-13 팀 결정) | 2017-06-28 | 0.5800 | 70 | A unified trading API with more than 100 crypto exchanges an |
 
 신생으로 빠진 저장소 중에는 스킬·플러그인 모음(`alirezarezvani/claude-skills`, `anthropics/claude-plugins-official`, `anthropics/knowledge-work-plugins`, `sickn33/agentic-awesome-skills`, `davila7/claude-code-templates`)과 책 저장소(`bojieli/ai-agent-book`)가 있다. 신생 선이 없어지면 이들은 예제·목록 모음 쪽에서 다시 판단해야 한다.
 
-### 4.4 점수 컷 아래 — 27개 (예비)
+### 4.4 점수 컷 아래 — 26개 (예비)
 
 기준을 모두 통과했지만 `score_v2` 81위 이하다. 100개 중 하나를 빼게 되면 위에서부터 채운다.
 
 | 순위 | 저장소 | score_v2 | PR 경유 | PR 연결 (구간) | 이슈 참조 | 구간 커밋 | 라이선스 |
 |---:|---|---:|---:|---:|---:|---:|---|
-| 81 | `confident-ai/deepeval` | 0.5196 | 0.967 | 0.800 | 0.000 | 10,366 | Apache-2.0 |
-| 82 | `huggingface/sentence-transformers` | 0.5098 | 1.000 | 0.700 | 0.333 | 3,224 | Apache-2.0 |
-| 83 | `pyg-team/pytorch_geometric` | 0.5063 | 0.967 | 0.660 | 0.233 | 7,999 | MIT |
-| 84 | `Dao-AILab/flash-attention` | 0.5043 | 1.000 | 0.520 | 0.733 | 1,607 | BSD-3-Clause |
-| 85 | `datalab-to/surya` | 0.5007 | 1.000 | 1.000 | 0.000 | 1,013 | Apache-2.0 |
-| 86 | `harry0703/MoneyPrinterTurbo` | 0.4989 | 0.833 | 0.867 | 0.200 | 1,116 | MIT |
-| 87 | `openai/openai-python` | 0.4913 | 1.000 | 0.906 | 0.033 | 1,734 | Apache-2.0 |
-| 88 | `ranaroussi/yfinance` | 0.4742 | 0.933 | 0.620 | 0.433 | 1,951 | Apache-2.0 |
-| 89 | `tinygrad/tinygrad` | 0.4736 | 1.000 | 0.629 | 0.067 | 15,271 | MIT |
-| 90 | `Textualize/rich` | 0.4639 | 0.900 | 0.775 | 0.000 | 4,460 | MIT |
-| 91 | `SWE-agent/SWE-agent` | 0.4632 | 0.867 | 0.467 | 0.633 | 2,182 | MIT |
-| 92 | `ungoogled-software/ungoogled-chromium` | 0.4503 | 1.000 | 0.650 | 0.267 | 2,427 | BSD-3-Clause |
-| 93 | `chatchat-space/Langchain-Chatchat` | 0.4462 | 1.000 | 0.800 | 0.000 | 2,471 | Apache-2.0 |
-| 94 | `serengil/deepface` | 0.4210 | 0.967 | 0.543 | 0.367 | 2,170 | MIT |
-| 95 | `datalab-to/marker` | 0.4172 | 1.000 | 0.800 | 0.000 | 1,400 | Apache-2.0 |
-| 96 | `srbhr/Resume-Matcher` | 0.4121 | 1.000 | 0.667 | 0.133 | 2,134 | Apache-2.0 |
-| 97 | `huggingface/pytorch-image-models` | 0.3763 | 0.867 | 0.550 | 0.133 | 3,316 | Apache-2.0 |
-| 98 | `fastapi/fastapi` | 0.3725 | 1.000 | 0.489 | 0.077 | 7,793 | MIT |
-| 99 | `magic-wormhole/magic-wormhole` | 0.3712 | 0.800 | 0.533 | 0.200 | 2,391 | MIT |
-| 100 | `fastapi/sqlmodel` | 0.3498 | 1.000 | 0.567 | 0.167 | 1,380 | MIT |
-| 101 | `hiyouga/LlamaFactory` | 0.3480 | 1.000 | 0.500 | 0.133 | 3,108 | Apache-2.0 |
-| 102 | `zhayujie/CowAgent` | 0.3208 | 0.733 | 0.440 | 0.100 | 3,994 | MIT |
-| 103 | `DrewThomasson/ebook2audiobook` | 0.3065 | 1.000 | 0.333 | 0.000 | 15,398 | Apache-2.0 |
-| 104 | `fastapi/typer` | 0.2870 | 1.000 | 0.475 | 0.067 | 1,781 | MIT |
-| 105 | `langbot-app/LangBot` | 0.2758 | 0.733 | 0.400 | 0.000 | 4,405 | Apache-2.0 |
-| 106 | `hpcaitech/Open-Sora` | 0.1965 | 1.000 | 0.364 | 0.000 | 1,333 | Apache-2.0 |
-| 107 | `hiroi-sora/Umi-OCR` | 0.0788 | 1.000 | 0.133 | 0.000 | 1,267 | MIT |
+| 81 | `huggingface/sentence-transformers` | 0.5098 | 1.000 | 0.700 | 0.333 | 3,224 | Apache-2.0 |
+| 82 | `pyg-team/pytorch_geometric` | 0.5063 | 0.967 | 0.660 | 0.233 | 7,999 | MIT |
+| 83 | `Dao-AILab/flash-attention` | 0.5043 | 1.000 | 0.520 | 0.733 | 1,607 | BSD-3-Clause |
+| 84 | `datalab-to/surya` | 0.5007 | 1.000 | 1.000 | 0.000 | 1,013 | Apache-2.0 |
+| 85 | `harry0703/MoneyPrinterTurbo` | 0.4989 | 0.833 | 0.867 | 0.200 | 1,116 | MIT |
+| 86 | `openai/openai-python` | 0.4913 | 1.000 | 0.906 | 0.033 | 1,734 | Apache-2.0 |
+| 87 | `ranaroussi/yfinance` | 0.4742 | 0.933 | 0.620 | 0.433 | 1,951 | Apache-2.0 |
+| 88 | `tinygrad/tinygrad` | 0.4736 | 1.000 | 0.629 | 0.067 | 15,271 | MIT |
+| 89 | `Textualize/rich` | 0.4639 | 0.900 | 0.775 | 0.000 | 4,460 | MIT |
+| 90 | `SWE-agent/SWE-agent` | 0.4632 | 0.867 | 0.467 | 0.633 | 2,182 | MIT |
+| 91 | `ungoogled-software/ungoogled-chromium` | 0.4503 | 1.000 | 0.650 | 0.267 | 2,427 | BSD-3-Clause |
+| 92 | `chatchat-space/Langchain-Chatchat` | 0.4462 | 1.000 | 0.800 | 0.000 | 2,471 | Apache-2.0 |
+| 93 | `serengil/deepface` | 0.4210 | 0.967 | 0.543 | 0.367 | 2,170 | MIT |
+| 94 | `datalab-to/marker` | 0.4172 | 1.000 | 0.800 | 0.000 | 1,400 | Apache-2.0 |
+| 95 | `srbhr/Resume-Matcher` | 0.4121 | 1.000 | 0.667 | 0.133 | 2,134 | Apache-2.0 |
+| 96 | `huggingface/pytorch-image-models` | 0.3763 | 0.867 | 0.550 | 0.133 | 3,316 | Apache-2.0 |
+| 97 | `fastapi/fastapi` | 0.3725 | 1.000 | 0.489 | 0.077 | 7,793 | MIT |
+| 98 | `magic-wormhole/magic-wormhole` | 0.3712 | 0.800 | 0.533 | 0.200 | 2,391 | MIT |
+| 99 | `fastapi/sqlmodel` | 0.3498 | 1.000 | 0.567 | 0.167 | 1,380 | MIT |
+| 100 | `hiyouga/LlamaFactory` | 0.3480 | 1.000 | 0.500 | 0.133 | 3,108 | Apache-2.0 |
+| 101 | `zhayujie/CowAgent` | 0.3208 | 0.733 | 0.440 | 0.100 | 3,994 | MIT |
+| 102 | `DrewThomasson/ebook2audiobook` | 0.3065 | 1.000 | 0.333 | 0.000 | 15,398 | Apache-2.0 |
+| 103 | `fastapi/typer` | 0.2870 | 1.000 | 0.475 | 0.067 | 1,781 | MIT |
+| 104 | `langbot-app/LangBot` | 0.2758 | 0.733 | 0.400 | 0.000 | 4,405 | Apache-2.0 |
+| 105 | `hpcaitech/Open-Sora` | 0.1965 | 1.000 | 0.364 | 0.000 | 1,333 | Apache-2.0 |
+| 106 | `hiroi-sora/Umi-OCR` | 0.0788 | 1.000 | 0.133 | 0.000 | 1,267 | MIT |
 
 ## 5. 예상 규모 (실행 계획용)
 
@@ -414,14 +419,13 @@ python -m tools.repo_scale --input docs/repo_final100.csv --out docs/repo_final1
 
 | 저장소 | 규모 | 서버 크기 MB | 클론 어림 MB | 순회 커밋 (어림) | 대량 커밋 비중 | 대량 커밋의 변경 줄 비중 | 커밋당 변경 줄 | .py 파일 | .py MB | 최대 .py KB | PR 연결 비율 | PR 연결 커밋 (어림) | API 호출 어림 (저~중~고) |
 |---|:---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| `ccxt/ccxt` | XL | 8,442 | 10,974 | 85,790 | 4.3% | 95.3% | 4,063 | 1,019 | 37.2 | 765 | 0.43 | 36,743 | 4,929~11,551~19,406 |
 | `zulip/zulip` | XL | 633 | 822 | 62,725 | 0.5% | 51.2% | 148 | 2,037 | 16.2 | 423 | 0.74 | 46,681 | 4,639~10,873~18,266 |
 | `apache/airflow` | L | 737 | 958 | 41,027 | 3.4% | 26.0% | 223 | 8,291 | 69.5 | 656 | 0.95 | 39,138 | 3,178~7,449~12,515 |
 | `ray-project/ray` | L | 796 | 1,034 | 32,061 | 1.1% | 18.1% | 359 | 4,903 | 49.1 | 484 | 1.00 | 32,025 | 2,666~6,249~10,499 |
 | `jax-ml/jax` | L | 190 | 247 | 30,660 | 0.0% | 0.0% | 98 | 1,069 | 25.1 | 2,310 | 0.80 | 24,638 | 1,868~4,377~7,354 |
 | `RasaHQ/rasa` | L | 1,667 | 2,167 | 22,077 | 0.6% | 31.5% | 116 | 600 | 5.4 | 97 | 0.84 | 18,540 | 1,300~3,046~5,118 |
 | `PrefectHQ/prefect` | L | 241 | 313 | 21,566 | 0.3% | 6.5% | 215 | 1,915 | 23.5 | 1,042 | 0.83 | 17,820 | 1,583~3,709~6,232 |
-| `sgl-project/sglang` |  | 408 | 530 | 19,913 | 0.0% | 0.0% | 201 | 7,472 | 87.4 | 511 | 1.00 | 19,913 | 1,912~4,480~7,527 |
+| `sgl-project/sglang` |  | 408 | 530 | 19,951 | 0.1% | 1.0% | 240 | 7,472 | 87.4 | 511 | 1.00 | 19,935 | 1,915~4,488~7,539 |
 | `hummingbot/hummingbot` |  | 554 | 720 | 18,703 | 0.3% | 0.6% | 224 | 1,653 | 15.9 | 174 | 1.00 | 18,703 | 1,516~3,553~5,969 |
 | `saleor/saleor` |  | 242 | 314 | 18,589 | 2.2% | 39.9% | 454 | 4,359 | 26.8 | 219 | 0.98 | 18,244 | 1,436~3,366~5,655 |
 | `langflow-ai/langflow` | L | 1,594 | 2,072 | 17,572 | 2.2% | 8.7% | 1,039 | 4,143 | 32.9 | 329 | 0.97 | 17,140 | 1,336~3,131~5,259 |
@@ -431,6 +435,7 @@ python -m tools.repo_scale --input docs/repo_final100.csv --out docs/repo_final1
 | `Lightning-AI/pytorch-lightning` |  | 131 | 170 | 11,084 | 1.1% | 24.5% | 110 | 646 | 5.2 | 81 | 0.94 | 10,479 | 950~2,227~3,741 |
 | `streamlit/streamlit` | L | 1,141 | 1,483 | 10,674 | 2.9% | 12.4% | 232 | 1,237 | 14.1 | 229 | 0.85 | 9,050 | 768~1,799~3,023 |
 | `NVIDIA-NeMo/Speech` |  | 519 | 674 | 9,426 | 1.1% | 37.7% | 426 | 1,598 | 20.8 | 235 | 0.98 | 9,269 | 709~1,662~2,791 |
+| `confident-ai/deepeval` |  | 205 | 266 | 8,539 | 0.9% | 26.5% | 318 | 1,142 | 6.9 | 135 | 0.69 | 5,851 | 460~1,079~1,813 |
 | `run-llama/llama_index` |  | 486 | 631 | 7,959 | 0.8% | 94.5% | 4,973 | 3,772 | 15.3 | 290 | 1.00 | 7,941 | 602~1,412~2,371 |
 | `comet-ml/opik` |  | 802 | 1,042 | 7,490 | 1.2% | 36.9% | 468 | 3,042 | 21.5 | 3,096 | 0.88 | 6,592 | 594~1,393~2,341 |
 | `recommenders-team/recommenders` |  | 229 | 297 | 7,266 | 0.0% | 0.0% | 302 | 247 | 1.5 | 63 | 0.91 | 6,591 | 451~1,057~1,776 |
@@ -468,7 +473,7 @@ python -m tools.repo_scale --input docs/repo_final100.csv --out docs/repo_final1
 | `reflex-dev/reflex` |  | 196 | 254 | 3,657 | 2.4% | 40.6% | 351 | 1,351 | 12.0 | 227 | 1.00 | 3,644 | 304~712~1,196 |
 | `deepspeedai/DeepSpeed` |  | 245 | 318 | 3,546 | 0.9% | 38.5% | 223 | 1,131 | 9.3 | 301 | 0.96 | 3,390 | 290~680~1,142 |
 | `verl-project/verl` |  | 31 | 40 | 3,099 | 0.4% | 41.4% | 300 | 675 | 7.1 | 103 | 0.99 | 3,056 | 233~547~919 |
-| `eosphoros-ai/DB-GPT` |  | 477 | 620 | 3,076 | 11.3% | 73.4% | 1,227 | 1,544 | 8.8 | 160 | 1.00 | 3,076 | 207~484~814 |
+| `eosphoros-ai/DB-GPT` |  | 477 | 620 | 3,069 | 11.7% | 72.5% | 1,799 | 1,544 | 8.8 | 160 | 1.00 | 3,069 | 206~483~812 |
 | `spotDL/spotify-downloader` |  | 161 | 209 | 2,662 | 0.2% | 5.9% | 3,146 | 93 | 0.5 | 33 | 0.81 | 2,166 | 200~469~787 |
 | `openai/openai-agents-python` |  | 73 | 94 | 2,490 | 3.3% | 42.5% | 436 | 1,025 | 16.9 | 468 | 0.98 | 2,453 | 214~501~842 |
 | `psf/black` |  | 9 | 11 | 2,396 | 0.1% | 0.6% | 74 | 378 | 5.3 | 1,373 | 0.89 | 2,129 | 196~459~772 |
@@ -524,16 +529,16 @@ python -m tools.repo_scale --input docs/repo_final100.csv --out docs/repo_final1
 
 | | 저장소 | 서버 크기 합 | 클론 어림 합 | 순회 커밋 (어림) | 추출 시간 어림 (저~중~고) |
 |---|---:|---:|---:|---:|---:|
-| 신규 80 | 80 | 34.5GB | **44.9GB** | 685,423 | 36시간~71시간~125시간 |
+| 신규 80 | 80 | 26.5GB | **34.5GB** | 608,203 | 32시간~63시간~111시간 |
 | 기존 20 | 20 | 9.3GB | 12.0GB | 330,774 | (실측 합계 44시간) |
-| 100개 | 100 | 43.8GB | 57.0GB | 1,016,197 | |
+| 100개 | 100 | 35.8GB | 46.5GB | 938,977 | |
 
 - 추출 시간은 노트북 1대에서 저장소를 하나씩 돌린다고 본 합계다. `--workers`와 3분할로 줄어든다
-- CHARTER §7의 추정("100개 ≈ 10~20GB, 1인당 3~7GB")보다 크다. 신규 80개만으로 약 44.9GB다. 큰 저장소 몇 개가 합계를 끌고 간다: `ccxt/ccxt` 10.7GB, `roboflow/supervision` 5.8GB, `PaddlePaddle/PaddleOCR` 2.4GB, `RasaHQ/rasa` 2.1GB, `langflow-ai/langflow` 2.0GB, `mlflow/mlflow` 1.9GB
+- CHARTER §7의 추정("100개 ≈ 10~20GB, 1인당 3~7GB")보다 크다. 신규 80개만으로 약 34.5GB다. 큰 저장소 몇 개가 합계를 끌고 간다: `roboflow/supervision` 5.8GB, `PaddlePaddle/PaddleOCR` 2.4GB, `RasaHQ/rasa` 2.1GB, `langflow-ai/langflow` 2.0GB, `mlflow/mlflow` 1.9GB, `pytorch/vision` 1.6GB
 - 추출이 끝난 클론을 지우면(§7) 동시에 필요한 용량은 합계가 아니라 "돌고 있는 저장소들의 크기"다
-- **XL (신규 3개):** `zulip/zulip`, `roboflow/supervision`, `ccxt/ccxt`
+- **XL (신규 2개):** `zulip/zulip`, `roboflow/supervision`
 - **L (신규 10개):** `mlflow/mlflow`, `ray-project/ray`, `apache/airflow`, `pytorch/vision`, `PrefectHQ/prefect`, `langflow-ai/langflow`, `streamlit/streamlit`, `RasaHQ/rasa`, `PaddlePaddle/PaddleOCR`, `jax-ml/jax`
-- `ccxt/ccxt`는 따로 봐야 한다. 서버 크기 8.2GB(클론 어림 약 11GB), 순회 커밋 약 85,790개다. 커밋 수는 home-assistant/core(약 11.8만) 다음이고, 크기는 openpilot(9월 클론 6.5GB)보다 크다. 대량 커밋(변경 파일 50개 이상)이 표본 변경 줄의 95%를 차지한다. GitHub는 주 언어를 Python으로 보지만 바이트 기준 Python은 23%이고 TypeScript·C#·PHP·Go가 비슷하게 있다 — 한 언어로 쓴 코드를 다른 언어로 변환해 함께 커밋하는 저장소다. 채굴 구간 PR 연결도 0.540이다. **기준은 모두 통과해 목록에 넣었다. 빼거나 미루는 것은 §8 ⑤에 제안으로 적었다**
+- `ccxt/ccxt`(XL — 서버 크기 8.2GB, 순회 커밋 약 8.6만)는 목록에서 뺐다 (§1.4). 넣었을 때의 신규 클론 합계는 약 44.9GB였다
 
 ## 6. 맥락 결합 API 부담 (어림)
 
@@ -557,7 +562,7 @@ API 호출 ≈ 순회 커밋 × (FULL_FUNCTION 커밋 비율) × (1 + PR 연결 
 
 | | PR 연결 커밋 (어림) | API 호출 저 | 중 | 고 | 토큰 1개로 (중) |
 |---|---:|---:|---:|---:|---:|
-| 신규 80 | 576,279 | 50,735 | **118,908** | 199,766 | 23.8시간 |
+| 신규 80 | 545,402 | 46,268 | **108,443** | 182,183 | 21.7시간 |
 | 기존 20 (다시 돌린다면) | 300,615 | 25,094 | 58,813 | 98,804 | 11.8시간 |
 
 "PR 연결 커밋"은 채굴 구간 전체의 값이다. FULL_FUNCTION 커밋만의 값이 아니다. 맥락 결합이 모든 커밋으로 넓어질 때의 상한으로 읽으면 된다.
@@ -570,7 +575,7 @@ API 호출 ≈ 순회 커밋 × (FULL_FUNCTION 커밋 비율) × (1 + PR 연결 
 
 - 분담: 재헌 6 / 성제 7 / 희수 7 (§2.1 표의 "#82 담당"). `home-assistant/core`는 재헌 배정이었지만 `recent_only` 적용 뒤 성제 노트북에서 돌았다 (#82 완료 코멘트)
 - 결과는 성제 노트북에 모여 있다: 추출 `data/run_{sj,jh,hs,ha}/`, 맥락 `data/context_{sj,jh,hs,ha}/`, 조립 `data/assembled/`. 클론은 `repos/`에 10개가 남아 있다 (성제 7개 + home-assistant, httpx, requests)
-- **`pipeline.run`에 `repo_final100.csv`를 그대로 넣으면 기존 20개를 다시 추출한다.** 실행 기록의 필터 규칙 버전이 v0.7이고 지금은 v0.8이라 `is_completed`가 건너뛰지 않는다 (home-assistant만 약 15시간). 기존 20개를 다시 돌릴지는 따로 정하고, 아니면 신규 80개 행만 담은 담당별 CSV를 입력으로 쓴다
+- **기존 20개는 다시 돌리지 않는다. 실행은 담당별 CSV로 한다 (§7.2).** `pipeline.run`에 `repo_final100.csv`를 그대로 넣으면 기존 20개를 다시 추출한다 — 실행 기록의 필터 규칙 버전이 v0.7이고 지금은 v0.8이라 `is_completed`가 건너뛰지 않는다 (home-assistant만 약 15시간). 기존 20개를 새 규칙으로 다시 돌릴 필요가 생기면 그때 따로 정한다
 
 | #82 담당 | 저장소 | 순회 커밋 (어림) | API 호출 어림 (중) |
 |---|---:|---:|---:|
@@ -584,17 +589,18 @@ API 호출 ≈ 순회 커밋 × (FULL_FUNCTION 커밋 비율) × (1 + PR 연결 
 
 | 담당 | 저장소 | 클론 합계 (어림) | 가장 큰 클론 | 순회 커밋 (어림) | 추출 시간 어림 (저~중~고) | API 호출 어림 (저~중~고) | API 한도 시간 (중, 5,000회/시간) | XL·L |
 |---|---:|---:|---|---:|---:|---:|---:|---|
-| 성제 | 36 | 15.3GB | ccxt 10.7GB | 229,371 | 12~24~42h | 16,263~38,115~64,034 | 7.6h | ccxt (XL) |
-| 재헌 | 23 | 14.7GB | supervision 5.8GB | 225,021 | 12~23~41h | 17,253~40,432~67,923 | 8.1h | supervision (XL), airflow (L), langflow (L), jax (L), streamlit (L) |
-| 희수 | 21 | 14.9GB | PaddleOCR 2.4GB | 231,031 | 12~24~42h | 17,219~40,361~67,809 | 8.1h | zulip (XL), PaddleOCR (L), ray (L), rasa (L), mlflow (L), vision (L), prefect (L) |
+| 성제 | 38 | 11.7GB | supervision 5.8GB | 203,343 | 11~21~37h | 14,907~34,936~58,695 | 7.0h | supervision (XL), jax (L), streamlit (L) |
+| 재헌 | 21 | 11.5GB | rasa 2.1GB | 206,391 | 11~21~38h | 15,668~36,723~61,691 | 7.3h | zulip (XL), rasa (L), mlflow (L), vision (L), prefect (L) |
+| 희수 | 21 | 11.3GB | PaddleOCR 2.4GB | 198,469 | 11~20~36h | 15,693~36,784~61,797 | 7.4h | PaddleOCR (L), airflow (L), langflow (L), ray (L) |
 
-**성제** (36개) — `ccxt/ccxt`, `hummingbot/hummingbot`, `Lightning-AI/pytorch-lightning`, `pypa/pipenv`, `plotly/dash`, `deepset-ai/haystack`, `langchain-ai/langgraph`, `topoteretes/cognee`, `scrapy/scrapy`, `ManimCommunity/manim`, `3b1b/manim`, `modelscope/FunASR`, `kivy/kivy`, `huggingface/datasets`, `locustio/locust`, `hpcaitech/ColossalAI`, `python-poetry/poetry`, `huggingface/trl`, `deepspeedai/DeepSpeed`, `verl-project/verl`, `openai/openai-agents-python`, `psf/black`, `spotify/luigi`, `ScrapeGraphAI/Scrapegraph-ai`, `assafelovic/gpt-researcher`, `sherlock-project/sherlock`, `microsoft/qlib`, `huggingface/peft`, `mlc-ai/mlc-llm`, `pallets/click`, `mkdocs/mkdocs`, `pyscript/pyscript`, `nginx-proxy/nginx-proxy`, `huggingface/smolagents`, `modelcontextprotocol/python-sdk`, `getzep/graphiti`
+**성제** (38개) — `jax-ml/jax`, `saleor/saleor`, `netbox-community/netbox`, `streamlit/streamlit`, `confident-ai/deepeval`, `mitmproxy/mitmproxy`, `HKUDS/LightRAG`, `deepset-ai/haystack`, `blakeblackshear/frigate`, `langchain-ai/langgraph`, `agno-agi/agno`, `scrapy/scrapy`, `ManimCommunity/manim`, `3b1b/manim`, `modelscope/FunASR`, `arc53/DocsGPT`, `kivy/kivy`, `huggingface/datasets`, `locustio/locust`, `hpcaitech/ColossalAI`, `roboflow/supervision`, `python-poetry/poetry`, `huggingface/trl`, `verl-project/verl`, `openai/openai-agents-python`, `spotify/luigi`, `assafelovic/gpt-researcher`, `sherlock-project/sherlock`, `microsoft/qlib`, `huggingface/peft`, `mlc-ai/mlc-llm`, `pallets/click`, `soxoj/maigret`, `pyscript/pyscript`, `nginx-proxy/nginx-proxy`, `huggingface/smolagents`, `getzep/graphiti`, `Huanshere/VideoLingo`
 
-**재헌** (23개) — `apache/airflow`, `jax-ml/jax`, `sgl-project/sglang`, `saleor/saleor`, `langflow-ai/langflow`, `netbox-community/netbox`, `streamlit/streamlit`, `NVIDIA-NeMo/Speech`, `recommenders-team/recommenders`, `mitmproxy/mitmproxy`, `marimo-team/marimo`, `HKUDS/LightRAG`, `blakeblackshear/frigate`, `stanfordnlp/dspy`, `onnx/onnx`, `PrefectHQ/fastmcp`, `roboflow/supervision`, `eosphoros-ai/DB-GPT`, `spotDL/spotify-downloader`, `exo-explore/exo`, `Genesis-Embodied-AI/genesis-world`, `soxoj/maigret`, `Huanshere/VideoLingo`
+**재헌** (21개) — `zulip/zulip`, `RasaHQ/rasa`, `PrefectHQ/prefect`, `hummingbot/hummingbot`, `mlflow/mlflow`, `NVIDIA-NeMo/Speech`, `run-llama/llama_index`, `huggingface/diffusers`, `pypa/pipenv`, `topoteretes/cognee`, `pytorch/vision`, `onnx/onnx`, `reflex-dev/reflex`, `deepspeedai/DeepSpeed`, `eosphoros-ai/DB-GPT`, `spotDL/spotify-downloader`, `ScrapeGraphAI/Scrapegraph-ai`, `exo-explore/exo`, `huggingface/lerobot`, `mkdocs/mkdocs`, `kvcache-ai/ktransformers`
 
-**희수** (21개) — `zulip/zulip`, `ray-project/ray`, `RasaHQ/rasa`, `PrefectHQ/prefect`, `mlflow/mlflow`, `Textualize/textual`, `run-llama/llama_index`, `comet-ml/opik`, `huggingface/diffusers`, `plotly/plotly.py`, `agno-agi/agno`, `PaddlePaddle/PaddleOCR`, `arc53/DocsGPT`, `FoundationAgents/MetaGPT`, `pytorch/vision`, `pydantic/pydantic-ai`, `reflex-dev/reflex`, `sanic-org/sanic`, `huggingface/lerobot`, `tornadoweb/tornado`, `kvcache-ai/ktransformers`
+**희수** (21개) — `apache/airflow`, `ray-project/ray`, `sgl-project/sglang`, `langflow-ai/langflow`, `Textualize/textual`, `Lightning-AI/pytorch-lightning`, `comet-ml/opik`, `recommenders-team/recommenders`, `marimo-team/marimo`, `plotly/dash`, `plotly/plotly.py`, `PaddlePaddle/PaddleOCR`, `FoundationAgents/MetaGPT`, `stanfordnlp/dspy`, `pydantic/pydantic-ai`, `PrefectHQ/fastmcp`, `psf/black`, `sanic-org/sanic`, `tornadoweb/tornado`, `Genesis-Embodied-AI/genesis-world`, `modelcontextprotocol/python-sdk`
 
-- XL 셋은 한 사람에게 하나씩 갔다. 누가 어느 묶음을 맡을지는 바꿔도 된다 — 다만 `ccxt/ccxt` 묶음은 디스크 여유가 15GB 이상인 노트북이어야 한다
+- **실행 입력은 담당별 CSV다:** 성제 `docs/repo_final100_sj.csv`, 재헌 `docs/repo_final100_jh.csv`, 희수 `docs/repo_final100_hs.csv`. 위 배정 그대로이고 신규 저장소만 들어 있다. 배정을 바꾸면 CSV도 같이 바꾼다
+- XL 둘(`zulip/zulip`, `roboflow/supervision`)은 서로 다른 사람에게 갔다. 누가 어느 묶음을 맡을지는 바꿔도 된다
 - 추출 시간은 `--workers`로 줄지만 API 한도는 토큰당이라 줄지 않는다. 맥락 결합은 한 사람당 위 표의 "API 한도 시간"이 하한이다 (고 기준이면 약 1.7배)
 - 클론은 추출과 맥락 결합이 **둘 다** 끝난 뒤에 지운다 (`--repo-path`가 필요하다, #82 절차). 저장소 단위로 끝나는 대로 지우면 합계만큼의 용량은 필요 없다
 - 이 분할은 §5·§6의 어림 위에 서 있다. 저장소 하나가 2배 틀릴 수 있으므로, 큰 저장소부터 돌려서 어긋나면 남은 것을 다시 나누는 편이 안전하다
@@ -602,17 +608,17 @@ API 호출 ≈ 순회 커밋 × (FULL_FUNCTION 커밋 비율) × (1 + PR 연결 
 
 ## 8. 변경 제안 (바꾸지 않았다)
 
-이번 선정에서 기준을 바꾸면 결과가 달라졌을 지점들이다. **하나도 적용하지 않았다.** 받아들이려면 §13 절차(이슈 → 회의 → ADR → CHARTER)를 거친다.
+이번 선정에서 기준을 바꾸면 결과가 달라졌을 지점들이다. **기준(§4.3)에는 하나도 적용하지 않았다.** ⑤만 팀 결정으로 `ccxt/ccxt` 하나를 손으로 뺐다 (§1.4) — 규칙은 아직 없다. 받아들이려면 §13 절차(이슈 → 회의 → ADR → CHARTER)를 거친다.
 
 | # | 제안 | 지금 | 왜 | 받아들이면 달라지는 것 |
 |---:|---|---|---|---|
 | ① | 최근 1년 표본의 최소 수를 정한다 (예: 10건) | 최소 수 없음. 1건으로도 게이트를 통과한다 | `mkdocs/mkdocs` 2, `RasaHQ/rasa` 1, `FoundationAgents/MetaGPT` 1, `encode/httpx` 4 — 표본 1~4건으로 `pr_ratio` 1.000을 받았다. 사실상 활동이 멈춘 저장소다 | 신규에서 3개가 빠지거나 측정 창을 넓혀 다시 재게 된다. 기존 20의 httpx도 걸린다 |
 | ② | "2015년 이후 시작 우선"을 수식으로 정한다 | v2는 `recent_only`로 구간만 좁힌다. 우선 규칙은 없다 | 지시의 "우선"이 가산점인지 동점 처리인지 정해진 것이 없다. 이번에는 v2 그대로 뒀다 | `recent_only` 신규 13개의 순위가 내려간다 |
-| ③ | PR 게이트를 채굴 구간 값(`window_pr_ratio`)에도 건다 | 최근 1년 값에만 건다 (§4.3 ③ 문구 그대로) | 채굴은 구간 전체를 도는데 게이트는 최근 1년만 본다. v2를 만든 이유가 이 어긋남이었다 | 신규에서 6개(`zulip/zulip` 0.667, `modelscope/FunASR` 0.680, `agno-agi/agno` 0.650, `ccxt/ccxt` 0.540, `ManimCommunity/manim` 0.583, `Huanshere/VideoLingo` 0.533)가 빠진다. 기존 20에서도 keras·crawl4ai·unsloth·openpilot이 걸리므로 20개를 그대로 둔다는 전제와 부딪친다 |
+| ③ | PR 게이트를 채굴 구간 값(`window_pr_ratio`)에도 건다 | 최근 1년 값에만 건다 (§4.3 ③ 문구 그대로) | 채굴은 구간 전체를 도는데 게이트는 최근 1년만 본다. v2를 만든 이유가 이 어긋남이었다 | 신규에서 5개(`zulip/zulip` 0.667, `modelscope/FunASR` 0.680, `agno-agi/agno` 0.650, `ManimCommunity/manim` 0.583, `Huanshere/VideoLingo` 0.533)가 빠진다. 기존 20에서도 keras·crawl4ai·unsloth·openpilot이 걸리므로 20개를 그대로 둔다는 전제와 부딪친다 |
 | ④ | `issue_ref_ratio`를 더 큰 표본이나 연도별 표본으로 잰다 | 최근 사람 커밋 30건 | 한 달 사이 pandas가 0.233 → 0.933으로 움직였다 (§2.3). 점수의 0.3이 이 값이다 | 70위 아래 순위가 바뀔 수 있다 |
-| ⑤ | 초대형·다국어 저장소의 처리 규칙을 정한다 (`ccxt/ccxt`) | 주 언어가 Python이면 통과 | §5.5. 클론 약 11GB, 순회 커밋 약 8.6만, Python 23%, 구간 PR 연결 0.540 | ccxt를 빼면 81위 `confident-ai/deepeval`가 들어온다. 신규 클론 합계가 약 34.2GB로 줄어든다 |
+| ⑤ | 생성 코드 위주·다국어 저장소의 처리 규칙을 정한다 | 규칙 없음. `ccxt/ccxt` 하나만 팀 결정으로 뺐다 (§1.4) | 주 언어가 Python이면 통과하고, `NOISE_GENERATED`가 미구현이라 필터도 거르지 못한다. 같은 유형이 100개 안에 더 있는지 보지 않았다 | 규칙이 생기면 다른 저장소도 걸릴 수 있다. 필터 쪽에서 풀면(생성 코드 필터) 저장소를 뺄 이유가 줄어든다 |
 | ⑥ | `select_repos.py`가 연결 끊김도 재시도하고, 바뀌는 응답(저장소 정보·커밋 목록·검색)의 캐시에 유효 기간을 둔다 | `URLError`만 재시도. 캐시는 영구 | §1.2, §9 ①. 기준이 아니라 스크립트 결함이다 | 선정 결과는 그대로다. 재현이 쉬워진다 |
-| ⑦ | 신생 저장소·예제 모음 판단을 §4.3에 올리거나 내린다 | `repo_final20.md` §2의 사후 설명 선을 선례로 썼다 | §1.4. 기준에 없는 제외가 29개다 (`repo_final20.md` §5 ⑥, #25) | 내리면 §4.3 표의 상위 저장소가 들어오고 80번째 근처가 밀려난다 |
+| ⑦ | 신생 저장소·예제 모음 판단을 §4.3에 올리거나 내린다 | `repo_final20.md` §2의 사후 설명 선을 선례로 썼다 | §1.4. 기준에 없는 제외가 30개다 (`repo_final20.md` §5 ⑥, #25) | 내리면 §4.3 표의 상위 저장소가 들어오고 80번째 근처가 밀려난다 |
 
 ## 9. 한계와 확인하지 않은 것
 
@@ -624,7 +630,7 @@ API 호출 ≈ 순회 커밋 × (FULL_FUNCTION 커밋 비율) × (1 + PR 연결 
 
 **② 검색 범위 500은 정한 값이다.** 상위 500개에서 게이트 통과 155개가 나와 80개를 채우기에 충분해서 멈췄다. 1,000개로 넓히면 더 높은 점수의 저장소가 들어와 70위 아래가 바뀔 수 있다. 검색 500번째의 별 수는 약 1.8만 개다.
 
-**③ 판단 제외의 일부는 Claude가 했다.** `geekcomputers/Python`·`keon/algorithms`를 예제 모음으로 본 것, 그리고 신규 80개 중에 예제·목록 모음이 **없다**고 본 것 모두 저장소 설명과 토픽만 보고 한 판단이다. 저장소를 열어 보지 않았다. 사람이 80개를 한 번 훑어야 한다. 눈에 띈 경계 사례: `recommenders-team/recommenders`("Best Practices on Recommendation Systems" — 라이브러리와 예제 노트북이 같이 있다), `ungoogled-software/ungoogled-chromium`(Python 97%지만 패치·빌드 스크립트 저장소다), `nginx-proxy/nginx-proxy`(서버 크기 1MB, Python은 테스트 코드 위주로 보인다), `hummingbot/hummingbot`·`ccxt/ccxt`(거래소 커넥터가 대량으로 추가·삭제된다 — home-assistant의 통합 모듈과 같은 편중 우려, `repo_final20.md` §5 ⑨).
+**③ 판단 제외의 일부는 Claude가 했다.** `geekcomputers/Python`·`keon/algorithms`를 예제 모음으로 본 것, 그리고 신규 80개 중에 예제·목록 모음이 **없다**고 본 것 모두 저장소 설명과 토픽만 보고 한 판단이다. 저장소를 열어 보지 않았다. 사람이 80개를 한 번 훑어야 한다. 눈에 띈 경계 사례: `recommenders-team/recommenders`("Best Practices on Recommendation Systems" — 라이브러리와 예제 노트북이 같이 있다), `ungoogled-software/ungoogled-chromium`(Python 97%지만 패치·빌드 스크립트 저장소다), `nginx-proxy/nginx-proxy`(서버 크기 1MB, Python은 테스트 코드 위주로 보인다), `hummingbot/hummingbot`(거래소 커넥터가 대량으로 추가·삭제된다 — home-assistant의 통합 모듈과 같은 편중 우려, `repo_final20.md` §5 ⑨).
 
 **④ #82 실행 기록의 커밋 수와 채굴 구간.** §5.2. `recent_only` 5개의 실행 기록이 전체 이력 커밋 수를 담고 있다. FULL_FUNCTION 커밋 비율의 분모가 그 값이라, 구간만 돌았다면 비율이 달랐을 것이다.
 
