@@ -1483,3 +1483,178 @@ def test_full_function_only_needs_an_input_file(capsys):
     """--sample·--commit 에는 레코드가 없어 걸러 낼 것이 없다."""
     assert ctx.main(["--repo", "a/b", "--sample", "3", "--full-function-only"]) == 2
     assert "--input" in capsys.readouterr().err
+
+
+# --------------------------------------------------------------------------------------
+# 출력 단계 - 캐시·병렬·한도 시 지연 (Issue #128)
+# --------------------------------------------------------------------------------------
+
+
+def _two_cut_functions_in_one_file(tmp_path):
+    """한 커밋이 한 파일의 두 함수 시그니처를 고친다 - 같은 자식 파일을 보는 레코드 둘."""
+    repo = _init_repo(tmp_path / "repo")
+    before = (
+        "def parse(raw):\n    items = raw.split(',')\n    return items\n\n\n"
+        "def join(items):\n    text = ','.join(items)\n    return text\n"
+    )
+    after = (
+        "def parse(raw, sep=','):\n    items = raw.split(sep)\n    return items\n\n\n"
+        "def join(items, sep=','):\n    text = sep.join(items)\n    return text\n"
+    )
+    _write(repo, "m.py", before)
+    _commit_all(repo, "v1")
+    _write(repo, "m.py", after)
+    sha = _commit_all(repo, "v2")
+    deletions = extract_module.extract_deletions(repo, _REPO, _last_commit_pair(repo))
+    records = [extract_module.to_json_dict(deletion) for deletion in deletions]
+    assert sorted(record["function_name"] for record in records) == ["join", "parse"]
+    targets = ctx.parse_targets(json.dumps(record) for record in records)
+    contexts = [ctx.CommitContext(repo=target.repo, commit_sha=sha) for target in targets]
+    return repo, targets, contexts
+
+
+def _clear_parse_caches():
+    """캐시는 모듈 전역이다. 호출 횟수를 세는 테스트는 비우고 시작한다."""
+    for cached in (ctx._child_source, ctx._child_functions, ctx._hunk_functions):
+        cached.cache_clear()
+
+
+def test_same_commit_and_file_is_read_and_parsed_once(tmp_path, monkeypatch):
+    """한 파일에서 함수 N 개가 지워지면 레코드도 N 개다. 자식 파일은 한 번만 읽고 파싱한다."""
+    repo, targets, contexts = _two_cut_functions_in_one_file(tmp_path)
+    _clear_parse_caches()
+    reads, parses = [], []
+    real_read, real_parse = ctx.read_child_source, ctx._ADAPTER.extract_functions
+
+    def counting_read(*args):
+        reads.append(args)
+        return real_read(*args)
+
+    def counting_parse(text):
+        parses.append(text)
+        return real_parse(text)
+
+    monkeypatch.setattr(ctx, "read_child_source", counting_read)
+    monkeypatch.setattr(ctx._ADAPTER, "extract_functions", counting_parse)
+    lines = ctx.build_output_lines(str(repo), list(zip(targets, contexts, strict=True)))
+
+    assert len(lines) == 2
+    assert len(reads) == 1
+    # 자식 파일 1회 + 헝크 본문마다 1회. 레코드 둘이 같은 것을 보므로 중복이 없다.
+    assert len(parses) == len(set(parses))
+    codes = [json.loads(line)["replacement"]["code"] for line in lines]
+    assert all(code.rstrip().endswith(("return items", "return text")) for code in codes)
+
+
+def test_cached_output_equals_uncached_output(tmp_path):
+    """캐시를 거친 출력이 레코드마다 따로 읽고 파싱한 출력과 같다."""
+    repo, targets, contexts = _two_cut_functions_in_one_file(tmp_path)
+    _clear_parse_caches()
+    expected = [
+        ctx.build_output_record(
+            target,
+            context,
+            child_source=ctx.read_child_source(repo, target.commit_sha, target.file_path),
+        )
+        for target, context in zip(targets, contexts, strict=True)
+    ]
+
+    lines = ctx.build_output_lines(str(repo), list(zip(targets, contexts, strict=True)))
+
+    assert [json.loads(line) for line in lines] == expected
+
+
+def _pair(sha, path):
+    """묶음 나누기만 보는 (대상, 맥락)."""
+    return ctx.CommitTarget("a/b", sha, path), ctx.CommitContext(repo="a/b", commit_sha=sha)
+
+
+def test_output_batches_keep_order_and_never_split_a_commit_file_group():
+    """같은 커밋·같은 파일은 한 작업자가 맡아야 캐시가 맞는다. 순서는 입력 그대로."""
+    keys = [("s1", "a.py")] * 3 + [("s1", "b.py")] + [("s2", "a.py")] * 2
+    pairs = [_pair(sha, path) for sha, path in keys]
+
+    batches = list(ctx.output_batches(pairs, size=2))
+
+    assert [pair for batch in batches for pair in batch] == pairs
+    assert [[(t.commit_sha, t.file_path) for t, _ in batch] for batch in batches] == [
+        [("s1", "a.py")] * 3,
+        [("s1", "b.py"), ("s2", "a.py"), ("s2", "a.py")],
+    ]
+
+
+def test_workers_default_is_sequential():
+    """기본값은 지금까지의 동작(순차)이다. 바꾸면 절차 문서의 명령이 뜻이 달라진다."""
+    assert ctx.build_parser().parse_args([]).workers == 1
+
+
+def test_workers_must_be_positive(capsys):
+    assert ctx.main(["--repo", "a/b", "--commit", "s", "--workers", "0"]) == 2
+    assert "--workers" in capsys.readouterr().err
+
+
+def test_parallel_output_is_identical_to_sequential(tmp_path):
+    """작업자 프로세스로 나눠도 파일이 바이트 단위로 같다 - 순서까지."""
+    repo, targets, contexts = _two_cut_functions_in_one_file(tmp_path)
+    # 묶음이 여럿 나오도록 같은 대상을 되풀이한다 (묶음 경계는 커밋·파일이 바뀔 때만 생긴다).
+    other = [ctx.CommitTarget(t.repo, t.commit_sha, None, record=t.record) for t in targets]
+    many_targets = (targets + other) * ctx.OUTPUT_BATCH_SIZE
+    many_contexts = (contexts + contexts) * ctx.OUTPUT_BATCH_SIZE
+    sequential, parallel = tmp_path / "seq.jsonl", tmp_path / "par.jsonl"
+
+    ctx.write_output(sequential, many_targets, many_contexts, repo_path=repo, workers=1)
+    ctx.write_output(parallel, many_targets, many_contexts, repo_path=repo, workers=2)
+
+    assert len(list(ctx.output_batches(zip(many_targets, many_contexts, strict=True)))) > 2
+    assert sequential.read_bytes() == parallel.read_bytes()
+    assert len(sequential.read_text(encoding="utf-8").splitlines()) == len(many_targets)
+
+
+def test_main_forwards_workers_to_the_output_stage(tmp_path, monkeypatch):
+    """`--workers` 가 `main` 을 거쳐 실제 출력까지 닿고, 결과는 순차와 같다."""
+    parallel, _repo = _run_main_on_cut_function(
+        tmp_path / "par",
+        monkeypatch,
+        "--repo-path",
+        str(tmp_path / "par" / "repo"),
+        "--workers",
+        "2",
+    )
+    sequential, _repo = _run_main_on_cut_function(
+        tmp_path / "seq", monkeypatch, "--repo-path", str(tmp_path / "seq" / "repo")
+    )
+
+    assert parallel["replacement"] == sequential["replacement"]
+    assert parallel["replacement"]["code"].rstrip().endswith("return items")
+
+
+def test_rate_limit_skips_parsing_and_leaves_the_output_alone(tmp_path, monkeypatch, capsys):
+    """한도에 걸린 실행은 파싱하지 않고 끝낸다 - 파싱은 수집이 끝난 실행에서 한 번만 (#128).
+
+    전에는 0 이 나올 때까지 다시 돌리는 동안 매번 거기까지 모은 것을 읽고 파싱해 썼다.
+    그 파일은 붙이기가 어차피 거부한다 (`test_attach_rejects_a_truncated_context_file...`).
+    """
+    record = {"repo": "a/b", "commit_sha": "sha1", "file_path": "m.py", "commit_message": "msg"}
+    input_path, out_path = tmp_path / "in.jsonl", tmp_path / "out.jsonl"
+    input_path.write_text((json.dumps(record) + "\n") * 2, encoding="utf-8")
+    out_path.write_text("이전 결과\n", encoding="utf-8")
+
+    def stopped(collector, targets, log=None):
+        report = ctx.AttachmentReport(stopped_reason="API 한도 소진 (1건 남기고 중단)")
+        return [ctx.CommitContext(repo="a/b", commit_sha="sha1")], report
+
+    def must_not_parse(*args, **kwargs):
+        raise AssertionError("한도에 걸린 실행에서 파싱했다")
+
+    monkeypatch.setenv("GITHUB_TOKEN", "test")
+    monkeypatch.setattr(ctx, "load_env_file", lambda _path: None)
+    monkeypatch.setattr(ctx, "run_targets", stopped)
+    monkeypatch.setattr(ctx, "build_output_record", must_not_parse)
+    monkeypatch.setattr(ctx, "read_child_source", must_not_parse)
+    argv = ["--input", str(input_path), "--out", str(out_path), "--repo-path", str(tmp_path)]
+
+    assert ctx.main([*argv, "--cache-dir", str(tmp_path / "cache")]) == 1
+    assert out_path.read_text(encoding="utf-8") == "이전 결과\n"
+    captured = capsys.readouterr()
+    assert "쓰지 않았다" in captured.err
+    assert "JSONL:" not in captured.out

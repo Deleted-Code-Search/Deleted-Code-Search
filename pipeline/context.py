@@ -30,8 +30,10 @@
 20개 저장소 실행 (#82, #142):
     맥락 결합은 `--repo-path` 를 하나만 받으므로 저장소마다, 클론이 있는 노트북에서 돈다.
     결과는 `pipeline.run` 실행 디렉터리 **밖**에 둔다 - 조립기(#101)가 모르는 JSONL 을 거부한다.
-    맥락은 FULL_FUNCTION 에만 붙인다 (#85 대상, ADR-003). 한도에 걸리면 거기까지만 쓰고 1 로
-    멈추므로 **0 이 나올 때까지 다시 돌린다** - 캐시가 있어 이어 간다.
+    맥락은 FULL_FUNCTION 에만 붙인다 (#85 대상, ADR-003). 한도에 걸리면 **출력을 쓰지 않고**
+    1 로 멈추므로 **0 이 나올 때까지 다시 돌린다** - 캐시가 있어 이어 간다. 자식 파일 읽기와
+    대체 코드 매칭은 수집이 끝까지 간 마지막 실행에서 한 번만 한다 (#128). `--workers N` 을
+    주면 그 단계를 프로세스 N 개로 나눈다 (기본 1 = 순차, 출력은 같다).
 
     python -m pipeline.context --input <run>/<owner>__<name>.jsonl --full-function-only \\
         --repo-path repos/<owner>/<name> --out data/context/<owner>__<name>.jsonl
@@ -44,6 +46,7 @@ from __future__ import annotations
 
 import argparse
 import difflib
+import functools
 import hashlib
 import json
 import os
@@ -52,6 +55,7 @@ import subprocess
 import sys
 from collections import Counter
 from collections.abc import Iterable, Iterator, Sequence
+from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, NamedTuple
@@ -625,6 +629,12 @@ ADDED_HUNK_FIELD = "added_hunk_same_file"
 # 파서는 상태가 없어 하나만 만들어 쓴다 (`extract.py` 와 같은 방식).
 _ADAPTER = PythonAdapter()
 
+# 파싱 결과 캐시 크기 (#128). 한 커밋·한 파일에서 삭제된 함수 N 개는 레코드 N 개가 되고, 그
+# N 개가 같은 자식 파일과 같은 추가 헝크를 본다. 추출이 커밋·파일 순으로 쓰므로 그 레코드들은
+# 입력에서 붙어 있다 - 그래서 작은 캐시로도 전부 맞는다. 키우면 작업자마다 메모리만 더 든다.
+CHILD_SOURCE_CACHE_SIZE = 32
+HUNK_PARSE_CACHE_SIZE = 512
+
 
 def added_hunk_text(record: dict[str, Any]) -> str | None:
     """그 커밋·그 파일에서 추가된 줄 전체. 필드가 아예 없으면 `None`.
@@ -717,10 +727,26 @@ def _whole_function(child_source: str, name: str, child_line: int) -> Function |
     `PythonAdapter` 는 데코레이터 첫 줄부터를 함수 시작으로 잡는데, 데코레이터가 바뀌지
     않았으면 그 줄은 헝크에 없다.
     """
-    for function in _ADAPTER.extract_functions(child_source):
+    for function in _child_functions(child_source):
         if function.name == name and function.start_line <= child_line <= function.end_line:
             return function
     return None
+
+
+@functools.lru_cache(maxsize=CHILD_SOURCE_CACHE_SIZE)
+def _child_functions(child_source: str) -> tuple[Function, ...]:
+    """자식 파일 원문의 함수 목록. 같은 원문은 한 번만 파싱한다 (#128).
+
+    전에는 후보마다 파일 전체를 다시 파싱했다. 원문은 `_child_source` 가 같은 객체를 돌려주므로
+    해시도 한 번만 계산된다.
+    """
+    return tuple(_ADAPTER.extract_functions(child_source))
+
+
+@functools.lru_cache(maxsize=HUNK_PARSE_CACHE_SIZE)
+def _hunk_functions(text: str) -> tuple[Function, ...]:
+    """헝크 본문의 함수 목록. 같은 커밋·같은 파일의 레코드들은 같은 헝크를 본다 (#128)."""
+    return tuple(_ADAPTER.extract_functions(text))
 
 
 def _added_functions(text: str) -> list[Function]:
@@ -732,7 +758,7 @@ def _added_functions(text: str) -> list[Function]:
     성질에 기댄다 - 완결되지 않은 조각은 애초에 대체 코드 후보가 아니다.
     """
     try:
-        return list(_ADAPTER.extract_functions(text))
+        return list(_hunk_functions(text))
     except Exception:  # noqa: BLE001 - 파서가 어떤 예외를 낼지는 어댑터 구현에 달렸다
         return []
 
@@ -928,6 +954,18 @@ def read_child_source(repo_path: str | Path, commit_sha: str, file_path: str) ->
         return _read_file_at(repo_path, commit_sha, file_path)
     except (subprocess.CalledProcessError, OSError, UnicodeDecodeError):
         return None
+
+
+@functools.lru_cache(maxsize=CHILD_SOURCE_CACHE_SIZE)
+def _child_source(repo_path: str, commit_sha: str, file_path: str) -> str | None:
+    """`read_child_source` 를 같은 커밋·같은 파일에 한 번만 부른다 (#128).
+
+    `git show` 는 프로세스를 하나 띄우는 일이라 Windows 에서 건당 30ms 안팎이고, 맥락 결합의
+    출력 단계 시간 대부분이 여기였다 (httpx 947건에서 34초 중 31초). 커밋 SHA 와 경로가 같으면
+    내용이 같으므로 캐시해도 결과가 달라지지 않는다. 못 읽은 것(`None`)도 같은 실행 안에서는
+    다시 읽어도 못 읽는다.
+    """
+    return read_child_source(repo_path, commit_sha, file_path)
 
 
 def _whole_body(
@@ -1277,6 +1315,82 @@ def attach_contexts(
 
 
 # --------------------------------------------------------------------------------------
+# 출력 단계 - 자식 파일 읽기·대체 코드 매칭 (Issue #128)
+# --------------------------------------------------------------------------------------
+
+# 작업자에게 넘기는 한 묶음의 레코드 수. 작으면 프로세스 간 전달이 잦아지고, 크면 묶음 수가
+# 작업자 수보다 적어져 나눌 것이 없다 (httpx 는 FULL_FUNCTION 이 947건뿐이다).
+OUTPUT_BATCH_SIZE = 64
+DEFAULT_WORKERS = 1
+
+
+def output_batches(
+    pairs: Iterable[tuple[CommitTarget, CommitContext]], size: int = OUTPUT_BATCH_SIZE
+) -> Iterator[list[tuple[CommitTarget, CommitContext]]]:
+    """(대상, 맥락) 을 입력 순서 그대로 묶음으로 나눈다.
+
+    같은 커밋·같은 파일의 레코드는 한 묶음에 둔다 - 캐시가 작업자 프로세스마다 따로라서,
+    갈라지면 같은 파일을 두 작업자가 각각 읽고 파싱한다. 그래서 묶음은 `size` 를 넘을 수 있다.
+    """
+    batch: list[tuple[CommitTarget, CommitContext]] = []
+    previous: tuple[str, str | None] | None = None
+    for target, context in pairs:
+        key = (target.commit_sha, target.file_path)
+        if len(batch) >= size and key != previous:
+            yield batch
+            batch = []
+        batch.append((target, context))
+        previous = key
+    if batch:
+        yield batch
+
+
+def build_output_lines(
+    repo_path: str | None, batch: Sequence[tuple[CommitTarget, CommitContext]]
+) -> list[str]:
+    """묶음 하나의 출력 JSONL 줄들. 순차 실행과 작업자 프로세스가 같은 함수를 쓴다.
+
+    직렬화까지 여기서 한다 - 작업자가 dict 를 돌려주면 부모가 그것을 다시 풀고 또 직렬화한다.
+    """
+    lines: list[str] = []
+    for target, context in batch:
+        child_source = (
+            _child_source(repo_path, target.commit_sha, target.file_path)
+            if repo_path is not None and target.file_path
+            else None
+        )
+        record = build_output_record(target, context, child_source=child_source)
+        lines.append(json.dumps(record, ensure_ascii=False) + "\n")
+    return lines
+
+
+def write_output(
+    out_path: Path,
+    targets: Sequence[CommitTarget],
+    contexts: Sequence[CommitContext],
+    *,
+    repo_path: Path | None = None,
+    workers: int = DEFAULT_WORKERS,
+) -> None:
+    """레코드를 입력 순서대로 `out_path` 에 쓴다. `workers` 가 몇이든 출력은 같다.
+
+    스레드가 아니라 프로세스로 나눈다. `_ADAPTER` 는 tree-sitter 파서 하나를 들고 있고 파서는
+    동시에 쓰면 안 된다. `map` 은 결과를 넣은 순서대로 돌려주므로 순서를 따로 맞추지 않는다.
+    """
+    build = functools.partial(build_output_lines, None if repo_path is None else str(repo_path))
+    batches = output_batches(zip(targets, contexts, strict=True))
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    with out_path.open("w", encoding="utf-8") as handle:
+        if workers <= 1:
+            for lines in map(build, batches):
+                handle.writelines(lines)
+            return
+        with ProcessPoolExecutor(max_workers=workers) as executor:
+            for lines in executor.map(build, batches):
+                handle.writelines(lines)
+
+
+# --------------------------------------------------------------------------------------
 # CLI
 # --------------------------------------------------------------------------------------
 
@@ -1318,6 +1432,12 @@ def build_parser() -> argparse.ArgumentParser:
         dest="context_dirs",
         help="--attach 용 맥락 결과 폴더. 여러 번 줄 수 있다",
     )
+    parser.add_argument(
+        "--workers",
+        type=int,
+        default=DEFAULT_WORKERS,
+        help="--out 의 자식 파일 읽기·대체 코드 매칭을 나눌 프로세스 수 (기본 1 = 순차, #128)",
+    )
     parser.add_argument("--max-issues", type=int, default=MAX_ISSUES_PER_COMMIT)
     parser.add_argument("--cache-dir", type=Path, default=None)
     parser.add_argument("--env-file", type=Path, default=Path(".env"))
@@ -1331,6 +1451,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     `--out` 으로 레코드를 쓸 때 **`--repo-path` 를 꼭 준다.** 없으면 에러 없이 대체 코드
     본문이 크게 줄어든다 - 예비 200건에서 39건 -> 8건 (#107). 헝크에는 추가된 줄만 있어서
     자식 파일 원문 없이는 함수가 헝크 안에서 끝난 것이 확인된 후보만 채울 수 있기 때문이다.
+
+    **한도에 걸려 멈추면 `--out` 을 쓰지 않는다** (#128). 전에는 거기까지 모은 것을 매번
+    파싱해 썼는데, 그 파일은 붙이기(`attach_contexts`)가 어차피 거부하고, 0 이 나올 때까지
+    다시 돌리는 동안 같은 레코드를 실행마다 다시 읽고 파싱했다. 수집한 응답은 캐시에 남으므로
+    잃는 것은 없다. 이미 있던 `--out` 파일은 건드리지 않는다.
     """
     args = build_parser().parse_args(argv)
     load_env_file(args.env_file)
@@ -1354,6 +1479,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 0
     if args.full_function_only and not args.input:
         log("--full-function-only 는 --input 과 함께 쓴다.")
+        return 2
+    if args.workers < 1:
+        log("--workers 는 1 이상이다.")
         return 2
 
     token = os.environ.get("GITHUB_TOKEN", "").strip()
@@ -1389,7 +1517,12 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     contexts, report = run_targets(collector, targets, log=log if len(targets) > 1 else None)
 
-    if args.out:
+    if args.out and report.stopped_reason:
+        log(
+            f"{args.out} 은 쓰지 않았다: 한도에 걸려 멈췄다. 다시 돌리면 캐시로 이어 가고,"
+            " 파싱은 수집이 끝난 실행에서 한 번만 한다."
+        )
+    elif args.out:
         if args.repo_path is None:
             # 에러 없이 조용히 나빠지는 경로라 알린다. 예비 200건에서 대체 코드 본문이
             # 39건 -> 10건으로 줄었다 (#107).
@@ -1397,16 +1530,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 "--repo-path 없이 돈다: 대체 코드 본문은 헝크 안에서 끝이 확인된 것만 채운다."
                 " 클론 경로를 주면 자식 파일에서 온전히 뽑는다."
             )
-        args.out.parent.mkdir(parents=True, exist_ok=True)
-        with args.out.open("w", encoding="utf-8") as handle:
-            for target, context in zip(targets, contexts, strict=False):
-                child_source = (
-                    read_child_source(args.repo_path, target.commit_sha, target.file_path)
-                    if args.repo_path is not None and target.file_path
-                    else None
-                )
-                record = build_output_record(target, context, child_source=child_source)
-                handle.write(json.dumps(record, ensure_ascii=False) + "\n")
+        write_output(args.out, targets, contexts, repo_path=args.repo_path, workers=args.workers)
         print(f"JSONL: {args.out} ({len(contexts)}건)")
 
     if len(contexts) == 1:
