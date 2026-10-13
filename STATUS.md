@@ -98,7 +98,7 @@
 - **해석 (2026-10-13, 조장 판단, #173)**
   - **게이트 1은 예비 200건으로 판정을 마쳤다** (진행, `docs/meetings/gate-1.md`). 500건 결과로 게이트 1을 다시 판정하지 않는다
   - **500건 회수율(EXPLICIT 22.0% / +INFERRED≥0.5 55.2% / +INFERRED≥0.8 24.2%)은 예비 200건과 같은 잣대로 비교하지 않는다.** 가이드 v3(화면에 표시된 근거만 인정)로 기준이 엄격해진 뒤의 값이고, 예비 200건은 가이드 v1이었다
-  - **UNKNOWN의 주된 원인은 대체 코드·호출 정보 부재다.** 개별 라벨 UNKNOWN 543건의 원인 태그는 `no-replacement` 391 · `no-caller-info` 391 · `vague-message` 388 · `no-context` 113이고, 확정 UNKNOWN 224건으로는 166 · 165 · 160 · 69다 (`docs/reports/labels_main500.md` §5, 복수 태그). 이유가 없어서라기보다 맥락이 화면에 붙지 않아서다. 대체 코드 매칭·맥락 결합 개선은 확장 단계 과제로 남긴다
+  - **UNKNOWN 원인 태그는 `no-replacement` 391 · `no-caller-info` 391 · `vague-message` 388 · `no-context` 113으로(개별 라벨 543건, 복수 태그), 맥락 부재(대체 코드·호출 정보)와 커밋 메시지 모호가 거의 같은 비율로 함께 붙어 있다.** 확정 UNKNOWN 224건으로는 166 · 165 · 160 · 69다 (`docs/reports/labels_main500.md` §5). 하나를 주된 원인으로 꼽지 않는다. 맥락 쪽(대체 코드 매칭·맥락 결합)은 확장 단계에서 개선할 수 있는 과제로, 메시지 모호는 원천 데이터의 한계로 남긴다
   - `docs/evaluation.md`의 해석 칸은 PR #168 머지 후 따로 채운다
 
 **라벨 kappa** (판정 전 개별 라벨, `reason_label` / `evidence_grade`)
