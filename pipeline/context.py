@@ -33,7 +33,8 @@
     맥락은 FULL_FUNCTION 에만 붙인다 (#85 대상, ADR-003). 한도에 걸리면 **출력을 쓰지 않고**
     1 로 멈추므로 **0 이 나올 때까지 다시 돌린다** - 캐시가 있어 이어 간다. 자식 파일 읽기와
     대체 코드 매칭은 수집이 끝까지 간 마지막 실행에서 한 번만 한다 (#128). `--workers N` 을
-    주면 그 단계를 프로세스 N 개로 나눈다 (기본 1 = 순차, 출력은 같다).
+    주면 그 단계를 프로세스 N 개로 나눈다 (기본 1 = 순차, 출력은 같다). `--wait-on-limit` 을
+    주면 한도에 걸려도 멈추지 않고 풀릴 때까지 기다렸다가 그 자리부터 이어 간다.
 
     python -m pipeline.context --input <run>/<owner>__<name>.jsonl --full-function-only \\
         --repo-path repos/<owner>/<name> --out data/context/<owner>__<name>.jsonl
@@ -49,14 +50,17 @@ import difflib
 import functools
 import hashlib
 import json
+import math
 import os
 import re
 import subprocess
 import sys
+import time
 from collections import Counter
-from collections.abc import Iterable, Iterator, Sequence
+from collections.abc import Callable, Iterable, Iterator, Sequence
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass, field
+from datetime import datetime
 from pathlib import Path
 from typing import Any, NamedTuple
 
@@ -1069,11 +1073,104 @@ def sample_targets(client: GitHubClient, repo: str, count: int) -> list[CommitTa
     return targets
 
 
+# 한도가 풀리는 시각 뒤에 더 기다리는 여유. 서버 시계와 어긋나 풀리기 직전에 다시 부르면
+# 또 걸린다.
+LIMIT_WAIT_MARGIN_SECONDS = 30
+# 헤더로 풀리는 시각을 알 수 없을 때의 재시도 간격. 60초에서 두 배씩, 15분까지.
+LIMIT_BACKOFF_START_SECONDS = 60
+LIMIT_BACKOFF_MAX_SECONDS = 900
+# 기다리는 동안 남은 시간을 다시 알리는 간격.
+LIMIT_ANNOUNCE_SECONDS = 300
+
+
+def limit_headers(error: Exception) -> dict[str, str]:
+    """한도 오류에 딸린 응답 헤더 (키는 소문자). 없으면 빈 dict.
+
+    GitHubClient 는 `HTTPError` 를 `RuntimeError` 로 감싸 올리면서 원인(`__cause__`)으로
+    남긴다. 헤더는 거기에만 있다 - `is_rate_limit_error` 와 같은 이유로 그 파일은 건드리지
+    않고 여기서 꺼낸다.
+    """
+    headers = getattr(error.__cause__, "headers", None)
+    if not headers:
+        return {}
+    return {key.lower(): str(value) for key, value in headers.items()}
+
+
+def limit_wait_seconds(headers: dict[str, str], now: float, attempt: int = 0) -> float:
+    """한도가 풀릴 때까지 기다릴 초 (순수 함수 - 테스트 대상).
+
+    GitHub 문서의 순서를 따른다: `Retry-After` 가 있으면(2차 한도) 그만큼, 없고 남은 횟수가
+    0 이면(1차 한도) `X-RateLimit-Reset` 시각까지. 둘 다 `LIMIT_WAIT_MARGIN_SECONDS` 를
+    더한다. 남은 횟수가 있는데 걸린 것은 리셋 시각과 무관한 2차 한도라 그 시각을 믿지 않는다.
+    어느 쪽도 아니면 `attempt`(같은 자리에서 이미 기다린 횟수)에 따라 간격을 늘린다.
+    """
+    retry_after = headers.get("retry-after", "")
+    if retry_after.isdigit():
+        return int(retry_after) + LIMIT_WAIT_MARGIN_SECONDS
+    reset = headers.get("x-ratelimit-reset", "")
+    if reset.isdigit() and headers.get("x-ratelimit-remaining", "0") == "0":
+        return max(0.0, int(reset) - now) + LIMIT_WAIT_MARGIN_SECONDS
+    return float(min(LIMIT_BACKOFF_START_SECONDS * 2**attempt, LIMIT_BACKOFF_MAX_SECONDS))
+
+
+def _announce(message: str) -> None:
+    """대기 안내는 표준 출력으로, 바로 보이게. 파일로 돌려도 진행을 볼 수 있어야 한다."""
+    print(message, flush=True)
+
+
+@dataclass
+class LimitWait:
+    """한도에 걸리면 멈추지 않고 기다린다 (`--wait-on-limit`, #128).
+
+    저장소 100개를 돌릴 때 한도에 걸릴 때마다 사람이 다시 시작하지 않게 하려는 것이다.
+    시계·잠들기·알림을 주입받는 것은 테스트가 실제로 기다리지 않게 하려는 것이다.
+    """
+
+    clock: Callable[[], float] = time.time
+    sleep: Callable[[float], None] = time.sleep
+    announce: Callable[[str], None] = _announce
+
+    def wait(self, seconds: float) -> None:
+        """`seconds` 동안 기다리며 `LIMIT_ANNOUNCE_SECONDS` 마다 남은 시간을 알린다."""
+        until = self.clock() + seconds
+        while (remaining := until - self.clock()) > 0:
+            self.announce(
+                f"한도 — {datetime.fromtimestamp(until):%H:%M}까지 대기"
+                f" (남은 {math.ceil(remaining / 60)}분)"
+            )
+            self.sleep(min(remaining, LIMIT_ANNOUNCE_SECONDS))
+
+
+def _collect_through_limit(
+    collector: ContextCollector, target: CommitTarget, limit_wait: LimitWait | None
+) -> CommitContext:
+    """대상 하나를 수집한다. `limit_wait` 가 있으면 한도 오류를 기다렸다가 같은 대상을 다시 한다.
+
+    다시 할 때 그 커밋에서 이미 받은 응답은 캐시에서 나오므로 걸린 호출부터 이어진다.
+    `limit_wait` 가 없으면 한도 오류를 그대로 올린다 (지금까지의 동작).
+    """
+    attempt = 0
+    while True:
+        try:
+            return collector.collect(
+                target.repo,
+                target.commit_sha,
+                file_path=target.file_path,
+                commit_message=target.commit_message,
+            )
+        except RuntimeError as error:
+            if limit_wait is None or not is_rate_limit_error(error):
+                raise
+            limit_wait.wait(limit_wait_seconds(limit_headers(error), limit_wait.clock(), attempt))
+            attempt += 1
+
+
 def run_targets(
     collector: ContextCollector,
     targets: Sequence[CommitTarget],
     *,
     log: object = None,
+    limit_wait: LimitWait | None = None,
 ) -> tuple[list[CommitContext], AttachmentReport]:
     """표본 전체에 맥락 결합을 돌리고 붙는 비율을 센다.
 
@@ -1085,17 +1182,15 @@ def run_targets(
     JSONL 에 멀쩡한 결과처럼 남고, 이유 회수율이 실제보다 낮게 나온다 (측정 실패를 측정
     결과로 착각하게 된다). 그래서 그 자리에서 멈추고, 멈춘 대상은 아예 기록하지 않으며,
     리포트에 이유를 남긴다. 그때까지 모은 것은 버리지 않는다.
+
+    `limit_wait` 를 주면 한도에서 멈추지 않는다 - 풀릴 때까지 기다렸다가 걸린 대상부터 이어
+    가서 끝까지 간다 (`LimitWait`).
     """
     contexts: list[CommitContext] = []
     report = AttachmentReport()
     for index, target in enumerate(targets, start=1):
         try:
-            context = collector.collect(
-                target.repo,
-                target.commit_sha,
-                file_path=target.file_path,
-                commit_message=target.commit_message,
-            )
+            context = _collect_through_limit(collector, target, limit_wait)
             marks = "".join(
                 mark if flag else "-"
                 for mark, flag in (
@@ -1438,6 +1533,11 @@ def build_parser() -> argparse.ArgumentParser:
         default=DEFAULT_WORKERS,
         help="--out 의 자식 파일 읽기·대체 코드 매칭을 나눌 프로세스 수 (기본 1 = 순차, #128)",
     )
+    parser.add_argument(
+        "--wait-on-limit",
+        action="store_true",
+        help="API 한도에 걸리면 종료하지 않고 풀릴 때까지 기다렸다가 이어서 수집한다 (#128)",
+    )
     parser.add_argument("--max-issues", type=int, default=MAX_ISSUES_PER_COMMIT)
     parser.add_argument("--cache-dir", type=Path, default=None)
     parser.add_argument("--env-file", type=Path, default=Path(".env"))
@@ -1515,7 +1615,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         log("대상이 없다.")
         return 1
 
-    contexts, report = run_targets(collector, targets, log=log if len(targets) > 1 else None)
+    contexts, report = run_targets(
+        collector,
+        targets,
+        log=log if len(targets) > 1 else None,
+        limit_wait=LimitWait() if args.wait_on_limit else None,
+    )
 
     if args.out and report.stopped_reason:
         log(
