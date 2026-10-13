@@ -4,6 +4,8 @@
 """
 
 import email.message
+import email.utils
+import io
 import json
 import urllib.error
 import urllib.parse
@@ -197,10 +199,16 @@ def test_pr_number_from_message(message, expected):
 # --------------------------------------------------------------------------------------
 
 
-def _http_error(code):
-    return urllib.error.HTTPError(
-        "https://api.github.com/x", code, "err", email.message.Message(), None
-    )
+# 1차 한도에 걸린 403 의 헤더. 이것(또는 Retry-After·본문 문구)이 없는 403 은 권한 거부다.
+LIMIT_HEADERS = {"X-RateLimit-Remaining": "0"}
+
+
+def _http_error(code, headers=None, body=None):
+    message = email.message.Message()
+    for key, value in (headers or {}).items():
+        message[key] = str(value)
+    fp = None if body is None else io.BytesIO(body.encode("utf-8"))
+    return urllib.error.HTTPError("https://api.github.com/x", code, "err", message, fp)
 
 
 def route_fetcher(routes, calls=None):
@@ -570,8 +578,8 @@ def test_attachment_report_handles_empty_sample():
 @pytest.mark.parametrize(
     ("message", "expected"),
     [
-        ("HTTP 403: https://api.github.com/x", True),
         ("HTTP 429: https://api.github.com/x", True),
+        ("HTTP 403: https://api.github.com/x", False),  # 헤더도 본문도 없는 403 은 한도가 아니다
         ("HTTP 404: https://api.github.com/x", False),
         ("네트워크 오류: https://api.github.com/x", False),
     ],
@@ -579,6 +587,47 @@ def test_attachment_report_handles_empty_sample():
 def test_rate_limit_error_is_recognised_by_status(message, expected):
     """GitHubClient 의 메시지 포맷이 바뀌면 이 테스트가 먼저 깨져야 한다."""
     assert ctx.is_rate_limit_error(RuntimeError(message)) is expected
+
+
+def _wrapped(code, headers=None, body=None):
+    """GitHubClient 가 올리는 모양 - `HTTPError` 를 원인으로 단 `RuntimeError`."""
+    error = RuntimeError(f"HTTP {code}: https://api.github.com/x")
+    error.__cause__ = _http_error(code, headers, body)
+    return error
+
+
+SECONDARY_LIMIT_BODY = json.dumps(
+    {"message": "You have exceeded a secondary rate limit. Please wait.\nSee docs."}
+)
+DENIED_BODY = json.dumps({"message": "Resource not accessible by personal access token\nmore"})
+
+
+@pytest.mark.parametrize(
+    ("error", "limit", "denied"),
+    [
+        (_wrapped(403, LIMIT_HEADERS), True, False),  # 1차 한도
+        (_wrapped(403, {"Retry-After": "60"}), True, False),  # 2차 한도
+        (_wrapped(403, {"X-RateLimit-Remaining": "4000"}, SECONDARY_LIMIT_BODY), True, False),
+        (_wrapped(429), True, False),
+        (_wrapped(403, {"X-RateLimit-Remaining": "4000"}, DENIED_BODY), False, True),  # 권한
+        (_wrapped(403), False, True),
+        (_wrapped(401, body=json.dumps({"message": "Bad credentials"})), False, True),  # 토큰
+        (_wrapped(410), False, False),  # 삭제된 이슈 - 그 조각만 건너뛴다
+        (_wrapped(500), False, False),
+    ],
+)
+def test_403_is_a_limit_only_with_limit_evidence(error, limit, denied):
+    """403 은 한도와 권한 거부가 같은 코드다. 한도의 증거가 있을 때만 기다린다 (#128)."""
+    assert ctx.is_rate_limit_error(error) is limit
+    assert ctx.is_access_denied_error(error) is denied
+
+
+def test_error_message_is_the_first_line_of_the_response_message():
+    assert ctx.error_message(_wrapped(403, body=DENIED_BODY)) == (
+        "Resource not accessible by personal access token"
+    )
+    assert ctx.error_message(_wrapped(403, body="plain text\nsecond")) == "plain text"
+    assert ctx.error_message(_wrapped(403)) == ""
 
 
 def test_rate_limit_stops_the_batch_instead_of_recording_empty_contexts(tmp_path):
@@ -590,7 +639,7 @@ def test_rate_limit_stops_the_batch_instead_of_recording_empty_contexts(tmp_path
 
     def fetch(url, request_headers):
         if "sha_boom" in url:
-            raise _http_error(403)
+            raise _http_error(403, LIMIT_HEADERS)
         seen.append(url)
         return route_fetcher(FULL_ROUTES)(url, request_headers)
 
@@ -615,12 +664,12 @@ def test_rate_limit_stops_the_batch_instead_of_recording_empty_contexts(tmp_path
 # --------------------------------------------------------------------------------------
 
 
-def _fetcher_failing_on(fragment, code):
+def _fetcher_failing_on(fragment, code, headers=None):
     """`fragment` 가 든 URL 만 실패시키고 나머지는 FULL_ROUTES 대로."""
 
     def fetch(url, request_headers):
         if fragment in url:
-            raise _http_error(code)
+            raise _http_error(code, headers)
         return route_fetcher(FULL_ROUTES)(url, request_headers)
 
     return fetch
@@ -698,7 +747,7 @@ def test_rate_limit_still_stops_even_though_failures_are_tolerated(tmp_path):
     client = ctx.GitHubClient(
         "t",
         tmp_path / "cache",
-        fetcher=_fetcher_failing_on("/issues/42", 403),
+        fetcher=_fetcher_failing_on("/issues/42", 403, LIMIT_HEADERS),
         sleep=lambda _: None,
     )
     collector = ctx.ContextCollector(client)
@@ -1152,7 +1201,7 @@ def _run_main_on_cut_function(tmp_path, monkeypatch, *extra_args):
     monkeypatch.setattr(
         ctx,
         "run_targets",
-        lambda collector, targets, log=None: (
+        lambda collector, targets, **_kwargs: (
             [ctx.CommitContext(repo=target.repo, commit_sha=sha) for target in targets],
             ctx.AttachmentReport(),
         ),
@@ -1483,3 +1532,560 @@ def test_full_function_only_needs_an_input_file(capsys):
     """--sample·--commit 에는 레코드가 없어 걸러 낼 것이 없다."""
     assert ctx.main(["--repo", "a/b", "--sample", "3", "--full-function-only"]) == 2
     assert "--input" in capsys.readouterr().err
+
+
+# --------------------------------------------------------------------------------------
+# 출력 단계 - 캐시·병렬·한도 시 지연 (Issue #128)
+# --------------------------------------------------------------------------------------
+
+
+def _two_cut_functions_in_one_file(tmp_path):
+    """한 커밋이 한 파일의 두 함수 시그니처를 고친다 - 같은 자식 파일을 보는 레코드 둘."""
+    repo = _init_repo(tmp_path / "repo")
+    before = (
+        "def parse(raw):\n    items = raw.split(',')\n    return items\n\n\n"
+        "def join(items):\n    text = ','.join(items)\n    return text\n"
+    )
+    after = (
+        "def parse(raw, sep=','):\n    items = raw.split(sep)\n    return items\n\n\n"
+        "def join(items, sep=','):\n    text = sep.join(items)\n    return text\n"
+    )
+    _write(repo, "m.py", before)
+    _commit_all(repo, "v1")
+    _write(repo, "m.py", after)
+    sha = _commit_all(repo, "v2")
+    deletions = extract_module.extract_deletions(repo, _REPO, _last_commit_pair(repo))
+    records = [extract_module.to_json_dict(deletion) for deletion in deletions]
+    assert sorted(record["function_name"] for record in records) == ["join", "parse"]
+    targets = ctx.parse_targets(json.dumps(record) for record in records)
+    contexts = [ctx.CommitContext(repo=target.repo, commit_sha=sha) for target in targets]
+    return repo, targets, contexts
+
+
+def _clear_parse_caches():
+    """캐시는 모듈 전역이다. 호출 횟수를 세는 테스트는 비우고 시작한다."""
+    for cached in (ctx._child_source, ctx._child_functions, ctx._hunk_functions):
+        cached.cache_clear()
+
+
+def test_same_commit_and_file_is_read_and_parsed_once(tmp_path, monkeypatch):
+    """한 파일에서 함수 N 개가 지워지면 레코드도 N 개다. 자식 파일은 한 번만 읽고 파싱한다."""
+    repo, targets, contexts = _two_cut_functions_in_one_file(tmp_path)
+    _clear_parse_caches()
+    reads, parses = [], []
+    real_read, real_parse = ctx.read_child_source, ctx._ADAPTER.extract_functions
+
+    def counting_read(*args):
+        reads.append(args)
+        return real_read(*args)
+
+    def counting_parse(text):
+        parses.append(text)
+        return real_parse(text)
+
+    monkeypatch.setattr(ctx, "read_child_source", counting_read)
+    monkeypatch.setattr(ctx._ADAPTER, "extract_functions", counting_parse)
+    lines = ctx.build_output_lines(str(repo), list(zip(targets, contexts, strict=True)))
+
+    assert len(lines) == 2
+    assert len(reads) == 1
+    # 자식 파일 1회 + 헝크 본문마다 1회. 레코드 둘이 같은 것을 보므로 중복이 없다.
+    assert len(parses) == len(set(parses))
+    codes = [json.loads(line)["replacement"]["code"] for line in lines]
+    assert all(code.rstrip().endswith(("return items", "return text")) for code in codes)
+
+
+def test_cached_output_equals_uncached_output(tmp_path):
+    """캐시를 거친 출력이 레코드마다 따로 읽고 파싱한 출력과 같다."""
+    repo, targets, contexts = _two_cut_functions_in_one_file(tmp_path)
+    _clear_parse_caches()
+    expected = [
+        ctx.build_output_record(
+            target,
+            context,
+            child_source=ctx.read_child_source(repo, target.commit_sha, target.file_path),
+        )
+        for target, context in zip(targets, contexts, strict=True)
+    ]
+
+    lines = ctx.build_output_lines(str(repo), list(zip(targets, contexts, strict=True)))
+
+    assert [json.loads(line) for line in lines] == expected
+
+
+def _pair(sha, path):
+    """묶음 나누기만 보는 (대상, 맥락)."""
+    return ctx.CommitTarget("a/b", sha, path), ctx.CommitContext(repo="a/b", commit_sha=sha)
+
+
+def test_output_batches_keep_order_and_never_split_a_commit_file_group():
+    """같은 커밋·같은 파일은 한 작업자가 맡아야 캐시가 맞는다. 순서는 입력 그대로."""
+    keys = [("s1", "a.py")] * 3 + [("s1", "b.py")] + [("s2", "a.py")] * 2
+    pairs = [_pair(sha, path) for sha, path in keys]
+
+    batches = list(ctx.output_batches(pairs, size=2))
+
+    assert [pair for batch in batches for pair in batch] == pairs
+    assert [[(t.commit_sha, t.file_path) for t, _ in batch] for batch in batches] == [
+        [("s1", "a.py")] * 3,
+        [("s1", "b.py"), ("s2", "a.py"), ("s2", "a.py")],
+    ]
+
+
+def test_workers_default_is_sequential():
+    """기본값은 지금까지의 동작(순차)이다. 바꾸면 절차 문서의 명령이 뜻이 달라진다."""
+    assert ctx.build_parser().parse_args([]).workers == 1
+
+
+def test_workers_must_be_positive(capsys):
+    assert ctx.main(["--repo", "a/b", "--commit", "s", "--workers", "0"]) == 2
+    assert "--workers" in capsys.readouterr().err
+
+
+def test_parallel_output_is_identical_to_sequential(tmp_path):
+    """작업자 프로세스로 나눠도 파일이 바이트 단위로 같다 - 순서까지."""
+    repo, targets, contexts = _two_cut_functions_in_one_file(tmp_path)
+    # 묶음이 여럿 나오도록 같은 대상을 되풀이한다 (묶음 경계는 커밋·파일이 바뀔 때만 생긴다).
+    other = [ctx.CommitTarget(t.repo, t.commit_sha, None, record=t.record) for t in targets]
+    many_targets = (targets + other) * ctx.OUTPUT_BATCH_SIZE
+    many_contexts = (contexts + contexts) * ctx.OUTPUT_BATCH_SIZE
+    sequential, parallel = tmp_path / "seq.jsonl", tmp_path / "par.jsonl"
+
+    ctx.write_output(sequential, many_targets, many_contexts, repo_path=repo, workers=1)
+    ctx.write_output(parallel, many_targets, many_contexts, repo_path=repo, workers=2)
+
+    assert len(list(ctx.output_batches(zip(many_targets, many_contexts, strict=True)))) > 2
+    assert sequential.read_bytes() == parallel.read_bytes()
+    assert len(sequential.read_text(encoding="utf-8").splitlines()) == len(many_targets)
+
+
+def test_main_forwards_workers_to_the_output_stage(tmp_path, monkeypatch):
+    """`--workers` 가 `main` 을 거쳐 실제 출력까지 닿고, 결과는 순차와 같다."""
+    parallel, _repo = _run_main_on_cut_function(
+        tmp_path / "par",
+        monkeypatch,
+        "--repo-path",
+        str(tmp_path / "par" / "repo"),
+        "--workers",
+        "2",
+    )
+    sequential, _repo = _run_main_on_cut_function(
+        tmp_path / "seq", monkeypatch, "--repo-path", str(tmp_path / "seq" / "repo")
+    )
+
+    assert parallel["replacement"] == sequential["replacement"]
+    assert parallel["replacement"]["code"].rstrip().endswith("return items")
+
+
+def test_rate_limit_skips_parsing_and_leaves_the_output_alone(tmp_path, monkeypatch, capsys):
+    """한도에 걸린 실행은 파싱하지 않고 끝낸다 - 파싱은 수집이 끝난 실행에서 한 번만 (#128).
+
+    전에는 0 이 나올 때까지 다시 돌리는 동안 매번 거기까지 모은 것을 읽고 파싱해 썼다.
+    그 파일은 붙이기가 어차피 거부한다 (`test_attach_rejects_a_truncated_context_file...`).
+    """
+    record = {"repo": "a/b", "commit_sha": "sha1", "file_path": "m.py", "commit_message": "msg"}
+    input_path, out_path = tmp_path / "in.jsonl", tmp_path / "out.jsonl"
+    input_path.write_text((json.dumps(record) + "\n") * 2, encoding="utf-8")
+    out_path.write_text("이전 결과\n", encoding="utf-8")
+
+    def stopped(collector, targets, **_kwargs):
+        report = ctx.AttachmentReport(stopped_reason="API 한도 소진 (1건 남기고 중단)")
+        return [ctx.CommitContext(repo="a/b", commit_sha="sha1")], report
+
+    def must_not_parse(*args, **kwargs):
+        raise AssertionError("한도에 걸린 실행에서 파싱했다")
+
+    monkeypatch.setenv("GITHUB_TOKEN", "test")
+    monkeypatch.setattr(ctx, "load_env_file", lambda _path: None)
+    monkeypatch.setattr(ctx, "run_targets", stopped)
+    monkeypatch.setattr(ctx, "build_output_record", must_not_parse)
+    monkeypatch.setattr(ctx, "read_child_source", must_not_parse)
+    argv = ["--input", str(input_path), "--out", str(out_path), "--repo-path", str(tmp_path)]
+
+    assert ctx.main([*argv, "--cache-dir", str(tmp_path / "cache")]) == 1
+    assert out_path.read_text(encoding="utf-8") == "이전 결과\n"
+    captured = capsys.readouterr()
+    assert "쓰지 않았다" in captured.err
+    assert "JSONL:" not in captured.out
+
+
+# --------------------------------------------------------------------------------------
+# 한도 시 자동 대기 후 재개 (기본. 끄려면 `--no-wait-on-limit`, Issue #128)
+# --------------------------------------------------------------------------------------
+
+# `main` 테스트가 `ctx` 의 이름을 바꿔 끼우므로 진짜를 먼저 잡아 둔다.
+_REAL_CLIENT = ctx.GitHubClient
+_REAL_LIMIT_WAIT = ctx.LimitWait
+
+
+class _FakeTime:
+    """잠들면 그만큼 시계가 간다. 실제로는 기다리지 않는다."""
+
+    def __init__(self, now=1_000_000.0):
+        self.now = now
+        self.sleeps = []
+        self.messages = []
+
+    def clock(self):
+        return self.now
+
+    def sleep(self, seconds):
+        self.sleeps.append(seconds)
+        self.now += seconds
+
+    def limit_wait(self):
+        return _REAL_LIMIT_WAIT(clock=self.clock, sleep=self.sleep, announce=self.messages.append)
+
+
+def _limit_error(code=403, **headers):
+    """GitHubClient 가 올리는 모양 - `HTTPError` 를 원인으로 단 `RuntimeError`."""
+    message = email.message.Message()
+    for key, value in headers.items():
+        message[key.replace("_", "-")] = str(value)
+    cause = urllib.error.HTTPError("https://api.github.com/x", code, "err", message, None)
+    error = RuntimeError(f"HTTP {code}: https://api.github.com/x")
+    error.__cause__ = cause
+    return error
+
+
+@pytest.mark.parametrize(
+    ("headers", "attempt", "expected"),
+    [
+        # 1차 한도: 리셋 시각까지 + 여유 30초
+        ({"x-ratelimit-reset": "1000600", "x-ratelimit-remaining": "0"}, 0, 630),
+        ({"x-ratelimit-reset": "1000600"}, 0, 630),  # 남은 횟수 헤더가 없으면 리셋을 믿는다
+        ({"x-ratelimit-reset": "999000", "x-ratelimit-remaining": "0"}, 0, 30),  # 이미 지났다
+        # 2차 한도: Retry-After 가 먼저다
+        ({"retry-after": "120", "x-ratelimit-reset": "1000600"}, 0, 150),
+        # 남은 횟수가 있는데 걸렸다 - 리셋 시각과 무관하다. 간격을 늘려 간다
+        ({"x-ratelimit-reset": "1000600", "x-ratelimit-remaining": "4000"}, 0, 60),
+        ({}, 0, 60),
+        ({}, 1, 120),
+        ({}, 3, 480),
+        ({}, 4, 900),  # 960 이 아니라 15분에서 멈춘다
+        ({}, 20, 900),
+        # Retry-After 는 HTTP 날짜로도 온다 (RFC 9110). 미래면 그 시각까지 + 여유
+        ({"retry-after": email.utils.formatdate(1_000_600, usegmt=True)}, 0, 630),
+        # 이미 지난 날짜·못 읽는 값은 없는 것으로 치고 다음 경로로 간다
+        ({"retry-after": email.utils.formatdate(999_000, usegmt=True)}, 0, 60),
+        ({"retry-after": "soon"}, 2, 240),
+        (
+            {
+                "retry-after": "soon",
+                "x-ratelimit-reset": "1000600",
+                "x-ratelimit-remaining": "0",
+            },
+            0,
+            630,
+        ),
+    ],
+)
+def test_limit_wait_seconds(headers, attempt, expected):
+    assert ctx.limit_wait_seconds(headers, 1_000_000.0, attempt) == expected
+
+
+def test_limit_headers_come_from_the_wrapped_http_error():
+    error = _limit_error(403, X_RateLimit_Reset=1000600, Retry_After=7)
+
+    assert ctx.limit_headers(error) == {"x-ratelimit-reset": "1000600", "retry-after": "7"}
+    assert ctx.limit_headers(RuntimeError("HTTP 403: x")) == {}
+
+
+def test_wait_announces_the_deadline_every_few_minutes():
+    """12분을 기다리면 5분마다 한 번씩, 남은 시간을 줄여 가며 알린다."""
+    fake = _FakeTime()
+
+    fake.limit_wait().wait(720)
+
+    assert fake.sleeps == [300, 300, 120]
+    assert fake.now == 1_000_720.0
+    deadline = ctx.datetime.fromtimestamp(1_000_720.0).strftime("%H:%M")
+    assert fake.messages == [
+        f"한도 — {deadline}까지 대기 (남은 12분)",
+        f"한도 — {deadline}까지 대기 (남은 7분)",
+        f"한도 — {deadline}까지 대기 (남은 2분)",
+    ]
+
+
+def _limited_fetcher(failures, calls=None):
+    """`/issues/42` 조회가 `failures` 의 오류를 차례로 낸 뒤 정상으로 돌아오는 fetcher."""
+    pending = list(failures)
+
+    def fetch(url, request_headers):
+        if calls is not None:
+            calls.append(url)
+        if "/issues/42" in url and pending:
+            raise pending.pop(0).__cause__
+        return route_fetcher(FULL_ROUTES)(url, request_headers)
+
+    return fetch
+
+
+def _limited_collector(tmp_path, fake, failures):
+    """한도에 걸리는 수집기와 그 호출 기록.
+
+    GitHubClient 자체의 대기는 `max_wait_seconds=0` 으로 꺼 둔다 - 여기서 보려는 것은 그것이
+    포기하고 올린 오류를 맥락 결합이 받아 기다리는 경로다.
+    """
+    calls = []
+    client = _REAL_CLIENT(
+        "t",
+        tmp_path / "cache",
+        fetcher=_limited_fetcher(failures, calls),
+        sleep=fake.sleep,
+        max_wait_seconds=0,
+    )
+    return ctx.ContextCollector(client), calls
+
+
+LIMIT_TARGETS = [
+    ctx.CommitTarget("a/b", "sha1", commit_message="msg"),
+    ctx.CommitTarget("a/b", "sha1", "src/net.py", commit_message="msg"),
+]
+
+
+def test_wait_on_limit_resumes_from_the_same_target(tmp_path):
+    """한도에 걸리면 리셋 시각 + 30초를 기다렸다가 걸린 대상부터 이어서 끝까지 간다."""
+    fake = _FakeTime()
+    failure = _limit_error(403, X_RateLimit_Reset=1_000_600, X_RateLimit_Remaining=0)
+    collector, calls = _limited_collector(tmp_path, fake, [failure])
+
+    contexts, report = ctx.run_targets(collector, LIMIT_TARGETS, limit_wait=fake.limit_wait())
+
+    assert report.stopped_reason == ""
+    assert [context.issue_numbers for context in contexts] == [(42, 43), (42, 43)]
+    assert sum(fake.sleeps) == 630
+    assert len(fake.messages) == 3  # 630초 = 300 + 300 + 30
+    # 걸린 호출만 다시 나갔다 - 그 앞의 PR 조회는 캐시에서 나왔다.
+    assert sum("/issues/42" in url for url in calls) == 2
+    assert sum("/commits/sha1/pulls" in url for url in calls) == 1
+
+
+def test_wait_on_limit_backs_off_when_there_are_no_headers(tmp_path):
+    """헤더가 없으면 60초부터 늘려 가며 다시 해 본다."""
+    fake = _FakeTime()
+    collector, _calls = _limited_collector(tmp_path, fake, [_limit_error(429)] * 3)
+
+    contexts, report = ctx.run_targets(collector, LIMIT_TARGETS, limit_wait=fake.limit_wait())
+
+    assert fake.sleeps == [60, 120, 240]
+    assert report.stopped_reason == ""
+    assert len(contexts) == 2
+
+
+def test_without_wait_on_limit_the_batch_still_stops(tmp_path):
+    """옵션이 꺼져 있으면 지금까지와 같다 - 기다리지 않고 멈춘다."""
+    fake = _FakeTime()
+    collector, _calls = _limited_collector(tmp_path, fake, [_wrapped(403, LIMIT_HEADERS)])
+
+    contexts, report = ctx.run_targets(collector, LIMIT_TARGETS)
+
+    assert contexts == []
+    assert "한도 소진 (2건 남기고 중단)" in report.stopped_reason
+    assert fake.sleeps == []
+
+
+def test_waiting_does_not_change_the_collected_contexts(tmp_path):
+    """한도에 걸렸다 이어 간 결과가 한 번도 안 걸린 결과와 같다."""
+    fake = _FakeTime()
+    limited, _calls = _limited_collector(
+        tmp_path / "limited", fake, [_wrapped(403, LIMIT_HEADERS)] * 2
+    )
+    clean, _calls = _limited_collector(tmp_path / "clean", fake, [])
+
+    waited, _report = ctx.run_targets(limited, LIMIT_TARGETS, limit_wait=fake.limit_wait())
+    straight, _report = ctx.run_targets(clean, LIMIT_TARGETS)
+
+    assert waited == straight
+
+
+def test_other_failures_are_not_waited_on(tmp_path):
+    """기다리는 것은 한도뿐이다. 삭제된 이슈(410)는 전처럼 그 조각만 건너뛴다."""
+    fake = _FakeTime()
+    collector, _calls = _limited_collector(tmp_path, fake, [_limit_error(410)] * 2)
+
+    contexts, _report = ctx.run_targets(collector, LIMIT_TARGETS, limit_wait=fake.limit_wait())
+
+    assert fake.sleeps == []
+    assert [context.issue_numbers for context in contexts] == [(43,), (43,)]
+
+
+def _main_on_two_records(tmp_path, monkeypatch, failures, *extra_args):
+    """레코드 둘을 `main --input --out` 으로 돌린다. `/issues/42` 가 `failures` 만큼 걸린다."""
+    fake = _FakeTime()
+    fetch = _limited_fetcher(failures)
+
+    def client(token, cache_dir, **kwargs):
+        return _REAL_CLIENT(
+            token, cache_dir, fetcher=fetch, sleep=fake.sleep, max_wait_seconds=0, **kwargs
+        )
+
+    record = {"repo": "a/b", "commit_sha": "sha1", "file_path": "src/net.py"}
+    record.update(commit_message="msg", function_name="parse", added_hunks_same_file=[])
+    tmp_path.mkdir(parents=True, exist_ok=True)
+    input_path, out_path = tmp_path / "in.jsonl", tmp_path / "out.jsonl"
+    input_path.write_text((json.dumps(record) + "\n") * 2, encoding="utf-8")
+    monkeypatch.setenv("GITHUB_TOKEN", "test")
+    monkeypatch.setattr(ctx, "load_env_file", lambda _path: None)
+    monkeypatch.setattr(ctx, "GitHubClient", client)
+    monkeypatch.setattr(ctx, "LimitWait", fake.limit_wait)
+    argv = ["--input", str(input_path), "--out", str(out_path)]
+    code = ctx.main([*argv, "--cache-dir", str(tmp_path / "cache"), *extra_args])
+    return code, out_path, fake
+
+
+def test_wait_on_limit_is_on_by_default():
+    """팀원이 옵션 없이 돌려도 멈추지 않게 기본이 켜짐이다. 옛 플래그는 써도 된다."""
+    parser = ctx.build_parser()
+
+    assert parser.parse_args([]).wait_on_limit is True
+    assert parser.parse_args(["--wait-on-limit"]).wait_on_limit is True
+    assert parser.parse_args(["--no-wait-on-limit"]).wait_on_limit is False
+
+
+@pytest.mark.parametrize("flags", [(), ("--wait-on-limit",)])
+def test_main_waits_then_parses_once_and_exits_zero(tmp_path, monkeypatch, capsys, flags):
+    """기본 동작: 기다렸다 끝까지 수집하고, 마지막에 한 번 파싱해 0 으로 끝난다.
+
+    `--wait-on-limit` 은 기본과 같다 - 이미 그렇게 돌리던 명령이 깨지지 않게 남겨 뒀다.
+    """
+    hit = [_limit_error(403, Retry_After=90)]
+    code, out_path, fake = _main_on_two_records(tmp_path, monkeypatch, hit, *flags)
+
+    assert code == 0
+    assert sum(fake.sleeps) == 120  # Retry-After 90 + 여유 30
+    assert fake.messages[0].startswith("한도 — ")
+    assert fake.messages[0].endswith("까지 대기 (남은 2분)")
+    rows = [json.loads(line) for line in out_path.read_text(encoding="utf-8").splitlines()]
+    assert [row["context"]["issue_numbers"] for row in rows] == [[42, 43], [42, 43]]
+    assert "중단" not in capsys.readouterr().out
+
+
+def test_no_wait_on_limit_exits_one_and_writes_nothing(tmp_path, monkeypatch, capsys):
+    """`--no-wait-on-limit`: 예전 동작 - 한도에 걸리면 기다리지 않고 파싱 없이 1 로 끝난다."""
+    code, out_path, fake = _main_on_two_records(
+        tmp_path, monkeypatch, [_wrapped(403, LIMIT_HEADERS)], "--no-wait-on-limit"
+    )
+    assert "--no-wait-on-limit" in capsys.readouterr().err
+
+    assert code == 1
+    assert not out_path.exists()
+    assert fake.sleeps == []
+
+
+def test_output_is_the_same_with_and_without_the_option(tmp_path, monkeypatch):
+    """기다렸다 이어 쓴 파일 = 대기를 끄고 다시 돌려 쓴 파일 = 한 번도 안 걸린 파일."""
+    hit = [_limit_error(403, Retry_After=90)]
+    off = "--no-wait-on-limit"
+    waited_code, waited, _fake = _main_on_two_records(tmp_path / "waited", monkeypatch, hit)
+    first_code, _out, _fake = _main_on_two_records(tmp_path / "rerun", monkeypatch, hit, off)
+    # 대기를 끄고 걸렸으니 사람이 다시 돌린다 - 같은 캐시 폴더로 이어 간다.
+    rerun_code, rerun, _fake = _main_on_two_records(tmp_path / "rerun", monkeypatch, [], off)
+    clean_code, clean, _fake = _main_on_two_records(tmp_path / "clean", monkeypatch, [])
+
+    assert (waited_code, first_code, rerun_code, clean_code) == (0, 1, 0, 0)
+    assert waited.read_bytes() == rerun.read_bytes() == clean.read_bytes()
+
+
+# --------------------------------------------------------------------------------------
+# 기다려도 풀리지 않는 오류는 종료 코드 2 (Issue #128)
+# --------------------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("error", "shown"),
+    [
+        (_wrapped(403, {"X-RateLimit-Remaining": "4000"}, DENIED_BODY), "HTTP 403: Resource not"),
+        (_wrapped(401, body=json.dumps({"message": "Bad credentials"})), "HTTP 401: Bad cred"),
+    ],
+)
+@pytest.mark.parametrize("flags", [(), ("--no-wait-on-limit",)])
+def test_denied_401_and_403_stop_at_once_with_exit_code_2(
+    tmp_path, monkeypatch, capsys, error, shown, flags
+):
+    """한도가 아닌 401·403 은 기다리지도, 조각만 건너뛰지도 않고 원인을 찍고 2 로 끝낸다."""
+    code, out_path, fake = _main_on_two_records(tmp_path, monkeypatch, [error] * 50, *flags)
+
+    assert code == 2
+    assert fake.messages == []  # 한도 대기에 들어가지 않았다
+    assert not out_path.exists()
+    captured = capsys.readouterr()
+    assert shown in captured.err
+    assert "2건 남기고 중단" in captured.err
+
+
+def test_denied_error_is_not_swallowed_as_a_skipped_piece(tmp_path):
+    """조각만 포기하고 넘어가면 토큰이 막힌 실행이 전부 "맥락 없음" 으로 끝난다."""
+    fake = _FakeTime()
+    collector, _calls = _limited_collector(tmp_path, fake, [_wrapped(401)] * 5)
+
+    contexts, report = ctx.run_targets(collector, LIMIT_TARGETS, limit_wait=fake.limit_wait())
+
+    assert contexts == []
+    assert report.fatal is True
+    assert "API 거부 HTTP 401" in report.stopped_reason
+    assert "issue" not in collector.skipped
+
+
+def test_ten_fruitless_retries_in_a_row_exit_with_code_2(tmp_path, monkeypatch, capsys):
+    """한도로 보이지만 풀리지 않으면 끝없이 기다리지 않는다 - 연속 10번이면 2 로 끝낸다."""
+    always = [_wrapped(403, {"Retry-After": "60"})] * 100
+    code, out_path, fake = _main_on_two_records(tmp_path, monkeypatch, always)
+
+    assert code == 2
+    assert sum(fake.sleeps) == 10 * 90  # 처음 걸려 한 번 + 성과 없는 재시도 9번 뒤 기다림
+    assert not out_path.exists()
+    assert "연속 10번 실패" in capsys.readouterr().err
+
+
+class _CountedClient:
+    """`_LimitRetry` 가 감싸는 것은 fetcher 뿐이다."""
+
+    def __init__(self):
+        self.fetcher = lambda url, headers: (200, {}, b"{}")
+
+
+def test_one_successful_request_resets_the_fruitless_counter():
+    """성공한 요청이 한 번이라도 있으면 다시 0 부터 센다 - 긴 실행이 누적으로 죽지 않게."""
+    fake, client = _FakeTime(), _CountedClient()
+    original = client.fetcher
+    retry = ctx._LimitRetry(fake.limit_wait(), client)
+    error = _wrapped(429)
+
+    for _ in range(ctx.LIMIT_MAX_FRUITLESS_RETRIES):
+        retry.wait(error)  # 처음 1번 + 성과 없는 9번
+    client.fetcher("https://api.github.com/x", {})  # 한 번 성공
+    for _ in range(ctx.LIMIT_MAX_FRUITLESS_RETRIES):
+        retry.wait(error)  # 다시 0 부터 - 아직 포기하지 않는다
+    with pytest.raises(ctx.ApiStopError, match="연속 10번 실패"):
+        retry.wait(error)
+
+    retry.close()
+    assert client.fetcher is original
+
+
+def test_a_404_counts_as_a_request_that_got_through():
+    """404 는 서버가 받아 답한 것이다 - 한도가 풀렸다는 증거로 센다."""
+    fake, client = _FakeTime(), _CountedClient()
+
+    def not_found(url, headers):
+        raise _http_error(404)
+
+    client.fetcher = not_found
+    retry = ctx._LimitRetry(fake.limit_wait(), client)
+    for _ in range(3 * ctx.LIMIT_MAX_FRUITLESS_RETRIES):
+        retry.wait(_wrapped(429))
+        with pytest.raises(urllib.error.HTTPError):
+            client.fetcher("https://api.github.com/x", {})
+
+    assert retry.fruitless == 0
+
+
+def test_run_targets_restores_the_client_fetcher(tmp_path):
+    fake = _FakeTime()
+    collector, _calls = _limited_collector(tmp_path, fake, [])
+    original = collector.client.fetcher
+
+    ctx.run_targets(collector, LIMIT_TARGETS, limit_wait=fake.limit_wait())
+
+    assert collector.client.fetcher is original

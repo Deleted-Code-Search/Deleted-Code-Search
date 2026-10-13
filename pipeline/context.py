@@ -30,8 +30,21 @@
 20개 저장소 실행 (#82, #142):
     맥락 결합은 `--repo-path` 를 하나만 받으므로 저장소마다, 클론이 있는 노트북에서 돈다.
     결과는 `pipeline.run` 실행 디렉터리 **밖**에 둔다 - 조립기(#101)가 모르는 JSONL 을 거부한다.
-    맥락은 FULL_FUNCTION 에만 붙인다 (#85 대상, ADR-003). 한도에 걸리면 거기까지만 쓰고 1 로
-    멈추므로 **0 이 나올 때까지 다시 돌린다** - 캐시가 있어 이어 간다.
+    맥락은 FULL_FUNCTION 에만 붙인다 (#85 대상, ADR-003). **한도에 걸려도 멈추지 않는다** -
+    풀릴 때까지 기다렸다가 걸린 자리부터 이어 가고, 기다리는 동안 "한도 — HH:MM까지 대기"를
+    찍는다. 그래서 **한 번 돌리면 0 으로 끝난다. 다시 돌릴 필요가 없다** (#128). 자식 파일
+    읽기와 대체 코드 매칭은 수집이 끝난 뒤 한 번만 한다. `--workers N` 을 주면 그 단계를
+    프로세스 N 개로 나눈다 (기본 1 = 순차, 출력은 같다).
+
+    예전 동작이 필요하면 `--no-wait-on-limit` 을 준다: 한도에 걸리면 **출력을 쓰지 않고** 1 로
+    멈추고, 0 이 나올 때까지 사람이 다시 돌린다 (캐시가 있어 이어 간다).
+
+    종료 코드:
+        0  끝까지 수집하고 출력을 썼다
+        1  한도에 걸려 멈췄다 (`--no-wait-on-limit` 일 때만). 출력은 쓰지 않았다. 다시 돌리면
+           이어 간다
+        2  다시 돌려도 소용없다. 출력은 쓰지 않았다. 한도가 아닌 401·403(토큰·권한 문제),
+           한도 대기 뒤 재시도가 연속 10번 실패, 인자 오류. 원인을 고친 뒤 돌린다
 
     python -m pipeline.context --input <run>/<owner>__<name>.jsonl --full-function-only \\
         --repo-path repos/<owner>/<name> --out data/context/<owner>__<name>.jsonl
@@ -44,15 +57,21 @@ from __future__ import annotations
 
 import argparse
 import difflib
+import email.utils
+import functools
 import hashlib
 import json
+import math
 import os
 import re
 import subprocess
 import sys
+import time
 from collections import Counter
-from collections.abc import Iterable, Iterator, Sequence
+from collections.abc import Callable, Iterable, Iterator, Sequence
+from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass, field
+from datetime import datetime
 from pathlib import Path
 from typing import Any, NamedTuple
 
@@ -90,8 +109,12 @@ CODE_FENCE_RE = re.compile(r"```.*?```", re.DOTALL)
 INLINE_CODE_RE = re.compile(r"`[^`\n]*`")
 
 # GitHubClient 는 한도 소진(403)·과다 요청(429)을 재시도한 뒤 "HTTP 403: {url}" 로 올린다.
-RATE_LIMIT_STATUS = frozenset({403, 429})
 HTTP_STATUS_RE = re.compile(r"HTTP (\d{3})")
+# 한도는 403 이나 429 로 온다. 429 는 그 자체로 한도고, 403 은 권한 거부와 같은 코드라
+# 헤더·본문으로 가른다 (`is_rate_limit_error`).
+RATE_LIMIT_PHRASE = "rate limit"
+# 한도가 아니면 다시 해도 같은 답이 오는 상태 코드. 401 은 토큰, 403 은 권한·차단이다.
+ACCESS_DENIED_STATUS = frozenset({401, 403})
 
 
 # --------------------------------------------------------------------------------------
@@ -99,15 +122,93 @@ HTTP_STATUS_RE = re.compile(r"HTTP (\d{3})")
 # --------------------------------------------------------------------------------------
 
 
-def is_rate_limit_error(error: Exception) -> bool:
-    """GitHubClient 가 올린 RuntimeError 가 한도 소진인가.
+class ApiStopError(RuntimeError):
+    """다시 해도 소용없어 실행을 끝내야 하는 API 오류 (종료 코드 2).
 
-    GitHubClient(select_repos, 성제 담당)는 403/429 를 재시도한 뒤 네트워크 오류와 같은
-    RuntimeError 로 올린다. 그 파일에 전용 예외를 넣는 게 맞지만 담당 영역 밖이라,
-    여기서 메시지의 상태 코드로 가른다. 포맷이 바뀌면 테스트가 먼저 깨지게 해 뒀다.
+    한도 오류와 달리 기다려도 풀리지 않는다 - 무인 실행이 영구 오류를 한도로 알고 끝없이
+    기다리지 않게, 원인을 찍고 멈춘다.
     """
+
+
+def error_status(error: Exception) -> int | None:
+    """GitHubClient 가 올린 RuntimeError 의 HTTP 상태 코드. 없으면 `None`.
+
+    GitHubClient(select_repos, 성제 담당)는 HTTP 오류를 네트워크 오류와 같은 RuntimeError 로
+    올린다. 그 파일에 전용 예외를 넣는 게 맞지만 건드리지 않기로 해, 원인(`__cause__`)의
+    `HTTPError` 에서 읽고 없으면 메시지의 "HTTP 403" 에서 읽는다. 포맷이 바뀌면 테스트가
+    먼저 깨지게 해 뒀다.
+    """
+    code = getattr(error.__cause__, "code", None)
+    if isinstance(code, int):
+        return code
     match = HTTP_STATUS_RE.search(str(error))
-    return bool(match) and int(match.group(1)) in RATE_LIMIT_STATUS
+    return int(match.group(1)) if match else None
+
+
+def limit_headers(error: Exception) -> dict[str, str]:
+    """오류에 딸린 응답 헤더 (키는 소문자). 없으면 빈 dict.
+
+    헤더는 감싸인 원인(`HTTPError`)에만 있다.
+    """
+    headers = getattr(error.__cause__, "headers", None)
+    if not headers:
+        return {}
+    return {key.lower(): str(value) for key, value in headers.items()}
+
+
+def error_body(error: Exception) -> str:
+    """오류 응답 본문. 읽을 수 없으면 빈 문자열.
+
+    응답은 한 번만 읽을 수 있어서 읽은 것을 원인 객체에 붙여 둔다.
+    """
+    cause = error.__cause__
+    if cause is None or not hasattr(cause, "read"):
+        return ""
+    body = getattr(cause, "_context_body", None)
+    if body is None:
+        try:
+            body = cause.read().decode("utf-8", errors="replace")
+        except Exception:  # noqa: BLE001 - 닫힌 응답 등. 본문을 못 읽어도 분류는 계속한다
+            body = ""
+        cause._context_body = body
+    return body
+
+
+def error_message(error: Exception) -> str:
+    """오류 응답의 메시지 첫 줄. GitHub 은 `{"message": ...}` 로 준다."""
+    body = error_body(error)
+    try:
+        message = json.loads(body).get("message") or ""
+    except (ValueError, AttributeError):
+        message = body
+    lines = str(message).strip().splitlines()
+    return lines[0].strip() if lines else ""
+
+
+def is_rate_limit_error(error: Exception) -> bool:
+    """GitHubClient 가 올린 RuntimeError 가 한도 소진인가 - 기다리면 풀리는 오류인가.
+
+    429 는 그 자체로 한도다. 403 은 권한 거부도 같은 코드라 다음 중 하나가 있어야 한도다:
+    남은 횟수 0(`x-ratelimit-remaining`), `Retry-After` 헤더, 본문의 "rate limit" 문구
+    (2차 한도는 남은 횟수가 있는 채로 온다). 전에는 403 을 전부 한도로 봤는데, 그러면
+    권한이 없는 저장소나 막힌 토큰을 한도로 알고 끝없이 기다린다 (#128).
+    """
+    status = error_status(error)
+    if status == 429:
+        return True
+    if status != 403:
+        return False
+    headers = limit_headers(error)
+    return (
+        headers.get("x-ratelimit-remaining") == "0"
+        or "retry-after" in headers
+        or RATE_LIMIT_PHRASE in error_body(error).lower()
+    )
+
+
+def is_access_denied_error(error: Exception) -> bool:
+    """한도가 아닌 401·403 인가 - 다시 해도 같은 답이 오는 거부."""
+    return error_status(error) in ACCESS_DENIED_STATUS and not is_rate_limit_error(error)
 
 
 @dataclass(frozen=True, order=True)
@@ -374,6 +475,8 @@ class AttachmentReport:
     cache_hits: int = 0
     stopped_reason: str = ""
     """비어 있지 않으면 표본을 다 돌기 전에 멈춘 것. 비율을 전체 표본 값으로 읽으면 안 된다."""
+    fatal: bool = False
+    """멈춘 이유가 다시 돌려도 풀리지 않는 것인가 (`ApiStopError`). 종료 코드 2 로 간다."""
     skipped: dict[str, int] = field(default_factory=dict)
     """건너뛴 조회 종류별 횟수. 실패를 조용히 삼키면 무엇을 잃었는지 모른다 (#50)."""
 
@@ -455,6 +558,12 @@ class ContextCollector:
         """
         if is_rate_limit_error(error):
             raise error
+        if is_access_denied_error(error):
+            # 조각만 포기하고 넘어가면 토큰이 막힌 실행이 전부 "맥락 없음" 으로 끝난다 -
+            # 한도 소진을 삼키면 안 되는 것과 같은 이유다.
+            raise ApiStopError(
+                f"API 거부 HTTP {error_status(error)}: {error_message(error) or '(메시지 없음)'}"
+            ) from error
         self.skipped[kind] = self.skipped.get(kind, 0) + 1
 
     def get_json(self, kind: str, path: str) -> Any:
@@ -625,6 +734,12 @@ ADDED_HUNK_FIELD = "added_hunk_same_file"
 # 파서는 상태가 없어 하나만 만들어 쓴다 (`extract.py` 와 같은 방식).
 _ADAPTER = PythonAdapter()
 
+# 파싱 결과 캐시 크기 (#128). 한 커밋·한 파일에서 삭제된 함수 N 개는 레코드 N 개가 되고, 그
+# N 개가 같은 자식 파일과 같은 추가 헝크를 본다. 추출이 커밋·파일 순으로 쓰므로 그 레코드들은
+# 입력에서 붙어 있다 - 그래서 작은 캐시로도 전부 맞는다. 키우면 작업자마다 메모리만 더 든다.
+CHILD_SOURCE_CACHE_SIZE = 32
+HUNK_PARSE_CACHE_SIZE = 512
+
 
 def added_hunk_text(record: dict[str, Any]) -> str | None:
     """그 커밋·그 파일에서 추가된 줄 전체. 필드가 아예 없으면 `None`.
@@ -717,10 +832,26 @@ def _whole_function(child_source: str, name: str, child_line: int) -> Function |
     `PythonAdapter` 는 데코레이터 첫 줄부터를 함수 시작으로 잡는데, 데코레이터가 바뀌지
     않았으면 그 줄은 헝크에 없다.
     """
-    for function in _ADAPTER.extract_functions(child_source):
+    for function in _child_functions(child_source):
         if function.name == name and function.start_line <= child_line <= function.end_line:
             return function
     return None
+
+
+@functools.lru_cache(maxsize=CHILD_SOURCE_CACHE_SIZE)
+def _child_functions(child_source: str) -> tuple[Function, ...]:
+    """자식 파일 원문의 함수 목록. 같은 원문은 한 번만 파싱한다 (#128).
+
+    전에는 후보마다 파일 전체를 다시 파싱했다. 원문은 `_child_source` 가 같은 객체를 돌려주므로
+    해시도 한 번만 계산된다.
+    """
+    return tuple(_ADAPTER.extract_functions(child_source))
+
+
+@functools.lru_cache(maxsize=HUNK_PARSE_CACHE_SIZE)
+def _hunk_functions(text: str) -> tuple[Function, ...]:
+    """헝크 본문의 함수 목록. 같은 커밋·같은 파일의 레코드들은 같은 헝크를 본다 (#128)."""
+    return tuple(_ADAPTER.extract_functions(text))
 
 
 def _added_functions(text: str) -> list[Function]:
@@ -732,7 +863,7 @@ def _added_functions(text: str) -> list[Function]:
     성질에 기댄다 - 완결되지 않은 조각은 애초에 대체 코드 후보가 아니다.
     """
     try:
-        return list(_ADAPTER.extract_functions(text))
+        return list(_hunk_functions(text))
     except Exception:  # noqa: BLE001 - 파서가 어떤 예외를 낼지는 어댑터 구현에 달렸다
         return []
 
@@ -930,6 +1061,18 @@ def read_child_source(repo_path: str | Path, commit_sha: str, file_path: str) ->
         return None
 
 
+@functools.lru_cache(maxsize=CHILD_SOURCE_CACHE_SIZE)
+def _child_source(repo_path: str, commit_sha: str, file_path: str) -> str | None:
+    """`read_child_source` 를 같은 커밋·같은 파일에 한 번만 부른다 (#128).
+
+    `git show` 는 프로세스를 하나 띄우는 일이라 Windows 에서 건당 30ms 안팎이고, 맥락 결합의
+    출력 단계 시간 대부분이 여기였다 (httpx 947건에서 34초 중 31초). 커밋 SHA 와 경로가 같으면
+    내용이 같으므로 캐시해도 결과가 달라지지 않는다. 못 읽은 것(`None`)도 같은 실행 안에서는
+    다시 읽어도 못 읽는다.
+    """
+    return read_child_source(repo_path, commit_sha, file_path)
+
+
 def _whole_body(
     function: Function, body: str, new_start: Any, child_source: str | None
 ) -> str | None:
@@ -1031,11 +1174,156 @@ def sample_targets(client: GitHubClient, repo: str, count: int) -> list[CommitTa
     return targets
 
 
+# 한도가 풀리는 시각 뒤에 더 기다리는 여유. 서버 시계와 어긋나 풀리기 직전에 다시 부르면
+# 또 걸린다.
+LIMIT_WAIT_MARGIN_SECONDS = 30
+# 헤더로 풀리는 시각을 알 수 없을 때의 재시도 간격. 60초에서 두 배씩, 15분까지.
+LIMIT_BACKOFF_START_SECONDS = 60
+LIMIT_BACKOFF_MAX_SECONDS = 900
+# 기다리는 동안 남은 시간을 다시 알리는 간격.
+LIMIT_ANNOUNCE_SECONDS = 300
+# 한도 대기 뒤 다시 했는데 요청이 하나도 성공하지 못한 일이 연속으로 이만큼이면 포기한다.
+# 한도로 보이지만 풀리지 않는 것(계정 정지 등)에 무인 실행이 끝없이 매달리지 않게 한다.
+LIMIT_MAX_FRUITLESS_RETRIES = 10
+
+
+def _retry_after_seconds(value: str, now: float) -> float | None:
+    """`Retry-After` 헤더가 말하는 대기 초. 못 읽거나 이미 지난 시각이면 `None`.
+
+    초(`120`)와 HTTP 날짜(`Wed, 21 Oct 2026 07:28:00 GMT`) 두 형식이 있다 (RFC 9110).
+    """
+    value = value.strip()
+    if value.isdigit():
+        return float(value)
+    try:
+        seconds = email.utils.parsedate_to_datetime(value).timestamp() - now
+    except (TypeError, ValueError):
+        return None
+    return seconds if seconds > 0 else None
+
+
+def limit_wait_seconds(headers: dict[str, str], now: float, attempt: int = 0) -> float:
+    """한도가 풀릴 때까지 기다릴 초 (순수 함수 - 테스트 대상).
+
+    GitHub 문서의 순서를 따른다: `Retry-After` 가 있으면(2차 한도) 그만큼 - 초든 날짜든 -,
+    없고 남은 횟수가 0 이면(1차 한도) `X-RateLimit-Reset` 시각까지. 둘 다
+    `LIMIT_WAIT_MARGIN_SECONDS` 를 더한다. 남은 횟수가 있는데 걸린 것은 리셋 시각과 무관한
+    2차 한도라 그 시각을 믿지 않는다. 어느 쪽도 아니거나 `Retry-After` 를 못 읽으면
+    `attempt`(성과 없이 이미 기다린 횟수)에 따라 간격을 늘린다.
+    """
+    retry_after = _retry_after_seconds(headers.get("retry-after", ""), now)
+    if retry_after is not None:
+        return retry_after + LIMIT_WAIT_MARGIN_SECONDS
+    reset = headers.get("x-ratelimit-reset", "")
+    if reset.isdigit() and headers.get("x-ratelimit-remaining", "0") == "0":
+        return max(0.0, int(reset) - now) + LIMIT_WAIT_MARGIN_SECONDS
+    return float(min(LIMIT_BACKOFF_START_SECONDS * 2**attempt, LIMIT_BACKOFF_MAX_SECONDS))
+
+
+def _announce(message: str) -> None:
+    """대기 안내는 표준 출력으로, 바로 보이게. 파일로 돌려도 진행을 볼 수 있어야 한다."""
+    print(message, flush=True)
+
+
+@dataclass
+class LimitWait:
+    """한도에 걸리면 멈추지 않고 기다린다 (CLI 의 기본. 끄려면 `--no-wait-on-limit`, #128).
+
+    저장소 100개를 돌릴 때 한도에 걸릴 때마다 사람이 다시 시작하지 않게 하려는 것이다.
+    시계·잠들기·알림을 주입받는 것은 테스트가 실제로 기다리지 않게 하려는 것이다.
+    """
+
+    clock: Callable[[], float] = time.time
+    sleep: Callable[[float], None] = time.sleep
+    announce: Callable[[str], None] = _announce
+
+    def wait(self, seconds: float) -> None:
+        """`seconds` 동안 기다리며 `LIMIT_ANNOUNCE_SECONDS` 마다 남은 시간을 알린다."""
+        until = self.clock() + seconds
+        while (remaining := until - self.clock()) > 0:
+            self.announce(
+                f"한도 — {datetime.fromtimestamp(until):%H:%M}까지 대기"
+                f" (남은 {math.ceil(remaining / 60)}분)"
+            )
+            self.sleep(min(remaining, LIMIT_ANNOUNCE_SECONDS))
+
+
+class _LimitRetry:
+    """한도 대기와 "기다려도 소용없다"의 판정. `run_targets` 한 번에 하나.
+
+    요청이 성공했는지는 클라이언트의 fetcher 를 감싸서 센다 - 캐시에서 나온 응답은 한도가
+    풀렸다는 증거가 아니라서 `collect` 가 조각을 돌려줬는지로는 알 수 없다. 404 는 성공으로
+    센다: 서버가 요청을 받아 답한 것이다.
+    """
+
+    def __init__(self, limit_wait: LimitWait, client: GitHubClient) -> None:
+        self.limit_wait = limit_wait
+        self.client = client
+        self.fruitless = 0
+        self._successes = 0
+        self._waited = False
+        self._fetcher = client.fetcher
+        client.fetcher = self._counting_fetch
+
+    def _counting_fetch(self, url: str, headers: dict[str, str]) -> Any:
+        try:
+            result = self._fetcher(url, headers)
+        except Exception as error:
+            if getattr(error, "code", None) == 404:
+                self._successes += 1
+            raise
+        self._successes += 1
+        return result
+
+    def close(self) -> None:
+        """클라이언트의 fetcher 를 되돌린다."""
+        self.client.fetcher = self._fetcher
+
+    def wait(self, error: Exception) -> None:
+        """한도가 풀릴 때까지 기다린다. 기다려도 소용없으면 `ApiStopError`."""
+        if self._waited and self._successes == 0:
+            self.fruitless += 1
+            if self.fruitless >= LIMIT_MAX_FRUITLESS_RETRIES:
+                raise ApiStopError(
+                    f"한도 대기 뒤 재시도가 연속 {self.fruitless}번 실패했다"
+                    f" (성공한 요청 0건, 마지막 오류: {error})"
+                ) from error
+        else:
+            self.fruitless = 0
+        self._successes = 0
+        self._waited = True
+        seconds = limit_wait_seconds(limit_headers(error), self.limit_wait.clock(), self.fruitless)
+        self.limit_wait.wait(seconds)
+
+
+def _collect_through_limit(
+    collector: ContextCollector, target: CommitTarget, retry: _LimitRetry | None
+) -> CommitContext:
+    """대상 하나를 수집한다. `retry` 가 있으면 한도 오류를 기다렸다가 같은 대상을 다시 한다.
+
+    다시 할 때 그 커밋에서 이미 받은 응답은 캐시에서 나오므로 걸린 호출부터 이어진다.
+    `retry` 가 없으면 한도 오류를 그대로 올린다 (`--no-wait-on-limit`).
+    """
+    while True:
+        try:
+            return collector.collect(
+                target.repo,
+                target.commit_sha,
+                file_path=target.file_path,
+                commit_message=target.commit_message,
+            )
+        except RuntimeError as error:
+            if retry is None or not is_rate_limit_error(error):
+                raise
+            retry.wait(error)
+
+
 def run_targets(
     collector: ContextCollector,
     targets: Sequence[CommitTarget],
     *,
     log: object = None,
+    limit_wait: LimitWait | None = None,
 ) -> tuple[list[CommitContext], AttachmentReport]:
     """표본 전체에 맥락 결합을 돌리고 붙는 비율을 센다.
 
@@ -1047,17 +1335,33 @@ def run_targets(
     JSONL 에 멀쩡한 결과처럼 남고, 이유 회수율이 실제보다 낮게 나온다 (측정 실패를 측정
     결과로 착각하게 된다). 그래서 그 자리에서 멈추고, 멈춘 대상은 아예 기록하지 않으며,
     리포트에 이유를 남긴다. 그때까지 모은 것은 버리지 않는다.
+
+    `limit_wait` 를 주면 한도에서 멈추지 않는다 - 풀릴 때까지 기다렸다가 걸린 대상부터 이어
+    가서 끝까지 간다 (`LimitWait`).
+
+    다시 해도 풀리지 않는 오류(`ApiStopError`: 한도가 아닌 401·403, 기다려도 계속 실패)는
+    어느 쪽이든 그 자리에서 멈추고 `report.fatal` 을 세운다.
     """
+    retry = None if limit_wait is None else _LimitRetry(limit_wait, collector.client)
+    try:
+        return _run_targets(collector, targets, log, retry)
+    finally:
+        if retry is not None:
+            retry.close()
+
+
+def _run_targets(
+    collector: ContextCollector,
+    targets: Sequence[CommitTarget],
+    log: object,
+    retry: _LimitRetry | None,
+) -> tuple[list[CommitContext], AttachmentReport]:
+    """`run_targets` 의 본체."""
     contexts: list[CommitContext] = []
     report = AttachmentReport()
     for index, target in enumerate(targets, start=1):
         try:
-            context = collector.collect(
-                target.repo,
-                target.commit_sha,
-                file_path=target.file_path,
-                commit_message=target.commit_message,
-            )
+            context = _collect_through_limit(collector, target, retry)
             marks = "".join(
                 mark if flag else "-"
                 for mark, flag in (
@@ -1066,6 +1370,13 @@ def run_targets(
                     ("R", context.has_review),
                 )
             )
+        except ApiStopError as error:
+            remaining = len(targets) - index + 1
+            report.stopped_reason = f"{error} ({remaining}건 남기고 중단)"
+            report.fatal = True
+            if callable(log):
+                log(f"[{index}/{len(targets)}] {report.stopped_reason}")
+            break
         except RuntimeError as error:
             if is_rate_limit_error(error):
                 remaining = len(targets) - index + 1
@@ -1277,6 +1588,82 @@ def attach_contexts(
 
 
 # --------------------------------------------------------------------------------------
+# 출력 단계 - 자식 파일 읽기·대체 코드 매칭 (Issue #128)
+# --------------------------------------------------------------------------------------
+
+# 작업자에게 넘기는 한 묶음의 레코드 수. 작으면 프로세스 간 전달이 잦아지고, 크면 묶음 수가
+# 작업자 수보다 적어져 나눌 것이 없다 (httpx 는 FULL_FUNCTION 이 947건뿐이다).
+OUTPUT_BATCH_SIZE = 64
+DEFAULT_WORKERS = 1
+
+
+def output_batches(
+    pairs: Iterable[tuple[CommitTarget, CommitContext]], size: int = OUTPUT_BATCH_SIZE
+) -> Iterator[list[tuple[CommitTarget, CommitContext]]]:
+    """(대상, 맥락) 을 입력 순서 그대로 묶음으로 나눈다.
+
+    같은 커밋·같은 파일의 레코드는 한 묶음에 둔다 - 캐시가 작업자 프로세스마다 따로라서,
+    갈라지면 같은 파일을 두 작업자가 각각 읽고 파싱한다. 그래서 묶음은 `size` 를 넘을 수 있다.
+    """
+    batch: list[tuple[CommitTarget, CommitContext]] = []
+    previous: tuple[str, str | None] | None = None
+    for target, context in pairs:
+        key = (target.commit_sha, target.file_path)
+        if len(batch) >= size and key != previous:
+            yield batch
+            batch = []
+        batch.append((target, context))
+        previous = key
+    if batch:
+        yield batch
+
+
+def build_output_lines(
+    repo_path: str | None, batch: Sequence[tuple[CommitTarget, CommitContext]]
+) -> list[str]:
+    """묶음 하나의 출력 JSONL 줄들. 순차 실행과 작업자 프로세스가 같은 함수를 쓴다.
+
+    직렬화까지 여기서 한다 - 작업자가 dict 를 돌려주면 부모가 그것을 다시 풀고 또 직렬화한다.
+    """
+    lines: list[str] = []
+    for target, context in batch:
+        child_source = (
+            _child_source(repo_path, target.commit_sha, target.file_path)
+            if repo_path is not None and target.file_path
+            else None
+        )
+        record = build_output_record(target, context, child_source=child_source)
+        lines.append(json.dumps(record, ensure_ascii=False) + "\n")
+    return lines
+
+
+def write_output(
+    out_path: Path,
+    targets: Sequence[CommitTarget],
+    contexts: Sequence[CommitContext],
+    *,
+    repo_path: Path | None = None,
+    workers: int = DEFAULT_WORKERS,
+) -> None:
+    """레코드를 입력 순서대로 `out_path` 에 쓴다. `workers` 가 몇이든 출력은 같다.
+
+    스레드가 아니라 프로세스로 나눈다. `_ADAPTER` 는 tree-sitter 파서 하나를 들고 있고 파서는
+    동시에 쓰면 안 된다. `map` 은 결과를 넣은 순서대로 돌려주므로 순서를 따로 맞추지 않는다.
+    """
+    build = functools.partial(build_output_lines, None if repo_path is None else str(repo_path))
+    batches = output_batches(zip(targets, contexts, strict=True))
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    with out_path.open("w", encoding="utf-8") as handle:
+        if workers <= 1:
+            for lines in map(build, batches):
+                handle.writelines(lines)
+            return
+        with ProcessPoolExecutor(max_workers=workers) as executor:
+            for lines in executor.map(build, batches):
+                handle.writelines(lines)
+
+
+# --------------------------------------------------------------------------------------
 # CLI
 # --------------------------------------------------------------------------------------
 
@@ -1318,6 +1705,21 @@ def build_parser() -> argparse.ArgumentParser:
         dest="context_dirs",
         help="--attach 용 맥락 결과 폴더. 여러 번 줄 수 있다",
     )
+    parser.add_argument(
+        "--workers",
+        type=int,
+        default=DEFAULT_WORKERS,
+        help="--out 의 자식 파일 읽기·대체 코드 매칭을 나눌 프로세스 수 (기본 1 = 순차, #128)",
+    )
+    parser.add_argument(
+        "--wait-on-limit",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help=(
+            "API 한도에 걸리면 풀릴 때까지 기다렸다가 이어서 수집한다 (기본, #128)."
+            " --no-wait-on-limit 이면 예전처럼 파싱 없이 종료 코드 1"
+        ),
+    )
     parser.add_argument("--max-issues", type=int, default=MAX_ISSUES_PER_COMMIT)
     parser.add_argument("--cache-dir", type=Path, default=None)
     parser.add_argument("--env-file", type=Path, default=Path(".env"))
@@ -1326,11 +1728,21 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    """맥락을 모으고 결과를 낸다. 한도 소진으로 멈췄으면 1, 정상이면 0.
+    """맥락을 모으고 결과를 낸다. 종료 코드는 0·1·2 (모듈 독스트링 "종료 코드").
+
+    한도에 걸리면 기본으로는 멈추지 않고 기다렸다 이어 간다 (`LimitWait`). 1 로 멈추는 것은
+    `--no-wait-on-limit` 을 줬을 때뿐이다. 팀원이 옵션 없이 돌려도 밤새 멈춰 있지 않게 하려고
+    기다리는 쪽을 기본으로 했다. 기다려도 풀리지 않는 오류(한도가 아닌 401·403, 대기 뒤 연속
+    실패)는 2 로 끝낸다 - 다시 돌리기 전에 원인을 고쳐야 한다는 뜻이다.
 
     `--out` 으로 레코드를 쓸 때 **`--repo-path` 를 꼭 준다.** 없으면 에러 없이 대체 코드
     본문이 크게 줄어든다 - 예비 200건에서 39건 -> 8건 (#107). 헝크에는 추가된 줄만 있어서
     자식 파일 원문 없이는 함수가 헝크 안에서 끝난 것이 확인된 후보만 채울 수 있기 때문이다.
+
+    **한도에 걸려 멈추면(`--no-wait-on-limit`) `--out` 을 쓰지 않는다** (#128). 전에는
+    거기까지 모은 것을 매번 파싱해 썼는데, 그 파일은 붙이기(`attach_contexts`)가 어차피
+    거부하고, 0 이 나올 때까지 다시 돌리는 동안 같은 레코드를 실행마다 다시 읽고 파싱했다.
+    수집한 응답은 캐시에 남으므로 잃는 것은 없다. 이미 있던 `--out` 파일은 건드리지 않는다.
     """
     args = build_parser().parse_args(argv)
     load_env_file(args.env_file)
@@ -1354,6 +1766,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 0
     if args.full_function_only and not args.input:
         log("--full-function-only 는 --input 과 함께 쓴다.")
+        return 2
+    if args.workers < 1:
+        log("--workers 는 1 이상이다.")
         return 2
 
     token = os.environ.get("GITHUB_TOKEN", "").strip()
@@ -1387,9 +1802,23 @@ def main(argv: Sequence[str] | None = None) -> int:
         log("대상이 없다.")
         return 1
 
-    contexts, report = run_targets(collector, targets, log=log if len(targets) > 1 else None)
+    contexts, report = run_targets(
+        collector,
+        targets,
+        log=log if len(targets) > 1 else None,
+        limit_wait=LimitWait() if args.wait_on_limit else None,
+    )
 
-    if args.out:
+    if report.fatal:
+        log(f"중단: {report.stopped_reason}")
+        if args.out:
+            log(f"{args.out} 은 쓰지 않았다. 원인을 고친 뒤 다시 돌린다 (캐시로 이어 간다).")
+    elif args.out and report.stopped_reason:
+        log(
+            f"{args.out} 은 쓰지 않았다: 한도에 걸려 멈췄다 (--no-wait-on-limit). 다시 돌리면"
+            " 캐시로 이어 가고, 파싱은 수집이 끝난 실행에서 한 번만 한다."
+        )
+    elif args.out:
         if args.repo_path is None:
             # 에러 없이 조용히 나빠지는 경로라 알린다. 예비 200건에서 대체 코드 본문이
             # 39건 -> 10건으로 줄었다 (#107).
@@ -1397,22 +1826,15 @@ def main(argv: Sequence[str] | None = None) -> int:
                 "--repo-path 없이 돈다: 대체 코드 본문은 헝크 안에서 끝이 확인된 것만 채운다."
                 " 클론 경로를 주면 자식 파일에서 온전히 뽑는다."
             )
-        args.out.parent.mkdir(parents=True, exist_ok=True)
-        with args.out.open("w", encoding="utf-8") as handle:
-            for target, context in zip(targets, contexts, strict=False):
-                child_source = (
-                    read_child_source(args.repo_path, target.commit_sha, target.file_path)
-                    if args.repo_path is not None and target.file_path
-                    else None
-                )
-                record = build_output_record(target, context, child_source=child_source)
-                handle.write(json.dumps(record, ensure_ascii=False) + "\n")
+        write_output(args.out, targets, contexts, repo_path=args.repo_path, workers=args.workers)
         print(f"JSONL: {args.out} ({len(contexts)}건)")
 
     if len(contexts) == 1:
         print(json.dumps(contexts[0].to_schema_context(), ensure_ascii=False, indent=2))
     for line in report.format_lines():
         print(line)
+    if report.fatal:
+        return 2
     return 1 if report.stopped_reason else 0
 
 
