@@ -18,6 +18,7 @@
     python -m classify.baseline_llm --input records.jsonl --out predictions.jsonl
     python -m classify.baseline_llm --input records.jsonl --dry-run   # 프롬프트만 확인
     python -m classify.baseline_llm ... --provider anthropic            # 유료로 바꿀 때
+    python -m classify.baseline_llm ... --split val                     # 검증 split 만 (#87)
 
     키(NVIDIA_API_KEY, ANTHROPIC_API_KEY)는 .env 에서만 읽는다 (§8.4).
 """
@@ -43,8 +44,10 @@ from classify.baselines import (
     METHOD_LLM,
     UNKNOWN_LABEL,
     Prediction,
+    add_split_arguments,
     commit_message_of,
     record_id_of,
+    select_split,
     summarize,
     write_predictions,
 )
@@ -408,6 +411,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--dry-run", action="store_true", help="API 를 부르지 않고 첫 프롬프트만 출력"
     )
+    add_split_arguments(parser)
     return parser
 
 
@@ -418,7 +422,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     sys.stderr.reconfigure(encoding="utf-8")
     load_env_file(args.env_file)
 
-    records = read_jsonl(args.input)
+    records = select_split(args, read_jsonl(args.input))
+    if records is None:
+        return 2
     # 음수를 그대로 슬라이스하면 records[:-1] 이 되어 "앞 N건만" 의 정반대가 된다.
     # 마지막 한 건만 빼고 전부 유료 호출하는 셈이라, 비용을 아끼려는 옵션이 비용을 쓴다.
     if args.limit < 0:

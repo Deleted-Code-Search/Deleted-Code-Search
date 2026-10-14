@@ -15,6 +15,7 @@
 
 실행:
     python -m classify.baseline_keyword --input records.jsonl --out predictions.jsonl
+    python -m classify.baseline_keyword --input records.jsonl --split val   # 검증 split 만
 """
 
 from __future__ import annotations
@@ -30,8 +31,10 @@ from classify.baselines import (
     METHOD_KEYWORD,
     UNKNOWN_LABEL,
     Prediction,
+    add_split_arguments,
     commit_message_of,
     record_id_of,
+    select_split,
     summarize,
     write_predictions,
 )
@@ -201,6 +204,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--input", type=Path, required=True, help="레코드 JSONL")
     parser.add_argument("--out", type=Path, default=None, help="예측 JSONL 저장 경로")
+    add_split_arguments(parser)
     return parser
 
 
@@ -209,7 +213,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     sys.stdout.reconfigure(encoding="utf-8")
     sys.stderr.reconfigure(encoding="utf-8")
 
-    records = read_jsonl(args.input)
+    records = select_split(args, read_jsonl(args.input))
+    if records is None:
+        return 2
     if not records:
         print("레코드가 없다.", file=sys.stderr)
         return 1
