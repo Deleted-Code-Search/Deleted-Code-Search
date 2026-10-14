@@ -461,6 +461,8 @@ def test_model_can_pick_a_reason_the_sentence_keyword_missed():
     assert result.label == "DEAD"
     assert (result.evidence_grade, result.confidence) == ("INFERRED", clf.INFERRED_FLOOR)
     assert "DESIGN" in result.note
+    # 다른 이유의 문장은 DEAD 의 근거가 아니다 - 인용·위치에 넣지 않는다 (#168 코드래빗)
+    assert (result.evidence_text, result.evidence_source, result.evidence_locator) == ("", "", "")
 
 
 def test_without_model_or_llm_there_is_no_signal_and_it_is_unk():

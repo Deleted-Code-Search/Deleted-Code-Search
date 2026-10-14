@@ -53,6 +53,26 @@ def test_a_missing_prediction_is_refused_not_counted_wrong():
         ev.evaluate(gold, {"v1": "DEAD", "v2": "DEAD", "v3": "UNK"})
 
 
+def test_a_label_outside_the_eight_is_refused():
+    """8종 밖 라벨은 정확도에선 오답인데 클래스별 표·혼동 행렬에선 사라진다 (#168 코드래빗)."""
+    gold = ev.load_gold(gold_rows(), "val")
+
+    with pytest.raises(ValueError, match="8종 밖 예측 라벨 1건"):
+        ev.evaluate(gold, {"v1": "DEAD", "v2": "TYPO", "v3": "UNK", "v4": "FEAT"})
+
+
+def test_a_record_predicted_twice_is_refused():
+    """dict 로 만들면 뒤 줄이 앞 줄을 덮어써 이어 붙인 파일도 정상처럼 평가된다 (#168 코드래빗)."""
+    rows = [
+        {"record_id": "v1", "predicted_label": "DEAD"},
+        {"record_id": "v1", "predicted_label": "UNK"},
+    ]
+
+    with pytest.raises(ValueError, match="두 번"):
+        ev.predictions_by_id(rows)
+    assert ev.predictions_by_id(rows[:1]) == {"v1": "DEAD"}
+
+
 def test_an_unsettled_final_is_refused():
     rows = gold_rows()
     rows[1]["final"]["reason_label"] = None

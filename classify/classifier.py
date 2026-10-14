@@ -374,9 +374,8 @@ class Classifier:
         2. 그 라벨의 이유 문장은 있는데 이 함수까지 닿지 않는다 -> INFERRED (가이드 §6.1.1 E2)
         3. 대체 코드가 있다 -> INFERRED, 근거 ① (`diff:replacement`)
         4. LLM 이 같은 라벨을 골랐다 -> INFERRED, 하한 0.5, 근거 문장은 LLM 이 쓴 것
-        5. 이유 문장은 있는데 키워드가 다른 이유를 가리켰다 -> INFERRED, 하한 0.5, 그 문장
-        6. 모델만 골랐다 -> INFERRED, 하한 0.5, 근거 문장 없음. 4~6 은 가장 약한 경우라 신뢰도를
-           올리지 않는다
+        5. 모델만 골랐다 -> INFERRED, 하한 0.5, 근거 문장 없음. 다른 이유의 키워드 문장이 있으면
+           note 에만 적는다. 4·5 는 가장 약한 경우라 신뢰도를 올리지 않는다
 
         2 가 3 보다 먼저인 것은 신뢰도 순서가 아니다 (2 는 0.6, 3 은 최대 0.9). 같은 라벨의 이유
         문장은 **왜**를 말하고, 대체 코드는 무엇이 이어받았는지만 말해 어느 이유도 받치지 않는다.
@@ -442,29 +441,15 @@ class Classifier:
                 scores=scores,
                 note="근거 문장: LLM 작성 (ADR-005)",
             )
+        # 다른 이유를 가리키는 키워드 문장은 이 라벨의 근거가 아니다 - 근거 칸에 넣지 않고 note 에만
+        # 남긴다 (#168 코드래빗). 넣으면 DEAD 결과의 인용·위치가 DESIGN 문장을 가리키게 된다.
+        note = "모델만 이 라벨을 골랐다 - 화면에서 짚은 근거가 없다"
         if sentences:
-            passage = sentences[0].passage
-            return Classification(
-                record_id,
-                label,
-                INFERRED,
-                passage.text,
-                passage.source,
-                passage.locator,
-                INFERRED_FLOOR,
-                scores=scores,
-                note=f"문장 키워드는 {sentences[0].label} 을 가리켰고 라벨은 모델·LLM 이 골랐다",
+            note += (
+                f". 문장 키워드는 {sentences[0].label} 을 가리켰다 ({sentences[0].passage.locator})"
             )
         return Classification(
-            record_id,
-            label,
-            INFERRED,
-            "",
-            "",
-            "",
-            INFERRED_FLOOR,
-            scores=scores,
-            note="모델만 이 라벨을 골랐다 - 화면에서 짚은 근거가 없다",
+            record_id, label, INFERRED, "", "", "", INFERRED_FLOOR, scores=scores, note=note
         )
 
 

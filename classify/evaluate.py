@@ -54,15 +54,37 @@ def load_gold(rows: Sequence[Mapping[str, Any]], split: str) -> dict[str, Mappin
     return gold
 
 
+def predictions_by_id(rows: Sequence[Mapping[str, Any]]) -> dict[str, str]:
+    """예측 파일 줄들 → `{record_id: predicted_label}`. 같은 레코드가 두 번 있으면 거부한다.
+
+    그대로 dict 로 만들면 뒤 줄이 앞 줄을 조용히 덮어써, 재실행 결과를 이어 붙인 파일도 정상
+    평가된 것처럼 정확도가 나온다 (#168 코드래빗). 어느 줄이 그 방식의 답인지 정할 수 없다.
+    """
+    predicted: dict[str, str] = {}
+    for row in rows:
+        record_id = str(row["record_id"])
+        if record_id in predicted:
+            raise ValueError(f"같은 레코드의 예측이 두 번 있다: {record_id}")
+        predicted[record_id] = row["predicted_label"]
+    return predicted
+
+
 def evaluate(gold: Mapping[str, Mapping[str, Any]], predicted: Mapping[str, str]) -> dict[str, Any]:
-    """§10.2 지표. `predicted` 에 gold 레코드가 하나라도 빠지면 거부한다.
+    """§10.2 지표. `predicted` 에 gold 레코드가 빠졌거나 8종 밖 라벨이 있으면 거부한다.
 
     빠진 건을 오답으로 치든 빼고 재든, 어느 쪽도 "그 방식의 정확도" 가 아니다. 예측 파일을 잘못
-    준 것이니 멈춘다. gold 밖 레코드의 예측(다른 split)은 세지 않는다.
+    준 것이니 멈춘다. 8종 밖 라벨은 정확도에서는 오답으로 세이지만 클래스별 표와 혼동 행렬은
+    8종만 돌아 거기서 사라진다 - 같은 결과 안에서 숫자가 서로 맞지 않게 된다 (#168 코드래빗).
+    gold 밖 레코드의 예측(다른 split)은 세지 않는다.
     """
     missing = sorted(set(gold) - set(predicted))
     if missing:
         raise ValueError(f"예측이 없는 레코드 {len(missing)}건 {missing[:3]}")
+    unknown = sorted(rid for rid in gold if predicted[rid] not in REASON_LABELS)
+    if unknown:
+        raise ValueError(
+            f"8종 밖 예측 라벨 {len(unknown)}건 {[(rid, predicted[rid]) for rid in unknown[:3]]}"
+        )
 
     pairs = [
         (final["reason_label"], predicted[rid], final.get("evidence_grade"))
@@ -189,7 +211,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         gold = load_gold(read_jsonl(args.labels), args.split)
         rows = read_jsonl(args.predictions)
         versions = sorted({str(row.get("version")) for row in rows})
-        result = evaluate(gold, {str(row["record_id"]): row["predicted_label"] for row in rows})
+        result = evaluate(gold, predictions_by_id(rows))
     except (ValueError, KeyError) as error:
         print(f"평가할 수 없다: {error}", file=sys.stderr)
         return 2
