@@ -198,6 +198,7 @@ def predict_all(records: Sequence[dict[str, Any]]) -> list[Prediction]:
 
 
 def build_parser() -> argparse.ArgumentParser:
+    """CLI 인자. 실행 방법은 모듈 독스트링 "실행" 절."""
     parser = argparse.ArgumentParser(
         prog="python -m classify.baseline_keyword",
         description="기준선 A - 커밋 메시지 키워드 규칙으로 이유 8종 예측 (#44).",
@@ -209,6 +210,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
+    """기준선 A 를 돌려 예측을 저장하고 분포를 보고한다. `--split test` 는 `--final-test` 와만."""
     args = build_parser().parse_args(argv)
     sys.stdout.reconfigure(encoding="utf-8")
     sys.stderr.reconfigure(encoding="utf-8")

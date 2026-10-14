@@ -612,10 +612,12 @@ def split_inputs(tmp_path):
 
 
 def written_ids(path):
+    """예측 파일에 적힌 record_id 순서."""
     return [json.loads(line)["record_id"] for line in path.read_text(encoding="utf-8").splitlines()]
 
 
 def test_keyword_cli_split_predicts_only_that_split(tmp_path):
+    """기준선은 학습하지 않으니 고른 split 의 레코드만 예측한다."""
     out = tmp_path / "out.jsonl"
 
     assert bk.main(split_inputs(tmp_path) + ["--split", "val", "--out", str(out)]) == 0
@@ -640,6 +642,7 @@ def test_llm_cli_refuses_test_before_asking_anything(tmp_path, capsys, monkeypat
     """호출보다 먼저 거부한다 - test 에 한 번이라도 물으면 그 답이 캐시에 남는다."""
 
     def must_not_call(system, prompt, model):
+        """불리면 테스트가 실패하는 호출기 - 네트워크에 나가지 않는다."""
         raise AssertionError("test 를 --final-test 없이 물었다")
 
     monkeypatch.setattr(bl, "caller_from_env", lambda provider: must_not_call)
@@ -650,6 +653,7 @@ def test_llm_cli_refuses_test_before_asking_anything(tmp_path, capsys, monkeypat
 
 
 def test_llm_cli_dry_run_shows_the_first_record_of_the_split(tmp_path, capsys):
+    """dry-run 도 split 을 거른 뒤의 첫 레코드 프롬프트를 보여 준다."""
     args = split_inputs(tmp_path) + ["--split", "val", "--env-file", str(tmp_path / "none")]
 
     assert bl.main(args + ["--dry-run"]) == 0

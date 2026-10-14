@@ -84,11 +84,17 @@
 
 ## 6. 재현
 
+**판정에 쓰는 것은 커밋한 예측 파일(`docs/reports/gate2_test/*.jsonl`)이다.** 재현은 커밋하지 않는 `data/` 아래에 내고 커밋본과 비교한다. 같은 경로에 내면 판정 파일을 덮어쓴다.
+
 ```bash
-python -m classify.classifier --records datasets/labels/main500_records.jsonl --labels datasets/labeled_500.jsonl --llm --split test --final-test --out docs/reports/gate2_test/ours.jsonl
-python -m classify.baseline_llm --input datasets/labels/main500_records.jsonl --split test --final-test --out docs/reports/gate2_test/llm_b.jsonl
-python -m classify.baseline_keyword --input datasets/labels/main500_records.jsonl --split test --final-test --out docs/reports/gate2_test/keyword_a.jsonl
+python -m classify.classifier --records datasets/labels/main500_records.jsonl --labels datasets/labeled_500.jsonl --llm --split test --final-test --out data/gate2_reproduced/ours.jsonl
+python -m classify.baseline_llm --input datasets/labels/main500_records.jsonl --split test --final-test --out data/gate2_reproduced/llm_b.jsonl
+python -m classify.baseline_keyword --input datasets/labels/main500_records.jsonl --split test --final-test --out data/gate2_reproduced/keyword_a.jsonl
+git diff --no-index --ignore-cr-at-eol docs/reports/gate2_test/ours.jsonl data/gate2_reproduced/ours.jsonl
+git diff --no-index --ignore-cr-at-eol docs/reports/gate2_test/llm_b.jsonl data/gate2_reproduced/llm_b.jsonl
+git diff --no-index --ignore-cr-at-eol docs/reports/gate2_test/keyword_a.jsonl data/gate2_reproduced/keyword_a.jsonl
 python -m classify.evaluate docs/reports/gate2_test/ours.jsonl --split test
 ```
 
-LLM 응답 캐시(test 199건)는 파일 수 때문에 따로 올린다. 캐시가 있으면 위 첫 두 줄은 시간 초과 1건만 다시 묻는다.
+- test LLM 응답 캐시(PR #177)가 있으면 기준선 B 는 API 를 부르지 않고 같은 파일이 나온다. 기준선 A 는 규칙이라 늘 같다 (둘 다 2026-10-14 에 위 명령으로 커밋본과 같은 것을 확인했다)
+- 우리 방식은 시간 초과 1건(§2)만 API 를 다시 부른다. 그 답에 따라 `ours.jsonl` 과 그 한 줄이 다를 수 있다. 다시 부르면 test 를 한 번 더 묻는 것이라 이 문서를 쓸 때는 돌리지 않았다

@@ -115,6 +115,7 @@ def select_split(args: argparse.Namespace, records: list[dict[str, Any]]) -> lis
 
 
 def write_predictions(path: Path, predictions: Iterable[Prediction]) -> int:
+    """예측을 JSONL 로 쓰고 줄 수를 돌려준다. 폴더가 없으면 만든다."""
     path.parent.mkdir(parents=True, exist_ok=True)
     count = 0
     with path.open("w", encoding="utf-8") as handle:
