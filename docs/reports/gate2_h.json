@@ -1,0 +1,27 @@
+{
+  "split": "test",
+  "example": false,
+  "H": 0.8080808080808081,
+  "agreement": {
+    "records": 100,
+    "denominator": 99,
+    "agreed": 80,
+    "excluded": 1
+  },
+  "wilson95": [
+    0.7195963930846633,
+    0.8735496072108871
+  ],
+  "interim_records": 34,
+  "rejudged_v3_records": 17,
+  "reference_after_50": {
+    "records": 66,
+    "denominator": 66,
+    "agreed": 49,
+    "excluded": 0,
+    "rate": 0.7424242424242424
+  },
+  "accuracy_threshold": 0.8,
+  "accuracy_cap": 0.8,
+  "baseline_margin_pp": 10
+}
