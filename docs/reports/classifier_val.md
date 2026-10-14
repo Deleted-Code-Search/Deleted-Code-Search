@@ -110,3 +110,5 @@ python -m classify.evaluate <예측> --split test --json docs/reports/<결과>.j
 ```
 
 `--final-test` 없이 `--split test` 를 주면 분류기가 거부한다.
+
+**결과 (2026-10-14):** test 60.0% (기준선 A 33.0% / B 38.0%). `docs/reports/gate2_test.md`

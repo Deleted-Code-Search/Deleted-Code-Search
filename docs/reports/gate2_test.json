@@ -1,0 +1,432 @@
+{
+  "split": "test",
+  "n": 100,
+  "methods": {
+    "ours": {
+      "n": 100,
+      "correct": 60,
+      "accuracy": 0.6,
+      "all_unk_accuracy": 0.5,
+      "per_class": {
+        "BUG": {
+          "support": 1,
+          "predicted": 0,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0
+        },
+        "PERF": {
+          "support": 0,
+          "predicted": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        },
+        "SEC": {
+          "support": 0,
+          "predicted": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        },
+        "LIB": {
+          "support": 4,
+          "predicted": 2,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0
+        },
+        "DEAD": {
+          "support": 18,
+          "predicted": 10,
+          "precision": 0.7,
+          "recall": 0.3888888888888889,
+          "f1": 0.5
+        },
+        "DESIGN": {
+          "support": 21,
+          "predicted": 30,
+          "precision": 0.4666666666666667,
+          "recall": 0.6666666666666666,
+          "f1": 0.5490196078431373
+        },
+        "FEAT": {
+          "support": 6,
+          "predicted": 12,
+          "precision": 0.3333333333333333,
+          "recall": 0.6666666666666666,
+          "f1": 0.4444444444444444
+        },
+        "UNK": {
+          "support": 50,
+          "predicted": 46,
+          "precision": 0.7608695652173914,
+          "recall": 0.7,
+          "f1": 0.7291666666666667
+        }
+      },
+      "confusion": {
+        "BUG": {
+          "DESIGN": 1
+        },
+        "PERF": {},
+        "SEC": {},
+        "LIB": {
+          "DEAD": 1,
+          "DESIGN": 1,
+          "UNK": 2
+        },
+        "DEAD": {
+          "DEAD": 7,
+          "DESIGN": 3,
+          "FEAT": 4,
+          "UNK": 4
+        },
+        "DESIGN": {
+          "LIB": 2,
+          "DESIGN": 14,
+          "FEAT": 1,
+          "UNK": 4
+        },
+        "FEAT": {
+          "DEAD": 1,
+          "FEAT": 4,
+          "UNK": 1
+        },
+        "UNK": {
+          "DEAD": 1,
+          "DESIGN": 11,
+          "FEAT": 3,
+          "UNK": 35
+        }
+      },
+      "by_grade": {
+        "EXPLICIT": {
+          "n": 24,
+          "correct": 11,
+          "accuracy": 0.4583333333333333
+        },
+        "INFERRED": {
+          "n": 26,
+          "correct": 14,
+          "accuracy": 0.5384615384615384
+        },
+        "UNKNOWN": {
+          "n": 50,
+          "correct": 35,
+          "accuracy": 0.7
+        }
+      },
+      "versions": [
+        "r1+m2+c3+llm:deepseek-ai/deepseek-v4.1-flash"
+      ],
+      "wilson95": [
+        0.502,
+        0.6906
+      ]
+    },
+    "keyword_a": {
+      "n": 100,
+      "correct": 33,
+      "accuracy": 0.33,
+      "all_unk_accuracy": 0.5,
+      "per_class": {
+        "BUG": {
+          "support": 1,
+          "predicted": 14,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0
+        },
+        "PERF": {
+          "support": 0,
+          "predicted": 1,
+          "precision": 0.0,
+          "recall": null,
+          "f1": 0.0
+        },
+        "SEC": {
+          "support": 0,
+          "predicted": 3,
+          "precision": 0.0,
+          "recall": null,
+          "f1": 0.0
+        },
+        "LIB": {
+          "support": 4,
+          "predicted": 7,
+          "precision": 0.14285714285714285,
+          "recall": 0.25,
+          "f1": 0.18181818181818182
+        },
+        "DEAD": {
+          "support": 18,
+          "predicted": 5,
+          "precision": 0.6,
+          "recall": 0.16666666666666666,
+          "f1": 0.2608695652173913
+        },
+        "DESIGN": {
+          "support": 21,
+          "predicted": 5,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0
+        },
+        "FEAT": {
+          "support": 6,
+          "predicted": 8,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0
+        },
+        "UNK": {
+          "support": 50,
+          "predicted": 57,
+          "precision": 0.5087719298245614,
+          "recall": 0.58,
+          "f1": 0.5420560747663552
+        }
+      },
+      "confusion": {
+        "BUG": {
+          "UNK": 1
+        },
+        "PERF": {},
+        "SEC": {},
+        "LIB": {
+          "BUG": 1,
+          "LIB": 1,
+          "FEAT": 1,
+          "UNK": 1
+        },
+        "DEAD": {
+          "BUG": 1,
+          "DEAD": 3,
+          "FEAT": 5,
+          "UNK": 9
+        },
+        "DESIGN": {
+          "BUG": 3,
+          "PERF": 1,
+          "LIB": 4,
+          "DEAD": 1,
+          "UNK": 12
+        },
+        "FEAT": {
+          "BUG": 1,
+          "UNK": 5
+        },
+        "UNK": {
+          "BUG": 8,
+          "SEC": 3,
+          "LIB": 2,
+          "DEAD": 1,
+          "DESIGN": 5,
+          "FEAT": 2,
+          "UNK": 29
+        }
+      },
+      "by_grade": {
+        "EXPLICIT": {
+          "n": 24,
+          "correct": 4,
+          "accuracy": 0.16666666666666666
+        },
+        "INFERRED": {
+          "n": 26,
+          "correct": 0,
+          "accuracy": 0.0
+        },
+        "UNKNOWN": {
+          "n": 50,
+          "correct": 29,
+          "accuracy": 0.58
+        }
+      },
+      "versions": [
+        "a1"
+      ],
+      "wilson95": [
+        0.2456,
+        0.4269
+      ]
+    },
+    "llm_b": {
+      "n": 100,
+      "correct": 38,
+      "accuracy": 0.38,
+      "all_unk_accuracy": 0.5,
+      "per_class": {
+        "BUG": {
+          "support": 1,
+          "predicted": 3,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0
+        },
+        "PERF": {
+          "support": 0,
+          "predicted": 1,
+          "precision": 0.0,
+          "recall": null,
+          "f1": 0.0
+        },
+        "SEC": {
+          "support": 0,
+          "predicted": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        },
+        "LIB": {
+          "support": 4,
+          "predicted": 6,
+          "precision": 0.3333333333333333,
+          "recall": 0.5,
+          "f1": 0.4
+        },
+        "DEAD": {
+          "support": 18,
+          "predicted": 6,
+          "precision": 0.8333333333333334,
+          "recall": 0.2777777777777778,
+          "f1": 0.4166666666666667
+        },
+        "DESIGN": {
+          "support": 21,
+          "predicted": 33,
+          "precision": 0.3333333333333333,
+          "recall": 0.5238095238095238,
+          "f1": 0.40740740740740733
+        },
+        "FEAT": {
+          "support": 6,
+          "predicted": 30,
+          "precision": 0.16666666666666666,
+          "recall": 0.8333333333333334,
+          "f1": 0.2777777777777778
+        },
+        "UNK": {
+          "support": 50,
+          "predicted": 21,
+          "precision": 0.7142857142857143,
+          "recall": 0.3,
+          "f1": 0.4225352112676056
+        }
+      },
+      "confusion": {
+        "BUG": {
+          "DESIGN": 1
+        },
+        "PERF": {},
+        "SEC": {},
+        "LIB": {
+          "LIB": 2,
+          "FEAT": 2
+        },
+        "DEAD": {
+          "BUG": 1,
+          "LIB": 1,
+          "DEAD": 5,
+          "FEAT": 10,
+          "UNK": 1
+        },
+        "DESIGN": {
+          "LIB": 3,
+          "DESIGN": 11,
+          "FEAT": 2,
+          "UNK": 5
+        },
+        "FEAT": {
+          "BUG": 1,
+          "FEAT": 5
+        },
+        "UNK": {
+          "BUG": 1,
+          "PERF": 1,
+          "DEAD": 1,
+          "DESIGN": 21,
+          "FEAT": 11,
+          "UNK": 15
+        }
+      },
+      "by_grade": {
+        "EXPLICIT": {
+          "n": 24,
+          "correct": 11,
+          "accuracy": 0.4583333333333333
+        },
+        "INFERRED": {
+          "n": 26,
+          "correct": 12,
+          "accuracy": 0.46153846153846156
+        },
+        "UNKNOWN": {
+          "n": 50,
+          "correct": 15,
+          "accuracy": 0.3
+        }
+      },
+      "versions": [
+        "b1/deepseek-ai/deepseek-v4.1-flash"
+      ],
+      "wilson95": [
+        0.291,
+        0.4779
+      ]
+    }
+  },
+  "paired": {
+    "ours_vs_llm_b": {
+      "ours_only_correct": 31,
+      "other_only_correct": 9,
+      "exact_binomial_two_sided_p": 0.0007
+    },
+    "ours_vs_keyword_a": {
+      "ours_only_correct": 36,
+      "other_only_correct": 9,
+      "exact_binomial_two_sided_p": 0.0001
+    }
+  },
+  "criteria": {
+    "H": 0.8081,
+    "accuracy_threshold": 0.8,
+    "baseline_threshold": 0.48,
+    "ours_accuracy": 0.6,
+    "meets_accuracy": false,
+    "meets_baseline": true,
+    "note": "판정은 #92 (docs/meetings/gate-2.md). 이 칸은 사전 등록 기준에 숫자를 넣어 본 것이다"
+  },
+  "run": {
+    "started": "2026-10-14T20:31:58+09:00",
+    "finished": "2026-10-14T22:00:10+09:00",
+    "commit": "616fe2d846e33068bfc11a3fcfe8283f8c242417",
+    "classifier_trained_on": "train+val (400)",
+    "llm_calls": {
+      "ours_c3": 100,
+      "llm_b_b1": 100
+    },
+    "exceptions": [
+      {
+        "method": "ours",
+        "record_id": "18e7be08-dfc1-5e3a-a29e-f45c1a887a74",
+        "what": "LLM 호출 시간 초과(TimeoutError) - 그 건은 LLM 표 없이 모델만으로 분류됐다 (정의된 동작)",
+        "prediction": "DESIGN",
+        "gold": "DESIGN",
+        "effect": "LLM 답이 다른 라벨이었다면 틀릴 수 있었다 - 정확도 59~60%",
+        "retried": false
+      },
+      {
+        "method": "llm_b",
+        "record_id": "aa251005-f5fd-5bd9-934e-7dc5cb37b4fc",
+        "what": "8종 밖 라벨 'TST' - parse_answer 가 UNK 로 바꿨다 (사전 정의)",
+        "prediction": "UNK",
+        "gold": "DEAD",
+        "effect": "제대로 읽혔다면 맞았을 수 있다 - 정확도 38~39%",
+        "retried": false
+      }
+    ],
+    "retry_policy": "정확도를 보기 전에, 실패한 호출을 다시 부르지 않고 돌린 그대로를 결과로 쓰기로 정했다 (test 는 한 번만)"
+  }
+}
