@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 AST 소스 파싱을 런타임 메타데이터와 명시적 @router(paths=...)·Literal/Enum 반환 힌트로 대체한다고 밝히고, 이 visit_Compare는 그 AST 파싱용 state 속성 추론 코드이므로 구조 전환으로 제거됐다."}

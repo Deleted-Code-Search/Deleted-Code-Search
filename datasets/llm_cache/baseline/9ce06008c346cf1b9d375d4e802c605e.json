@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 TF와 JAX 지원을 폐기(deprecate)한다고 명시하고 있어 해당 프레임워크용 테스트 헬퍼 함수가 기능 폐기로 제거됐다."}

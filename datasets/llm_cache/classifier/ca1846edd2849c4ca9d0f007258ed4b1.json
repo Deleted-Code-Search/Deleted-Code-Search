@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|커밋 메시지가 pandas/io/gbq.py와 테스트를 제거하고 pandas-gbq로 대체한다고 밝히며, 추가된 코드가 pytest.importorskip('pandas_gbq')로 외부 라이브러리 호출로 전환했기 때문이다."}

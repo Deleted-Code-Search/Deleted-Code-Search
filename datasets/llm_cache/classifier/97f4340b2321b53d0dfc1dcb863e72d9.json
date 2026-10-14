@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 제목과 본문이 TF·JAX 지원 종료(Deprecate TF + JAX)를 선언하고 커밋 메시지에 \"Delete the tests\"가 있어, JAX 기반 DINOv2 테스트 자체가 폐기된 기능에 속해 삭제됐다."}

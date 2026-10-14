@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|커밋 메시지가 hf_api 모듈을 제거하고 huggingface_hub 를 사용한다고 명시하여 직접 구현을 외부 라이브러리로 대체했기 때문이다."}

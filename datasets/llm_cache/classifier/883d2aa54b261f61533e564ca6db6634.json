@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|삭제된 fin()의 본문(backend 캐시 정리)이 같은 커밋에서 추가된 reset_cache_backend_state() 제너레이터로 그대로 옮겨졌으므로, 픽스처를 generator 방식으로 재구성하면서 정리 로직이 다른 자리로 이동한 것이다."}

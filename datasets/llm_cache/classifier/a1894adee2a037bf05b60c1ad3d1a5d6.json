@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋이 \"Integrated the admin\"으로 Flask-Admin 기반 관리 화면을 도입하면서 라우트/뷰 구조가 재편되어, 기존 datasource 뷰 함수가 새 구조에 맞지 않게 됐다."}

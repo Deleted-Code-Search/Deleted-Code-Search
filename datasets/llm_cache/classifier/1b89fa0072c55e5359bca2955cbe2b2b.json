@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 laika/laikad 참조를 제거한다고 밝히고, 이 함수는 laika 관련 GPS 시뮬레이션 도구의 공개 진입점이라 기능 자체가 폐기된 것으로 보인다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 커스텀 데이터 관리 객체를 coordinator로 교체한다고 밝혔고, 추가된 코드에서 coordinator의 async_config_entry_first_refresh/async_refresh가 이 함수의 갱신 역할을 이어받았다."}

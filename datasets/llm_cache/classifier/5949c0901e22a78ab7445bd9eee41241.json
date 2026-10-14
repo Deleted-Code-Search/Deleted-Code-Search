@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 `Config.allow_extra`가 더 이상 인식되지 않고 `Config.extra`를 쓰라고 명시했으며, 이 테스트는 그 폐기된 옵션의 동작을 검증하던 것이다."}

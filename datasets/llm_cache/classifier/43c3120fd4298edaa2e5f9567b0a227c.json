@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 커밋이 같은 자리에 `_can_hold_na` 분기를 추가한 `_nan_idxs`를 새로 넣어, 기존 구현이 base Index의 nan 처리 구조 재편에 맞지 않게 되어 대체됐다."}

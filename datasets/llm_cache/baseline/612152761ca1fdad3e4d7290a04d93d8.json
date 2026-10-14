@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지에 deprecation timeline에 따라 raw column alias를 order_by()에 전달하는 지원을 제거했다고 적혀 있다."}

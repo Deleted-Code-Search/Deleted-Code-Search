@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 vLLM에서 tokenizer group을 제거한다고 명시하여 관련 기능 자체가 폐기됨"}

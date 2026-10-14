@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 MCP execute_sql 도구를 SQL 실행 API로 이전하는 리팩터링을 명시하여 구조 변경으로 테스트가 제거됐다."}

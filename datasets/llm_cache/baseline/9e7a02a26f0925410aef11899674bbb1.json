@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "BUG|커밋 메시지가 응답에 포함된 모델 이름을 수정한다고 명시하며, 이 테스트는 model_name 없이 요청 시 응답의 model이 MODEL_NAME과 같다고 검증하는 잘못된 동작을 확인하는 테스트였다."}

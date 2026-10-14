@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지의 \"attempt to replace tf with ops\"는 텐서플로 의존을 ops로 대체하는 구조 변경을 시사한다."}

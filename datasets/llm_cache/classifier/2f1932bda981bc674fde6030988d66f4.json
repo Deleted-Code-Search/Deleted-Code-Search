@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 자리에 들어온 대체 copy()가 내부 구조를 dict 기반으로 바꾼 새 HTTPHeaderDict 구현에 맞춰 재작성된 것으로, 구조 변경에 따라 기존 코드가 맞지 않게 되어 교체됐다."}

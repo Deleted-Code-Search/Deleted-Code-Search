@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 문단을 런(run)으로 유지하고 텍스트 박스를 drawables 소유권 경로로 읽는 등 파싱 구조를 재작성했음을 설명하므로, 기존 단일 문단·본문 스토리지 방식의 함수가 새 구조로 대체된 것으로 보인다."}

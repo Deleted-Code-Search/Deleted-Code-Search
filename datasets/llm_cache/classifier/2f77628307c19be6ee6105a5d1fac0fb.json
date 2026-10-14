@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 \"Removed unused __str__() methods in tests models\"라고 이 함수를 unused(호출되지 않음)라고 이름으로 지목해 삭제 이유를 말한다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|SparseArray를 ExtensionArray로 전환하는 구조 변경으로 인해 기존 __array_wrap__ 구현이 제거됐다."}

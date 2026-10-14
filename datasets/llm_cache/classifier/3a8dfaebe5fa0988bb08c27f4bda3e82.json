@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR #2547 본문이 \"Drop our custom `TRACE` level logging\"이라며 사용자에게 노출되던 TRACE 로깅 기능 자체를 제거한다고 명시했다."}

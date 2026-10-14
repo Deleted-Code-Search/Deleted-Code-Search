@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|Index.fillna 추가로 결측치 처리 방식이 바뀌면서 _nan_idxs 캐시 속성이 더 이상 필요 없어졌다"}

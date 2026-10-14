@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR이 \"Add update integration\"을 되돌리는(revert) 커밋이라 update 통합 자체가 제거됐고, 이 테스트가 검증하던 update/skip 기능도 함께 사라졌다."}

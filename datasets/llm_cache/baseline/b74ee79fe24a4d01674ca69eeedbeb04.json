@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 BNB 지원 추가를 명시하여 가중치 로딩 구조가 변경되면서 기존 load_weights 구현이 제거된 것으로 보인다."}

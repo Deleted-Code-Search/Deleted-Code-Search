@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 wilight에서 속성(attributes)을 사용하도록 변경했다고 명시하여, name 프로퍼티가 속성 기반 구조로 대체된 추상화 변경으로 보인다."}

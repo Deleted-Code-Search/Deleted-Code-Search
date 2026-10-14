@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|MarkdownGenerationStrategy 라는 새로운 전략 개념을 도입하면서 기존 크롤러 전략의 컨텍스트 매니저 위임 구조가 재편된 것으로 보인다."}

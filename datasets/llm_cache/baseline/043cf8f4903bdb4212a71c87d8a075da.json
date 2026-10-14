@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|CLI가 Click 기반으로 리팩터링되면서 기존 argparse 기반 프레임워크의 테스트가 제거됐다."}

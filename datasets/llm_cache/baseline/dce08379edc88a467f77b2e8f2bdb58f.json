@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 argparse 기반 커스텀 프레임워크를 Click으로 교체하는 리팩터링이라 명시하여, 해당 프레임워크의 메서드 테스트가 구조 변경으로 제거됐다."}

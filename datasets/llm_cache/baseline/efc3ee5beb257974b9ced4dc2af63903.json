@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 불필요한 __hash__ 메서드를 제거한다고 명시하며, 삭제된 코드는 해시 동작을 검증하는 테스트로 더 이상 필요하지 않게 되었다."}

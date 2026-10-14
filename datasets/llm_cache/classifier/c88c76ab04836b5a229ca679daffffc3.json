@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|삭제된 `on_step_start` 콜백은 `events.append`만 하는 테스트 보조 함수인데, 같은 커밋이 추가한 코드 어디에도 이 콜백을 등록하거나 호출하는 자리가 없고 이를 대체하는 코드도 없어 호출자를 잃은 것으로 보인다."}

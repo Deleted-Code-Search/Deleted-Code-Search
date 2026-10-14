@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|\"Studio\" 기능 추가 커밋을 통째로 되돌리는 revert이므로, 해당 기능과 함께 도입된 구조 변경이 원복되며 제거됐다."}

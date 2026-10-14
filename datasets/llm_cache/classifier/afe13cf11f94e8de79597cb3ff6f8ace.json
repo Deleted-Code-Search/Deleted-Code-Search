@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 자리에 compute_output_shape가 data_format 기반 height_axis/width_axis를 쓰는 새 구현으로 대체되어, 구조·인터페이스 변경에 맞춰 재작성된 것이다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 \"Removed Meta.index_together per deprecation timeline\"이라 index_together 기능 자체가 제거됐고, 이 테스트는 그 기능을 검증하던 것이다."}

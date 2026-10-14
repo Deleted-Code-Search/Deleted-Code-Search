@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|PR 본문이 \"Refactor chatglm loading logic to use `AutoWeightsLoader`\"라고 밝히고, 같은 자리에 `AutoWeightsLoader(self).load_weights(...)` 호출로 대체되어 직접 구현이 라이브러리(내부 유틸) 호출로 바뀌었다."}

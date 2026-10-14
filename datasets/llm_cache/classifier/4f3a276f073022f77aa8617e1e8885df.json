@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지와 PR 본문은 PR #5615 전체를 되돌린다고만 하고, 이 테스트 함수나 그 대상(parse_tool_calls_from_text)을 이름으로 가리키며 삭제 이유를 말하지 않는다."}
