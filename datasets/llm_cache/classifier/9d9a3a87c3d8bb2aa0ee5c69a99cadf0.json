@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "BUG|PR 본문이 `model` 파라미터 선택화로 served-model-name 동작이 깨진 버그를 수정한다고 밝히고, 삭제된 테스트는 model_name 없이 요청해 응답 model이 MODEL_NAME인지 검증하던 것으로 이 버그 동작에 묶여 있다."}

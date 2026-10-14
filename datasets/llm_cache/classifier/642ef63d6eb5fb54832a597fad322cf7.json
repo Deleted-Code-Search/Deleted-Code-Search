@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 제목과 커밋 메시지가 `eval_type_backport()` 지원 제거를 명시하고, 이 함수는 그 백포트 관련 TypeError 판별 로직이라 기능 자체가 폐기됐다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|SparseArray가 ndarray 서브클래스에서 ExtensionArray로 바뀌면서 __array_wrap__이 self.values.__array_wrap__에 위임하고 결과를 self._constructor로 감싸는 새 구현으로 대체됐다."}

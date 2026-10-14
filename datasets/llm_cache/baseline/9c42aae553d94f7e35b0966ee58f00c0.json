@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지에서 Selenium 지원을 제거하고 Playwright를 요구한다고 명시하여 Selenium 관련 기능 자체를 폐기했기 때문이다."}

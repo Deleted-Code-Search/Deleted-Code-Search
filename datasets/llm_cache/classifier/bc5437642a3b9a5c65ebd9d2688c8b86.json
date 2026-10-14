@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR이 \"Remove boilerplate code in favour of attributes\"라며 device_class 프로퍼티를 없애고 같은 커밋에서 self._attr_device_class = SENSOR_TYPES[self.type][4] 로 속성 직접 설정 방식으로 대체했다."}

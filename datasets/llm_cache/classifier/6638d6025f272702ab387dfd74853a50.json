@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|삭제된 함수의 docstring이 \"Deprecated: Provides backwards-compatibility with old method Browser().close()\"라고 명시하여, 사용자에게 제공되던 하위 호환 메서드 자체가 제거된 폐기 사례다."}

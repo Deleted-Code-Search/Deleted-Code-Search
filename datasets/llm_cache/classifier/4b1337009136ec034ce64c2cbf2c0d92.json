@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR 본문이 DoclingParseDocumentBackend를 deprecated 호환 래퍼로 대체하고 DoclingThreadedPdfParser를 유일 구현으로 삼아, 이 테스트 헬퍼가 쓰던 백엔드 선택 경로가 사라져 호출자를 잃었다."}

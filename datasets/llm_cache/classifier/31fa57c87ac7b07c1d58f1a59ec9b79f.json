@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 \"Removed obsolete cookie test mixing bytes with str\"라며 이 테스트를 이름으로 가리키고, Python 3 SimpleCookie가 값을 문자열로 취급해 bytes 혼용 검증 대상이 사라졌기 때문이다."}

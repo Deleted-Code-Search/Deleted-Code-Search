@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 서빙 시그니처를 `__init__()`에서 `self.call` 검사로 자동 생성하도록 재구성한다고 밝혀, 수동 `serving_output` 오버라이드가 새 구조에서 불필요해졌다."}

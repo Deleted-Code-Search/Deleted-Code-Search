@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 docling-parse 백엔드를 리팩터링하여 pypdfium을 제거한다고 명시하므로 구조 변경으로 제거됐다."}

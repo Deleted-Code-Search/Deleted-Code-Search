@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 `_pairwise` 속성을 deprecation cycle 후 제거한다고 밝혔고, 이 테스트는 그 공개 속성의 존재를 검증하던 테스트라 기능 자체가 사라져 삭제됐다."}

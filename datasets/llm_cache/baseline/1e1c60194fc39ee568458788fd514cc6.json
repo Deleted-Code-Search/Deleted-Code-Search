@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|동기 클라이언트 내부의 사설 async 엔진을 제거하고 공유 베이스 클래스 기반의 sync/async 형제 구조로 리팩터링하면서 해당 async 컨텍스트 매니저 메서드가 제거됐다."}

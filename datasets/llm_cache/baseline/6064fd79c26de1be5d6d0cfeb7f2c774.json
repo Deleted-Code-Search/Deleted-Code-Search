@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 서빙 시그니처와 더미 입력을 자동 감지 방식으로 재구성하면서 BERT·RoBERTa 등 여러 모델의 수동 serving_output/dummy 오버라이드를 일괄 제거했다고 명시한다."}

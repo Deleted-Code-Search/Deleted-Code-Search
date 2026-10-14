@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 #6107에서 도입한 GGUF shard controls(export toggles, split-folder naming, saving helpers)를 제거한다고 명시했고, 이 테스트는 그 shard 분할 헬퍼(_split_main_gguf)의 동작을 검증하던 테스트다."}

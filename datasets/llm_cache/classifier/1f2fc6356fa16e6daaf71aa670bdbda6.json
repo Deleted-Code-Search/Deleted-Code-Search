@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지와 PR 제목이 \"Remove Imputer in preprocessing\"으로 공개 클래스 Imputer 자체를 폐기했고, 이 함수는 그 Imputer의 내부 fit 메서드다."}

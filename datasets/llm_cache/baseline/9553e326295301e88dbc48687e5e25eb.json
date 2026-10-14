@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|mypy 플러그인 지원을 추가하면서 dataclasses 처리 방식이 재구성되어 해당 래퍼 함수가 제거됐다."}

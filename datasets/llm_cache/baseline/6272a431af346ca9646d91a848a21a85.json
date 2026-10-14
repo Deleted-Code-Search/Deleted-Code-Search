@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 `_pairwise` 속성 제거를 명시하고, 삭제된 코드는 그 속성을 검증하는 테스트뿐이다."}

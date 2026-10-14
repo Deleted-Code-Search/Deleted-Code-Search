@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 \"Prevented double submission of admin forms\" 기능을 되돌렸다(revert)고 명시하며, 이 테스트는 그 기능을 검증하던 테스트다."}

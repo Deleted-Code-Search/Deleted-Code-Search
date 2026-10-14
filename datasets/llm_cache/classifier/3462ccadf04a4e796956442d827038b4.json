@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR 본문이 레거시 데몬 CLI(`browser_use/skill_cli/**/*`)를 제거했다고 밝혀, 이 테스트가 검증하던 tunnel_manager 대상이 사라졌다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "BUG|PR 본문이 `pending`이 dead code라 tracker gate가 절대 작동하지 않아 payload 버퍼가 전송 중 덮어써져 `RuntimeError`/`ValidationError`가 발생한다고 명시하므로, 경쟁 조건을 고치려는 삭제다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR이 StateProxy/LockedListProxy 계층을 제거하고 flow.state가 원시 상태 객체를 반환하도록 바꿨다고 명시해, 프록시의 __add__가 새 인터페이스에 맞지 않게 됐다."}
