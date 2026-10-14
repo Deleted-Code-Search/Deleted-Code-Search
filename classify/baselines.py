@@ -13,13 +13,15 @@
 
 from __future__ import annotations
 
+import argparse
 import json
+import sys
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from classify.labels import REASON_LABELS
+from classify.labels import MERGED_FILENAME, REASON_LABELS, read_jsonl
 
 UNKNOWN_LABEL = "UNK"
 
@@ -69,7 +71,51 @@ def commit_message_of(record: dict[str, Any]) -> str:
     return context.get("commit_message") or record.get("commit_message") or ""
 
 
+def records_in_splits(
+    records: Sequence[dict[str, Any]], label_rows: Sequence[dict[str, Any]], splits: Sequence[str]
+) -> list[dict[str, Any]]:
+    """라벨 파일의 `split` 이 `splits` 중 하나인 레코드만 (#87). 라벨에 없는 레코드는 빠진다."""
+    split_of = {str(row.get("record_id")): row.get("split") for row in label_rows}
+    return [record for record in records if split_of.get(record_id_of(record)) in splits]
+
+
+TEST_SPLIT = "test"
+FINAL_TEST_REFUSAL = (
+    "test 는 최종 1회만 돈다 (게이트 2 사전 등록). H 를 기록한 뒤 --final-test 로 돌려라."
+)
+
+
+def add_split_arguments(parser: argparse.ArgumentParser) -> None:
+    """기준선 CLI 의 `--split`·`--final-test` (#87). 분류기(`classify.classifier`)와 같은 뜻이다.
+
+    기준선은 학습하지 않으니 고른 split 을 예측만 한다. test 는 분류기와 같은 시점에 한 번만 돈다.
+    """
+    parser.add_argument(
+        "--labels",
+        type=Path,
+        default=Path("datasets") / MERGED_FILENAME,
+        help="--split 에 쓰는 확정 라벨 파일 (record_id -> split)",
+    )
+    parser.add_argument(
+        "--split", choices=("val", TEST_SPLIT), default=None, help="이 split 의 레코드만 예측"
+    )
+    parser.add_argument(
+        "--final-test", action="store_true", help="--split test 를 허락한다 (최종 1회)"
+    )
+
+
+def select_split(args: argparse.Namespace, records: list[dict[str, Any]]) -> list | None:
+    """`--split` 이 있으면 그 split 의 레코드만. test 인데 `--final-test` 가 없으면 알리고 None."""
+    if not args.split:
+        return records
+    if args.split == TEST_SPLIT and not args.final_test:
+        print(FINAL_TEST_REFUSAL, file=sys.stderr)
+        return None
+    return records_in_splits(records, read_jsonl(args.labels), (args.split,))
+
+
 def write_predictions(path: Path, predictions: Iterable[Prediction]) -> int:
+    """예측을 JSONL 로 쓰고 줄 수를 돌려준다. 폴더가 없으면 만든다."""
     path.parent.mkdir(parents=True, exist_ok=True)
     count = 0
     with path.open("w", encoding="utf-8") as handle:

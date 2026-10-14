@@ -1,0 +1,100 @@
+{"record_id": "92620e7f-e463-555a-8a31-d9ed0311d2c5", "predicted_label": "DESIGN", "method": "keyword", "version": "a1", "evidence": ["refactor"], "note": ""}
+{"record_id": "511c845c-43b8-5bf8-9045-9214ed25d5f8", "predicted_label": "BUG", "method": "keyword", "version": "a1", "evidence": ["fix", "bugfix"], "note": ""}
+{"record_id": "69cc961f-88ac-5bd4-8320-a1b29e95a244", "predicted_label": "BUG", "method": "keyword", "version": "a1", "evidence": ["Fix"], "note": ""}
+{"record_id": "bf1d181f-3fd8-53a0-a270-abd1b88afdd8", "predicted_label": "UNK", "method": "keyword", "version": "a1", "evidence": [], "note": "매칭된 키워드 없음"}
+{"record_id": "dbee26cc-3540-5c5f-838e-73c0d5a5c7b0", "predicted_label": "UNK", "method": "keyword", "version": "a1", "evidence": [], "note": "매칭된 키워드 없음"}
+{"record_id": "ccbdb405-7ee7-50a5-b053-b7d725a9c3cf", "predicted_label": "PERF", "method": "keyword", "version": "a1", "evidence": ["performance", "faster", "benchmark"], "note": ""}
+{"record_id": "e925d450-7361-5d70-ba65-aae0d40001f1", "predicted_label": "UNK", "method": "keyword", "version": "a1", "evidence": [], "note": "매칭된 키워드 없음"}
+{"record_id": "63f216a4-1245-5cbf-bc78-6c86eb887602", "predicted_label": "BUG", "method": "keyword", "version": "a1", "evidence": ["Fix"], "note": ""}
+{"record_id": "8006f704-be98-531f-9eeb-4cae80e70691", "predicted_label": "DEAD", "method": "keyword", "version": "a1", "evidence": ["unused"], "note": ""}
+{"record_id": "5ef1e5ff-f38f-5ce6-b4fd-17cf65049384", "predicted_label": "UNK", "method": "keyword", "version": "a1", "evidence": [], "note": "매칭된 키워드 없음"}
+{"record_id": "4c9ac92c-3d40-5120-afce-ea6f582802f5", "predicted_label": "UNK", "method": "keyword", "version": "a1", "evidence": [], "note": "매칭된 키워드 없음"}
+{"record_id": "4adc2ea7-f88c-584d-bf07-3c9025265ee4", "predicted_label": "SEC", "method": "keyword", "version": "a1", "evidence": ["securit"], "note": ""}
+{"record_id": "4554cc32-6b3b-5303-8687-3a5f8f298091", "predicted_label": "UNK", "method": "keyword", "version": "a1", "evidence": [], "note": "매칭된 키워드 없음"}
+{"record_id": "e8bd2fd0-2048-5471-90ac-2fed90991ed7", "predicted_label": "UNK", "method": "keyword", "version": "a1", "evidence": [], "note": "매칭된 키워드 없음"}
+{"record_id": "c10ae911-28ec-5f6b-b660-3c60573a447a", "predicted_label": "UNK", "method": "keyword", "version": "a1", "evidence": [], "note": "매칭된 키워드 없음"}
+{"record_id": "74da24c9-297a-5f72-8291-b060b2eff5ac", "predicted_label": "FEAT", "method": "keyword", "version": "a1", "evidence": ["deprecat"], "note": ""}
+{"record_id": "8f4140d2-0b0e-5204-aae6-481feca0acd5", "predicted_label": "UNK", "method": "keyword", "version": "a1", "evidence": [], "note": "매칭된 키워드 없음"}
+{"record_id": "1ef98f4c-47a1-5cda-ac5d-10d0e93c1075", "predicted_label": "UNK", "method": "keyword", "version": "a1", "evidence": [], "note": "매칭된 키워드 없음"}
+{"record_id": "a508672a-48a5-5d6f-b4f1-1ef89de071e9", "predicted_label": "FEAT", "method": "keyword", "version": "a1", "evidence": ["deprecat"], "note": ""}
+{"record_id": "675a0161-2067-5f0c-8a98-1c5c54280b4d", "predicted_label": "UNK", "method": "keyword", "version": "a1", "evidence": [], "note": "매칭된 키워드 없음"}
+{"record_id": "cc1c75d2-8528-54cf-b9cc-f857adf6fbcf", "predicted_label": "FEAT", "method": "keyword", "version": "a1", "evidence": ["deprecat"], "note": ""}
+{"record_id": "1805de4b-5b8d-5fe7-999f-a3f2a2d31692", "predicted_label": "FEAT", "method": "keyword", "version": "a1", "evidence": ["deprecat"], "note": ""}
+{"record_id": "f11e58b4-26c6-5483-805d-534f1fc70713", "predicted_label": "UNK", "method": "keyword", "version": "a1", "evidence": [], "note": "매칭된 키워드 없음"}
+{"record_id": "63fddc09-c5f5-5927-8e73-36f1f771f720", "predicted_label": "LIB", "method": "keyword", "version": "a1", "evidence": ["use 'Dict' instead", "in favor of"], "note": ""}
+{"record_id": "e4ee5290-313e-5b2c-88c7-13013923b45a", "predicted_label": "UNK", "method": "keyword", "version": "a1", "evidence": [], "note": "매칭된 키워드 없음"}
+{"record_id": "abbc2db8-efc4-5bf4-b747-524efc7b9c52", "predicted_label": "UNK", "method": "keyword", "version": "a1", "evidence": [], "note": "매칭된 키워드 없음"}
+{"record_id": "1f859f65-c3b6-5bbb-9c75-c83ee330b0dc", "predicted_label": "LIB", "method": "keyword", "version": "a1", "evidence": ["replace with"], "note": ""}
+{"record_id": "002b063b-dda9-501a-8dcd-412f34ddd882", "predicted_label": "DESIGN", "method": "keyword", "version": "a1", "evidence": ["Refactor"], "note": ""}
+{"record_id": "742c0fc5-a46b-57ee-8672-b34b3bebeb3f", "predicted_label": "UNK", "method": "keyword", "version": "a1", "evidence": [], "note": "매칭된 키워드 없음"}
+{"record_id": "780d55c4-b8d3-56b5-8f53-d857e101412b", "predicted_label": "UNK", "method": "keyword", "version": "a1", "evidence": [], "note": "매칭된 키워드 없음"}
+{"record_id": "4afc6739-cb0e-52e2-affa-4b75a835c9e3", "predicted_label": "DEAD", "method": "keyword", "version": "a1", "evidence": ["unused"], "note": ""}
+{"record_id": "f219e46c-f130-5946-81e5-803d51753f3e", "predicted_label": "UNK", "method": "keyword", "version": "a1", "evidence": [], "note": "매칭된 키워드 없음"}
+{"record_id": "18e7be08-dfc1-5e3a-a29e-f45c1a887a74", "predicted_label": "UNK", "method": "keyword", "version": "a1", "evidence": [], "note": "매칭된 키워드 없음"}
+{"record_id": "68c42f38-cf7d-5ca6-b6ac-b71b088c5f28", "predicted_label": "BUG", "method": "keyword", "version": "a1", "evidence": ["fix", "broken"], "note": ""}
+{"record_id": "b5be979c-d4df-5a91-b1a3-773144780813", "predicted_label": "BUG", "method": "keyword", "version": "a1", "evidence": ["fix"], "note": ""}
+{"record_id": "2f2ad10b-ceaf-5cb5-83a0-fcc14dd8227d", "predicted_label": "UNK", "method": "keyword", "version": "a1", "evidence": [], "note": "매칭된 키워드 없음"}
+{"record_id": "5bfc8f79-57c9-5b80-a6fa-ad1e8636b4e6", "predicted_label": "DEAD", "method": "keyword", "version": "a1", "evidence": ["obsolete"], "note": ""}
+{"record_id": "fa436235-dc94-5f4a-8186-5adcbbee95ba", "predicted_label": "BUG", "method": "keyword", "version": "a1", "evidence": ["Fix"], "note": ""}
+{"record_id": "f49f9e0d-892d-5ac0-ab02-ddb3d37bffe9", "predicted_label": "BUG", "method": "keyword", "version": "a1", "evidence": ["fix"], "note": ""}
+{"record_id": "6821b0a1-4caf-5228-bca8-eac5537834ae", "predicted_label": "UNK", "method": "keyword", "version": "a1", "evidence": [], "note": "매칭된 키워드 없음"}
+{"record_id": "ae7c2608-c2ae-5766-866c-98832f4b7b67", "predicted_label": "UNK", "method": "keyword", "version": "a1", "evidence": [], "note": "매칭된 키워드 없음"}
+{"record_id": "fefb0be3-55b9-5c61-9d71-944b8e140e0d", "predicted_label": "BUG", "method": "keyword", "version": "a1", "evidence": ["Fixed"], "note": ""}
+{"record_id": "3f891933-5743-50cd-88dd-40b84dc600db", "predicted_label": "LIB", "method": "keyword", "version": "a1", "evidence": ["replace tf with"], "note": ""}
+{"record_id": "22c04567-1a14-5481-84b3-f21f49adfc9b", "predicted_label": "UNK", "method": "keyword", "version": "a1", "evidence": [], "note": "매칭된 키워드 없음"}
+{"record_id": "2aa0be25-4af8-55a0-9bba-2cb3051a0d88", "predicted_label": "UNK", "method": "keyword", "version": "a1", "evidence": [], "note": "매칭된 키워드 없음"}
+{"record_id": "dd40d5c2-517d-5750-ae19-a00f7d5aa2be", "predicted_label": "UNK", "method": "keyword", "version": "a1", "evidence": [], "note": "매칭된 키워드 없음"}
+{"record_id": "83adabe4-3c80-5d49-a66c-ee1554f46dca", "predicted_label": "UNK", "method": "keyword", "version": "a1", "evidence": [], "note": "매칭된 키워드 없음"}
+{"record_id": "ea3509f1-0227-5220-a3e1-a7ef1ca4bac3", "predicted_label": "UNK", "method": "keyword", "version": "a1", "evidence": [], "note": "매칭된 키워드 없음"}
+{"record_id": "84ff80cd-cd18-5a6d-8cc2-9ff03ee4989a", "predicted_label": "UNK", "method": "keyword", "version": "a1", "evidence": [], "note": "매칭된 키워드 없음"}
+{"record_id": "408ded89-d105-5a85-b932-1420daaf34db", "predicted_label": "DESIGN", "method": "keyword", "version": "a1", "evidence": ["Cleanup"], "note": ""}
+{"record_id": "1acee761-c189-58c0-bfb2-8091b1912611", "predicted_label": "UNK", "method": "keyword", "version": "a1", "evidence": [], "note": "매칭된 키워드 없음"}
+{"record_id": "b6f5ec1c-9f51-58b6-83e1-706e9445366f", "predicted_label": "LIB", "method": "keyword", "version": "a1", "evidence": ["in favour of"], "note": ""}
+{"record_id": "8dfc256d-feef-50bb-ac07-3234b9f427ea", "predicted_label": "UNK", "method": "keyword", "version": "a1", "evidence": [], "note": "매칭된 키워드 없음"}
+{"record_id": "0fe39abd-a92b-549b-a99c-584d82c45b83", "predicted_label": "UNK", "method": "keyword", "version": "a1", "evidence": [], "note": "매칭된 키워드 없음"}
+{"record_id": "92bd0536-b0b0-5016-8d20-55521bd3884e", "predicted_label": "UNK", "method": "keyword", "version": "a1", "evidence": [], "note": "매칭된 키워드 없음"}
+{"record_id": "efff0402-4d14-59d6-a6dd-4141f708637e", "predicted_label": "SEC", "method": "keyword", "version": "a1", "evidence": ["securit"], "note": ""}
+{"record_id": "72126b93-7019-5837-98b1-1bb31991ab9c", "predicted_label": "UNK", "method": "keyword", "version": "a1", "evidence": [], "note": "매칭된 키워드 없음"}
+{"record_id": "b6230e79-d234-5a28-bcc2-f01988519a08", "predicted_label": "BUG", "method": "keyword", "version": "a1", "evidence": ["Bugfix"], "note": ""}
+{"record_id": "eb2d27fb-0b8e-5c26-bcc3-1b271eea662b", "predicted_label": "UNK", "method": "keyword", "version": "a1", "evidence": [], "note": "매칭된 키워드 없음"}
+{"record_id": "41c875c5-7d50-5926-8538-51fde444f450", "predicted_label": "BUG", "method": "keyword", "version": "a1", "evidence": ["Fix"], "note": ""}
+{"record_id": "44229a0e-c050-586a-b79c-601c5ebc844e", "predicted_label": "UNK", "method": "keyword", "version": "a1", "evidence": [], "note": "매칭된 키워드 없음"}
+{"record_id": "faffa5cf-7dc9-5627-8b78-a7c8126c240a", "predicted_label": "FEAT", "method": "keyword", "version": "a1", "evidence": ["Deprecat"], "note": ""}
+{"record_id": "070bb5e6-c52d-56eb-a74d-af5dd8692c95", "predicted_label": "UNK", "method": "keyword", "version": "a1", "evidence": [], "note": "매칭된 키워드 없음"}
+{"record_id": "17faf726-f872-5e0c-bd6e-33ef9db73e95", "predicted_label": "UNK", "method": "keyword", "version": "a1", "evidence": [], "note": "매칭된 키워드 없음"}
+{"record_id": "10642d9f-fa34-5bf0-a7e4-6ddcd8815ede", "predicted_label": "BUG", "method": "keyword", "version": "a1", "evidence": ["fix"], "note": ""}
+{"record_id": "814cfc95-95c7-5b2e-bcd4-513753670c20", "predicted_label": "LIB", "method": "keyword", "version": "a1", "evidence": ["vendoring"], "note": ""}
+{"record_id": "10e91894-7efa-516c-84d4-293714a0f7ae", "predicted_label": "UNK", "method": "keyword", "version": "a1", "evidence": [], "note": "매칭된 키워드 없음"}
+{"record_id": "aa251005-f5fd-5bd9-934e-7dc5cb37b4fc", "predicted_label": "UNK", "method": "keyword", "version": "a1", "evidence": [], "note": "매칭된 키워드 없음"}
+{"record_id": "3f525d74-a5d7-58f7-943f-53f6b3ddb737", "predicted_label": "SEC", "method": "keyword", "version": "a1", "evidence": ["securit"], "note": ""}
+{"record_id": "49a82b90-64e8-56b7-959a-51716b4d4488", "predicted_label": "UNK", "method": "keyword", "version": "a1", "evidence": [], "note": "매칭된 키워드 없음"}
+{"record_id": "f41659a5-816f-556d-bc4f-6ac3d29a042b", "predicted_label": "DEAD", "method": "keyword", "version": "a1", "evidence": ["unused", "dead code", "obsolete"], "note": ""}
+{"record_id": "4556bfcb-ba03-52d4-87c5-215844107160", "predicted_label": "UNK", "method": "keyword", "version": "a1", "evidence": [], "note": "매칭된 키워드 없음"}
+{"record_id": "a55b9c38-fd10-5863-86d8-acd0b60ddb97", "predicted_label": "UNK", "method": "keyword", "version": "a1", "evidence": [], "note": "매칭된 키워드 없음"}
+{"record_id": "6711d4ca-1f83-5be3-8e16-6ff9fb32c4e1", "predicted_label": "UNK", "method": "keyword", "version": "a1", "evidence": [], "note": "매칭된 키워드 없음"}
+{"record_id": "0eda74ce-6286-5bef-afb1-5348187a7d50", "predicted_label": "BUG", "method": "keyword", "version": "a1", "evidence": ["Fix"], "note": ""}
+{"record_id": "429980f1-275b-5ca0-90af-495819355f40", "predicted_label": "LIB", "method": "keyword", "version": "a1", "evidence": ["use 'Dict' instead", "in favor of"], "note": ""}
+{"record_id": "7848d20d-250f-5abe-92df-795f01f9414d", "predicted_label": "DEAD", "method": "keyword", "version": "a1", "evidence": ["obsolete"], "note": ""}
+{"record_id": "50dbd3a2-9bb5-5906-a39f-62f9249d0159", "predicted_label": "UNK", "method": "keyword", "version": "a1", "evidence": [], "note": "매칭된 키워드 없음"}
+{"record_id": "5b3ad821-8bd9-5db8-91f6-67c4b18e8aa9", "predicted_label": "FEAT", "method": "keyword", "version": "a1", "evidence": ["deprecat"], "note": ""}
+{"record_id": "bb4d6824-ff51-5995-91fc-ec2b3a97742b", "predicted_label": "UNK", "method": "keyword", "version": "a1", "evidence": [], "note": "매칭된 키워드 없음"}
+{"record_id": "c51cd4a2-cffb-50ff-af68-e0f88e90195a", "predicted_label": "UNK", "method": "keyword", "version": "a1", "evidence": [], "note": "매칭된 키워드 없음"}
+{"record_id": "f0a21b03-3f09-58c4-8397-0028e9eb7ced", "predicted_label": "UNK", "method": "keyword", "version": "a1", "evidence": [], "note": "매칭된 키워드 없음"}
+{"record_id": "c266ee95-cb30-5b9e-a09c-8e1cae867dc6", "predicted_label": "UNK", "method": "keyword", "version": "a1", "evidence": [], "note": "매칭된 키워드 없음"}
+{"record_id": "9f6c2cb3-f9a8-5ace-901f-04b7766ad358", "predicted_label": "UNK", "method": "keyword", "version": "a1", "evidence": [], "note": "매칭된 키워드 없음"}
+{"record_id": "846ec22b-6711-519a-bbb4-230ecf492576", "predicted_label": "UNK", "method": "keyword", "version": "a1", "evidence": [], "note": "매칭된 키워드 없음"}
+{"record_id": "cdd85ed5-1ac1-5b20-9bdb-9338e8a67a13", "predicted_label": "FEAT", "method": "keyword", "version": "a1", "evidence": ["deprecat", "Removed support"], "note": ""}
+{"record_id": "fa78d830-8cc7-570d-be13-cf98d34bdce4", "predicted_label": "UNK", "method": "keyword", "version": "a1", "evidence": [], "note": "매칭된 키워드 없음"}
+{"record_id": "9373cc6a-0a4c-5a19-b6ef-8312b938987b", "predicted_label": "UNK", "method": "keyword", "version": "a1", "evidence": [], "note": "매칭된 키워드 없음"}
+{"record_id": "a326dc70-386f-52e8-b5f5-70a1688f6f93", "predicted_label": "UNK", "method": "keyword", "version": "a1", "evidence": [], "note": "매칭된 키워드 없음"}
+{"record_id": "36fe825d-6307-5429-b015-bc3edf0f13ca", "predicted_label": "DESIGN", "method": "keyword", "version": "a1", "evidence": ["Clean up"], "note": ""}
+{"record_id": "c34fcd43-0719-5647-b583-065561acacdc", "predicted_label": "LIB", "method": "keyword", "version": "a1", "evidence": ["built-in"], "note": ""}
+{"record_id": "a890213b-b504-5f58-a2d4-7b0e03fc07fb", "predicted_label": "FEAT", "method": "keyword", "version": "a1", "evidence": ["Remove support"], "note": ""}
+{"record_id": "1bba14ae-0cfa-5dad-9ba4-c457ea0ec80d", "predicted_label": "UNK", "method": "keyword", "version": "a1", "evidence": [], "note": "매칭된 키워드 없음"}
+{"record_id": "2671acab-068f-55c3-aa25-ebc2e4b25a70", "predicted_label": "BUG", "method": "keyword", "version": "a1", "evidence": ["Fixed", "Regression"], "note": ""}
+{"record_id": "afba5e3b-9c7e-50d3-9cf3-ce4b7a9565ea", "predicted_label": "BUG", "method": "keyword", "version": "a1", "evidence": ["Fix"], "note": ""}
+{"record_id": "13b58c51-fca0-51e7-b44b-d3cb7f4ec7a8", "predicted_label": "UNK", "method": "keyword", "version": "a1", "evidence": [], "note": "매칭된 키워드 없음"}
+{"record_id": "34c0a05d-7551-52ef-8802-6838847056aa", "predicted_label": "UNK", "method": "keyword", "version": "a1", "evidence": [], "note": "매칭된 키워드 없음"}
+{"record_id": "e46e22cf-4674-5fbc-9f79-6bea09da5b0d", "predicted_label": "DESIGN", "method": "keyword", "version": "a1", "evidence": ["refactor", "consolidat"], "note": ""}
+{"record_id": "eafcac38-0e3d-55f6-a086-8d007b2d25c1", "predicted_label": "UNK", "method": "keyword", "version": "a1", "evidence": [], "note": "매칭된 키워드 없음"}
+{"record_id": "1f364dcd-646e-548c-968c-6fc8293585a1", "predicted_label": "UNK", "method": "keyword", "version": "a1", "evidence": [], "note": "매칭된 키워드 없음"}

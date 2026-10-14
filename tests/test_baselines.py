@@ -587,3 +587,74 @@ def test_nvidia_caller_spaces_calls_under_the_free_rate_limit(monkeypatch):
     call("s", "p", "m")
 
     assert waits == [pytest.approx(1.1)]
+
+
+# --------------------------------------------------------------------------------------
+# split (#87) - 기준선도 분류기와 같은 split 을 예측한다
+# --------------------------------------------------------------------------------------
+
+
+def split_inputs(tmp_path):
+    """레코드 3건(학습 t1, 검증 v1, 시험 x1)과 그 split 이 적힌 라벨 파일."""
+    source, labels = tmp_path / "records.jsonl", tmp_path / "labels.jsonl"
+    rows = [
+        record("fix crash", record_id="t1"),
+        record("remove unused", record_id="v1"),
+        record("drop support", record_id="x1"),
+    ]
+    source.write_text("\n".join(json.dumps(row) for row in rows), encoding="utf-8")
+    splits = [("t1", "train"), ("v1", "val"), ("x1", "test")]
+    labels.write_text(
+        "\n".join(json.dumps({"record_id": rid, "split": split}) for rid, split in splits),
+        encoding="utf-8",
+    )
+    return ["--input", str(source), "--labels", str(labels)]
+
+
+def written_ids(path):
+    """예측 파일에 적힌 record_id 순서."""
+    return [json.loads(line)["record_id"] for line in path.read_text(encoding="utf-8").splitlines()]
+
+
+def test_keyword_cli_split_predicts_only_that_split(tmp_path):
+    """기준선은 학습하지 않으니 고른 split 의 레코드만 예측한다."""
+    out = tmp_path / "out.jsonl"
+
+    assert bk.main(split_inputs(tmp_path) + ["--split", "val", "--out", str(out)]) == 0
+    assert written_ids(out) == ["v1"]
+
+
+def test_keyword_cli_refuses_test_without_the_final_flag(tmp_path, capsys):
+    """test 는 분류기와 같은 시점에 한 번만 돈다 (게이트 2 사전 등록)."""
+    out = tmp_path / "out.jsonl"
+
+    assert bk.main(split_inputs(tmp_path) + ["--split", "test", "--out", str(out)]) == 2
+    assert not out.exists()
+    assert "--final-test" in capsys.readouterr().err
+    assert (
+        bk.main(split_inputs(tmp_path) + ["--split", "test", "--final-test", "--out", str(out)])
+        == 0
+    )
+    assert written_ids(out) == ["x1"]
+
+
+def test_llm_cli_refuses_test_before_asking_anything(tmp_path, capsys, monkeypatch):
+    """호출보다 먼저 거부한다 - test 에 한 번이라도 물으면 그 답이 캐시에 남는다."""
+
+    def must_not_call(system, prompt, model):
+        """불리면 테스트가 실패하는 호출기 - 네트워크에 나가지 않는다."""
+        raise AssertionError("test 를 --final-test 없이 물었다")
+
+    monkeypatch.setattr(bl, "caller_from_env", lambda provider: must_not_call)
+    args = split_inputs(tmp_path) + ["--split", "test", "--env-file", str(tmp_path / "none")]
+
+    assert bl.main(args) == 2
+    assert "--final-test" in capsys.readouterr().err
+
+
+def test_llm_cli_dry_run_shows_the_first_record_of_the_split(tmp_path, capsys):
+    """dry-run 도 split 을 거른 뒤의 첫 레코드 프롬프트를 보여 준다."""
+    args = split_inputs(tmp_path) + ["--split", "val", "--env-file", str(tmp_path / "none")]
+
+    assert bl.main(args + ["--dry-run"]) == 0
+    assert "remove unused" in capsys.readouterr().out

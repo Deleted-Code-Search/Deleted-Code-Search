@@ -15,6 +15,7 @@
 
 실행:
     python -m classify.baseline_keyword --input records.jsonl --out predictions.jsonl
+    python -m classify.baseline_keyword --input records.jsonl --split val   # 검증 split 만
 """
 
 from __future__ import annotations
@@ -30,8 +31,10 @@ from classify.baselines import (
     METHOD_KEYWORD,
     UNKNOWN_LABEL,
     Prediction,
+    add_split_arguments,
     commit_message_of,
     record_id_of,
+    select_split,
     summarize,
     write_predictions,
 )
@@ -195,21 +198,26 @@ def predict_all(records: Sequence[dict[str, Any]]) -> list[Prediction]:
 
 
 def build_parser() -> argparse.ArgumentParser:
+    """CLI 인자. 실행 방법은 모듈 독스트링 "실행" 절."""
     parser = argparse.ArgumentParser(
         prog="python -m classify.baseline_keyword",
         description="기준선 A - 커밋 메시지 키워드 규칙으로 이유 8종 예측 (#44).",
     )
     parser.add_argument("--input", type=Path, required=True, help="레코드 JSONL")
     parser.add_argument("--out", type=Path, default=None, help="예측 JSONL 저장 경로")
+    add_split_arguments(parser)
     return parser
 
 
 def main(argv: Sequence[str] | None = None) -> int:
+    """기준선 A 를 돌려 예측을 저장하고 분포를 보고한다. `--split test` 는 `--final-test` 와만."""
     args = build_parser().parse_args(argv)
     sys.stdout.reconfigure(encoding="utf-8")
     sys.stderr.reconfigure(encoding="utf-8")
 
-    records = read_jsonl(args.input)
+    records = select_split(args, read_jsonl(args.input))
+    if records is None:
+        return 2
     if not records:
         print("레코드가 없다.", file=sys.stderr)
         return 1
