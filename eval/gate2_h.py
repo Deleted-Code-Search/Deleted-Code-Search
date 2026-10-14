@@ -22,6 +22,10 @@
 실행:
     python -m eval.gate2_h
     python -m eval.gate2_h --json-out docs/reports/gate2_h.json
+
+    게이트 실행은 test 레코드가 정확히 100건(CHARTER §10.2 분할)이 아니면 결과를 내지 않고 멈춘다.
+    `--example` 은 작은 예제(테스트 픽스처)용이고, 이때만 건수 검증을 끈다.
+    예제 모드 결과는 게이트 기록에 쓰지 않는다.
 """
 
 from __future__ import annotations
@@ -42,6 +46,9 @@ ACCURACY_CAP = 0.80
 # 게이트 2 ② (§10.2, ADR-016 결정 2). 이 스크립트는 값을 적기만 하고 비교하지 않는다.
 BASELINE_MARGIN_PP = 10
 TEST_SPLIT = "test"
+# CHARTER §10.2 분할 (학습 300 / 검증 100 / 테스트 100).
+# 게이트 실행에서 test 가 이 건수가 아니면 H 를 내지 않는다.
+EXPECTED_TEST_RECORDS = 100
 _WILSON_Z = 1.959964
 
 
@@ -105,9 +112,22 @@ def rejudged_count(
 
 
 def compute(
-    merged: Sequence[dict[str, Any]], assignment: Mapping[str, Mapping[str, Any]]
+    merged: Sequence[dict[str, Any]],
+    assignment: Mapping[str, Mapping[str, Any]],
+    *,
+    example: bool = False,
 ) -> dict[str, Any]:
+    """H 와 게이트 2 ① 기준값을 낸다.
+
+    `example=False`(게이트 실행)이면 test 레코드가 `EXPECTED_TEST_RECORDS` 건이 아닐 때 멈춘다.
+    다른 건수에서 나온 H 는 ADR-016 의 H 가 아니다. `example=True` 는 손으로 센 예제용이다.
+    """
     rows = select_test_rows(merged)
+    if not example and len(rows) != EXPECTED_TEST_RECORDS:
+        raise ValueError(
+            f"test 레코드가 {len(rows)}건이다 - "
+            f"게이트 실행은 정확히 {EXPECTED_TEST_RECORDS}건이어야 한다"
+        )
     missing = [row["record_id"] for row in rows if row["record_id"] not in assignment]
     if missing:
         raise ValueError(f"배분 파일에 없는 테스트 레코드 {len(missing)}건 {missing[:3]}")
@@ -124,6 +144,7 @@ def compute(
     interval = wilson_interval(main.agreed, main.denominator)
     return {
         "split": TEST_SPLIT,
+        "example": example,
         "H": main.rate,
         "agreement": asdict(main),
         "wilson95": list(interval) if interval else None,
@@ -168,15 +189,21 @@ def main(argv: Sequence[str] | None = None) -> int:
         "--assignment", type=Path, default=Path("datasets/labels/main500_assignment.jsonl")
     )
     parser.add_argument("--json-out", type=Path)
+    parser.add_argument(
+        "--example",
+        action="store_true",
+        help=f"예제 모드: test {EXPECTED_TEST_RECORDS}건 검증을 끈다. 게이트 기록에 쓰지 않는다",
+    )
     args = parser.parse_args(argv)
 
     assignment = {row["record_id"]: row for row in read_jsonl(args.assignment)}
     try:
-        result = compute(read_jsonl(args.merged), assignment)
+        result = compute(read_jsonl(args.merged), assignment, example=args.example)
     except ValueError as error:
         print(f"H 를 낼 수 없다: {error}", file=sys.stderr)
         return 1
-    print(f"### 게이트 2 H ({args.merged})")
+    title = "예제 모드 - 게이트 기록에 쓰지 않는다" if args.example else str(args.merged)
+    print(f"### 게이트 2 H ({title})")
     print()
     for line in format_report(result):
         print(line)

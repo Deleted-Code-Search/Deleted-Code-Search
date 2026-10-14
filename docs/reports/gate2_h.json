@@ -1,5 +1,6 @@
 {
   "split": "test",
+  "example": false,
   "H": 0.8080808080808081,
   "agreement": {
     "records": 100,
