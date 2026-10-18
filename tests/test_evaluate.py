@@ -153,3 +153,29 @@ def test_cli_shows_grades_only_when_the_predictions_have_them(tmp_path, capsys):
     assert "근거 등급 - 정확도 100.0% (4/4)" in capsys.readouterr().out
     assert ev.main([str(without), "--labels", str(labels)]) == 0
     assert "### 근거 등급 -" not in capsys.readouterr().out
+
+
+def test_an_unsettled_final_grade_is_refused():
+    """정답 등급이 3등급 밖이면 등급 정확도 분모에는 들고 혼동 행렬에서는 빠진다 (#181 코드래빗)."""
+    rows = gold_rows()
+    rows[2]["final"]["evidence_grade"] = None
+
+    with pytest.raises(ValueError, match="final.evidence_grade 가 확정되지 않았다"):
+        ev.load_gold(rows, "val")
+
+
+def test_grades_are_read_only_from_the_evaluated_split():
+    """다른 split 행에 등급이 없어도 이 split 의 등급 표는 그대로다 (#181 코드래빗).
+
+    이 split 의 일부 행에만 등급이 있으면 거부한다.
+    """
+    gold = ev.load_gold(gold_rows(), "val")
+    graded = [{"record_id": rid, "evidence_grade": "INFERRED"} for rid in ("v1", "v2", "v3", "v4")]
+    other_split = {"record_id": "t1"}  # 학습 split 행, 등급 칸 없음
+
+    assert ev.grades_in_split(graded + [other_split], gold) == {
+        rid: "INFERRED" for rid in ("v1", "v2", "v3", "v4")
+    }
+    assert ev.grades_in_split([{"record_id": rid} for rid in gold], gold) is None
+    with pytest.raises(ValueError, match=r"등급이 일부 예측에만 있다 \(3/4건\)"):
+        ev.grades_in_split(graded[:3] + [{"record_id": "v4"}], gold)

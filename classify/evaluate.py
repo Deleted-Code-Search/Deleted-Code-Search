@@ -48,6 +48,9 @@ def load_gold(rows: Sequence[Mapping[str, Any]], split: str) -> dict[str, Mappin
         final = row.get("final") or {}
         if final.get("reason_label") not in REASON_LABELS:
             raise ValueError(f"{row.get('record_id')}: final.reason_label 이 확정되지 않았다")
+        # 등급도 같다 - 3등급 밖이면 등급 정확도 분모에는 들어가고 혼동 행렬에서는 빠진다 (#181)
+        if final.get("evidence_grade") not in EVIDENCE_GRADES:
+            raise ValueError(f"{row.get('record_id')}: final.evidence_grade 가 확정되지 않았다")
         gold[str(row["record_id"])] = final
     if not gold:
         raise ValueError(f"split={split} 인 레코드가 없다")
@@ -113,6 +116,24 @@ def evaluate(gold: Mapping[str, Mapping[str, Any]], predicted: Mapping[str, str]
         "confusion": _confusion_table(confusion, REASON_LABELS),
         "by_grade": by_grade,
     }
+
+
+def grades_in_split(
+    rows: Sequence[Mapping[str, Any]], gold: Mapping[str, Mapping[str, Any]]
+) -> dict[str, str] | None:
+    """평가하는 split 행들의 `{record_id: evidence_grade}`. 등급 칸이 하나도 없으면 None.
+
+    기준선 예측에는 등급이 없고 분류기 예측에는 있다 (#178). 다른 split 의 행은 보지 않는다 -
+    거기 등급이 없다고 이 split 의 등급 표가 사라지면 안 된다. 이 split 의 일부 행에만 등급이
+    있으면 어느 쪽 파일인지 알 수 없으니 거부한다 (#181 코드래빗).
+    """
+    target = [row for row in rows if str(row["record_id"]) in gold]
+    graded = [row for row in target if "evidence_grade" in row]
+    if not graded:
+        return None
+    if len(graded) != len(target):
+        raise ValueError(f"등급이 일부 예측에만 있다 ({len(graded)}/{len(target)}건)")
+    return {str(row["record_id"]): row["evidence_grade"] for row in graded}
 
 
 def evaluate_grades(
@@ -264,9 +285,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         rows = read_jsonl(args.predictions)
         versions = sorted({str(row.get("version")) for row in rows})
         result = evaluate(gold, predictions_by_id(rows))
-        # 기준선 예측에는 등급이 없다. 분류기 예측(등급 칸이 있는 파일)에서만 등급을 잰다 (#178)
-        if rows and all("evidence_grade" in row for row in rows):
-            grades = {str(row["record_id"]): row["evidence_grade"] for row in rows}
+        grades = grades_in_split(rows, gold)
+        if grades is not None:
             result["evidence_grade"] = evaluate_grades(gold, grades)
     except (ValueError, KeyError) as error:
         print(f"평가할 수 없다: {error}", file=sys.stderr)
