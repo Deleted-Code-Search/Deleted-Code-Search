@@ -1,0 +1,143 @@
+{
+  "issue": 178,
+  "decision": {
+    "date": "2026-10-18",
+    "by": "조장(성제)",
+    "choice": "r1 유지. r2 는 시도했다가 버린 접근",
+    "why": "val EXPLICIT precision 0.385 - 'EXPLICIT 은 잘못 주는 것이 놓치는 것보다 나쁘다' 와 맞지 않고 등급 정확도가 떨어졌다. 다른 규칙을 다시 고르면 val 을 또 보게 된다"
+  },
+  "r2_commit": "85deff9",
+  "reason_labels_unchanged": {
+    "test": "100/100 (docs/reports/gate2_test/ours.jsonl 과 같음)",
+    "val": "100/100 (r1 예측과 같음)"
+  },
+  "train_cv": {
+    "note": "학습 300건 5겹 교차 검증(시드 0)의 예측 라벨(m2+c3)로 등급만 비교. 규칙은 여기서 골랐다",
+    "r1": {
+      "grade_accuracy": 0.6,
+      "explicit_predicted": 1,
+      "explicit_precision": 1.0,
+      "explicit_recall": 0.02
+    },
+    "r2": {
+      "grade_accuracy": 0.617,
+      "explicit_predicted": 44,
+      "explicit_precision": 0.5,
+      "explicit_recall": 0.34
+    }
+  },
+  "val": {
+    "note": "보고용으로 한 번 봤다",
+    "r1": {
+      "n": 100,
+      "correct": 62,
+      "accuracy": 0.62,
+      "per_class": {
+        "EXPLICIT": {
+          "support": 21,
+          "predicted": 2,
+          "precision": 1.0,
+          "recall": 0.09523809523809523,
+          "f1": 0.17391304347826084
+        },
+        "INFERRED": {
+          "support": 40,
+          "predicted": 49,
+          "precision": 0.5714285714285714,
+          "recall": 0.7,
+          "f1": 0.6292134831460674
+        },
+        "UNKNOWN": {
+          "support": 39,
+          "predicted": 49,
+          "precision": 0.6530612244897959,
+          "recall": 0.8205128205128205,
+          "f1": 0.7272727272727272
+        }
+      },
+      "confusion": {
+        "EXPLICIT": {
+          "EXPLICIT": 2,
+          "INFERRED": 14,
+          "UNKNOWN": 5
+        },
+        "INFERRED": {
+          "INFERRED": 28,
+          "UNKNOWN": 12
+        },
+        "UNKNOWN": {
+          "INFERRED": 7,
+          "UNKNOWN": 32
+        }
+      }
+    },
+    "r2": {
+      "n": 100,
+      "correct": 57,
+      "accuracy": 0.57,
+      "per_class": {
+        "EXPLICIT": {
+          "support": 21,
+          "predicted": 13,
+          "precision": 0.38461538461538464,
+          "recall": 0.23809523809523808,
+          "f1": 0.2941176470588235
+        },
+        "INFERRED": {
+          "support": 40,
+          "predicted": 38,
+          "precision": 0.5263157894736842,
+          "recall": 0.5,
+          "f1": 0.5128205128205129
+        },
+        "UNKNOWN": {
+          "support": 39,
+          "predicted": 49,
+          "precision": 0.6530612244897959,
+          "recall": 0.8205128205128205,
+          "f1": 0.7272727272727272
+        }
+      },
+      "confusion": {
+        "EXPLICIT": {
+          "EXPLICIT": 5,
+          "INFERRED": 11,
+          "UNKNOWN": 5
+        },
+        "INFERRED": {
+          "EXPLICIT": 8,
+          "INFERRED": 20,
+          "UNKNOWN": 12
+        },
+        "UNKNOWN": {
+          "INFERRED": 7,
+          "UNKNOWN": 32
+        }
+      }
+    }
+  },
+  "gold_explicit_quotes_train": {
+    "n": 65,
+    "quote_in_our_passages": 46,
+    "keyword_label_equals_gold": 8,
+    "no_keyword": 35,
+    "keyword_label_differs": 22,
+    "names_function": 6,
+    "names_file_stem": 13,
+    "names_dir_or_module": 26
+  },
+  "human_agreement_train": {
+    "one_labeler_explicit": 88,
+    "other_also_explicit": 44,
+    "rate": 0.5
+  },
+  "val_false_explicit_r2": {
+    "n": 8,
+    "types": {
+      "커밋·PR·모듈 전체를 말하는 문장 (E3 실패)": 3,
+      "저장소 이름·URL 속 낱말이 디렉터리 이름에 걸림": 3,
+      "이슈 본문의 일반 문장": 1,
+      "함수를 가리키지만 이유가 아니라 호출자 변화 서술": 1
+    }
+  }
+}

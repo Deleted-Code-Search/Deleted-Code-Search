@@ -772,3 +772,46 @@ def test_cli_refuses_test_without_the_final_flag(tmp_path, capsys):
     final = clf.main(split_files(tmp_path) + ["--split", "test", "--final-test"])
     assert final == 0
     assert "학습 레코드와 이어진 3건" in capsys.readouterr().out  # train + val 로 학습
+
+
+def test_classifier_reproduces_the_gate2_test_labels():
+    """분류기 코드를 고쳐도 게이트 2 test 라벨이 그대로인지 본다 (#178, `docs/meetings/gate-2.md`).
+
+    게이트 2 는 `docs/reports/gate2_test/ours.jsonl` 의 라벨로 판정했다. 등급 규칙(#178)이나 버전
+    문자열(#180)을 손댈 때 이유 라벨이 하나라도 바뀌면 그 판정이 고친 코드에 성립하지 않는다.
+    같은 조건(학습+검증 400건 학습, 커밋된 LLM 캐시)으로 test 100건을 다시 분류해 예측 라벨끼리
+    비교한다. 정답은 읽지 않는다. 캐시에 없는 1건(그 실행에서도 시간 초과)은 호출이 실패해 그때처럼
+    모델만으로 분류된다 - 네트워크에는 나가지 않는다.
+    """
+    from pathlib import Path
+
+    from classify.baseline_llm import NVIDIA_MODEL
+    from classify.labels import read_jsonl
+
+    committed = {
+        row["record_id"]: row["predicted_label"]
+        for row in read_jsonl(Path("docs/reports/gate2_test/ours.jsonl"))
+    }
+    label_rows = read_jsonl(Path("datasets/labeled_500.jsonl"))
+    split_of = {row["record_id"]: row["split"] for row in label_rows}
+    records = read_jsonl(Path("datasets/labels/main500_records.jsonl"))
+    training = [r for r in records if split_of[r["record_id"]] in clf.TRAIN_SPLITS["test"]]
+    test = [r for r in records if split_of[r["record_id"]] == "test"]
+    model = clf.train_model(training, clf.load_final_labels(label_rows))
+
+    def offline(system, prompt, model_name):
+        """캐시에 없는 프롬프트만 여기 온다 - 실패로 돌려보낸다."""
+        raise OSError("캐시에 없다 - 테스트는 네트워크에 나가지 않는다")
+
+    runner = LlmBaseline(
+        caller=offline,
+        model=NVIDIA_MODEL,
+        cache_dir=clf.DEFAULT_CACHE_DIR,
+        prompt_version=clf.CANDIDATE_PROMPT_VERSION,
+    )
+    classifier = clf.Classifier(model=model, llm=clf.LlmCandidate(runner))
+    labels = {r["record_id"]: classifier.classify(r).label for r in test}
+
+    assert len(labels) == len(committed) == 100
+    assert labels == committed
+    assert runner.calls == 1  # 캐시에 없던 1건만 시도했다
