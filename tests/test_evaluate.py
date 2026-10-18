@@ -99,3 +99,57 @@ def test_cli_prints_the_table_and_writes_json(tmp_path, capsys):
     assert "정확도 **75.0%** (3/4)" in capsys.readouterr().out
     saved = json.loads(out.read_text(encoding="utf-8"))
     assert (saved["split"], saved["versions"], saved["correct"]) == ("val", ["x1"], 3)
+
+
+def test_grade_metrics_on_a_hand_checked_example():
+    """근거 등급 (#178). 정답 등급 v1 E · v2 I · v3 U · v4 I 에 I · I · U · E 로 답하면 2/4."""
+    gold = ev.load_gold(gold_rows(), "val")
+    result = ev.evaluate_grades(
+        gold, {"v1": "INFERRED", "v2": "INFERRED", "v3": "UNKNOWN", "v4": "EXPLICIT"}
+    )
+
+    assert (result["n"], result["correct"], result["accuracy"]) == (4, 2, 0.5)
+    explicit, inferred = result["per_class"]["EXPLICIT"], result["per_class"]["INFERRED"]
+    assert (explicit["support"], explicit["predicted"], explicit["precision"]) == (1, 1, 0.0)
+    assert (inferred["precision"], inferred["recall"]) == (0.5, 0.5)
+    assert result["confusion"]["EXPLICIT"] == {"INFERRED": 1}
+
+
+@pytest.mark.parametrize(
+    ("grades", "match"),
+    [
+        ({"v1": "EXPLICIT", "v2": "INFERRED", "v3": "UNKNOWN"}, "등급 예측이 없는 레코드 1건"),
+        (
+            {"v1": "EXPLICIT", "v2": "STRONG", "v3": "UNKNOWN", "v4": "INFERRED"},
+            "3등급 밖 예측 1건",
+        ),
+    ],
+)
+def test_missing_or_unknown_grades_are_refused(grades, match):
+    with pytest.raises(ValueError, match=match):
+        ev.evaluate_grades(ev.load_gold(gold_rows(), "val"), grades)
+
+
+def test_cli_shows_grades_only_when_the_predictions_have_them(tmp_path, capsys):
+    """분류기 예측에는 등급이 있고 기준선 예측에는 없다. 없으면 등급 표를 내지 않는다."""
+    labels = tmp_path / "l.jsonl"
+    labels.write_text("\n".join(json.dumps(row) for row in gold_rows()), encoding="utf-8")
+    rows = [("v1", "DEAD", "EXPLICIT"), ("v2", "DEAD", "INFERRED"), ("v3", "UNK", "UNKNOWN")]
+    rows.append(("v4", "FEAT", "INFERRED"))
+    with_grades, without = tmp_path / "ours.jsonl", tmp_path / "baseline.jsonl"
+    with_grades.write_text(
+        "\n".join(
+            json.dumps({"record_id": r, "predicted_label": lb, "evidence_grade": g})
+            for r, lb, g in rows
+        ),
+        encoding="utf-8",
+    )
+    without.write_text(
+        "\n".join(json.dumps({"record_id": r, "predicted_label": lb}) for r, lb, _ in rows),
+        encoding="utf-8",
+    )
+
+    assert ev.main([str(with_grades), "--labels", str(labels)]) == 0
+    assert "근거 등급 - 정확도 100.0% (4/4)" in capsys.readouterr().out
+    assert ev.main([str(without), "--labels", str(labels)]) == 0
+    assert "### 근거 등급 -" not in capsys.readouterr().out
