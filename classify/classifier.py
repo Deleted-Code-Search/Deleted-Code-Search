@@ -57,14 +57,7 @@ from classify.baseline_llm import (
 from classify.baselines import UNKNOWN_LABEL, record_id_of
 from classify.labels import EVIDENCE_GRADES, REASON_LABELS
 from classify.model import MODEL_VERSION, ReasonModel
-from classify.rules import (
-    RULES_VERSION,
-    Passage,
-    ReasonSentence,
-    explicit_passage,
-    find_reason_sentences,
-    passages,
-)
+from classify.rules import RULES_VERSION, ReasonSentence, find_reason_sentences, passages
 from pipeline.select_repos import load_env_file
 
 METHOD_OURS = "ours"
@@ -350,8 +343,7 @@ class Classifier:
         if label == UNKNOWN_LABEL:
             return Classification(record_id, UNKNOWN_LABEL, UNKNOWN, "", "", "", 0.0, scores=scores)
         replacement = _usable_replacement(record)
-        explicit = explicit_passage(record)
-        return self._grade(record_id, label, explicit, sentences, replacement, candidate, scores)
+        return self._grade(record_id, label, sentences, replacement, candidate, scores)
 
     def _scores(
         self, record: dict[str, Any], candidate: tuple[str, str] | None
@@ -371,7 +363,6 @@ class Classifier:
         self,
         record_id: str,
         label: str,
-        explicit: Passage | None,
         sentences: Sequence[ReasonSentence],
         replacement: tuple[str, float] | None,
         candidate: tuple[str, str] | None,
@@ -379,9 +370,8 @@ class Classifier:
     ) -> Classification:
         """고른 라벨을 **가장 직접 받치는** 근거로 등급을 정한다. 아래 순서대로 처음 맞는 것.
 
-        1. 이유를 말하며(E1) 이 레코드를 이름으로 가리키는(E2) 문장이 있다 -> EXPLICIT (원문 인용,
-           `rules.explicit_passage`, r2)
-        2. 그 라벨의 키워드 문장은 있는데 1 을 못 넘는다 -> INFERRED (가이드 §6.1.1 E2)
+        1. 그 라벨의 이유 문장이 삭제된 함수를 이름으로 가리킨다 -> EXPLICIT (원문 인용)
+        2. 그 라벨의 이유 문장은 있는데 이 함수까지 닿지 않는다 -> INFERRED (가이드 §6.1.1 E2)
         3. 대체 코드가 있다 -> INFERRED, 근거 ① (`diff:replacement`)
         4. LLM 이 같은 라벨을 골랐다 -> INFERRED, 하한 0.5, 근거 문장은 LLM 이 쓴 것
         5. 모델만 골랐다 -> INFERRED, 하한 0.5, 근거 문장 없음. 다른 이유의 키워드 문장이 있으면
@@ -391,22 +381,22 @@ class Classifier:
         문장은 **왜**를 말하고, 대체 코드는 무엇이 이어받았는지만 말해 어느 이유도 받치지 않는다.
         고른 라벨의 근거로는 앞이 더 직접적이다.
 
-        r1 은 EXPLICIT 을 "고른 라벨과 같은 키워드의 문장이 **함수 이름**을 가리킬 때" 만 줬다. 학습
-        300건의 정답 EXPLICIT 65건 중 그 두 조건을 넘는 것이 8건·6건뿐이라 거의 내지 못했다 (#178).
-        r2 는 키워드가 고른 라벨과 같기를 요구하지 않는다 - 키워드 라벨은 잡음이 크다 (`_scores`).
+        EXPLICIT 은 **같은 라벨**의 문장으로만 준다 - 인용문이 그 이유를 말해야 한다 (§6.1).
         """
-        if explicit is not None:
+        own = [sentence for sentence in sentences if sentence.label == label]
+        named = [sentence for sentence in own if sentence.names_target]
+        if named:
+            passage = named[0].passage
             return Classification(
                 record_id,
                 label,
                 EXPLICIT,
-                explicit.text,
-                explicit.source,
-                explicit.locator,
+                passage.text,
+                passage.source,
+                passage.locator,
                 EXPLICIT_CONFIDENCE,
                 scores=scores,
             )
-        own = [sentence for sentence in sentences if sentence.label == label]
         if own:
             passage = own[0].passage
             return Classification(

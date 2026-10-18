@@ -240,94 +240,14 @@ def test_short_function_names_are_not_used_as_targets():
     assert rules.target_names(make_record(function_name="get", file_path="x/io.py")) == ()
 
 
-def test_reason_sentences_carry_their_keyword_label():
-    """이유 문장마다 기준선 A 키워드 라벨이 붙는다. 이름 대조는 `explicit_passage` 가 한다 (r2)."""
+def test_reason_sentences_carry_label_and_whether_they_name_the_target():
+    """이유 문장마다 라벨과 함수를 이름으로 가리키는지가 붙는다."""
     record = make_record(
         commit_message="legacy_backoff is unused now. Also fix typo in docs.",
     )
+    found = {(s.label, s.names_target) for s in rules.find_reason_sentences(record)}
 
-    assert {s.label for s in rules.find_reason_sentences(record)} == {"DEAD", "BUG"}
-
-
-# --------------------------------------------------------------------------------------
-# EXPLICIT 인용문 - r2, 가이드 v3 E1·E2 (#178)
-# --------------------------------------------------------------------------------------
-
-
-@pytest.mark.parametrize(
-    ("field", "value", "message"),
-    [
-        # 파일 이름 (v3 E2)
-        ("file_path", "src/net/retry_helper.py", "Drop retry_helper, it is unused now."),
-        # 디렉터리·모듈 낱말 - 대소문자를 가리지 않는다
-        (
-            "file_path",
-            "homeassistant/components/melcloud/__init__.py",
-            "Remove the deprecated MELCloud integration.",
-        ),
-        # 시그니처의 식별자
-        (
-            "function_signature",
-            "def legacy_backoff(policy: RetryPolicy):",
-            "RetryPolicy is deprecated in favor of the client option.",
-        ),
-    ],
-)
-def test_v3_names_beyond_the_function_name_make_explicit(field, value, message):
-    """v1 은 함수 이름만 봤다. v3 E2 는 파일 이름·디렉터리·모듈 낱말·시그니처 이름도 인정한다."""
-    record = make_record(commit_message=message, **{field: value})
-    if field != "function_signature":
-        record["function_name"] = "do_work"
-
-    explicit = rules.explicit_passage(record)
-
-    assert explicit is not None and explicit.text == message
-    result = clf.Classifier(llm=fake_llm("DEAD|x")).classify(record)
-    assert (result.evidence_grade, result.evidence_text) == ("EXPLICIT", message)
-    assert result.evidence_locator == "commit:message"
-
-
-@pytest.mark.parametrize(
-    "message",
-    ["Refactor legacy_backoff.", "Cleanup legacy_backoff and friends.", "fix legacy_backoff"],
-)
-def test_means_only_words_are_not_a_reason(message):
-    """`refactor`·`cleanup`·`fix` 만 있으면 E1 이 아니다 (가이드 §6.1.1).
-
-    이름을 가리켜도 EXPLICIT 이 아니다.
-    """
-    record = make_record(commit_message=message)
-
-    assert not rules.states_reason(message)
-    assert rules.explicit_passage(record) is None
-    assert clf.Classifier(llm=fake_llm("DESIGN|x")).classify(record).evidence_grade == "INFERRED"
-
-
-def test_generic_path_words_do_not_name_the_record():
-    """`utils`·`tests` 같은 경로 낱말은 거의 모든 저장소에 있어 이 레코드를 가리키지 않는다."""
-    record = make_record(file_path="tests/utils/io.py", commit_message="Remove unused utils tests.")
-
-    assert rules.record_names(record) == ()
-    assert rules.explicit_passage(record) is None
-
-
-def test_explicit_does_not_need_the_keyword_of_the_chosen_label():
-    """키워드 라벨은 잡음이 크다 - 정답 EXPLICIT 인용문 65건 중 22건이 다른 이유 키워드였다.
-
-    여기서 문장 키워드는 FEAT(deprecated)인데 고른 라벨은 DESIGN 이다. 인용문은 원문 그대로다.
-    """
-    message = "legacy_backoff is deprecated; retries now live in the transport layer."
-    result = clf.Classifier(llm=fake_llm("DESIGN|x")).classify(make_record(commit_message=message))
-
-    assert (result.label, result.evidence_grade, result.confidence) == ("DESIGN", "EXPLICIT", 1.0)
-    assert result.evidence_text == message
-
-
-def test_fix_pattern_is_the_one_in_the_keyword_rules():
-    """`MEANS_ONLY_PATTERNS` 는 기준선 A 의 패턴 문자열로 거른다. 기준선이 바뀌면 빗나간다."""
-    assert rules.FIX_PATTERN in dict(rules.KEYWORD_RULES)["BUG"]
-    assert not rules.states_reason("fix the thing")
-    assert rules.states_reason("the old path crashed on empty input")
+    assert found == {("DEAD", True), ("BUG", False)}
 
 
 # --------------------------------------------------------------------------------------
@@ -854,12 +774,14 @@ def test_cli_refuses_test_without_the_final_flag(tmp_path, capsys):
     assert "학습 레코드와 이어진 3건" in capsys.readouterr().out  # train + val 로 학습
 
 
-def test_r2_keeps_every_gate2_test_label():
-    """r2 는 등급만 바꾸고 이유 라벨은 하나도 바꾸지 않는다 (#178, `docs/meetings/gate-2.md`).
+def test_classifier_reproduces_the_gate2_test_labels():
+    """분류기 코드를 고쳐도 게이트 2 test 라벨이 그대로인지 본다 (#178, `docs/meetings/gate-2.md`).
 
-    게이트 2 test 실행(`docs/reports/gate2_test/ours.jsonl`, r1)과 같은 조건으로 test 100건을 다시
-    분류해 예측 라벨끼리 비교한다. 정답은 읽지 않는다. LLM 은 커밋된 캐시만 쓴다 - 캐시에 없는
-    1건(그 실행에서도 시간 초과였다)은 호출이 실패해 그때처럼 모델만으로 분류된다.
+    게이트 2 는 `docs/reports/gate2_test/ours.jsonl` 의 라벨로 판정했다. 등급 규칙(#178)이나 버전
+    문자열(#180)을 손댈 때 이유 라벨이 하나라도 바뀌면 그 판정이 고친 코드에 성립하지 않는다.
+    같은 조건(학습+검증 400건 학습, 커밋된 LLM 캐시)으로 test 100건을 다시 분류해 예측 라벨끼리
+    비교한다. 정답은 읽지 않는다. 캐시에 없는 1건(그 실행에서도 시간 초과)은 호출이 실패해 그때처럼
+    모델만으로 분류된다 - 네트워크에는 나가지 않는다.
     """
     from pathlib import Path
 
@@ -878,6 +800,7 @@ def test_r2_keeps_every_gate2_test_label():
     model = clf.train_model(training, clf.load_final_labels(label_rows))
 
     def offline(system, prompt, model_name):
+        """캐시에 없는 프롬프트만 여기 온다 - 실패로 돌려보낸다."""
         raise OSError("캐시에 없다 - 테스트는 네트워크에 나가지 않는다")
 
     runner = LlmBaseline(
