@@ -148,6 +148,29 @@ def parse_shard(text: str | None) -> tuple[int, int] | None:
     return shard
 
 
+def write_sample(args: argparse.Namespace) -> int:
+    """표본 레코드(원문 그대로)를 `--out` 에 쓴다.
+
+    LLM 을 여러 프로세스(`--shard`)로 나눠 부를 때 프로세스마다 큰 입력 전체를 다시 읽지 않게,
+    표본만 작은 파일로 먼저 뽑는다. 그 파일을 `--input` 으로 같은 시드·크기를 주면 같은 표본이
+    다시 뽑힌다 (저장소마다 키가 가장 작은 N건은 그 안에서도 그대로다).
+    """
+    exclude = set(load_final_labels(read_jsonl(args.labels)))
+    picked = sample_per_repo(iter_records(args.input), args.sample_per_repo, args.seed, exclude)
+    args.out.parent.mkdir(parents=True, exist_ok=True)
+    temporary = args.out.with_name(args.out.name + ".tmp")
+    with temporary.open("w", encoding="utf-8", newline="\n") as handle:
+        for record in picked:
+            handle.write(json.dumps(record, ensure_ascii=False) + "\n")
+    temporary.replace(args.out)
+    repos = Counter(str(record.get("repo")) for record in picked)
+    print(f"표본 {len(picked):,}건, 저장소 {len(repos)}개 (시드 {args.seed}) -> {args.out}")
+    short = {repo: n for repo, n in repos.items() if n < args.sample_per_repo}
+    if short:
+        print(f"  {args.sample_per_repo}건이 안 되는 저장소 {len(short)}개: {short}")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     """CLI 인자. 실행 방법은 모듈 독스트링 "실행" 절."""
     parser = argparse.ArgumentParser(
@@ -160,6 +183,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--sample-per-repo", type=int, default=0, help="저장소별 표본 크기")
     parser.add_argument("--seed", default=str(DEFAULT_SEED))
     parser.add_argument("--shard", default=None, help="K/N - 대상의 N 분의 1 만 처리")
+    parser.add_argument(
+        "--sample-only",
+        action="store_true",
+        help="분류하지 않고 표본 레코드만 --out 에 쓴다 (큰 입력을 한 번만 읽으려고)",
+    )
     parser.add_argument("--labels", type=Path, default=DEFAULT_LABELS)
     parser.add_argument("--training-records", type=Path, default=DEFAULT_TRAINING_RECORDS)
     parser.add_argument("--provider", choices=sorted(PROVIDERS), default=DEFAULT_PROVIDER)
@@ -188,6 +216,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     if missing:
         print(f"입력 파일이 없다: {missing}", file=sys.stderr)
         return 2
+    if args.sample_only:
+        if args.sample_per_repo <= 0 or args.llm:
+            print("--sample-only 는 --sample-per-repo 와 함께, --llm 없이 쓴다.", file=sys.stderr)
+            return 2
+        return write_sample(args)
 
     llm = None
     if args.llm:

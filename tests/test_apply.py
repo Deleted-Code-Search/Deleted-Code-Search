@@ -153,3 +153,34 @@ def test_missing_input_is_refused(tmp_path, capsys):
 
     assert code == 2
     assert "입력 파일이 없다" in capsys.readouterr().err
+
+
+def test_sample_only_writes_the_sample_and_resampling_it_gives_the_same(tmp_path, capsys):
+    """큰 입력을 한 번만 읽고 표본만 작은 파일로 - 그 파일에서 다시 뽑아도 같은 표본이다."""
+    rows = [record(f"r{i}", repo="a/b" if i % 3 else "c/d") for i in range(30)]
+    source = write_jsonl(tmp_path / "big.jsonl", rows)
+    labels = write_jsonl(tmp_path / "labels.jsonl", [{"record_id": "r1", "final": {}}])
+    sample = tmp_path / "sample.jsonl"
+    args = ["--sample-per-repo", "4", "--seed", "5", "--labels", str(labels)]
+
+    code = apply.main(["--input", str(source), "--out", str(sample), "--sample-only"] + args)
+
+    written = [json.loads(line)["id"] for line in sample.read_text(encoding="utf-8").splitlines()]
+    expected = [r["id"] for r in apply.sample_per_repo(iter(rows), 4, "5", set())]
+    assert code == 0
+    assert written == expected and len(written) == 8
+    again = [r["id"] for r in apply.sample_per_repo(apply.iter_records([sample]), 4, "5", set())]
+    assert again == written
+    assert "표본 8건, 저장소 2개" in capsys.readouterr().out
+
+
+@pytest.mark.parametrize("extra", [["--llm", "--sample-per-repo", "3"], []])
+def test_sample_only_needs_a_size_and_no_llm(tmp_path, capsys, extra):
+    source = write_jsonl(tmp_path / "a.jsonl", [record("x1")])
+
+    code = apply.main(
+        ["--input", str(source), "--out", str(tmp_path / "o.jsonl"), "--sample-only"] + extra
+    )
+
+    assert code == 2
+    assert "--sample-only" in capsys.readouterr().err
