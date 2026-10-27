@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 \"Removes 3,801 lines ... without changing what any test checks\"라며 테스트 셋업을 공유 헬퍼로 추출했다고 밝히고, 삭제된 run()의 메시지 리터럴이 `_capture_responses_input(monkeypatch, messages)` 헬퍼로 옮겨져 같은 일을 계속한다."}

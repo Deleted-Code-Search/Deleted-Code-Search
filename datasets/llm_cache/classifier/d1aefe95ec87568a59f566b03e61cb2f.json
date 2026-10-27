@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 로컬 러너를 standalone daemon+subprocess 구조에서 in-process 모델로, 연결을 페어링 코드 기반으로 재편한다고 밝혀 connect CLI의 페어링 코드 전송 테스트가 새 구조에 맞지 않게 됐다."}

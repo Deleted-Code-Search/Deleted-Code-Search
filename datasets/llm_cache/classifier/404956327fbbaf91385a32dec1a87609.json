@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지와 PR 본문이 duckdb checkpointer와 store를 제거한다고 명시하며, 이 함수는 그 store의 setup 진입점이라 사용자 기능 자체가 사라진다."}

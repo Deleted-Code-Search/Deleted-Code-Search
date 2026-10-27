@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|삭제된 `_poll_for_order`가 백엔드 state를 직접 조회하던 것을, 같은 커밋이 `from .utils import poll_assert_event_order`를 추가하고 여러 테스트에서 `poll_assert_event_order(driver, exp_order)`로 대체해 브라우저/app 기반 검증으로 옮겼다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 Query.orderSettings 필드를 제거한다고 명시하고, 그 필드의 리졸버인 이 함수가 공개 GraphQL 표면에서 사라졌다."}

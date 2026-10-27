@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|이 테스트가 검증하던 old-format 메타데이터 처리 경로가 커밋에서 KB 레코드 기반(model_selection) 방식으로 재편되면서 호출 대상이 사라졌고, 삭제를 가리키는 이유 문장이 없어 테스트 대상 상실로만 판단된다."}

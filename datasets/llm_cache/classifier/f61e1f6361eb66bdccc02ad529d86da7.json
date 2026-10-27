@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR 본문이 `token.py`의 `ISTERMINAL`을 이름으로 지목해 \"unused functions\"라며 참조 검색으로 사용처가 없음을 확인했다고 밝힌다."}

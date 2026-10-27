@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지는 로컬 thirdparty 설치를 제거하고 v2.0 설치 방식으로 되돌린다고만 말할 뿐, 이 save_audio 함수나 파일을 이름으로 가리키며 삭제 이유를 밝히지 않고, 경로가 thirdparty/ 하위라 판단 근거가 없다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR 본문에 tests/test_backend_docling_parse_v2.py(V2 tests)가 삭제 파일로 명시되어 있고, 이 테스트가 의존하던 DoclingParseV2DocumentBackend 백엔드가 제거되어 검증 대상이 사라졌다."}

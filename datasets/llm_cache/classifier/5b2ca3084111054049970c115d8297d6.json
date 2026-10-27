@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 \"loose function from the main sherlock.py file to the notify.py file\"로 옮겼고 \"these functions will be removed and the content pulled into QueryNotifyPrint()\"라며 출력 책임이 QueryNotifyPrint 객체로 재구성됐다고 밝힌다."}

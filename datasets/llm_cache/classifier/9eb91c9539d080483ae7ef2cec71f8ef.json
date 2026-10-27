@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|커밋 메시지가 vendored 사본을 upstream ghp_import 1.0 라이브러리 의존성으로 교체한다고 밝혀, 이 함수의 구현이 외부 라이브러리 호출로 대체됐다."}

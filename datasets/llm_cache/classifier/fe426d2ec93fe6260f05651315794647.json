@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 YAML 기반 설정 시스템과 팩토리 패턴으로의 대규모 재구성을 명시해, 환경변수에서 Neo4j 설정을 만들던 이 클래스메서드가 새 구성 체계로 대체된 구조 변경에 해당한다."}

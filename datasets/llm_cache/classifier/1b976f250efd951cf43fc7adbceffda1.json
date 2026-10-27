@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #9890이 TF embeddings/attention 레이어를 v4.1 이전 버전으로 되돌리면서, config를 받아 초기화하던 이 __init__ 대신 config 속성을 직접 대입하는 방식으로 임베딩 레이어 구조가 재편되어 같은 역할이 다른 자리에서 계속된다."}

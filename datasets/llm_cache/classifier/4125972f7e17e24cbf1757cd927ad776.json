@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #1622가 완료 시스템을 ShellComplete 클래스 기반으로 재설계하면서 fish 완성 처리도 새 클래스 구조로 옮겨졌고, 이 함수는 그 재편에 맞지 않게 되어 삭제됐다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 커밋이 `_wrap_for_chunked_arrays` 데코레이터로 같은 wrapper 로직을 `*args, **kwargs` 지원과 함께 재구현했고, 삭제된 함수는 그 데코레이터로 대체됐다."}

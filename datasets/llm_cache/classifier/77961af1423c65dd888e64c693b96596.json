@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|삭제된 fake_run_process는 테스트 내부의 run_process 몽키패치용 스텁인데, 같은 커밋이 추가한 코드에서 이 함수를 참조하거나 대체하는 자리가 없고 호출자를 잃은 것으로 보인다."}

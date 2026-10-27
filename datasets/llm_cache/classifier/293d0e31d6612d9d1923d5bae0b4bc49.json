@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 자리에 ssl_context·ciphers를 받는 새 ssl_wrap_socket이 들어와 SSLContext 기반으로 소켓을 감싸는 일을 이어받았으므로, 구조·인터페이스 재편으로 기존 함수가 맞지 않게 됐다."}

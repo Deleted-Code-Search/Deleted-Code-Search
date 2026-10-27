@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 `_update_shared_cache()`에 ground truth 업데이트를 포함시키고 `_update_shared_ground_truth_cache()`를 제거한다고 밝혔으며, 같은 커밋이 `_update_shared_cache`를 새 시그니처(`current_ground_truth_data_T`, `measured_data_timeline`)로 다시 추가해 같은 일을 이어받는다."}

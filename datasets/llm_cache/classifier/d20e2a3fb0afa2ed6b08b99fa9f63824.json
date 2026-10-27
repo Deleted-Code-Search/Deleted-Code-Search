@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 커밋이 checking.py에 CheckError 타입과 detect_error_page 등 오류 통계 구조를 새로 도입하면서 __init__에서 logger를 받던 클래스 구조가 그 인터페이스에 맞지 않게 되어 삭제됐다."}

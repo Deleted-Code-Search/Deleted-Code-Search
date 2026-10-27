@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 불필요한 `pymutable_geometries` 모듈을 제거했다고 밝혀, 이 테스트 모듈 자체가 호출되지 않아 삭제됐다."}

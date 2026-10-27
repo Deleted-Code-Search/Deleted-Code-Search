@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|PR 본문이 versioneer에서 setuptools-scm으로 전환한다고 밝혀, 버전 추적 구현이 외부 패키지로 대체됐다."}

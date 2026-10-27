@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #1622가 완료 시스템을 재설계하면서 테스트 파일 전체가 새 시스템 기준으로 다시 작성됐고, 이 테스트가 검증하던 choices_without_help 기반 동작이 새 구조로 대체됐다."}

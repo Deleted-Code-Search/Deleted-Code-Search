@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|export_backbone_name이 반환하던 \"model.onnx\" 대신 추가된 코드에서 embedder_model.export_name=\"model_eb\", backbone_model.export_name=\"model_bb\"로 내보내기 이름을 각 모델 객체의 속성으로 옮겨 관리하도록 구조가 바뀌었다."}

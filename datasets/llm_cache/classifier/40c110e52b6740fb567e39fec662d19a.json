@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 DoRA를 LoraVariant 서브클래스로 재구성한다고 밝히고, 추가된 LoraVariant.init이 dora_init이 하던 초기화를 이어받도록 설계됐다."}

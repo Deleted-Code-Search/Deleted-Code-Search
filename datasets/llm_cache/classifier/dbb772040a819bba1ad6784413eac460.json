@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|커밋 메시지가 'livereload'·'tornado' 의존성을 버리고 stdlib http.server 기반으로 재구현한다고 밝히며, 추가된 코드가 `from mkdocs.livereload import LiveReloadServer` 로 서버 구현을 외부 모듈 호출로 대체한다."}

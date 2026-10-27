@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|PR 본문이 \"Non-asyncio IOLoop and Future implementations\"를 삭제 대상으로 밝히고, 같은 커밋이 `Future = asyncio.Future`를 추가해 표준 라이브러리 구현이 대체했다."}

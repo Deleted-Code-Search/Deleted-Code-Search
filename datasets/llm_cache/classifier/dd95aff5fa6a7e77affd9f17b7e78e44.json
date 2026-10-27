@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|삭제된 xfail_jit_integer_size의 호출자가 추가 코드에 없고, 같은 커밋이 xfail_jit_python_scalar_arg(\"size\")로 대체 호출을 쓰면서 이 래퍼는 호출자를 잃었다."}

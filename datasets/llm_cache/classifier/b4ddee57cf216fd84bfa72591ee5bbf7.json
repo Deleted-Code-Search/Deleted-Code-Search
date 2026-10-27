@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 커밋이 이 함수를 pytest fixture `train_persist_load_with_different_settings`로 재작성하면서 `train_and_preprocess`·`process_message` 등 새 GraphComponent 기반 헬퍼로 호출 경로를 옮겼다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR 본문이 \"Removed unused controller actions and legacy test suite\"라며 구 구현에 묶인 테스트를 지웠고, 삭제된 테스트가 검증하던 FileSystem.describe() 기반 구현이 이 커밋에서 재작성되어 검증 대상이 사라졌다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 review MCP 서버(dev/mcps/review.py)를 Claude Code skills로 마이그레이션한다고 밝혀, 이 파일의 기능 자체가 skills로 대체·제거됐다."}

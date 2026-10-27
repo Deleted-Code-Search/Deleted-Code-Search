@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 커밋이 같은 자리에 `affine_irq(val, action)`을 추가해 IRQ 번호 대신 `get_irq_for_action(action)`으로 조회하도록 인터페이스를 바꿨고, PR 본문이 \"These numbers can change... so use the real names\"라며 번호 대신 이름을 쓰는 구조 변경임을 밝힌다."}

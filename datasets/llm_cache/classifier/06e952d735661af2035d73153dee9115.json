@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "PERF|커밋 메시지가 temperature division을 two-stage softmax에 인라인하면 배치가 클 때 standalone divide kernel보다 성능이 좋다고 밝혀, 이 패스를 성능 개선 목적으로 대체했음을 보여준다."}

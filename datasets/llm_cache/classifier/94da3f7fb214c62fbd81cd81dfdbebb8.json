@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|메타데이터가 JSON Lines에서 parquet로 전환되어(LEGACY_*_PATH 상수만 남고) 이 함수를 호출하던 자리가 사라졌으며, 리뷰에서 \"Unused function + deprecated !!\"라고 지적됐다."}

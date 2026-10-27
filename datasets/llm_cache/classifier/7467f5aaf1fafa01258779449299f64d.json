@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 `jax.config.jax_jit_pjit_api_merge` 참조를 제거한다고 밝히고, 이 테스트는 그 플래그가 False일 때만 동작하는 구 jit 코드 경로를 검증하므로 플래그 제거로 기능 자체가 사라졌다."}

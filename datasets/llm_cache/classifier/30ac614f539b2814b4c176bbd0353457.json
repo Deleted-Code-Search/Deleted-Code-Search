@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 \"redundant property declarations that are now handled by Entity and its subclasses\"라며 extra_state_attributes를 Entity 기본 처리로 대체했고, 추가 코드에서 _attr_extra_state_attributes로 속성 저장 방식이 바뀌었다."}

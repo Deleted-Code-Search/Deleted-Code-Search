@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|PR 본문이 \"removes the (unused) custom JSONFieldInspector in favor of the one in drf_yasg\"라고 밝혀, 이 커밋에서 직접 구현을 외부 라이브러리(drf_yasg) 호출로 대체했다."}

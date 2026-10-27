@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 \"Implement new Store interface\"로 인터페이스 재구성을 알리며, 이 파일에 대체 코드가 없어 배치 클래스가 새 인터페이스 구조로 재편되면서 이 생성자가 맞지 않게 된 것으로 보인다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 `increment_llm_counter()` → `_increment_llm_counter()`로 메서드 가시성을 private으로 바꾸는 인터페이스 변경을 명시하고 있어, 같은 일이 이름만 바뀐 다른 자리에서 계속된다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 \"remove deprecated stuff from 0.17\"이라며 cross-validation 반복자에서 boolean mask 반환 옵션을 제거했다고 밝히고, 커밋 메시지도 cross_validation.Bootstrap 제거를 명시하므로 공개 API 기능 자체가 폐기됐다."}

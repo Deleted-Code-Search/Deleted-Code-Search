@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 `get_temporary_timestep_data()` API를 deprecate한다고 밝히고, 같은 자리에 `@Deprecated(new=\"SingleAgentEpisode.custom_data[some-key]\", error=True)` 스텁만 남겨 공개 API 기능 자체가 제거됐다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지는 \"revert: rollback to v2.0 installation method, remove local thirdparty installation\"이라며 thirdparty 설치 제거를 말할 뿐, merge_chunks 함수나 이 파일의 삭제 이유를 이름으로 가리키지 않고, 화면에 대체 코드나 호출자 변경도 없어 근거를 댈 수 없다."}

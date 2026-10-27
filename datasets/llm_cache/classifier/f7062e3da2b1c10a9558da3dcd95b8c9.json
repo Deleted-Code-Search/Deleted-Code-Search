@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지가 \"Refactor\"뿐이고, 경로가 vendor/ 하위이며, 삭제된 함수를 대체하는 코드나 호출자 변경에 대한 근거가 화면에 없다."}

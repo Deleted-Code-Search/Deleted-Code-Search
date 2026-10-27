@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #1621이 사용자 분배·디스패치 로직을 `locust/distribution.py`와 `UsersDispatcher` 클래스로 재작성하면서, 이 함수가 속했던 기존 분배 계산 방식 자체가 새 구조로 대체됐다."}

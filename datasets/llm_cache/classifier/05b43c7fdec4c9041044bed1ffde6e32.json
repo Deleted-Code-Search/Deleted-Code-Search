@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|삭제된 `__call__` 메서드를 가진 클래스 대신 `Retriever` 타입 별칭(Callable[Concatenate[CallInfo, P], R])이 같은 호출 역할을 이어받도록 타입 구조를 재편했다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 제목과 커밋 메시지가 \"remove rag collection\"으로 RAG 컬렉션 기능 자체를 제거하는 작업임을 밝히고 있고, 이 파일(nemo/collections/nlp/losses/sgd_loss.py)이 그 제거 대상 영역에 속한다."}

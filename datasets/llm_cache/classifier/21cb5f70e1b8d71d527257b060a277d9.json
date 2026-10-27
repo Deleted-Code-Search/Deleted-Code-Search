@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 \"remove restream from frigate logic\"과 \"Migrate birdseye stream definition to S6\"라며 birdseye restream 정의를 S6(go2rtc)로 옮겼고, 이 함수가 하던 go2rtc 스트림 등록 일이 다른 자리로 이동했다."}

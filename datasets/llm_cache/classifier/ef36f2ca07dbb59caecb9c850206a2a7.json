@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #7734 본문이 `spatial_size` 용어를 없애고 `get_spatial_size`를 `get_size`로 이름을 바꾼다고 밝혔으며, 같은 파일에 `get_size_mask`가 추가되어 같은 일을 이어받는다."}

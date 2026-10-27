@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR 본문이 GAQ 전용 배관(AbortListener 등)을 제거하고 GTF로 이관했다고 밝혀, 이 테스트가 검증하던 AbortListener가 더 이상 존재하지 않아 삭제됐다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 `trl.experimental.bco`(`BCOTrainer`/`BCOConfig`) 스택을 제거한다고 밝히고, 이 함수는 그 트레이너 파일에 속한 내부 구현이므로 사용자 기능 자체의 폐기·지원 종료에 해당한다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|경로가 vendored/ 아래이고 커밋 메시지가 vendored SDK를 새 릴리스로 교체한다고만 말할 뿐, 이 테스트 함수나 그 대상(opt_struct)을 이름으로 가리키는 이유 문장이 없다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지에 \"#1504 이후 사용되지 않는 코드를 제거한다\"고 명시되어 있고, 삭제된 `__iter__`가 `self.items`를 반환하는 단순 위임 메서드로 호출자를 잃은 잔재에 해당한다."}

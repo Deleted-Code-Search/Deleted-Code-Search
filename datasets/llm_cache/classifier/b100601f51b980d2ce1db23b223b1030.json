@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #8670이 `LoraBaseMixin`을 도입해 LoRA 처리 메서드를 재사용 가능한 기반 클래스로 옮기면서, `get_active_adapters`는 `LoraLoaderMixin`에서 사라지고 새 기반 클래스 구조로 재편됐다."}

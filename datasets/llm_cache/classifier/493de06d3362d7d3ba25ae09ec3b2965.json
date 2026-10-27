@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR #5000 \"Drop dashboard 1.0: views, templates and tests\"와 커밋 메시지 \"Remove elasticsearch and postgresql search for dashboard\"가 대시보드 검색 기능 자체를 제거한다고 밝히고, 이 테스트가 검증하던 dashboard 검색 쿼리 생성 기능이 공개 표면에서 사라졌다."}

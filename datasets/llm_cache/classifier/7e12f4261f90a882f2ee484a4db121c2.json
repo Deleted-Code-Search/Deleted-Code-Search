@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|리뷰 코멘트가 \"utils에 있지만 일반적/공유 유용성이 없는 함수들을 deployments 파일의 helpers 섹션으로 옮겼다\"고 밝혀, 이 헬퍼가 deploy 관련 helpers로 재배치된 구조 변경임을 알 수 있다."}

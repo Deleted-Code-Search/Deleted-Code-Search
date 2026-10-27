@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR 본문이 `locust/dispatch.py`의 새 로직으로 디스패처를 재작성했다고 밝혔고, 삭제된 테스트가 호출하던 `all_users_of_current_class_have_been_dispatched` 함수가 이 커밋에서 사라져 검증 대상이 없어졌다."}

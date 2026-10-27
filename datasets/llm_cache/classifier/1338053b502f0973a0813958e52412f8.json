@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지와 PR 본문은 폴더 구조 재편만 밝히고 이 `configure` 함수나 `extern.py`를 이름으로 가리키지 않으며, 이 파일에 추가되거나 대체된 코드도 화면에 없어 삭제 이유를 댈 근거가 없다."}

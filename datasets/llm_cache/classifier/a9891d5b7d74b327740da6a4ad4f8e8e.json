@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|pre_basic_read가 하던 컨텍스트 생성이 새 AIOBasic_Engine 클래스의 _create_context 메서드로 옮겨졌고, 같은 커밋이 이 파일에 그 클래스를 추가했다."}

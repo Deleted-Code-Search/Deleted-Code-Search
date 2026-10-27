@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 \"centralize otel attribute keys\"라 하고, 추가 코드에서 `serialize_placeholder_to_otel_attrs(span, placeholder)`를 import해 호출하므로 같은 일이 공용 모듈로 옮겨졌다."}

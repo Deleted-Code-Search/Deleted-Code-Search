@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR이 FileSystemTargetTestMixin으로 공통 인터페이스 테스트를 재구성하면서 test_del_with_Text가 그 믹스인의 테스트로 대체됐다."}

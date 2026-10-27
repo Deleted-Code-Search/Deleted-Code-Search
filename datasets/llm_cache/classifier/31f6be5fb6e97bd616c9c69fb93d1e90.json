@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 \"refactored topology to include different kinds of connections\"라며 토폴로지 재구성을 명시하고, 추가된 코드에서 노드/연결 정보가 `_vertex_indices`와 `_graph` 기반의 새 구조로 대체되어 `update_node_profile`이 맞지 않게 됐다."}

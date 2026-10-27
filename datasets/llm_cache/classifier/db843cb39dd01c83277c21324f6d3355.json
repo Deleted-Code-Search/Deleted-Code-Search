@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 \"Remove dom and media modules\"라며 media 모듈 자체를 제거했고, 이는 구조 재편으로 같은 일이 다른 자리(pyscript.web.elements)에서 계속되기 때문이다."}

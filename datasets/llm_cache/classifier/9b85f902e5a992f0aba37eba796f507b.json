@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 lightrag_server.py를 ./routes로 쪼개고 각 API 카테고리를 개별 파일로 분리했다고 밝혔으며, 추가 코드에서 create_document_routes가 document_routes로부터 import되어 라우트 등록을 이어받는다."}

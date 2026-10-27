@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 Explore form_data 엔드포인트를 /charts에서 /explore로 옮긴다고 밝혀, check_access 테스트 대상이 새 위치의 API로 재편되면서 이 테스트가 맞지 않게 됐다."}

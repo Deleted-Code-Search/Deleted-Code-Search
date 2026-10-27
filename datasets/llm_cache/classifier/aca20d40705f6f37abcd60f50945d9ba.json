@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 \"Removes old engine code used for task orchestration\"이라 밝혀 이 함수가 속한 구 엔진의 태스크 오케스트레이션 코드가 제거됐고, 같은 PR에서 Task.apply_async·Task.map이 Task.create_run을 쓰도록 바뀌어 같은 일이 다른 자리에서 계속된다."}

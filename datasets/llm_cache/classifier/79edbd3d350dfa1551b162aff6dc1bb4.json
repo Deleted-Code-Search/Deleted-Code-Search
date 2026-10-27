@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 마이그레이션 파일을 정리(prune)하고 db 명령 옵션 \"--use-migration-files\"를 제거했다고 밝혀, 마이그레이션 파일로 DB를 생성·롤백하던 기능 자체가 없어졌다."}

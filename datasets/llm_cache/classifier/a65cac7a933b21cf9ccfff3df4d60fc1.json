@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 \"feat(rollout): add remote inference engine\"을 되돌리는(revert) 것이므로, 이 기능 자체가 제거되어 테스트도 함께 사라졌다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 preheated script runs 제거를 명시하고, 이 함수는 preheat 관련 서버 command line을 검사하던 헬퍼인데 추가된 코드는 `streamlit version` 실행 가능 여부만 확인하는 `_can_run_streamlit_version`으로 대체되어 호출자를 잃었다."}

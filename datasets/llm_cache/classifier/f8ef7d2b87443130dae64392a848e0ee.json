@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 \"Narrow the websocket handler interface\"·\"Pass close arguments via a new method instead of setting attributes\"라며 핸들러 인터페이스를 바꿨고, 추가 코드에서 close_reason이 on_ws_connection_close(close_code, close_reason) 인자와 self.close_reason 속성으로 대체되어 같은 정보가 다른 자리에서 계속 전달된다."}

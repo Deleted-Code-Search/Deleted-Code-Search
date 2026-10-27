@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지와 PR 본문이 \"Remove duplicated files in tests\"라고만 말할 뿐 이 move 함수나 파일을 이름으로 가리키며 삭제 이유를 밝히지 않고, 화면에 대체 코드나 호출자 변경도 없어 근거를 댈 수 없다."}

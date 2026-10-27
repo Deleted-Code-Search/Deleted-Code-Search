@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR 본문이 _compat 모듈의 py2 잔재 정리를 말할 뿐 _get_windows_argv를 이름으로 가리키지 않고, 추가된 코드에도 이 함수를 대체하거나 호출하는 자리가 없다."}

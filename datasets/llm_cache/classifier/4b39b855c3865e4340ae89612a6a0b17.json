@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|같은 자리에 들어온 대체 코드가 KTransformersOps.dequantize_q5_k 호출로 바뀌어, 직접 구현 대신 외부 라이브러리 호출로 이어받았다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 \"Next version will remove completely the ListView\"라며 ListView 기능 자체를 RecycleView로 대체·폐기한다고 밝히고, 이 테스트는 ListView/ListAdapter의 selection 기능을 검증하던 테스트다."}

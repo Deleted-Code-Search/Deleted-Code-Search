@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|`get_cipher`가 sniffio 기반 단일 함수로 재구성되면서 AsyncioBackend 전용 등록 함수가 그 구조에 맞지 않게 되어, 같은 일(stream_writer.get_extra_info(\"cipher\"))이 새 `get_cipher`의 else 분기에서 계속된다."}

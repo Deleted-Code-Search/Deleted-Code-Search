@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR이 locustfile 탐색을 -f 기반으로 단순화하면서 locustfile_is_directory를 find_locustfiles로 대체했고, 이 테스트가 검증하던 함수가 더 이상 쓰이지 않게 됐다."}

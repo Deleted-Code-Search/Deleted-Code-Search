@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|PR 본문에 \"Rest data has been updated to use the new shared client\"라며 httpx helper로 교체했다고 밝히고, 추가 코드가 get_async_client로 공유 클라이언트를 받아오므로 세션 종료 책임이 외부 헬퍼로 넘어갔다."}

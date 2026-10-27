@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR 본문이 colotensor에서 distributed 관련 기능을 제거한다고 밝혔고, 이 테스트는 분산 실행(spawn/run_dist)을 검증하는 테스트로 그 대상이 사라져 호출할 대상이 없어졌다."}

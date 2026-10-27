@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR 본문이 \"drop unused methods from EvalModel which are not used anymore\"라고 이 테스트가 검증하던 result API 메서드들이 더 이상 사용되지 않아 지운다고 밝히고 있다."}

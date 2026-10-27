@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 `_register_features()`를 `register_model()`로 이름을 바꾸고 `class_prepared` 시그널에서 분리해 `AppConfig.ready()`에서 호출하도록 등록 트리거를 재구성한다고 밝히며, 추가된 `register_models()`가 같은 등록 로직을 이어받는다."}

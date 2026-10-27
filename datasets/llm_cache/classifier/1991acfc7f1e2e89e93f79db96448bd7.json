@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 \"ioloop: Delete PollIOLoop ... no longer used\"라 하고, 이 테스트가 검증하던 PeriodicCallback 기반 IOLoop 동작이 py2 전용 구현 삭제로 대상이 사라졌다."}

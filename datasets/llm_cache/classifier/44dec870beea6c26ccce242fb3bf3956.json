@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR이 `--sandbox` 환경 프로비저닝을 uv 스크립트 환경 기반으로 재구성하면서 `build_sandbox_venv`/`additional_deps` 경로가 `run_in_sandbox`·`resolve_sandbox_mode` 등 새 모델로 대체됐고, 이 테스트가 검증하던 대상이 사라졌다."}

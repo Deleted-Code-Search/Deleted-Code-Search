@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 \"command: path completion\"으로 명령 체계 재편을 가리키고, 이 파일에 대체 코드가 없어 pathedit의 초기화 책임이 다른 구조로 옮겨진 것으로 보인다."}

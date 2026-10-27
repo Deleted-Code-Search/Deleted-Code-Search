@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지가 vendoring을 제거하고 temporalio 1.26.0으로 대체한다고만 말할 뿐, 이 _convert_agent 함수나 그 대체 구현을 이름으로 가리키지 않으며, 화면에 추가·대체 코드도 없어 근거를 댈 수 없다."}

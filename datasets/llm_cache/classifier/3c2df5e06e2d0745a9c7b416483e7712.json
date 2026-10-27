@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #1409가 셀렉터를 parsel 기반으로 이관하면서 HtmlXPathSelector 대신 Selector를 쓰는 테스트로 재작성됐고, 같은 파일에 Selector를 사용하는 테스트들이 추가됐다."}

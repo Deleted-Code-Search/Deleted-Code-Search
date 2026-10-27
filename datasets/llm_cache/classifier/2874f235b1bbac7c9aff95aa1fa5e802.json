@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|커밋 메시지 \"Use kombu.utils.encoding instead\"와 추가된 `from kombu.utils.encoding import (... ensure_bytes ...)`가 이 함수 구현을 외부 라이브러리 호출로 대체했음을 보여준다."}

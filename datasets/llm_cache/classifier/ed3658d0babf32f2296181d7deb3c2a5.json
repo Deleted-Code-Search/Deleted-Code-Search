@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지 \"factor out ujson extension into pandasjson\"은 ujson 확장을 분리한다는 것만 말할 뿐 이 테스트 함수를 이름으로 가리키지 않고, 삭제된 본문이나 대체 코드에서도 이유를 알 근거가 없다."}

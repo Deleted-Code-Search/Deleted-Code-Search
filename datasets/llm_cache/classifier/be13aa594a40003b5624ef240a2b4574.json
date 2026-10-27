@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR 본문이 시각 데이터용 커스텀 프롬프트 절단 로직을 제거한다고 밝혔고, 이 테스트가 검증하던 `truncate_with_protected_tokens` 함수가 삭제되어 검증 대상이 없어졌다."}

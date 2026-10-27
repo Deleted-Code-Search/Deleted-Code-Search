@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 자리에 `app` 파라미터를 받아 `app_or_default(app)`로 앱을 명시적으로 전달하는 새 `__init__`이 들어와, 앱 참조를 전역 `default_app`에서 인스턴스 속성으로 옮기는 구조 변경의 일부로 대체됐다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|PR 본문이 \"2.6 added ability to use property-decorated function as decorator for setters and deleters, so pandas/util/rwproperty isn't necessary anymore\"라고 밝혀, 직접 구현을 표준 라이브러리 property로 대체했다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 \"Collapsed VCMembership into the Device model\"이라 VCMembership 모델 자체가 Device로 통합되어, 이 테스트가 검증하던 vcmembership-list 엔드포인트와 VCMembership 모델이 사라지고 그 역할이 Device 모델의 다른 API로 옮겨졌다."}

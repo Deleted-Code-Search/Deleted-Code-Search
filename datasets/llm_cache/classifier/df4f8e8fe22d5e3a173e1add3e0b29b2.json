@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 ConsoleFormatter를 \"panel-based output\"으로 전환하며 \"outdated tree management methods\"를 제거했다고 밝히고, 같은 커밋이 handle_* 패널 메서드들을 새로 추가해 메모리 패널 출력 역할을 다른 자리에서 이어받았기 때문."}

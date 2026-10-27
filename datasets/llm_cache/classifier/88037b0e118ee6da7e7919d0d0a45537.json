@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지와 PR 제목이 \"[shardformer]delete xformers\"로, xformers 기반 flash attention 기능 자체를 제거하는 작업이며 이 함수가 그 xformers 의존 구현이므로 기능 폐기로 분류한다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 \"Remove duplicated test\"라고 이 테스트의 중복 제거를 명시하며, 삭제된 본문은 pass만 있는 빈 태스크라 검증할 대상이 없어졌다."}

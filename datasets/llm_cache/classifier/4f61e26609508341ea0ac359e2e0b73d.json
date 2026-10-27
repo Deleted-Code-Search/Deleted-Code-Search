@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 genai를 post-processor로 옮기며 opinionated 로직을 post processor로 이동한다고 밝혔고, 같은 커밋이 ObjectDescriptionProcessor를 추가해 썸네일 생성 등 관련 처리를 그쪽으로 이전했다."}

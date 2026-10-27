@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 deprecated 컬렉션(llm 등)을 제거한다고 밝히고, 이 함수는 그 제거 대상 컬렉션의 공개 API 표면에 속해 기능 자체가 사라졌다."}

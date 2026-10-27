@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR #27 본문이 tests의 옛 tfds 테스트 파일들을 제거했다고 밝히고, 이 테스트 파일이 그 대상에 속하며 삭제된 _info는 호출자를 잃은 코드다."}

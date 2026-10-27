@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #615가 콜백 시스템을 재작업하면서 on_epoch_end가 state 인자를 받는 새 시그니처로 같은 자리에 대체되었고, 저장 로직은 CheckpointCallback의 __save_to로 이어받았다."}

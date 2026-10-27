@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "SEC|PR 본문이 \"potential security issues (#5029)\"라며 이슈 #5029는 gallery/gallery.py의 Zip Slip/Tar Slip 경로 탈출로 명시돼 있어, 취약점 제거를 위한 삭제로 판단했다."}

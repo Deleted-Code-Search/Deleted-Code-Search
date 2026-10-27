@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 플러그인을 문자열 훅·핫로드 방식으로 재작성하면서 `load_plugins`/`PluginSettings` 기반 API가 사라졌고, 이 테스트가 검증하던 대상을 부르는 자리가 추가 코드에 없어 호출자를 잃었다."}

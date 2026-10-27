@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 on_pong 본문이 _WebSocketDelegate Protocol 클래스로 옮겨져 인터페이스 정의 방식이 바뀌었고, 커밋 메시지도 조건부 임포트 제거·타입 관련 재구성을 말한다."}

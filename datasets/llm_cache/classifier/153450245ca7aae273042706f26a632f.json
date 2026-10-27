@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지와 PR이 \"Remove deprecated video providers\"라며 video_pygst.py를 폐기 대상으로 명시했고, 이 함수는 그 제공자 자체의 기능이라 공개 표면에서 사라졌다."}

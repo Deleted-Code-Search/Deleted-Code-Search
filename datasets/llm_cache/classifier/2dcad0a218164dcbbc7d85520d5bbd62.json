@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|`noop` 함수는 호출되지 않는 내부 헬퍼로 보이며, 커밋이 이벤트 시스템을 `crewai_event_bus.emit` 기반으로 재구성하면서 호출자를 잃어 제거된 것으로, 삭제를 이름으로 가리키는 이유 문장이 없다."}

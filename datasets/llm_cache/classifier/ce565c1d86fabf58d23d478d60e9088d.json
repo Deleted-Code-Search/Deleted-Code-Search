@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 jax.mask와 jax.shapecheck 제거의 최종 단계라고 밝히고, 이슈 #11557에서 masking transformation을 폐기하기로 결정했으므로 사용자 기능 자체가 없어진 것이다."}

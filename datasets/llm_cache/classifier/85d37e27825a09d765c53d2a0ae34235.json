@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|경로에 vendor/가 있고 커밋 메시지가 vendored-in 라이브러리 제거라고 밝히지만, 이 함수가 다른 저장소로 옮겨졌다는 대상 저장소를 명시하지 않아 판단 근거가 부족하다."}

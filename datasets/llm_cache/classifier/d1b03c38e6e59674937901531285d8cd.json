@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 `crewai_cli.run_crew.find_crew_json_file()`과 `_has_json_crew()`가 제거됐고 JSON crew는 이제 `[tool.crewai].definition` 메타데이터로만 선언해야 한다고 명시해, 암묵적 파일명 탐색 기능 자체가 폐기됐다."}

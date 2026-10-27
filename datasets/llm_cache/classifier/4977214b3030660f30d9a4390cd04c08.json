@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 커밋이 State(initial_state)로 초기 상태를 직접 구성하는 방식으로 바뀌면서, dict를 순회해 setattr하던 이 변환 함수가 새 구조에 맞지 않게 됐다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지 \"no more oauth\"가 oauth 관련 기능 자체를 제거했음을 나타내며, 이 파일의 oauth1 유틸 함수도 그와 함께 사라졌다."}

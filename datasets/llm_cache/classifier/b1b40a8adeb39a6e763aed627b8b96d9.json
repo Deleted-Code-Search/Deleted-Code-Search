@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 \"Remove core schema validation\"이라 하고, 이 테스트가 검증하던 `validate_core_schema`의 스키마 검증 기능 자체가 제거되어 검증 대상이 사라졌다."}

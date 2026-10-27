@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|_get_ix의 인덱스 해석 로직이 새로 추가된 _get_simple_index의 내부 함수 ix로 옮겨졌고, 호출부도 _get_simple_index/_get_complex_date_index로 재구성됐다."}

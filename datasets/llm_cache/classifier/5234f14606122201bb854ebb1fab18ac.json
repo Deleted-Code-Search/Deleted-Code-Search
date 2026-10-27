@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 output validate/process 훅 도입과 `output_validator` 콜백이 process 훅 안에서 실행된다고 밝혔고, 추가 코드에서 `run_output_with_hooks`/`run_none_process_hooks` 등이 `output_validators`를 받아 검증을 이어받으므로 같은 일이 새 훅 경로로 옮겨졌다."}

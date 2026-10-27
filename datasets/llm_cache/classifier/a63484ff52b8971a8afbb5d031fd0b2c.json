@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|리뷰 코멘트가 `__getattr__` 대신 `execute_query`를 직접 정의하라고 지시했고, 같은 커밋이 그 메서드를 PostgresClient에 추가해 동적 위임 대신 명시적 메서드로 같은 일을 이어받았다."}

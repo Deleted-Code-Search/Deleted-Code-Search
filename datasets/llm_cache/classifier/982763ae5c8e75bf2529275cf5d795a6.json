@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR 본문이 이 파일이 reference evaluator를 위한 중복 테스트라서 삭제됐다고 밝혀, 검증 대상이 사라져 테스트의 tearDownClass도 함께 제거됐다."}

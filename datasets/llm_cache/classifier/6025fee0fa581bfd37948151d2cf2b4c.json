@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 WhisperX를 \"optional fallback\"으로 강등하고 \"the installer does not install it\"이라 명시하며, 삭제된 install_whisperx가 바로 그 설치 단계([6/7] Install WhisperX)이므로 사용자 기능(설치 옵션) 자체가 제거된 것이다."}

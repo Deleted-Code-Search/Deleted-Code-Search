@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지 \"keep original Architecture and Product Manager\"와 TL_INSTRUCTION 상수 도입으로 팀 리더 프롬프트 구성 방식이 바뀌면서 _get_prefix 오버라이드가 새 구조에 맞지 않게 됐다."}

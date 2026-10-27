@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지 \"delete packages\"와 PR 본문 \"removing all vendored dependencies\"는 이 파일이 vendor 경로(requests/packages/urllib3/...)에 있어 벤더링된 의존성 제거 작업의 대상임을 보여줄 뿐, 이 함수 자체의 삭제 이유를 이름으로 가리키지 않는다."}

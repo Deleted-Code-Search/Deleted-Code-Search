@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #1397이 \"Add support for multiple lyrics providers\"라며 `--lyrics-provider` 플래그로 제공자를 선택하게 바꿔, 단일 Genius 전용 `_get_song_lyrics`가 새 다중 제공자 구조에 맞지 않게 됐다."}

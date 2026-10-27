@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 \"Reports refactoring\"이라 하고, 같은 커밋이 `from .report import save_csv_report, genxmindfile`을 추가해 XMind 생성이 `report` 모듈로 옮겨졌으므로 이 함수의 일은 다른 자리에서 계속된다."}

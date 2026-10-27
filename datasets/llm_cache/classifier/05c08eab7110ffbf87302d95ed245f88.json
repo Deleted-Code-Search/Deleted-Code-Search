@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|커밋 메시지가 FilterChoiceField와 get_filter_choices()로 필터 폼 보일러플레이트를 줄였다고 밝히고, 추가된 코드에서 rir = FilterChoiceField(choices=get_filter_choices(RIR, id_field='slug', count_field='aggregates'))가 삭제된 aggregate_rir_choices()의 RIR 집계 선택지 생성을 그대로 대체한다."}

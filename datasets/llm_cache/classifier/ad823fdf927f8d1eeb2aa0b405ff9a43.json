@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|`MultiCommand`가 `Group`으로 병합되면서 같은 `list_commands`가 `Group`에 `sorted(self.commands)` 구현으로 이어받아졌다."}

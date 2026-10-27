@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 LocalWhisperTranscriber와 RemoteWhisperTranscriber를 Haystack에서 제거하고 whisper-haystack 패키지로 옮겼다고 밝혀, 사용자 기능 자체가 사라졌다."}

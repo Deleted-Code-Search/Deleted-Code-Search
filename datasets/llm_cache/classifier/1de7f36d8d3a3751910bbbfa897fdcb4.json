@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 멀티모달 엔티티 주입을 utils_pipeline의 중앙 post-pass에서 operate._process_single_content의 per-chunk 단계로 옮겼다고 밝혀, 이 함수가 속한 주입 경로 자체가 재구성됐다."}

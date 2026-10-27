@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|이 함수는 내부 헬퍼로 보이며, 커밋 메시지와 PR 본문은 공개 API에서 `create_tiles` 등을 제거한다고만 말하고 이 함수를 이름으로 가리키지 않으며, 같은 파일에 대체 코드나 호출자 변경의 흔적이 없다."}

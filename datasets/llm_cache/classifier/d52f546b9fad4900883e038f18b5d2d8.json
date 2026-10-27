@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 `get_cached_archives_for_link`를 `chef.py`에서 `utils/cache.py`로 옮겼다고 밝히고, 같은 커밋이 `ArtifactCache`를 도입해 캐시 유틸리티를 분리했으므로 구조 변경으로 이 코드가 다른 자리로 이동한 것이다."}

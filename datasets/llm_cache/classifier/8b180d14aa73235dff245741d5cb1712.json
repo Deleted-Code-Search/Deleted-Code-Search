@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 \"This was py2-only and is no longer used\"라며 PollIOLoop을 삭제했고, 이 함수는 그 클래스의 메서드로 호출자를 잃었다."}

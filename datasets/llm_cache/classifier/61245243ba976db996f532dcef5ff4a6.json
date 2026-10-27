@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 set_adapter를 중복 제거 대상으로 명시하고, 이 메서드가 BaseTuner로 흡수되도록 클래스가 BaseTuner를 상속하게 바뀌어 같은 일이 상위 클래스에서 계속된다."}

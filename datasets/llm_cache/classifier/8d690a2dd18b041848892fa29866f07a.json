@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 \"Re-organized the tests for shape polymorphism\"이라 하고, 같은 파일에 primitive harness 기반 테스트 구조(_make_harness, _POLY_SHAPE_TEST_HARNESSES)가 새로 추가되어 기존 개별 테스트가 그 구조로 재편되었기 때문이다."}

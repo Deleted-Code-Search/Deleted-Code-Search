@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 deprecated된 `KubernetesClusterConfig` 블록을 코어 라이브러리에서 제거한다고 밝혔고, 이 테스트는 그 제거된 블록의 인스턴스화를 검증하던 테스트다."}

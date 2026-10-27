@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 BAML과 LLMGateway를 리팩터해 동적 응답 모델 생성을 하려 한다고 밝히고, 같은 커밋이 이 파일에 ResponseModelAst/ResponseModelBuilder 등 새 구조를 추가해 기존 Node 빌더가 그 재구성된 구조에 맞지 않게 됐다."}

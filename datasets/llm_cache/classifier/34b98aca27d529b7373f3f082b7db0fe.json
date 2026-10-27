@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 커밋이 `app.static('index.html', \"websocket.html\")`를 추가하고 `index`를 `redirect(\"index.html\")`로 바꿔, 정적 파일 제공 방식으로 인터페이스가 재편되면서 기존 `file('websocket.html')` 호출이 맞지 않게 됐다."}

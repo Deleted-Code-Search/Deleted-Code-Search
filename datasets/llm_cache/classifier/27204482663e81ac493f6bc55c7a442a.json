@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 페이지·파일·내비게이션의 내부 처리를 전면 재작성했다고 밝히고, 삭제된 테스트는 옛 nav.SiteNavigation.walk_pages 기반 edit_url 검증이라 새 구조에서 다른 자리로 대체된 것으로 보인다."}

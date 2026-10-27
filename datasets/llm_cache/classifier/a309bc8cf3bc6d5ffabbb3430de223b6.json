@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|커밋 메시지가 \"Move checkers to c++\"이고, 삭제된 check_node의 검증 로직이 onnx_cpp2py_export.checker(C) 호출로 대체되어 외부 C++ 구현이 일을 이어받았다."}

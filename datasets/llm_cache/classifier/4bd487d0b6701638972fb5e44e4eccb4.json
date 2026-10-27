@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 커밋이 추가한 `test_the_assistant_helpers_are_gone`이 `_should_setup_mcp_server`를 포함한 헬퍼들이 제거됐음을 명시하고, `TestTheLibraryPathDoesNotTouchAiClients` 독스트링이 MCP 설정 단계가 라이브러리에서 CLI로 옮겨졌다고 설명하므로 이 테스트의 대상이 다른 자리(CLI)로 이동했다."}

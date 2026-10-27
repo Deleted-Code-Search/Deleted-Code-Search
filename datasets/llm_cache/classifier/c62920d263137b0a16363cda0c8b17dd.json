@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|삭제된 본문이 `self._build_optimization_metadata()` 호출이었고, 같은 자리에 `build_optimization_metadata(self)`라는 core.state 모듈의 함수 호출로 대체되어 직접 구현이 라이브러리/공용 함수로 바뀌었다."}

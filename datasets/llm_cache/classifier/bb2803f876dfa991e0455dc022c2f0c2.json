@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 자리에 `_load_instruments(self, market, freq)`가 새로 들어와 `backend_obj(market=market, freq=freq).data`로 같은 일을 이어받고, `backend_obj`가 kwargs를 받도록 인터페이스가 바뀌었다."}

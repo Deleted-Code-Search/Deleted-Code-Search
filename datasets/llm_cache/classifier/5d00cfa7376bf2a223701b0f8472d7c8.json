@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|PR 본문이 ESPHome bleak 구현을 bleak-esphome 라이브러리로 마이그레이션한다고 밝혀, 이 함수가 하던 연결 슬롯 대기가 외부 라이브러리로 이전됐다."}

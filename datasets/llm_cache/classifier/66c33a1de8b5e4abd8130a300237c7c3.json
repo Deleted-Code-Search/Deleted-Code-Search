@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 체크포인트 저장을 없애고 씬을 설명(description) 레코드로 재구성하는 전환이라고 밝히며, 이 함수는 data_manager를 순회해 체크포인트용 텐서를 모으던 헬퍼인데 그 체크포인트 기능 자체가 제거됐다."}

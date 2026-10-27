@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR 본문이 `trl/losses`의 fused DPO 구현과 그 대규모 패리티 테스트 스위트를 제거한다고 밝혀, 이 테스트가 검증하던 대상이 사라졌다."}

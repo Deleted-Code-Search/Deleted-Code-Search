@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 \"drop config migration\"이라며 config 마이그레이션 기능 자체를 제거한다고 밝혔고, 이 테스트는 그 config convert 기능을 검증하는 테스트다."}

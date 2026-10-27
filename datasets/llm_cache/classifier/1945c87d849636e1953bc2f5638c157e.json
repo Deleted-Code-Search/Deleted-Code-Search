@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|`_find_next_runnable_component`가 `_has_all_inputs_with_defaults`를 호출하도록 바뀌어, 같은 검사 로직이 모듈 수준 함수로 옮겨졌다."}

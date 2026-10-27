@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|이 테스트가 호출하는 BiasMetric.measure 대상이 이 커밋에서 제거됐다는 문장이 없고, 삭제된 본문 자체에도 @skip·@xfail 같은 이유 표시가 없어 근거가 부족하다."}

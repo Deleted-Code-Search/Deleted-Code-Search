@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 \"groot: remove dead N1.5 code (eagle2_hg_model...)\"라며 eagle2_hg_model/이 N1.7에서 참조가 전혀 없다고 밝혀 이 파일 전체가 호출되지 않아 삭제됐다."}

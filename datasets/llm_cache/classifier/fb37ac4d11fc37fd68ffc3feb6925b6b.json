@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|Python 2 지원 제거로 `isidentifier`의 호출자가 사라졌고, 같은 자리에 대체 코드가 없으며 PR 본문도 `_compat`의 py2 부분 정리라고만 밝힌다."}

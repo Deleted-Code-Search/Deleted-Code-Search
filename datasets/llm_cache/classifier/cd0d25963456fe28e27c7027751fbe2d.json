@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지에 \"remove deprecated tests\"가 반복되고 \"add deprecation warnings for non-mcore models\"라 하여 비-mcore 모델 지원 종료에 따라 해당 기능 테스트가 제거된 것으로, 사용자 기능 자체가 폐기된 경우다."}

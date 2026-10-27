@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|커밋 메시지가 \"upgrade openai to 1.x\"이고, 추가된 코드가 전역 openai 설정 대신 `AsyncOpenAI`/`AsyncAzureOpenAI` 클라이언트 호출로 바꾸면서 이 초기화 함수를 대체했다."}

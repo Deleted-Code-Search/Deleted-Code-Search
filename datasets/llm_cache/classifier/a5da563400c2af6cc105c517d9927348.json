@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 \"The concept of a View has been removed\"라며 View 제거와 렌더링의 Compositor 위임을 명시해, View.render가 구조 재편으로 맞지 않게 됐다."}

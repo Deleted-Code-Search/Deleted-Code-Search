@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 `st.vega_lite_chart`의 legacy dataframe serialization을 제거한다고 명시했고, 삭제된 테스트는 `st._legacy_vega_lite_chart`의 datasets 스펙 동작을 검증하므로 해당 기능 자체가 없어진 것이다."}

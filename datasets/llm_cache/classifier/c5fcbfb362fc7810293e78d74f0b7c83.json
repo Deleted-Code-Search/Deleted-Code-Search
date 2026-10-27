@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "BUG|커밋 메시지가 \"drop phantom cell from trailing-pipe table rows\" 수정을 되돌리는 revert이며, 이 테스트는 그 수정 동작을 검증하던 테스트다."}

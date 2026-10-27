@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|PR 본문은 옛 Python 통합 테스트 전반을 삭제·재작성했다고만 말할 뿐, create_component_details 함수나 이 파일을 이름으로 가리키며 삭제 이유를 밝히지 않고, 같은 커밋이 이 파일에 추가한 코드나 대체 코드도 없어 근거를 댈 수 없다."}

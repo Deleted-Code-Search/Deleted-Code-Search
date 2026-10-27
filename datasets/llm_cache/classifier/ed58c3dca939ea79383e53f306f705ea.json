@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 `peft`를 LoRA 필수 의존성으로 삼아 레거시 LoRA 코드를 제거한다고 밝혔고, 삭제된 `unload_lora`는 `peft`의 `disable_adapters()`로 대체하라고 안내하는 공개 API 폐기 함수다."}

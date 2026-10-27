@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지 \"removed old files\"와 리뷰 코멘트들은 디렉터리 구조·util 함수 시그니처·config 방식에 대한 제안일 뿐, 이 main() 함수 삭제의 이유를 이름으로 가리키며 말하지 않고 대체 코드도 없다."}

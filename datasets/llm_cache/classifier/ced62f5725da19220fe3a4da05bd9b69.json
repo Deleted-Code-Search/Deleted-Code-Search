@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "BUG|리뷰 코멘트가 `_pit_tiebreaker()`의 `_id` 정렬이 OpenSearch에서 `query_shard_exception`을 유발할 수 있다고 지적했고, 이를 `doc_id` 필드 기반 정렬로 교체했다."}

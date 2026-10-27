@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #1308이 폴더·브랜치·파일 단위 로딩을 추가하면서 git Repo 클론 기반 `_get_repo_tree` 대신 PyGithub 클라이언트로 트리를 순회하는 `_get_github_repo_data`가 같은 일을 이어받았다."}

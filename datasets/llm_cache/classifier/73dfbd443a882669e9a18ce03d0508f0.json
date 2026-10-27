@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 \"The company ceased operations on 1 Aug 2026. This PR removes the detector plugin and all references in Frigate.\"라고 DeGirum 검출기 플러그인 자체를 제거한다고 명시하므로, 사용자가 쓰던 검출기 기능이 없어진 FEAT이다."}

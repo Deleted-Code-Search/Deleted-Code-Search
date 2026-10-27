@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋이 DistProfiler를 torch.profiler 백엔드와 Agent Loop용 start/stop/check_* 인터페이스로 재구성하면서, stop_and_save 같은 기존 편의 메서드가 새 구조에 맞지 않게 되어 제거됐다."}

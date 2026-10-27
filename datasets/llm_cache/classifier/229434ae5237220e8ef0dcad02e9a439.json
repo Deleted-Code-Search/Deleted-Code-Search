@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 pygame window provider를 deprecated 후 제거한다고 명시했고, 이 파일은 그 provider의 일부이며 대체 코드가 없다."}

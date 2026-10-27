@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지·PR 본문은 V2의 공개 API 파괴적 변경과 capabilities 전환을 말할 뿐, 이 내부 함수 `_process_response`를 이름으로 가리키며 삭제 이유를 밝히지 않고, 같은 파일에 추가·대체된 코드도 없어 화면만으로 근거를 댈 수 없다."}

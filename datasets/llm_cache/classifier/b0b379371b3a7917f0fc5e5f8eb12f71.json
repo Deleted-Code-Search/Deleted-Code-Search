@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #1418이 검색 플러그인을 전면 재작성(\"Refactor search plugin\")하면서 legacy_search 모듈 자체가 새 구조로 대체됐고, 이 파일에는 대체 코드가 추가되지 않았다."}

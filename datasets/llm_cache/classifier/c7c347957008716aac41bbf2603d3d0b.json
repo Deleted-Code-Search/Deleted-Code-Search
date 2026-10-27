@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #1622가 완료 시스템을 재설계하면서 get_choices 기반 헬퍼 대신 shell_complete 메타데이터 방식으로 바뀌어 이 테스트 헬퍼가 새 구조에 맞지 않게 됐다."}

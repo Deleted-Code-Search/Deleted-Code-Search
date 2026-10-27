@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR #5968이 ListView를 RecycleView로 대체하며 완전히 제거한다고 밝혀, ListView 어댑터의 공개 기능 자체가 폐기됐다."}

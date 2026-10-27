@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR #1532가 Python 2 지원을 폐기(Drop Python 2)한다고 밝혔고, 삭제된 함수는 PY2 조건으로만 동작하는 Python 2 전용 코드다."}

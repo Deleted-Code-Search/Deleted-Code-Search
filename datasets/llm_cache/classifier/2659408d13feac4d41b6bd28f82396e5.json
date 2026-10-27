@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|삭제된 함수 본문이 같은 커밋에서 `with ignore_deprecation():` 블록으로 감싸져 그대로 다시 추가되었을 뿐, 삭제 이유를 밝히는 맥락 문장이나 대체 코드가 화면에 없다."}

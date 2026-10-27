@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|application/worker.py에서 `_derive_source_id` 정의를 지우고 `application.storage.db.source_ids`의 `derive_source_id`를 `_derive_source_id`로 re-export하도록 바꿔, 직접 구현을 외부 모듈 호출로 대체했다."}

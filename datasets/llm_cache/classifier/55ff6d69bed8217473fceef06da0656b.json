@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 `_TaskDecorator.map()` 구현을 재작성하며 데코레이터 매핑 시맨틱이 전통적 오퍼레이터와 다르다고 밝혀, `from_decorator`가 하던 매핑 생성 책임이 `partial`/`unmap` 등 새 구조로 옮겨졌다."}

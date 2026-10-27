@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|삭제된 테스트가 같은 커밋에서 주석 처리만 되어 남아 있고, 커밋 메시지 \"Refactor LoadingContext into a global object registry\"는 이 테스트를 이름으로 가리키지 않으며 대체 코드도 없어 이유를 댈 근거가 없다."}

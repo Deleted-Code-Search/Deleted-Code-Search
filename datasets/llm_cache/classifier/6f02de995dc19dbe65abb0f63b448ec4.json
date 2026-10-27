@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 `get_multimodal_embeddings`를 `embed_multimodal`로 이름을 바꾼다고 밝혔고, 같은 파일에 `def embed_multimodal`이 추가되어 같은 일을 이어받는다."}

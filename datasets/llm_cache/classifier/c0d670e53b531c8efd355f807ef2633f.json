@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 `lerobot[async]`와 레거시 async 명령을 `lerobot[remote]`로 대체하는 breaking change라며 기존 async_inference 모듈을 outdated로 명시했고, 이 테스트 픽스처가 그 레거시 async_inference의 PolicyServer를 대상으로 하기 때문이다."}

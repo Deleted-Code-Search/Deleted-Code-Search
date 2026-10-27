@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 get_event_triggers 사용을 rx.EventHandler props로 전환한다고 밝히고, 같은 파일에 on_change: EventHandler[lambda e0: [e0.target.checked]]가 추가되어 같은 일을 다른 인터페이스로 계속한다."}

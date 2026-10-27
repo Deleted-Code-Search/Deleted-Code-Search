@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 `entity_category`를 `config`로 설정한 MQTT sensor/binary_sensor 설정이 더 이상 셋업되지 않는 breaking change라며 이 work-a-round 제거를 명시하므로, 사용자가 쓰던 기능 자체를 없앤 것이다."}

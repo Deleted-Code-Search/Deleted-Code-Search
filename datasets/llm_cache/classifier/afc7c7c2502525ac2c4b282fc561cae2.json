@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|Popen_fake를 대체하는 setup_run_process가 추가되어 subprocess.Popen을 mock으로 패치하는 방식으로 바뀌었고, 삭제된 함수를 호출하던 자리가 사라졌다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|커밋 메시지 \"Refactor HTML formatting into errorpages.py\"와 추가된 `from sanic.errorpages import exception_response` 및 `return exception_response(request, exception, self.debug)`가 이 함수의 HTML 렌더링을 외부 모듈 호출로 대체했음을 보여준다."}

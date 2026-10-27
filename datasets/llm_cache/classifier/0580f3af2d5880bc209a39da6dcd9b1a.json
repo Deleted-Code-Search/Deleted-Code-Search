@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|setup.py가 cmake 기반 빌드로 재구성되면서 md5 함수를 호출하던 protobuf 자체 생성 로직이 사라져 호출자가 없어졌다."}

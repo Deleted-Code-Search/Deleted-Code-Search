@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 자리에 async 대신 httpx.Client를 쓰는 동기 버전 test_redirect_loop가 들어와 동일한 리다이렉트 루프 검증을 이어받았고, 커밋 메시지도 async가 필요 없는 테스트를 httpx.Client로 일관되게 바꾸는 재구성임을 밝힌다."}

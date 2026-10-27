@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "PERF|커밋 메시지가 \"Merge two HTML parsers into one\"이라며 \"HTML of each page doesn't need to be parsed twice\"로 성능 향상을 명시했고, 삭제된 handle_data의 데이터 수집이 추가된 _stripped_html/stripped_html로 이어받아진다."}

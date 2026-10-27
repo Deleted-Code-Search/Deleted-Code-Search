@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 utils.py를 type_handlers.py·attribute_assignment.py·share.py로 나누는 리팩터링이라 밝혀, 이 함수의 로직이 다른 자리로 재구성된 구조 변경이다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 차트 추출을 자체 Transformers 전용 구현에서 공유 VLM 엔진 시스템으로 이관한다고 밝히고, 추가된 코드가 create_vlm_engine으로 모델 로딩을 대체하므로 같은 일이 다른 자리에서 계속된다."}

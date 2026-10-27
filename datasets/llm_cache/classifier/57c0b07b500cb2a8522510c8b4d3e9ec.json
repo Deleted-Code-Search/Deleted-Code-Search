@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #3098이 configure_job 메서드로 임의 파라미터를 설정하도록 job 구성 방식을 바꾸면서, flatten_results 프로퍼티가 그 인터페이스에 맞지 않게 되어 제거됐다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 zulip.com \"referrals\" 시스템을 삭제한다고 밝히고, 이슈 #5655가 do_refer_friend 관련 코드 전체 제거를 요청하며, 이 함수가 그 referral 이벤트 전송 기능 자체를 없앤다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 \"Remove locally dead code\"라 하고 PR이 Vulture로 찾은 죽은 코드 삭제라고 밝히며, 이 함수를 호출하는 곳이 없어졌다는 근거가 화면에 있다."}

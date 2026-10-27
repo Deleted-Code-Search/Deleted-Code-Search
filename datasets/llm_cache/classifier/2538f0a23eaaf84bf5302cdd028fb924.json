@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 named tuple이 'call' 코어 스키마 대신 새 'named-tuple' 코어 스키마를 쓰도록 바꾼다고 밝혀, 기존 call 검증 방식의 오류 메시지('unexpected_positional_argument')를 검증하던 이 테스트의 대상 동작 자체가 사라졌다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "BUG|커밋 메시지가 \"Fix Injective stream error handling\"이라 스트림 오류 처리를 고치는 작업임을 밝히고, 삭제된 함수는 예외 처리 없이 스트림을 순회하다가 같은 자리에 while True·try/except·finally로 재시작·취소를 처리하는 버전으로 교체됐다."}

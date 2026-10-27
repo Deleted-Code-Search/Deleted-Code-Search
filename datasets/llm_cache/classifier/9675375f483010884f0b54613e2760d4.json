@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 \"Azure OpenAI now becomes a sub-class of OpenAI, reducing duplicated code\"라고 밝혀, 이 클래스의 자체 _send 구현이 OpenAI 부모 클래스의 동일 기능으로 대체되며 구조 변경으로 삭제됐다."}

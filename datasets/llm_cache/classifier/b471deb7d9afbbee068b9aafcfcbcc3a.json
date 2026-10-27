@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR #2443 본문이 Python 2 지원 종료를 위해 stack_context를 비롯한 obsolete 기능을 삭제한다고 명시했고, 이 파일은 그 stack_context 모듈이다."}

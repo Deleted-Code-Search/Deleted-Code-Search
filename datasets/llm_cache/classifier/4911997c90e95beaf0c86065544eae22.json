@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 백엔드별 라우팅·서버 초기화 구조를 재편하고 \"Removed server injection of server methods - they use self.server now\"라며 컴포넌트 스위트 등록 방식이 다른 자리로 옮겨졌음을 보여준다."}

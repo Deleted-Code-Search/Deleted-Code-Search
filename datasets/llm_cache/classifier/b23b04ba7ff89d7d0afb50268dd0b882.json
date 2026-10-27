@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|리뷰 코멘트가 `register_flow`를 없애자고 하며 \"flow name으로 배포하는 기능이 제거되어 목적이 없다\"고 했고, 이에 대한 답변에서 \"prefect 디렉터리 관련 다른 함수들도 함께 제거했다\"고 밝혀 호출자를 잃어 삭제됐다."}

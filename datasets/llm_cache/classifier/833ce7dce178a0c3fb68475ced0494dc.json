@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "BUG|커밋 메시지가 tp_shard의 프로세스 전역 가변 globals가 두 번째 AutoTP 모델에 의해 덮어써져 첫 모델이 잘못된 값을 읽는 문제(#8231)를 고친다고 명시하고, 삭제된 fixture가 바로 그 전역 상태(set_tp_grain_size/set_num_kv_heads)를 리셋하던 코드이기 때문이다."}

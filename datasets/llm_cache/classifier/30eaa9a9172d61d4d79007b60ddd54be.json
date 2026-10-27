@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 `validate_keypoint_confidence`를 이름으로 지목해 0.27.0에 deprecated되고 0.31.0 제거 예정이던 공개 API를 제거한다고 밝히며, PR 본문도 public API에서 제거된 항목으로 명시한다."}

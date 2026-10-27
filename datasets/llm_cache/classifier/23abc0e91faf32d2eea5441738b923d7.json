@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 페이지·파일·내비게이션 내부 처리를 전면 재작성했다고 밝히고, 추가된 코드에서 build_page가 새 Page/File/Files 구조로 바뀌어 내부 링크 URL 계산이 파일 컬렉션으로 이전됐음을 보여준다."}

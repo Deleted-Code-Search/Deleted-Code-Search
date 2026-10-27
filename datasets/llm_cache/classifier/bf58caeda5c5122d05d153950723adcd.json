@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 executor를 Lifecycle 컴포넌트 파이프라인으로 재구성하는 순수 리팩터라고 밝히고, 이 함수는 그 재구성으로 자리를 잃은 executor 내부 구현이다."}

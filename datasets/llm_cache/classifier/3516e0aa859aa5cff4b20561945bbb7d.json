@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "BUG|커밋 메시지가 \"prevent session closing after each request to maintain connection pool\"이라며 요청마다 세션을 닫던 `_session_context`의 finally close 동작을 고쳤고, 추가된 코드는 `self._session.closed` 확인 후 재사용하도록 바뀌었다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 \"remove model-versions/get-stages endpoint and corresponding client apis\"라며 이 테스트가 검증하던 get_model_version_stages API 자체를 제거한다고 명시했다."}

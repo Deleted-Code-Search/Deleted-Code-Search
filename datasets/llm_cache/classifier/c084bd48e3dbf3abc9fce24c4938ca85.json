@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 캐시 처리 흐름을 재편(use_llm_check 추가, naive 모드 캐시 처리 최적화)한다고 밝히고, 같은 커밋이 이 파일에서 hashing_kv를 kwargs에서 pop하는 방식으로 호출 인터페이스를 바꿔 handle_cache가 하던 캐시 조회 책임이 다른 자리로 옮겨졌다."}

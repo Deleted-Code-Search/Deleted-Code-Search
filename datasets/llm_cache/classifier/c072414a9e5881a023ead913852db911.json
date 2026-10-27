@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #9493이 `activate(host)` 함수 기반 플러그인을 선언적 `Plugin` 서브클래스로 재작성하면서, `host.handlers`를 순회하던 `close_host`가 `LoadedPlugin.dispatch(SessionEnd(...))`를 호출하는 `close(plugin)`로 대체됐다."}

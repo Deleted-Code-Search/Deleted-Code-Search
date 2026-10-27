@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 \"Replace all code with tf.keras redirects\"라 Keras 자체 구현을 없애고 tf.keras로 넘기는 폐기·지원 종료이며, 이 함수의 구현이 다른 자리에서 계속되지 않는다."}

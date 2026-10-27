@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #699이 PyQt5 위젯 기반 UI를 Dear ImGui 즉시 모드 GUI로 전환하면서 Qt 툴바 생성 코드가 새 UI 구조에 맞지 않게 됐다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 자리에 명시적 타입의 키워드 전용 인자를 받는 __init__이 추가되어 인터페이스가 재작성됐다."}

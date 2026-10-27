@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 `RFC7523OAuthClientProvider`와 그 `JWTParameters`를 v2 앞두고 제거한다고 밝히고, 이 함수는 그 클래스의 `private_key_jwt` 클라이언트 인증을 담당하던 메서드이며 각 모드가 대체 프로바이더로 매핑된다고 설명하므로 공개 표면의 기능 폐기다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 OFT를 제네릭 양자화 프레임워크로 옮기며 per-backend dispatch 파일 oft/hqq.py를 삭제한다고 밝히고, 같은 일이 resolve_quantization_backend 기반 OFTLayer.__init__에서 계속된다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문 Migration 항목에서 cloud task/session/profile 서브커맨드를 제거하고 `browser-use cloud`로 대체한다고 명시했으며, 이 함수는 profile 쿠키 조회 CLI 기능 자체를 없앤 것이다."}

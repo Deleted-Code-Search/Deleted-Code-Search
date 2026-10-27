@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|삭제된 함수는 Mongo 스타일의 인메모리 fake 저장소 메서드인데, 커밋 메시지·PR 본문·리뷰 어디에도 이 함수나 파일을 이름으로 가리키며 삭제 이유를 말하는 문장이 없고, 추가된 코드는 NotesRepository를 패치하는 새 테스트 fake(_FakeNotesRepo)로 대체되어 이 함수의 사정을 화면만으로 특정할 수 없다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지에 \"Remove old shape API\"가 있고, PR 본문에서 \"Changes to shaped window configuration options and behavior due to a complete rework on the SDL side\"라며 셰이프 관련 설정·동작이 재작업됐다고 밝혀, 기존 셰이프 모드 조회 기능 자체가 제거된 것으로 판단된다."}

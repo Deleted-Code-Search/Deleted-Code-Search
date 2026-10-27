@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지 \"no more oauth\"가 oauth 지원 자체를 없앴음을 나타내며, 이 함수는 oauth 파라미터 인코딩용 공개 유틸로 그 기능 제거와 함께 사라졌다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|PR 본문이 ZHA 핵심 로직을 자체 라이브러리(zigpy/zha)로 이관한다고 밝히고, 추가 코드가 zha.application.platforms.climate.const의 ZHAHVACMode를 import해 hvac_modes를 라이브러리 값으로 대체한다."}

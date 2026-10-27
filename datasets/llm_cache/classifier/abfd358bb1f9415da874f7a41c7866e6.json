@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 자리에 options를 받는 __init__이 새로 들어와 부모 호출 방식이 바뀌었고, 커밋 메시지가 전역 설정 제거·비즈니스 격리 지원을 위한 구성 변경임을 밝히므로 인터페이스 변경에 따른 재작성이다."}

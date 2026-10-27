@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|커밋 메시지 \"Add LiteLLM engine\"과 추가된 `from .llm_engines import MessageRole` 및 llm_engine 타입 변경으로 보아, 기본 엔진 생성(HfApiEngine)을 외부 LiteLLM 엔진 호출로 대체한 것이다."}

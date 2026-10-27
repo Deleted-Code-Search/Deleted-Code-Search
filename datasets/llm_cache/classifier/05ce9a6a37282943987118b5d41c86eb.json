@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "BUG|PR #613 본문이 model_instance 복사 시 발생하는 deepcopy 오류를 safe_deepcopy로 고치려 한다고 밝히고, 삭제된 __deepcopy__가 TypeError를 강제로 던져 폴백을 유도하던 테스트용 결함 코드이기 때문이다."}

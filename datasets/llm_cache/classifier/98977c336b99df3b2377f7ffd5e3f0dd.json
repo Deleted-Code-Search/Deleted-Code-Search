@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 자리에 `def __repr__(self) -> str:` 형태의 대체 코드가 들어와 `__repr__` 문자열을 f-string으로 통일하는 재구성이므로, 같은 일이 다른 형태로 계속된다."}

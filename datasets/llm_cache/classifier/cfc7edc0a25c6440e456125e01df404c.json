@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|PR 본문이 TypedDict 기반 정의를 런타임 shape 검증을 하는 TensorSchema 모델로 마이그레이션한다고 밝히고, 추가된 코드가 vllm.utils.tensor_schema의 TensorSchema/TensorShape로 검증을 대체하므로 외부 라이브러리 호출로 바뀐 것이다."}

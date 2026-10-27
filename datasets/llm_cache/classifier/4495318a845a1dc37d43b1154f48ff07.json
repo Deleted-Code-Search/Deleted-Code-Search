@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 \"rewritten most of the song list class\"라 하고, 추가된 코드가 Song.from_missing_data·Song.from_url 등으로 Song 생성 책임을 옮겨 create_empty_song의 역할을 대체하고 있다."}

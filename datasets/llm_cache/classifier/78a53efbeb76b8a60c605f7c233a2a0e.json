@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 Ray SGD v1을 완전히 폐기(deprecate)하고 ray.util.sgd import 시 에러를 낸다고 밝혀, 사용자 기능 자체가 제거됐다."}

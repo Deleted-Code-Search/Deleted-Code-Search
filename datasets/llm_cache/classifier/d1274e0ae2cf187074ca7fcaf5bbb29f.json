@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 `lerobot[async]`와 레거시 async 명령을 `lerobot[remote]`와 새 server/rollout 명령으로 교체하는 breaking change라며 async_inference 모듈을 outdated로 규정하고, 이 파일의 receive_actions도 그 레거시 async 클라이언트의 공개 동작이라 제거됐다."}

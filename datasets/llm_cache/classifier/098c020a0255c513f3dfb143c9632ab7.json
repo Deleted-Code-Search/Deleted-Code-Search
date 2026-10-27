@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|커밋 메시지가 websockets 6.0으로 전환을 밝히고, 추가된 코드가 handshake.check_request/build_response로 헤더 처리를 외부 라이브러리 호출로 대체했다."}

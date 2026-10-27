@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|리뷰 코멘트에서 \"Do we need fresh models for each unit test? ... move this to setUpClass()\"라고 제안하고 \"yes can you move it to setUpClass() instead\"로 확정해, setUp의 내용이 setUpClass로 옮겨졌기 때문이다."}

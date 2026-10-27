@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 BAML/LLMGateway 리팩터와 동적 응답 모델 생성을 위한 재구성이라 밝히고, 같은 파일에 ResponseModelAst/ResponseModelProperties 등 새 구조가 추가되어 이 코드가 그 구조에 맞지 않게 됐다."}

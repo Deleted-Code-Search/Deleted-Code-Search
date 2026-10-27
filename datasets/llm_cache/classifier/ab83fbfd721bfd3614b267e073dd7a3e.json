@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 \"remove custom multi-output matching workaround\"라며 이 파일의 커스텀 다중 출력 매칭 우회를 제거했고, 이는 구조를 바꾸면서 코드가 맞지 않게 된 경우다."}

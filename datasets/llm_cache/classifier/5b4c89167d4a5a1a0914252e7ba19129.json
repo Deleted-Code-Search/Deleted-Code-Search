@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 DatabaseFeatures.supports_microsecond_precision을 제거했다고 밝혔고, 이 테스트는 그 기능 플래그를 skipIfDBFeature로 참조하므로 검증 대상이 사라져 지웠다."}

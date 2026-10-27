@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 \"Remove logic that will alter the test model for ORT\"라며 모델의 opset을 변환하던 이 로직을 없애고, 같은 커밋이 백엔드 테스트를 InferenceSessionBackend 기반으로 재구성해 테스트 실행 경로 자체를 바꿨다."}

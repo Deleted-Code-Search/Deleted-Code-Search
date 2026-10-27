@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "BUG|PR 본문이 GitHub 리다이렉트(301)를 잘못 해석하던 문제를 고쳤다고 밝히고, 같은 커밋이 HEAD 대신 GET 요청을 쓰도록 바꿔 응답 분석을 바로잡았다."}

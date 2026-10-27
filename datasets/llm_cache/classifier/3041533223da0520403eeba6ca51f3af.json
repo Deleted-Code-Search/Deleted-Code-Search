@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 OnlineDPOTrainer를 오프라인 DPOTrainer에 가깝게 재구성하는 리팩터라 하고, repeat_generator의 무한 반복 데이터로더 순회는 새 배치 생성/에폭 구조로 대체되어 같은 일이 다른 자리에서 계속된다."}

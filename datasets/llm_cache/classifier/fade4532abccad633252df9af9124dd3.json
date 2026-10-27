@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지와 PR 본문은 FTX spot 커넥터를 ExchangePyBase 기반 순수 파이썬 커넥터로 전환하고 단위 테스트를 새로 구현했다고만 말할 뿐, 삭제된 tearDown 메서드를 이름으로 가리키며 삭제 이유를 밝히지 않는다."}

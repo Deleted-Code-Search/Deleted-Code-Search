@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 \"_find_table_bottom and _find_table_right helper methods as their logic is now integrated into the region expansion loop\"라며 이 함수의 로직이 BFS 기반 region expansion 루프로 통합됐다고 밝히므로, 같은 일이 다른 자리에서 계속되는 구조 변경이다."}

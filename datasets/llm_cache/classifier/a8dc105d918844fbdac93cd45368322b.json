@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 비전 RoPE를 `ModelVisionRotaryEmbedding` 모듈로 표준화하며 그리드 인터리브/permute를 로프 모듈로 옮기는 재구성이라고 밝히고, 이 `__init__`은 그 로프 모듈 영역에 속한다."}

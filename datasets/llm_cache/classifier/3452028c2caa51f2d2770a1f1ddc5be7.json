@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR 본문이 examples 폴더를 pyscript/examples로 옮긴다고 밝혔고, 이 테스트가 검증하던 examples/markdown-plugin.html 예제가 저장소에서 제거되어 검증 대상이 사라졌다."}

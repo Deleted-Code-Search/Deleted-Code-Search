@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 \"Job backend needs to support individual execution pool for each job function\"이라며 작업 실행 구조를 바꾸는 것을 명시했고, 이 함수는 단일 huey 큐를 초기화하던 코드로 새 실행 풀 구조에서 맞지 않게 됐다."}

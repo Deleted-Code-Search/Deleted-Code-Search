@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 \"Remove the native llama.cpp provider\"라며 이 프로바이더 자체를 제거했고, PR 본문도 \"Removed options that could never work: the native llama.cpp provider\"라고 공개 옵션 제거를 명시한다."}

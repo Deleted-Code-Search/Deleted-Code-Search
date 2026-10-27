@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|리뷰 코멘트가 \"서브클래스가 변경하지 않으면 이 함수는 생략할 수 있다\"고 지적했고, 같은 커밋이 BaseCollector를 도입해 collector_data()를 상속받는 구조로 바꾸면서 이 함수가 기반 클래스로 옮겨졌다."}

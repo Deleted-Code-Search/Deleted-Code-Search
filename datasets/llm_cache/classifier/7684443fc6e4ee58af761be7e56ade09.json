@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|리뷰에서 \"Why can't we reuse the load in the parent class?\"라며 부모 클래스의 load 재사용을 요구했고, 같은 커밋이 freq·inst_processor를 받는 새 로딩 경로(D.features 호출)를 추가해 로딩 책임이 재구성됐다."}

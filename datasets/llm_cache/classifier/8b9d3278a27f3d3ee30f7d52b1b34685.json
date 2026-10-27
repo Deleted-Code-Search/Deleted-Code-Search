@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR #18024가 attributeValue.referencedObject 추가를 되돌리면서, 이 필드를 검증하던 테스트도 함께 제거됐다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 커밋이 test_self_check_db를 async로 새로 추가해 self_check 호출과 disabled 검증을 이어받았으므로, 테스트 구조가 재편되며 기존 동기 테스트가 대체됐다."}

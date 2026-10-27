@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|PR 본문이 pydantic 2로 전환했다고 밝히고, 삭제된 `__get_validators__`는 pydantic v1 검증 훅이며 같은 파일에 `from prefect.types import SecretDict`가 추가되어 외부 라이브러리(pydantic 2) 방식으로 대체됐다."}

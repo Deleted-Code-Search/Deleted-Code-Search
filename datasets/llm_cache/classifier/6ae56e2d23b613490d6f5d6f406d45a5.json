@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|커밋 메시지가 pymanopt 코드를 로컬 폴더에서 제거하고 pip 설치로 대체한다고 밝혀, 이 함수 구현이 외부 라이브러리 호출로 바뀌었다."}

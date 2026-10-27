@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "PERF|커밋 메시지가 번들 크기 감소를 목적으로 data_docs를 빈 문자열로 바꾼다고 명시했고, 추가된 코드에서 data_docs가 빈 문자열로 대체되어 있다."}

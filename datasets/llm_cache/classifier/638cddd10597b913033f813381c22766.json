@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "PERF|커밋 메시지가 `find_subgraph_pregel`의 소스 파싱을 `dis` 바이트코드 순회로 교체해 빌드 시간을 4.9x, 감지 시간을 ~266x 단축한다고 밝히고, 삭제된 `__init__`은 그 소스 파싱 기반 클래스의 초기화 코드다."}

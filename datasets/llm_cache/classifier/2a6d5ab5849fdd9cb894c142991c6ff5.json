@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 제목·본문이 \"Move definition of attributes excluded from history to entity classes\"라며 이 파일의 exclude_attributes 정의를 엔티티 클래스로 옮기는 구조 변경임을 밝히고 있다."}

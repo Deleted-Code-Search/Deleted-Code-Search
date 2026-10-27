@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 \"Remove legacy 2fa configurator input since it was only needed for YAML\"이라며 YAML 지원 제거로 이 2FA 재검증 흐름을 없앴다고 밝힌다."}

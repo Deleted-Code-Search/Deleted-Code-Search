@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 `ClassInstantier` 기계와 parameterized 패키지를 제거하고 pytest.mark.parametrize로 재작성했다고 밝혀, 이 헬퍼가 속한 테스트 구조가 바뀌면서 필요 없어졌다."}

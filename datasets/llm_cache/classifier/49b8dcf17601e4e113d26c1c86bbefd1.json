@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #305가 스코어링 엔진을 재구성하면서 SummaC 모델을 DeepEvalBaseModel 래퍼로 바꿨고, compute_histogram은 _SummaCZS로 이전되어 같은 일이 다른 자리에서 계속된다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|커밋 메시지가 langkit 0.0.6의 get_callback_instance로 콜백 구현을 외부 패키지로 옮긴다고 밝히고, 추가된 코드가 langkit.callback_handler.get_callback_instance를 호출해 콜백을 위임한다."}

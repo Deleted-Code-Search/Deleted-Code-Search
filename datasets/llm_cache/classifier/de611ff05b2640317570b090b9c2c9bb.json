@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 \"Removed the legacy hybrid DoclingParsePageBackend implementation\"이라며 이 백엔드 구현을 제거했고, 페이지 접근이 iter_pages() 기반 스레드 백엔드 계약으로 재편되면서 get_size 같은 랜덤 페이지 접근 메서드가 맞지 않게 됐다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|이 테스트는 Mongo mock 기반 GetFeedbackAnalytics를 검증했지만, 같은 커밋이 analytics 라우트를 Postgres 기반(pg_conn, db_readonly 패치, _range_for_filter 등)으로 재작성하면서 해당 테스트가 새 구조에 맞지 않게 되어 삭제됐다."}

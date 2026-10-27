@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 DPO를 공유 chunked log-prob 경로로 옮기고 `_get_per_token_logps_and_entropies`와 기존 `_compute_loss`로 정책·참조 로그확률을 계산한다고 밝혀, 이 테스트 헬퍼의 역할이 다른 자리로 재편됐다."}

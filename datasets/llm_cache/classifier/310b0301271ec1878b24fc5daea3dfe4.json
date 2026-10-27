@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 \"Replace the regex extraction with a standard-library HTML tree parser\"라며 정규식 기반 파싱을 표준 라이브러리 HTML 트리 파서로 교체한다고 밝혔고, 삭제된 handle_starttag는 그 정규식 기반 파서의 일부이며 같은 파일에 _HTMLTreeParser 클래스가 새로 추가되어 같은 일을 이어받는다."}

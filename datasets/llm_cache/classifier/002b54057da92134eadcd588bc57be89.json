@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #1622가 완료 시스템을 재설계하면서 get_colors 같은 구식 완성 함수 대신 shell_complete 메타데이터 방식으로 대체됐다."}

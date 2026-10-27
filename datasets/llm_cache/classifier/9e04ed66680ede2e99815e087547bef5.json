@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #2246이 컴포넌트 빌드 방식과 출력 타입을 재편하면서 이 build 시그니처가 새 구조에 맞지 않게 됐고, 같은 파일에 대체 코드가 없어 다른 자리에서 이어받는 것으로 보인다."}

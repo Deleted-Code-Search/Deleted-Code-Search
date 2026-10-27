@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 \"Culled old package imports\"라고 하고, 추가된 코드는 이전 config 관련 함수들을 주석 처리한 \"Old Config Stuff\" 블록뿐이라 _flatten의 호출자(old_get_option 등)가 모두 주석 처리되어 호출되지 않게 됐다."}

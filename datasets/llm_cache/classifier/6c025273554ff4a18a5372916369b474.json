@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 \"Removed options that could never work: ... LanceDB\"라고 LanceDB 옵션 자체를 제거했다고 밝히고, 커밋 메시지도 VECTOR_STORE=lancedb가 유효하지 않은 값이라 관련 모듈·설정·스크립트 옵션·문서가 모두 사라졌다고 말한다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋이 st.navigation·st.Page 기반 MPA v2로 페이지 관리 구조를 재편하면서, 페이지 변경 시 캐시를 무효화하던 이 콜백이 새 내비게이션/페이지 관리 추상화로 대체되어 필요 없어졌다."}

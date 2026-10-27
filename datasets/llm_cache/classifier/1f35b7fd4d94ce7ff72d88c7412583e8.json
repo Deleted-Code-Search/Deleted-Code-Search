@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 \"Validator moved off @field_validator onto the field's Annotated for symmetry with the llm field\"라고 밝혀, 검증 로직이 _validate_executor_ref를 참조하는 BeforeValidator로 agent_executor 필드의 Annotated로 옮겨졌다."}

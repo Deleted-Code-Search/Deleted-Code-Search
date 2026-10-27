@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 \"Completely overhaul rack elevation SVG rendering\"이라 SVG 렌더링 구조를 재작성했고, 삭제된 merge_elevations의 앞/뒷면 병합 로직은 새 draw_face(face, opposite) 구조로 대체됐다."}

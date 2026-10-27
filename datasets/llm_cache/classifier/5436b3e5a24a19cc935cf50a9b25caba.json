@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 \"Remove truncated backpropagation from loops\"라고 TBPTT 기능 자체를 제거한다고 밝히고, 삭제된 on_run_start는 tbptt_split_batch로 배치를 분할하던 기능의 진입점이다."}

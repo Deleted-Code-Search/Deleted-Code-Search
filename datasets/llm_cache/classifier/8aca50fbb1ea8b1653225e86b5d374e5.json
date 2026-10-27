@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 `Spider.start_requests()`를 새 async `Spider.start()`로 대체(deprecate)한다고 밝히고, 같은 파일에 `async def start(self)`가 추가되어 같은 일을 이어받는다."}

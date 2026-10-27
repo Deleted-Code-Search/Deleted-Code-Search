@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR 본문이 Python 2 지원 중단으로 obsolete해진 것들을 삭제한다고 밝혔고, py2 str/bytes 변환용 from_wsgi_str은 그 대상이며 같은 커밋에서 py3용 to_wsgi_str만 남았다."}

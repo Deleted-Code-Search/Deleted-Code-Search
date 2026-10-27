@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|setup.py가 CMake 기반 빌드로 재작성되면서 recursive_glob를 부르던 protobuf 자동 생성 로직이 사라졌고, 추가된 코드는 glob.glob로 cmake 생성 파일을 복사할 뿐 recursive_glob의 호출자가 없다."}

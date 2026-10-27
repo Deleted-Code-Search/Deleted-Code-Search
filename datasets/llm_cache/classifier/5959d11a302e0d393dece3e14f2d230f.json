@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|리뷰 코멘트에서 \"if these are covered and currently a maintenance burden because of the changes, feel free to remove them\"이라며 테스트를 지워도 된다고 했고, 삭제된 테스트가 검증하던 `load_persistent_cache`의 대체 코드나 호출처 변화가 화면에 없어 검증 대상이 사라진 것으로 보인다."}

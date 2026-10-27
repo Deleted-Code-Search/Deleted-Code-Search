@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 \"Move the util to the same file (only callsite)\"라고 밝혀, 유일한 호출처가 이 파일로 옮겨지면서 원래 위치의 함수가 호출자를 잃어 삭제됐다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR 본문이 모듈 docstring에 따라 이 테스트를 제거할 수 있다고만 말하고, 삭제된 __init__은 테스트용 클래스 초기화로 호출자를 잃은 코드다."}

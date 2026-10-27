@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 `get_encoder()`를 modality 인자를 받는 범용 헬퍼로 일반화하고 중복 코드를 제거한다고 밝혀, 이 모델의 단순 위임 함수가 새 인터페이스로 대체됐다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 \"Rework reactions validation to have a single function\"이라 밝히고, 같은 커밋이 check_emoji_request라는 단일 함수로 검증 로직을 재구성하며 삭제된 함수의 검사 내용(emoji_name/emoji_code 비교, name_to_codepoint 조회)을 그 안에서 이어받고 있다."}

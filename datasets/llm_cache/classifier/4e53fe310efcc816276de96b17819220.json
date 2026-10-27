@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|파일 저장 대신 표준 라이브러리 sqlite3로 메시지 저장을 대체했고, 같은 이름의 add_messages가 sqlite3 INSERT로 다시 구현됐다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|삭제된 본문이 \"test_pipeline_level_group_offloading_inference instead\"라며 다른 테스트로 대체한다고 밝히고, 커밋 메시지도 \"remove group offloading skip\"이라 이 테스트가 검증할 대상이 없어져 지웠음을 보여준다."}

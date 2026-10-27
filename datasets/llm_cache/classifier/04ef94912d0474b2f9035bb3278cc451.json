@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 FastAPI 예제 구현과 API 엔드포인트 정의를 통째로 제거했다고 밝혀, 공개 엔드포인트 /system/stats 기능 자체가 사라졌다."}

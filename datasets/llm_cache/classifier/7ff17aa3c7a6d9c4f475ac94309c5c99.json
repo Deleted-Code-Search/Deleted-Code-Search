@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "PERF|커밋 메시지가 StateProxy 제거를 \"simplicity and performance\"와 벤치마크 수치(attr read 24x, list append 19x 등)로 설명하며, 이 copy 메서드는 제거된 LockedListProxy 계층의 일부다."}

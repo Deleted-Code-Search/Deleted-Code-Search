@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR이 file_browser.path(index)가 str 대신 Path 객체를 반환하도록 인터페이스를 바꾸는 breaking change라 하므로, FileInfo 변환 책임이 재편되어 이 _convert_value가 맞지 않게 됐다."}

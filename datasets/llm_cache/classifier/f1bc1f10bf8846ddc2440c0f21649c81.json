@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋이 `--retries` 도입과 전면 리팩터링을 선언하며, 삭제된 함수의 응답 처리·결과 생성 로직이 같은 파일에 추가된 `get_response`·`process_site_result`·`make_site_result`·`build_result` 등으로 재구성되어 이어지므로 구조 변경에 따른 삭제다."}

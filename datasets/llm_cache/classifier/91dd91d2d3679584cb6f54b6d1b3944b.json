@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 `StorageAttachment`가 `apply_runtime_config()`를 소유하도록 storage backend 수명주기를 트리 밖으로 옮겼다고 밝히고, 추가 코드에서 `self._storage_attachment.apply_runtime_config(...)`가 이 함수의 일을 이어받는다."}

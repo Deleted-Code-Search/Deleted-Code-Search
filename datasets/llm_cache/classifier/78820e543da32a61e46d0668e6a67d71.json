@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 자리에 team_name 매개변수를 받는 _env_var_name이 추가되어 팀 기반 설정 조회라는 새 인터페이스로 책임이 재편되었고, 기존 호출부도 team_name을 전달하도록 바뀌었다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 커밋이 같은 파일에 `async def search`를 다시 추가하면서 limit 기본값을 15로 바꾸고 CollectionNotFoundError 처리와 `limit > 0 else None` 로직을 넣는 등 검색 인터페이스를 재작성했으므로, 기존 구현이 새 구조에 맞지 않게 되어 교체된 것이다."}

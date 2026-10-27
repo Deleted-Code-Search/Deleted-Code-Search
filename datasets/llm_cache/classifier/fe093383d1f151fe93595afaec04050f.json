@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "BUG|삭제된 본문은 lora_E를 zeros_로 초기화했지만, 같은 자리에 들어온 대체 코드는 lora_E를 normal_로 초기화하도록 바뀌어 잘못된 초기화 동작을 고친 것으로 보인다."}

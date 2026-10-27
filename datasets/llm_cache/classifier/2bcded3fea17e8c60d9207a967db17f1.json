@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 커밋이 이 함수를 ClassificationTrainingProcess 클래스의 메서드로 옮겨 동일한 훈련 로직을 이어받았으므로, 구조·책임 재편에 따른 삭제다."}

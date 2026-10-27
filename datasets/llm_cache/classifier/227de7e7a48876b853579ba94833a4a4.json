@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|삭제된 fixture는 `c._client`를 직접 주입했지만, 추가된 코드는 `HostBackendClient(..., transport=...)`로 생성자에 transport를 넘기는 방식으로 바뀌어 클라이언트 구성 책임이 생성자로 이동했다."}

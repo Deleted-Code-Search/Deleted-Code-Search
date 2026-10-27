@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 View 개념을 제거하고 렌더링을 Compositor로 위임하는 재구성이라 했고, get_widgets가 View를 인자로 받는 추상 메서드라 이 구조 변경으로 맞지 않게 됐다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 DirectedGraph를 GraphTopology·DefinitionRegistry 등 여러 컴포넌트로 분할하는 리팩터라 밝히고, register_cell의 셀 등록·정의/엣지 계산 책임이 이 분할된 컴포넌트로 옮겨간 것으로 보인다."}

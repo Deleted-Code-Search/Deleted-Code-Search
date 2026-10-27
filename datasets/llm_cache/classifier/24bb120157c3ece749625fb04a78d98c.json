@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 \"Removed IPAddressField per deprecation timeline\"이라 사용자 기능(IPAddressField) 자체를 폐기했고, 이 테스트는 그 필드를 쓰던 테스트다."}

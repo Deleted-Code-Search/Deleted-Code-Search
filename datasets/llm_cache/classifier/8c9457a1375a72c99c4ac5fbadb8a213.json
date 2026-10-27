@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 \"tools: Remove check-css\"라며 해당 도구가 commit 0042694e24b23eb51553603b3ebefd66e5145392 이후 unused라고 밝혀, 테스트 대상이 사라져 검증할 대상이 없어졌다."}

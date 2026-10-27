@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|리뷰 코멘트가 \"These have been moved to the plugin\"이라며 superset-ui의 series.test.ts를 가리키지만, 이 파일(tests/viz_tests.py)의 get_cols가 그 대상 안에 있다는 근거가 화면에 없다."}

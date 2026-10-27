@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 기본 레이아웃을 None으로 표준화하는 내부 구조 변경을 말하고, 추가된 코드에서 `layout is None` 비교로 같은 레이아웃 판정이 다른 방식으로 이어받아진다."}

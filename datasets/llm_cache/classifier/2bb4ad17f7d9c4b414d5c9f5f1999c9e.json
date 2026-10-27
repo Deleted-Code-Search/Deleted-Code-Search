@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR 본문이 클라우드 모델 작업과 API 키 의존성을 제거한다고 밝혔고, 이 테스트 헬퍼 fake_api는 그 제거된 클라우드 릴리스 평가 경로를 흉내 내던 호출자를 잃어 삭제됐다."}

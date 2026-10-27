@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR 본문이 sip68 모델의 dual write를 제거한다고 밝혔고, 이 테스트가 검증하던 신규 Dataset 모델의 shadow write 경로가 사라져 검증 대상이 없어졌다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 함수가 `frame_key` 인자를 받는 형태로 대체되어 그래프별 소유권을 부여하는 구조 변경을 이어받았고, 이는 PR이 컴파일러 상태의 수명주기 소유권을 명시하려는 재구성임을 보여준다."}

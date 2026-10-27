@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 `scrapy.utils.url` re-exporting `w3lib.url`을 제거 대상으로 명시했고, 이 테스트는 그 폐기된 re-export 기능 자체를 검증하던 것이다."}

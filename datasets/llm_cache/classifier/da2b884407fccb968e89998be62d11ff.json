@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 제목 \"remove generic aoss_client interactions for release build\"와 리뷰 코멘트가 base class의 aoss 관련 메서드(save_to_aoss, create_aoss_indices, delete_aoss_indices) 제거를 지목하며, 추가된 코드는 빈 스텁(save_to_aoss가 0 반환, clear_aoss_indices가 1 반환)만 남겨 AOSS 인덱스 생성 기능 자체가 사라졌다."}

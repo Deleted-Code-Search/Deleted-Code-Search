@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 \"It also updates a test to check that a warning is sent when it is needed\"라며 테스트를 갱신했다고 밝히고, 같은 커밋이 이 파일에 `assert_warns(ConvergenceWarning, lr.fit, X, y_bin)` 줄을 추가해 경고 검증이 다른 테스트로 옮겨졌다."}

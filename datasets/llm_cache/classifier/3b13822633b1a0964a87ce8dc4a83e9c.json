@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 SEP-1686 기반 배경 태스크가 SEP-2663으로 대체됐고 SEP-2663 태스크는 tools-only라 밝혀, 프롬프트 태스크 기능 자체가 제거됐다."}

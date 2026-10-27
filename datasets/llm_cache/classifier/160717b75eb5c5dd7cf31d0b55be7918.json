@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 \"Only 4 of 14 tool-shaped functions were registered; the rest carried @log_usage alone, were unreachable... Removed them and everything they orphaned\"라고 밝혀, 이 함수가 등록되지 않아 호출되지 않는 죽은 코드였기 때문이다."}

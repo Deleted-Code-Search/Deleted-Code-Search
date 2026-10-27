@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|삭제된 `cli` 헬퍼는 `test_boolean_conversion` 파라미터화 테스트 안으로 옮겨져 `click.echo(flag, nl=False)`로 재구성되었고, BOOL 타입이 \"on\"/\"off\"를 받도록 하는 기능 변경에 맞춰 테스트 구조가 바뀌었다."}

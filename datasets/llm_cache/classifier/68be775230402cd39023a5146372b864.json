@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 제목과 본문이 RayMegatronWorker/RayMegatronWorkerGroup을 제거한다고 명시하고, 이 함수는 그 제거 대상 클래스의 공개 메서드이므로 기능 자체가 없어진 FEAT이다."}

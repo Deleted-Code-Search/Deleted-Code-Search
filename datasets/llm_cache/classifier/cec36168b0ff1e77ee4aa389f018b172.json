@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|`__getattr__`이 `.kn`을 포함한 속성 접근을 동적으로 처리하도록 추가되어, `kn` 프로퍼티가 하던 일을 다른 자리에서 계속한다."}

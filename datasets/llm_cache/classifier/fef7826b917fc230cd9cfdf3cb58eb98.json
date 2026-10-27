@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|삭제된 `__init__`의 임베딩·블록·마스크 구성이 같은 자리에 들어온 대체 코드에서 `whisper.model.Whisper(dims=dims)` 외부 라이브러리 호출로 바뀌었다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 \"GJK and MPR own their scratch states\"라며 GJK 상태 할당이 GJK 객체 자신의 activate()로 옮겨졌고, 추가 코드에서 self.gjk.activate(...)와 (self.gjk, \"multicontact_gjk_state\")로 같은 일을 이어받는다."}

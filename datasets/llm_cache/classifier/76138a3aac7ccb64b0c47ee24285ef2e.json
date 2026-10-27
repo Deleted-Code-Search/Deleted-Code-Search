@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 제목과 본문이 start_requests() 지원을 폐기(Drop, Deprecated in 2.13.0)한다고 밝혀 사용자 기능 자체가 제거됐다."}

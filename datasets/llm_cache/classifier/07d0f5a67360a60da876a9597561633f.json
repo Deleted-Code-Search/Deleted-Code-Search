@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 \"Remove code deprecated in 2.12.0\"이라 폐기된 기능을 제거한 것이고, 삭제된 __init__은 MediaPipeline의 옛 초기화 코드로 공개 표면에서 사라졌다."}

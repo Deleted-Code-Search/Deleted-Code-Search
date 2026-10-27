@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 \"Also delete the debug info tests, as they are fragile and they provide limited value\"라며 DEBUG 환경변수 기반 디버그 기능 자체를 무조건 생성 방식으로 바꾸고 관련 테스트를 없앴다고 밝힌다."}

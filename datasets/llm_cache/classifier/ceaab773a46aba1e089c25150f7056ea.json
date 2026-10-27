@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 \"Next version will remove completely the ListView, documentation and examples\"라며 ListView를 RecycleView로 대체·폐기한다고 밝히고, 삭제된 함수는 ListView를 사용하는 예제 위젯의 초기화 코드다."}

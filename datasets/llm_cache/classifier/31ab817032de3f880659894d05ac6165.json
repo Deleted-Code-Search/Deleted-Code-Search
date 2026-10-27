@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 vLLM 0.5.4/0.6.3 지원을 제거하고 최소 버전을 0.7.0으로 올리는 breaking change라 밝히며, 이 함수가 속한 vllm_v_0_5_4 디렉터리 전체를 삭제 대상으로 명시했다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR 본문의 \"Deleted dead code\" 항목이 이 커밋에서 클라이언트 표면 변경 후 도달 불가능해진 코드를 지웠다고 밝히고, 삭제된 함수의 호출자나 대체 코드가 화면에 없어 호출자를 잃은 내부 함수로 판단된다."}

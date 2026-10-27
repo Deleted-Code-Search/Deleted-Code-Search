@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #15148이 더미 객체를 메타클래스 기반으로 재작성해, 각 클래스에 흩어져 있던 forward 같은 메서드가 DummyObject 메타클래스로 일원화됐다."}

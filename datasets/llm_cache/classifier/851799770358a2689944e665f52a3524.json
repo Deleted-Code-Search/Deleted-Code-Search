@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR #1621이 dispatch 로직을 전면 재작성하면서 all_users_have_been_dispatched 함수가 사라졌고, 같은 파일에 추가된 새 테스트들은 dispatch_users/_aggregate_dispatched_users 기반으로 재편되어 이 테스트가 검증하던 대상을 더 이상 호출하지 않는다."}

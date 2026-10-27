@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR #6016이 `Result`에서 `early_stop_on`, `checkpoint_on`, `hiddens` 파라미터를 제거한다고 명시했고, 삭제된 `__init__`은 이 레거시 파라미터들을 초기화하던 코드다."}

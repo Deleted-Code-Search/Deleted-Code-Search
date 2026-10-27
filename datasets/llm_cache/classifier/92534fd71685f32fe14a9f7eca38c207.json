@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 \"remove asdt\"로 asdt 모듈 전체를 제거했고, 이 함수는 그 모듈 내부의 순회 함수라 사용자 기능 자체가 없어진 경우다."}

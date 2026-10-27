@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|requests-async의 DelayableSanicConnectionPool을 httpx의 ConnectionPool로 교체하면서, 같은 자리의 __init__이 httpx 기반 DelayableSanicConnectionPool의 초기화로 바뀌었다."}

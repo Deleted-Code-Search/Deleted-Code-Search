@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "BUG|커밋 메시지 \"1983 remove the duplicate POST /api/reports/{id}/chat registration that shadowed the LLM-backed handler\"가 이 함수를 지목하며, 중복 등록이 정상 핸들러를 가려 잘못 동작하게 만들던 문제를 고치려 삭제했다고 밝힌다."}

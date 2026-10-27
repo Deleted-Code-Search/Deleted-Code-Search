@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지가 colorama 벤더링을 제거하고 pip._vendor 것을 쓰라고 하지만, 이 파일이 vendor/ 경로에 있고 삭제 이유가 이 함수를 이름으로 가리키지 않으며 대체 코드도 화면에 없다."}

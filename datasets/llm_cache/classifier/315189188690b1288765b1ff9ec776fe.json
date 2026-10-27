@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 `GunicornWorker`를 완전히 제거한다고 명시했고, 이 테스트는 제거된 GunicornWorker의 접근 로그 동작을 검증하던 테스트다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 \"Refactor fully-async and one-step-off training to support multiple checkpoint engine backends\"라 여러 체크포인트 엔진 백엔드를 지원하도록 구조를 재편하면서 이 파일의 가중치 추출 코드가 그 구조에 맞지 않게 되어 삭제된 것으로 보인다."}

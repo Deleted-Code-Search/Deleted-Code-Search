@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 \"Finalize deprecation of jax.random.shuffle\"이라며 공개 API인 jax.random.shuffle을 폐기·제거했고, 삭제된 본문도 deprecated 경고를 내는 스텁이었다."}

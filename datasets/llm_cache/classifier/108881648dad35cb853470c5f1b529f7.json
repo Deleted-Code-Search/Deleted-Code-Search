@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 \"Removed contrib.gis.maps\"라 contrib.gis.maps 모듈 자체를 폐기했으므로, 이 모듈의 공개 기능이 사라진 FEAT다."}

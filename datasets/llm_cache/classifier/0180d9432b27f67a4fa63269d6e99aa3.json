@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR이 air_quality를 CoordinatorEntity로 업데이트한다고 밝히고, 클래스가 CoordinatorEntity를 상속하도록 바뀌면서 폴링 여부를 CoordinatorEntity가 담당하게 되어 should_poll 오버라이드가 불필요해졌다."}

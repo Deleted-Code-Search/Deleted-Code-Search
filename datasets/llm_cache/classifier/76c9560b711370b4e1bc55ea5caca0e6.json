@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "BUG|PR #1823이 이슈 #1814의 중첩 for 루프에서 `InterpreterError: The variable e is not defined` 오류를 고치기 위해 evaluate_dictcomp를 중첩 제너레이터를 지원하는 evaluate_nested_comp_helper 기반 구현으로 교체했다."}

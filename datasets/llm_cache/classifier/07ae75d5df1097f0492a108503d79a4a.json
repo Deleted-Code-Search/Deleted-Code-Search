@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 stack_context 지원 중단을 명시했고, 이 테스트는 삭제된 StackContext를 사용하는 코드라 기능 자체가 제거됐다."}

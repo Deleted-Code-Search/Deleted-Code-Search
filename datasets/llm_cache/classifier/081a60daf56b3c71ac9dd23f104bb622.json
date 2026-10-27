@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR이 AdaLora를 다중 어댑터 지원 구조로 재편하면서 reset_parameters가 adapter_name별 레이어 관리 방식에 맞지 않게 되어 제거됐고, 같은 커밋이 add_adapter/update_layer 등으로 초기화 책임을 옮겼다."}

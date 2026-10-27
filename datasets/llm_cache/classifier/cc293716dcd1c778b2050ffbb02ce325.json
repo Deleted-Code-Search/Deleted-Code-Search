@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 settings를 별도 패키지 pydantic-settings로 분리한다고 밝혀, BaseSettings 기반 설정 기능 자체가 pydantic에서 제거됐다."}

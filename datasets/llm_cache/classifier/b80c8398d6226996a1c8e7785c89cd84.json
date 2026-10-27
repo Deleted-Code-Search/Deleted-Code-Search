@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 \"Refactor the runtime apply function and remove the previous autograd function\"이라 밝혀, autograd Function의 backward가 런타임 apply 함수(runtime_apply 노드 삽입)로 대체됐다."}

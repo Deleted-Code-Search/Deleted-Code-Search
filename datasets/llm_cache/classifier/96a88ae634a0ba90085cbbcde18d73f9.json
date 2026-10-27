@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|같은 커밋이 이 함수 본문을 주석 처리된 상태로 남겨 두었고, 새로 추가된 verify_tables_v2 등은 DoclingDocument 기반으로 재작성되어 이 함수를 호출하는 자리가 사라졌다."}

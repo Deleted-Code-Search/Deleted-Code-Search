@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 `ToolInvoker`를 제거하고 툴 호출 코드를 `Agent`로 옮긴다고 밝히며, 리뷰 코멘트도 \"이 테스트들은 Agent가 툴 warm up을 담당하게 되면서 ToolInvoker 테스트에서 이관됐다\"고 말하므로 같은 일이 Agent 쪽에서 계속된다."}

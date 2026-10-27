@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 자리에 `mark_auto_export_ipynb`가 generation 인자와 bool 반환을 갖춘 형태로 다시 추가되어, auto-export 상태 인터페이스가 재설계되면서 기존 시그니처가 맞지 않게 됐다."}

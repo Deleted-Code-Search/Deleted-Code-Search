@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|삭제된 start()는 본문이 `return`뿐인 no-op 스텁이고, 같은 커밋이 추가한 finish()도 \"search loop calls it\"이라는 주석과 함께 no-op으로 남긴 것으로 보아 호출되지 않는 훅을 정리한 것이다."}

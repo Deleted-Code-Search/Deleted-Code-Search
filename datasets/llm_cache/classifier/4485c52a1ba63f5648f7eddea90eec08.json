@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 `should_not_be_proxied` 호출 대신 proxies 정보에 exclusions를 설정하는 방식으로 NO_PROXY 로직을 refactor한다고 밝혔고, 리뷰에서 util이 사라졌으니 테스트를 `test_proxies_environ`으로 옮기자고 해 같은 검증이 다른 자리에서 계속된다."}

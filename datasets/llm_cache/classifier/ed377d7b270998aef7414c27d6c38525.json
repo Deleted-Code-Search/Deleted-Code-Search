@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 \"Define postprocessing api and move face processing to fit\"이라며 얼굴 처리를 새 postprocessing API로 옮긴다고 밝혀, 이 함수의 일이 다른 구조로 이전됐다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 `experimental_get_query_params`/`experimental_set_query_params`를 deprecated 후 제거하고 `st.query_params`로 대체됐다고 밝혀, 이 실험적 API 사용을 검증하던 테스트가 대상 기능 폐기로 삭제됐다."}

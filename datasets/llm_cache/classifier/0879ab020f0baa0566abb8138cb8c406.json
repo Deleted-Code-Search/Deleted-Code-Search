@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #612가 HTTP/2 구현을 HTTP2Stream으로 분리하는 리팩터링이고, 추가된 코드에서 receive_events와 wait_for_event로 나뉘어 같은 일을 이어받는다."}

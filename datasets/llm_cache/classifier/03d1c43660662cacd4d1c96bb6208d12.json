@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "SEC|커밋 메시지가 eval() RCE 벡터 제거를 명시하고, 삭제된 테스트는 safe_eval의 문자열 메서드 실행 경로를 검증하던 것으로 expression 경로가 보안상 비활성화됨에 따라 함께 제거됐다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|경로가 vendor/ 아래이고 커밋 메시지가 \"delete packages\", PR이 vendored 의존성 제거를 말할 뿐 이 함수의 삭제 이유를 이름으로 가리키지 않는다."}

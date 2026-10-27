@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 experimental `generate_rollout_completions` 헬퍼와 그 사용처를 제거한다고 밝히고, 이 파일(trl/experimental/openenv/utils.py)이 그 헬퍼 구현의 일부로 삭제됐다."}

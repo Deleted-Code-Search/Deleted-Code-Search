@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 자리에 session 메서드가 database 인자를 선택적으로 받고 self._database로 폴백하도록 재작성되어, 전역 DEFAULT_DATABASE 대신 드라이버별 설정을 쓰는 구조 변경에 맞춰 인터페이스가 바뀌었다."}

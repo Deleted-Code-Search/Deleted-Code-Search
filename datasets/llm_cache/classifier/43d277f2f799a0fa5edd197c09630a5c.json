@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|리뷰 코멘트가 `save_to_aoss`가 deprecation 경로 없이 제거된 breaking change라며 기존 호출자를 위한 마이그레이션 안내가 필요하다고 지적하므로, 사용자가 쓰던 기능 자체가 없어진 것으로 판단된다."}

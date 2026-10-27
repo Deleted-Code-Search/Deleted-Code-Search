@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지와 PR 본문은 test_before_pypi 디렉터리가 실수로 저장소에 추가되어 .gitignore로 처리한다는 내용일 뿐, 이 테스트 함수의 삭제 이유를 밝히지 않는다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #2762가 메모리 추정 로직을 refactor·simplify하고 노드 삭제 시점을 delete_node_dict로 재구성하면서, last_use 등록 방식이 _build_delete_node_dict/_remove_deactive_node 기반으로 대체됐다."}

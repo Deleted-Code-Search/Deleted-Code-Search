@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|삭제된 본문이 `@unittest.skip(\"save pretrained not implemented\")`로, 이 테스트가 검증할 save/load 기능이 구현되지 않아 건너뛰던 스텁이었고, 이 커밋에서 해당 기능이 구현되어 검증 대상이 사라졌다."}

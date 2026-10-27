@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지와 PR 본문은 \"Replay a nested checkpoint\"라는 기능 추가만 언급할 뿐 삭제된 outer_2 함수를 이름으로 가리키지 않고, 추가된 코드에도 이 함수를 대체하거나 호출하던 자리가 바뀐 흔적이 없어 삭제 이유를 화면만으로 판단할 수 없다."}

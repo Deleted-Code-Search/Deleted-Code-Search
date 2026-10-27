@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 제목과 이슈가 `DatasetPipeline`을 하드 디프리케이트/완전 폐기한다고 밝히고, 리뷰 코멘트도 `from_iterable()` 외 모든 것을 삭제하라고 지시하므로 공개 API 기능 자체가 제거된 것이다."}

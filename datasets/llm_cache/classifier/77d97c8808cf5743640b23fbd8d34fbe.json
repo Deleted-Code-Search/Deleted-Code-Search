@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 benchmark 서브모듈을 revamp하고 __main__ 진입점을 도입한다고 밝혀 벤치마크 구조·인터페이스 재편으로 이 내부 함수가 맞지 않게 됐다."}

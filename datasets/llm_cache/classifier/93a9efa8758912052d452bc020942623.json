@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR #4815가 plotly.py API에서 `pointcloud`와 `heatmapgl` 트레이스를 제거한다고 밝히고, 삭제된 `titleside`는 deprecated된 공개 속성으로 사용자 API 표면에서 사라졌다."}

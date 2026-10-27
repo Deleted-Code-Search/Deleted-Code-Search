@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 \"Imperative ctx.elicit() inside a task is removed and raises with guard-pattern guidance\"라며 태스크 내 ctx.elicit() 기능 자체를 제거했고, 이 테스트는 그 제거된 ctx.elicit()을 사용하던 기능 검증 테스트다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #109가 OpenAI의 deprecated된 functions/function_call 대신 tool_calls 기반의 prebuilt \"tool calling executor\"를 도입하면서, 이 테스트가 검증하던 수동 ToolExecutor/MessageGraph 구성 방식이 새 executor API로 대체됐다."}

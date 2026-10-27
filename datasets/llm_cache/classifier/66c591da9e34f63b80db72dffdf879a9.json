@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 \"remove: onekey install\"이라 원클릭 설치 기능 자체를 없앤 것으로, install_dependencies 함수가 그 기능의 진입점이다."}

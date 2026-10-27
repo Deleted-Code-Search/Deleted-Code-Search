@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|리뷰 코멘트들이 util 함수에 researcher 객체를 넘기지 말고 필요한 파라미터를 직접 넘기라고 지시하며, 이 클래스의 __init__이 url을 받는 구조가 그 재설계에 맞지 않게 됐다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR #4901 본문이 #4871에서 추가한 제한을 되돌려 restricted 프로필에서도 evaluate()를 허용한다고 밝히며, 이 테스트 파일을 삭제한다고 명시한다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 \"The previous CLI persistence tests/fixtures/helpers were outdated and have been replaced, so remove them\"이라며 이전 CLI 지속성 테스트를 제거했다고 밝혀, 검증 대상이 재편되며 호출되지 않게 된 테스트를 지운 것이다."}

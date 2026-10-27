@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 자리에 `pause_writing`이 `self._can_write.clear()`로 다시 구현되어, HTTP 프로토콜 재작성에 맞춰 내부 상태 변수(`_not_paused`→`_can_write`)가 바뀌며 같은 일이 다른 자리에서 계속된다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 ProcessorMixin의 args 지원과 ProcessorTesterMixin 일반화를 말하고, 리뷰에서 kwargs 테스트를 size/crop_size 대신 do_rescale/rescale_factor로 바꿨다고 밝혀 테스트 구조 재편으로 이 테스트가 맞지 않게 됐다."}

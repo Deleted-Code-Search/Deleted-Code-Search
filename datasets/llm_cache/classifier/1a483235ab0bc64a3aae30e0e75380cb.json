@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 커밋이 이 파일에 `\"\"\"Delete db connect info.\"\"\"`라는 docstring을 가진 새 메서드를 추가해 삭제 기능이 다른 자리에서 계속되므로, 구조·인터페이스 재편에 따른 삭제로 판단된다."}

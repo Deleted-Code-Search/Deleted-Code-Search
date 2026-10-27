@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 \"Drop support for Python 2\"와 \"Non-asyncio IOLoop ... 삭제\"를 명시했고, 이 함수는 TwistedReactor 관련 코드로 커밋 메시지 \"Delete TwistedReactor and its tests\"에 따라 지원 종료된 기능에 속한다."}

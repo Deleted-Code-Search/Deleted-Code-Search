@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 \"GraphQL filtering doesn't work on functions, so define sub-queries as types\"라며 함수형 서브쿼리를 타입 필드로 바꾸는 구조 변경을 밝히고, 같은 커밋이 같은 파일에 `rearporttemplates: List[Annotated[\"RearPortTemplateType\", ...]]` 타입 필드를 추가해 같은 일을 이어받는다."}

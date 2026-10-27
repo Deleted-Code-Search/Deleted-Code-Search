@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 \"Removed legacy daemon CLI (`browser_use/skill_cli/**/*`)\"라며 이 파일이 속한 레거시 데몬 CLI 전체를 제거하고 엔트리포인트를 `browser_use.cli:main`으로 교체한다고 명시한다."}

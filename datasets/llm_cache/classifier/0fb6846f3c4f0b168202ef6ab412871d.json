@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지 \"removed old mcp\"가 이전 MCP 기능 자체를 제거했음을 밝히고, deprecated_mcp/utils.py의 응답 생성 함수가 대체 없이 삭제됐다."}

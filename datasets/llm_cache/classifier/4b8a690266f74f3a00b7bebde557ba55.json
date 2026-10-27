@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 \"removing redundancy by gathering tests in classes and sharing setup functions\"라며 벤치마크를 클래스로 재편한다고 밝혔고, 같은 파일에 DataFrameIndexing 클래스가 새로 추가되어 self.df2·self.idx 같은 셋업이 그쪽으로 옮겨졌다."}

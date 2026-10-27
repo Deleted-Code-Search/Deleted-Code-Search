@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR 본문이 provider-neutral fake 모델·세션을 scripted 유틸리티로 대체·마이그레이션한다고 밝히고, 추가된 코드가 `scripted_sandbox_session` 기반 `_shell_session`/`_pty_session`으로 바뀌면서 이 테스트 더블의 `persist_workspace` 호출자가 사라졌다."}

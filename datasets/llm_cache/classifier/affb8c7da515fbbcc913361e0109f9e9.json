@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 `sanic.response.stream`을 deprecated 항목 제거 목록에 명시했고, 삭제된 테스트가 바로 그 `stream` API를 사용하는 테스트다."}

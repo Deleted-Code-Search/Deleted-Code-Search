@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|같은 커밋이 `from urllib3.util.connection import HAS_IPV6`를 추가하고 `if not HAS_IPV6`로 대체해, 직접 구현한 IPv6 확인이 외부 라이브러리 호출로 바뀌었다."}

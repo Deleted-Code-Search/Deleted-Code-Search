@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|삭제된 코드의 TODO 주석이 \"drop 3.9\" 시점에 인라인 코드와 asyncio.timeout으로 교체하겠다고 밝혔고, 같은 커밋이 anyio.fail_after와 anyio 기반 _file_append_check로 대체 구현을 추가했다."}

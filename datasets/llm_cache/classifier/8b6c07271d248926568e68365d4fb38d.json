@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 `ClientSession(protocol_version=)` 생성자 kwarg와 `Client(protocol_version=)` 제거를 명시했고, 삭제된 테스트는 바로 그 `protocol_version=` 핀 인자로 세션을 만드는 공개 API 사용법을 검증하던 테스트다."}

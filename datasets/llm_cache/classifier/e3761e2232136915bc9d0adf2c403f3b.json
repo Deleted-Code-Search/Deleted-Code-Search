@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|추가된 코드의 아키텍처 주석이 \"Worker server resolution is single-level: a tool reached through nested mounts resolves to the outermost mounted child\"라며 중첩 마운트 해석 방식이 innermost에서 outermost로 바뀌었음을 밝히고, 삭제된 테스트는 바로 그 innermost 해석을 검증하던 것이다."}

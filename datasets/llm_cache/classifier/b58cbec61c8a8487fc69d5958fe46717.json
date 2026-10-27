@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 커밋이 이 파일을 함수 기반 스크립트에서 MBPPBenchmark 클래스로 재구성하면서 optimize_mbpp_evaluation의 평가 로직이 클래스의 evaluate_problem/evaluate_all_problems 메서드로 옮겨졌다."}

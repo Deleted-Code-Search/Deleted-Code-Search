@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|리뷰 코멘트에서 `Accept`가 `parse_accept` 함수로만 생성되는 내부 구현이며 이제 도달 불가능(unreachable)하다고 명시했고, `__ge__`는 그 내부 객체의 비교 연산자라 호출자를 잃었다."}

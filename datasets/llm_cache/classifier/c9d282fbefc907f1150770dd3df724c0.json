@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 pygame window provider가 deprecated 후 제거 대상이라고 밝히고 커밋 메시지도 deprecated provider 제거이므로, 사용자 기능 자체를 없앤 것이다."}

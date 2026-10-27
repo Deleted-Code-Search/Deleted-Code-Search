@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지 \"no more oauth\"가 oauth 기능 자체를 없앴음을 밝히고, 이 함수는 oauthlib의 access token secret 조회 인터페이스로 기능 제거에 해당한다."}

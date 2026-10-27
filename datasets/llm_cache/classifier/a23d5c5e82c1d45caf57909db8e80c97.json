@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 linear-attn 커널 선택을 프로세스 전역 dict에서 runner별 stamp로 바꾸는 구조 변경을 설명하며, 삭제된 테스트가 검증하던 `_init` 기반 동작이 `resolve_linear_attn_backends`를 직접 호출하는 새 테스트들로 대체되었다."}

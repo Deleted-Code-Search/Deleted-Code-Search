@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지와 PR 본문은 vendored AuthorizeNet SDK를 새 릴리스로 교체한다고만 말할 뿐, 이 pyxb 파일이나 __addPrefixMap 함수를 이름으로 가리키지 않고, 화면에 대체 코드나 호출자 변경도 없어 삭제 이유를 댈 근거가 없다."}

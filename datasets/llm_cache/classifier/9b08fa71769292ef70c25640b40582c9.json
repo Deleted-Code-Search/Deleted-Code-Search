@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR #1748 본문이 `_register_client`가 PR #1586 이후 dead code가 되어 도달 불가능해졌다고 밝혔고, 삭제된 `redirect_handler`는 그 죽은 메서드만 테스트하던 6개 테스트 중 하나다."}

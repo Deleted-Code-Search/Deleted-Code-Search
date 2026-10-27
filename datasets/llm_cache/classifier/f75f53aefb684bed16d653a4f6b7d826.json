@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 accelerate를 soft-dependency로 옮긴다고 밝혀, accelerate를 필수 backend로 요구하던 이 dummy 객체의 from_config가 더 이상 맞지 않게 됐다."}

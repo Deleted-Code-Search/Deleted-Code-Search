@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR #2306이 deprecated된 request_success/request_failure 이벤트 핸들러를 제거한다고 명시했고, 이 함수는 그 deprecated 핸들러를 호출하는 공개 이벤트 표면의 일부다."}

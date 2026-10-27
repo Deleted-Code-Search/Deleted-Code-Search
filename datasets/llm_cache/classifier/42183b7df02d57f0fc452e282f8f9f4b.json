@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "BUG|커밋 메시지가 `initial_seed`가 ABC에 없는 인자를 요구해 MLU에서만 `TypeError`가 나는 계약 위반이라며, #5569에서 다른 백엔드처럼 인자를 제거해 고쳤다고 명시한다."}

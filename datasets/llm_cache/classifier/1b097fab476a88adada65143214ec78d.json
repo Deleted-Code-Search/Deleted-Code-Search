@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR #5030 본문이 \"This hasn't seen wide use and has potential security issues\"라며 gallery/ 모듈 전체를 제거했고, 이 함수도 그 모듈의 공개 기능 일부로 함께 사라졌다."}

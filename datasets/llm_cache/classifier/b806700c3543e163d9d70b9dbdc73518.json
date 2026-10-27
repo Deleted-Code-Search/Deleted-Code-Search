@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|PR #4067 본문이 \"removing all vendored dependencies from Requests\"라며 벤더링된 chardet 구현을 외부 의존성으로 대체하는 작업임을 밝히고 있다."}

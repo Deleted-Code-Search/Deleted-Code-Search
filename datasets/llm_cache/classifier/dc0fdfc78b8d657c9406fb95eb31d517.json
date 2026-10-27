@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #590 본문이 notify 추상화를 완성하며 \"these functions will be removed and the content pulled into QueryNotifyPrint()\"라고 밝혔고, 추가된 코드에서 response_time_text 계산이 QueryNotifyPrint 메서드 안으로 흡수되어 같은 일이 계속된다."}

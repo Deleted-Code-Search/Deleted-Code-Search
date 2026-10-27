@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 import_server()를 mount()로 대체하며 3.0에서 폐기된 FastMCP 서버 메서드를 4.0에서 제거한다고 밝혔고, 이 테스트 파일은 그 제거된 import_server를 검증하던 deprecated 테스트라 기능 자체가 사라졌다."}

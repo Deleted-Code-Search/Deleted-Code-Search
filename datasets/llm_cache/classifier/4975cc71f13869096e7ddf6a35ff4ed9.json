@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 \"Rewrite the integration from scratch\"라 하고, 추가된 get_recipients_text가 쉼표·and·마침표로 서명자 목록을 잇는 같은 일을 새 구조에서 이어받는다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 \"test: re-organize test files\"로 테스트 파일 재구성만을 말하고, 삭제된 테스트가 검증하던 대상이 이 커밋에서 제거됐다는 문장이 없어 호출 대상 상실로 보기 어렵다."}

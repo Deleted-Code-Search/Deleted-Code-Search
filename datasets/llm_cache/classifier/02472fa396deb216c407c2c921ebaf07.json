@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR 본문이 Graphiti 클래스에서 build_indices와 search 메서드를 제거했다고 밝혀, 이 테스트가 호출하던 대상이 사라졌다."}

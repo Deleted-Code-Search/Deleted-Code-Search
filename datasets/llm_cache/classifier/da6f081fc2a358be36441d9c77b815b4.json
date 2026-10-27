@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 has_blackwell_gpu를 obsolete/moot라 하며 return-False 스텁으로 남겼고, 이 테스트가 검증하던 실제 감지 로직이 사라져 검증 대상이 없어졌다."}

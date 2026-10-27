@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 커밋이 같은 파일에 `def convert(`를 새로 추가해 동기 함수로 재작성했으므로, 구조·인터페이스 변경으로 async 구현이 맞지 않게 되어 대체된 것이다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지와 리뷰는 DocString→Help 이름 변경과 proto 호환성만 말할 뿐, 이 테스트 헬퍼 함수를 이름으로 가리키며 삭제 이유를 밝히지 않고, 같은 파일에 대체 코드도 없다."}

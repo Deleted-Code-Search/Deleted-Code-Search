@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 onnx.optimizer를 포함한 optimizer 관련 코드를 제거한다고 밝혔고, 이 테스트는 제거된 optimizer의 fuse_consecutive_transposes 기능을 검증하던 것이다."}

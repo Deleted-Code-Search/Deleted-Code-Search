@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 커밋이 `_remote_id_from_params`를 `_peer_id_from_params`로 이름을 바꾸고 `_parse_source`/`_parse_dest` 구조로 재편하면서 역할별 파라미터 파싱 책임이 새 구조로 옮겨졌다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|삭제된 `search_traces`는 `get_traces()`를 반환하는 테스트용 스텁인데, 같은 커밋이 `tests.tracing.helper`에서 `get_traces`를 import하도록 바꾸면서 이 내부 스텁을 호출하는 자리가 사라졌다."}

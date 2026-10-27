@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 \"remove asdt\"로 asdt 기능 자체를 제거한다고 밝히고, 이 파일 scrapegraphai/asdt/dom_tree.py의 __init__이 그 제거 대상 영역에 있다."}

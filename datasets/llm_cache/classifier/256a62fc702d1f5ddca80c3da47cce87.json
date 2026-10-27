@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 append_pipeline_log 헬퍼가 operate.py 마이그레이션 후 프로덕션 호출자가 0이 되어 제거됐다고 밝히고, 이 테스트는 그 헬퍼를 검증하던 대상이 사라져 함께 삭제됐다."}

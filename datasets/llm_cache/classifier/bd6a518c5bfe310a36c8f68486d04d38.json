@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 `sv.LMM`을 0.27.0에서 deprecated 후 0.31.0에 제거 예정이던 공개 API라며 `sv.VLM`으로 대체하라고 명시하고, PR 본문도 `sv.LMM`을 public API에서 제거된 항목으로 나열한다."}

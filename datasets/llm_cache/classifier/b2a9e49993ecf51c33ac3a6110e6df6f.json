@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 `Sanic`과 `Blueprint`의 `__slots__` 적용을 v21.12 제거 목록으로 명시했고, 삭제된 `__setattr__`은 그 `__slots__` 도입 전 임시 호환 레이어로서 인스턴스 속성 설정 자체를 더 이상 허용하지 않게 됐다."}

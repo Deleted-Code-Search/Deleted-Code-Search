@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR 본문이 `supports_text_encoder_loras = False` 플래그로 이 테스트를 건너뛰게 바꾸면서, 이미 `@unittest.skip`으로 비어 있던 스텁 본문이 검증할 대상이 없어져 삭제됐다."}

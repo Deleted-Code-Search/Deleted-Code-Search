@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 트랜잭션 상태 추적(TransactionState)과 staged 시점의 훅 등록으로 구조를 바꿨고, add_task가 하던 task 등록은 stage()의 on_rollback_hooks/on_commit_hooks 등록으로 대체됐다."}

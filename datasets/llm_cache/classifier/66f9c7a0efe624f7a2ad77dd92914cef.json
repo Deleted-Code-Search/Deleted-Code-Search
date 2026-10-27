@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #1281이 테스트를 MockTransport(handler_function) 기반으로 재구성하면서, httpcore 바이트 단위 transport를 흉내 내던 이 request 핸들러가 새 핸들러 함수(echo_request_content) 방식으로 대체됐다."}

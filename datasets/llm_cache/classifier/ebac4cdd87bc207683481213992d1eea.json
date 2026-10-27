@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "BUG|PR #2707이 artist 매칭이 artists 필드 미채움 시 author로 폴백하도록 matching.py를 고치는 버그 수정이며, 이 테스트는 그 폴백 동작을 검증하던 것이라 수정된 동작에 맞춰 제거됐다."}

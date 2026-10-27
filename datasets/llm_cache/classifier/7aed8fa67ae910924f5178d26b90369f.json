@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "BUG|PR #3174 본문이 `def __repr__`가 8칸 들여쓰기로 `forward` 안에 중첩되어 `return result` 뒤의 도달 불가능한 죽은 코드가 됐고, 그 결과 `SVDQuantLinear`가 \"adalora.\" 접두사 없이 출력되는 잘못된 동작을 고치려 4칸으로 내어 클래스 메서드로 되돌렸다고 명시한다."}

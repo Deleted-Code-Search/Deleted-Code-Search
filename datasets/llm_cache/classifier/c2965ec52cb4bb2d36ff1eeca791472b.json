@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR이 uv 호출·PEP 723 메타데이터 편집을 `marimo._environments.uv`와 `script_metadata` 두 모듈로 중앙화하면서, 테스트가 `script_metadata.uv`를 monkeypatch하는 `uv_calls` 픽스처와 `cwd` 검증 방식으로 재편되어 기존 `test_callback` 로그 캡처 방식이 맞지 않게 됐다."}

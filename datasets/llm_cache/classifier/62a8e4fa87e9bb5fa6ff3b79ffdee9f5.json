@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|파일 경로가 src/prefect/_vendor/starlette/testclient.py로 vendor 디렉터리 안에 있고, 커밋 맥락은 pydantic 2 전환만 언급할 뿐 이 함수 삭제 이유를 가리키지 않는다."}

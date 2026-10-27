@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 \"TRL chat interface is deprecated and will be removed in TRL 0.19\"라며 \"remove all the associated code to the chat cli\"라고 밝혀, 사용자가 쓰던 chat CLI 기능 자체가 제거된 것이다."}

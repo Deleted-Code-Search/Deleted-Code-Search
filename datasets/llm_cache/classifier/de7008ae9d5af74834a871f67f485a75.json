@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 Auto 클래스들을 auto_class_factory로 자동 생성하는 리팩터라고 밝히고, 추가된 코드에서 FlaxAutoModel = auto_class_factory(...)가 이 클래스의 역할을 이어받는다."}

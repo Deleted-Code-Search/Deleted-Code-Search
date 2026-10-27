@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "BUG|PR이 여러 인스턴스 간 client_order_id 충돌(DupNewCoid)을 고치려는 것이고, uuid32 대신 get_tracking_nonce를 쓰도록 테스트가 대체되어 경계 조건/경쟁 조건 오류 수정임을 보여준다."}

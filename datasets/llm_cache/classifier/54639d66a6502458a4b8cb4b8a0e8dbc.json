@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR이 TF GPT2를 XLA·AMP에 맞게 재작성하면서 위치 임베딩 브로드캐스트를 담당하던 이 call 메서드가 새 구조에서 맞지 않게 됐다."}

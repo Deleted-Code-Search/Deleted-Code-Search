@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR이 YAML 설정에서 config flow로 전환하면서 테스트가 MockConfigEntry와 NOTIFY_DOMAIN 서비스 호출 방식으로 재작성됐고, 삭제된 테스트의 YAML notify 설정 방식은 더 이상 유효하지 않게 됐다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 proxy auth를 addon으로 추출한다고 밝혀, SingleuserAuthAction을 검증하던 이 테스트는 인증 로직이 addon으로 재배치되며 맞지 않게 됐다."}

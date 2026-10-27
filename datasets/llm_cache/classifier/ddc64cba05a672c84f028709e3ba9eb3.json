@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "BUG|PR #877이 위험한 패턴 대신 위험한 모듈을 검사하도록 바꾸면서, `random._os`·`doctest.inspect.os` 같은 서브패키지 우회 접근을 막는 이 테스트가 그 취약점 수정의 일부로 대체되었다."}

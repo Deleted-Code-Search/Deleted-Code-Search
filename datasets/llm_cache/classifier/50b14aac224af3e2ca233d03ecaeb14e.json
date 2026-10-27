@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문에 \"remove old shorturl creation functionality from frontend and backend\"라고 명시되어 있고, 커밋 메시지에도 \"remove legacy shortner\"가 있어 사용자 기능(shorturl 생성) 자체가 제거됐다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 SAC의 새 API 스택을 기본으로 전환한다고 밝혀, 구 API 스택용 RNNSAC 모델의 forward가 더 이상 사용되지 않는 기능 제거에 해당한다."}

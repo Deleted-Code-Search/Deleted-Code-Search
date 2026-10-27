@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 자리에 들어온 대체 __init__이 client_id/client_secret 인자를 받고 masterclient 캐싱 로직으로 재작성되어, 라이브러리 사용성 개선(이슈 #468)을 위한 구조·인터페이스 변경으로 기존 코드가 맞지 않게 됐다."}

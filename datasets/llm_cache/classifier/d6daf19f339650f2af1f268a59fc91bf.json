@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|삭제된 train_featurizer 헬퍼가 하던 featurizer 생성이 추가된 코드의 featurizer 픽스처 메서드로 옮겨졌다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 `callback_handler`가 `tuple[str, str | None]` 대신 `AuthorizationCodeResult`를 반환하도록 바뀌었다고 밝히고, 같은 자리에 `AuthorizationCodeResult`를 반환하는 동일 함수가 추가되어 인터페이스 변경에 따른 재작성임을 보여준다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 ExportDeploy를 제거한다고 밝히고, 이 테스트 픽스처가 그 제거 대상인 export/quantizer 테스트 파일에 속해 검증 대상이 사라져 삭제됐다."}

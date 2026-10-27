@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|동기식 `session.begin_transaction()` 기반 `_find_node_degree`가 제거되고, 같은 커밋에서 `async with self._driver.session()`과 `await session.run(...)`을 쓰는 비동기 인라인 쿼리로 같은 노드 차수 조회가 이어받았다."}

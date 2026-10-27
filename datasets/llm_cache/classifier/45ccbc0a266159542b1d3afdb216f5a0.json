@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 Tornado 기반 서버 코드와 그에 대응하는 테스트 파일들을 제거한다고 밝혔고, 이 테스트가 검증하던 TornadoOAuth2App 구현이 사라져 검증 대상이 없어졌다."}

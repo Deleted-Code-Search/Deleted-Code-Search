@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 \"Auth backends are no longer used in Airflow 3. We should remove them.\"이라며 auth backend 기능 자체를 제거한다고 밝히고, 삭제된 함수는 그 auth backend들을 발견하던 코드다."}

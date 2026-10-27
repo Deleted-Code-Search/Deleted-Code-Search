@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지 \"clean up 1.x code\"가 1.x 시절 공개 API였던 run_batch를 제거하는 폐기·지원 종료 작업임을 가리키며, 대체 코드나 이어받는 구현이 없다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지·PR·이슈는 모두 evaluate 스크립트의 overlapping entities 수정에 관한 것이고, 삭제된 `_parse_local_version` 함수나 packaging 모듈을 가리키는 문장이 없으며, 같은 커밋이 이 파일에 추가한 코드나 대체 코드도 없어 근거를 댈 수 없다."}

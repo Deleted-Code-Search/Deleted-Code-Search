@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "SEC|커밋 메시지가 \"harden MCP stdio package sources\"라며 MCP 패키지 소스 보안 강화를 명시하고, 삭제된 함수의 패키지 허용목록 로직이 추가된 `validate_mcp_stdio_source_policy` 호출로 대체되어 신뢰할 수 없는 패키지 소스 차단을 강화한 것으로 보인다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 자리에 set_state가 WebSocketMessageState 튜플에 type·killed를 추가한 새 시그니처로 다시 구현되어, WebSocketFlow를 HTTPFlow로 병합하는 데이터 모델 재구성에 맞춰 상태 직렬화 인터페이스가 바뀐 것이다."}

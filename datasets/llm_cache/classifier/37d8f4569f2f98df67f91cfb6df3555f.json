@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 \"Modify Binance exchange tests to be a subclass of the generic exchange tests\"라 밝히고, 추가된 코드에서 BinanceExchangeTests가 AbstractExchangeConnectorTests.ExchangeConnectorTests를 상속하도록 바뀌어 supported_order_types 검증이 일반 테스트 클래스로 옮겨졌다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR #2443 본문이 \"Callback arguments\"를 제거 대상으로 명시했고, 삭제된 코드는 flush(callback=...) 인자를 쓰는 기능 자체를 없앤 것이다."}

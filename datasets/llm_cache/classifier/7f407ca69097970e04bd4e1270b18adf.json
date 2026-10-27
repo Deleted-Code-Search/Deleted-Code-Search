@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지가 pydantic을 vanilla dataclasses로 전환한다고만 하고, 이 파일은 vendor/ 경로의 pydantic 내부 코드라 판단 순서 1의 vendor 예외에 해당해 근거를 댈 수 없다."}

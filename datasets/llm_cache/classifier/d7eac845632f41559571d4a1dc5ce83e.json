@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "PERF|PR 본문이 \"Optimize comprehension evaluation\", \"Memory efficiency\", \"O(n) to O(1)\"이라며 중간 리스트 할당을 없애는 성능·메모리 개선을 명시했고, 삭제된 base_case의 리스트 반환을 제너레이터 기반 _evaluate_comprehensions가 대체한다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|이슈 #4548과 PR #4552가 crawl과 runspider의 동일한 process_options를 공유 부모 클래스(CommonCommands)로 옮기자고 명시했고, 이 파일은 CommonCommands를 상속하도록 바뀌어 같은 일이 부모 클래스에서 계속된다."}

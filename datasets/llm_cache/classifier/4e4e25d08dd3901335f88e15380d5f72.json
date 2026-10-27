@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR 본문이 `Connection` 클래스를 완전히 제거한다고 밝혀, 이 테스트가 검증하던 `Connection.from_list_of_sockets` 대상이 사라졌기 때문이다."}

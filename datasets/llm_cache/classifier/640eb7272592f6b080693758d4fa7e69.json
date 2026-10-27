@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 \"Deprecate a parameter name that is not a Python identifier\"를 되돌린다고 밝혀, 파라미터 이름 폐기 기능 자체가 제거됐다."}

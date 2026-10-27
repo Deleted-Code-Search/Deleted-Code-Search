@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #1699가 `Browser`/`BrowserConfig`/`BrowserContextConfig`를 `BrowserProfile`/`BrowserSession`으로 재구성하면서 테스트의 `start` 헬퍼가 새 `BrowserSession.initialize()` 호출로 대체됐다."}

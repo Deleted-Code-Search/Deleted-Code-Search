@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|삭제된 코드가 `@deprecated('call_id is deprecated, use tool_call_id instead.')`로 표시된 공개 API 프로퍼티이고, PR 본문이 V2에서 \"kwargs/feature removals\"와 v1.100.0에서 deprecated된 항목들의 제거를 명시하고 있다."}

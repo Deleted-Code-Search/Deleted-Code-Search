@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|삭제된 `train_fn_first`는 테스트 내 중첩 함수이고, 추가된 코드는 `_run_first_trainer_for_resumption` 안에 동일한 `train_fn` 본문을 담고 있어 순수 이동·이름 변경으로 보이지만, 커밋 메시지·PR·리뷰 어디에도 이 함수나 파일을 이름으로 가리키며 삭제 이유를 말하는 문장이 없다."}

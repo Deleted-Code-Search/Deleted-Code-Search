@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 함수가 async_mode 매개변수를 추가한 새 시그니처로 같은 자리에 다시 추가되어, 호출 경로가 바뀌면서 기존 시그니처가 맞지 않게 됐다."}

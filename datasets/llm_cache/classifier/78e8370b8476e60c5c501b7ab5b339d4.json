@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|_wrap_query는 semaphore로 쿼리를 감싸는 내부 헬퍼인데, 같은 커밋이 executors(AsyncioSimpleExecutor, AsyncioProgressbarQueueExecutor)를 도입해 실행 경로를 외부 실행기로 옮기면서 이 함수를 부르던 자리가 사라졌고, 삭제된 본문이나 커밋 메시지에 이 함수를 이름으로 가리키는 이유 문장이 없다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 \"move `write` away from `__init__.py` and into the `DeltaGenerator` class\"라고 밝혀, write 구현이 DeltaGenerator로 옮겨가면서 그 내부 헬퍼인 flush_buffer도 함께 사라졌다."}

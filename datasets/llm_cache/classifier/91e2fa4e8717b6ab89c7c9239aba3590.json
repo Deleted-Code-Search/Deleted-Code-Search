@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 `_post` 본문이 `with ipv6(...)` 컨텍스트와 `return _post(...)` 호출로 감싸여 같은 자리에 다시 나타나므로, IPv6 지원을 위한 호출 경로 재구성으로 옮겨진 것이다."}

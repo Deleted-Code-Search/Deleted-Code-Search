@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 'auto_adapt_to_methods' 데코레이터를 제거하고 'method_decorator'로 대체한다고 명시하며, 이 __get__ 메서드가 그 제거된 데코레이터의 일부다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "BUG|PR 제목과 본문이 multi-node에서 NIXL handshake metadata 누락 문제를 수정한다고 명시하고, 삭제된 함수는 단일 tp_rank의 metadata만 서빙하던 리스너로 대체 코드에서 encoded_data[target_tp_rank]로 여러 rank의 metadata를 서빙하도록 바뀌었다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|PR 본문은 \"cleanup fa4 by using sgl-fa4 pkg\"와 \"remove the copied source code\"라고만 말할 뿐, 이 파일이나 _setup_attributes 함수를 이름으로 가리키며 삭제 이유를 밝히지 않고, 같은 커밋이 이 파일에 추가한 코드나 대체 코드도 없어 화면만으로는 근거를 댈 수 없다."}

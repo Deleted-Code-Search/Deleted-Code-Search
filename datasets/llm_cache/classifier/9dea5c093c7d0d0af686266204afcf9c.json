@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|삭제된 함수는 `raise TypeError('xxx')`만 하는 스텁이고, 추가된 코드에서 `b.install_sync_handler = Mock(...)`으로 대체되어 실제 호출자가 사라졌다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 자리에 reset_hashers가 다시 추가되어 전역 HASHERS/PREFERRED_HASHER 캐시를 비우는 대신 lru_cache 기반 get_hashers/get_hashers_by_algorithm의 cache_clear를 호출하도록 캐싱 구조가 재구성됐다."}

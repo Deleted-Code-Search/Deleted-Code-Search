@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "BUG|커밋 메시지 \"fixes due to API changes\"와 대체 코드가 NDAX API 인증에 필요한 nonce·서명·APIKey·UserId 헤더를 생성하도록 바뀌어, 기존의 잘못된(ProBit용) 인증 헤더 동작을 고친 것이다."}

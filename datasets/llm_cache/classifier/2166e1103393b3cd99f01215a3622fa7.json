@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 \"auto-generate an admin password for headless public launches\" 기능을 되돌린다고 명시했고, 이 테스트는 그 자동 생성 함수 `run._auto_generate_admin_password`의 동작을 검증하던 것이라 기능 자체가 제거됐다."}

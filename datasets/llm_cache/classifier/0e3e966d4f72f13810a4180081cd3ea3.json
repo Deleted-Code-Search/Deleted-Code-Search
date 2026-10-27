@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "PERF|PR 본문이 \"Refactoring of the dispatch logic to improve performance\"라 하고, 이 테스트는 삭제된 dispatch 로직(UsersDispatcher)의 동작을 검증하던 것으로 성능 개선을 위한 재작성으로 대상이 바뀌어 지워졌다."}

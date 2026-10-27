@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋이 녹화 관리를 별도 프로세스로 옮기면서(#6248) start_recording_cleanup의 RecordingCleanup 스레드 시작이 init_recording_manager의 manage_recordings 프로세스로 대체됐다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #1612가 \"magic trailing comma\" 처리를 재구현하면서 was_checked 기반의 새 판별 로직으로 대체되어, 이 프로퍼티가 하던 optional trailing comma 판별이 다른 방식으로 이어받아졌다."}

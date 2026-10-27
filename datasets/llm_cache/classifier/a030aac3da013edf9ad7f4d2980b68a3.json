@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 이 테스트를 `GenerationTesterMixin`으로 옮긴다고 밝혀, 같은 검증이 다른 위치에서 계속되므로 구조 변경에 따른 삭제다."}

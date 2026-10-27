@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 \"moves deterministic Responses rendering into `OnlineRenderer.render_responses`\"라며 렌더링 로직을 `online_renderer.render_responses` 호출로 옮겼고, 추가된 `_render_resolved_response_inputs`가 그 호출을 이어받는다."}

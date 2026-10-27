@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 커밋이 CheckError 타입과 detect_error_page 등 오류 처리 구조를 새로 도입하면서, 삭제된 __init__은 super().__init__(*args, **kwargs)만 호출하는 빈 오버라이드로 새 구조에서 책임이 바뀌어 불필요해졌다."}

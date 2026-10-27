@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지와 PR 본문은 docker compose의 version 필드가 obsolete라는 것만 말할 뿐, test_forwards_to_whoami 함수 삭제 이유를 이름으로 가리키지 않으며, 삭제된 본문이나 대체 코드에서도 근거를 찾을 수 없다."}

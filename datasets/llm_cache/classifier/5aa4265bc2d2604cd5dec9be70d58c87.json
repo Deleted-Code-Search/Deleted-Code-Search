@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지 \"[tests] Now depends on case\"는 테스트가 case 모듈에 의존하게 바뀌었음을 알리며, 삭제된 _is_magic_module은 이 파일에 대체 코드나 호출자가 없어 호출되지 않게 되어 제거된 것으로 보인다."}

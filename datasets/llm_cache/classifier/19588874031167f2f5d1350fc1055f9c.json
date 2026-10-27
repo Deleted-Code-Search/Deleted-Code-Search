@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #2962가 ConfigOption 스키마를 클래스 기반으로 재작업하면서 테스트도 `class Schema(Config)`와 `conf.option` 속성 접근 방식으로 다시 작성됐고, 이 함수의 검증 내용은 추가된 `test_default` 등으로 이어받아졌다."}

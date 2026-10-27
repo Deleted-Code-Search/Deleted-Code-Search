@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 커밋이 fanout.fetch_per_source로 검색 경로를 재구성하며 임베딩·순서·저하 처리를 그쪽으로 옮겼고, 이 메서드의 일을 대체 코드가 이어받는다."}

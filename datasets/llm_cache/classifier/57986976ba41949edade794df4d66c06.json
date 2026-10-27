@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR이 엔티티 번역 추가(#116022)를 위해 엔티티 이름을 friendly_name 속성 기반에서 번역 키 기반으로 바꾸면서, 엔티티 name을 직접 검증하던 이 테스트가 새 인터페이스에 맞지 않게 됐다."}

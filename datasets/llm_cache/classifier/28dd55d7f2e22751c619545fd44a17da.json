@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 lowlevel Server의 데코레이터 기반 핸들러 등록을 생성자 on_* 키워드 인자로 교체하는 리팩터라 밝혀, 핸들러 등록 방식이 바뀌면서 이 테스트용 핸들러가 맞지 않게 됐다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 `trl.experimental.dppo`(`DPPOTrainer`, `DPPOConfig`)를 제거하는 실험적 공개 API의 파괴적 제거라고 명시하고, 테스트 파일도 함께 삭제 대상으로 밝히고 있다."}

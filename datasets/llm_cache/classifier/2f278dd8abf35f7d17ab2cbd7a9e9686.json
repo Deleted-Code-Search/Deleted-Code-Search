@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 `_tied_weights_keys`를 리스트에서 매핑으로 바꾸고 입력 임베딩 연결만 조회하는 메서드로 범위를 제한한다고 밝혔으며, 같은 파일에 `_get_module_names_tied_with_embedding` 호출로 대체되어 같은 일이 다른 API에서 계속된다."}

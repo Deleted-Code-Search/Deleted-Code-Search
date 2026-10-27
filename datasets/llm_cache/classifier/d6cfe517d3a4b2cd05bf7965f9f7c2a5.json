@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 llm 컬렉션 제거를 명시하고, 삭제된 함수는 NotImplementedError만 던지는 미구현 스텁으로 공개 CLI 팩토리 표면에서 사라졌다."}

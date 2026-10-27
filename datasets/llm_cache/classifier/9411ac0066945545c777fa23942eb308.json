@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR 본문이 \"Delete old eval API in favor of a Component based API\"라며 이 테스트가 검증하던 get_answers_from_output을 포함한 구 API를 삭제했으므로, 검증 대상이 사라져 테스트가 지워졌다."}

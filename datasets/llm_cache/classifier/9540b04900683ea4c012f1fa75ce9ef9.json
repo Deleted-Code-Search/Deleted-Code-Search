@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 `remove ConfusionMatrix.from_matrix`라고 삭제 대상을 이름으로 지목했고, 이 테스트가 부르던 `ConfusionMatrix.from_matrix`가 제거되어 검증 대상이 사라졌다."}

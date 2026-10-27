@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지에 as_ref나 이 함수를 이름으로 가리키며 삭제 이유를 밝히는 문장이 없고, 추가된 코드에도 as_ref의 역할을 이어받는 대체 코드가 보이지 않는다."}

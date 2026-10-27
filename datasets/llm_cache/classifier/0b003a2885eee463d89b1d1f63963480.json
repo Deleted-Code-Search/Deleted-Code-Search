@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|커밋 메시지가 \"Removed dependency on availablility of pymanopt's code in local folder\"와 \"A pip installation of pymanopt is now required\"라고 밝혀, 로컬에 복사해 둔 pymanopt 구현을 pip 설치한 외부 라이브러리로 대체했기 때문이다."}

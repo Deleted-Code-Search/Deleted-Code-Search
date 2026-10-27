@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|리뷰 코멘트에서 `_get_status`를 반환값 없는 `expect_connection_status` 메서드로 바꾸자는 제안이 수용됐고, 같은 커밋이 이 파일에 `expect_connection_status`를 import해 호출하도록 추가했다."}

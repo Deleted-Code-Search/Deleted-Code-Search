@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 스케줄러를 완전히 stateless로 재구성하고 상태를 params로 옮겼다고 밝혀, 상태를 replace하던 이 내부 함수가 새 구조에 맞지 않게 됐다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 `Runtime` 인터페이스의 patch/overrides 개선을 내세우고, 삭제된 `patch_runtime`은 `replace`로 런타임을 복제하던 헬퍼인데 같은 파일에 대체 코드가 없어 인터페이스 재편으로 이 코드가 맞지 않게 된 것으로 보인다."}

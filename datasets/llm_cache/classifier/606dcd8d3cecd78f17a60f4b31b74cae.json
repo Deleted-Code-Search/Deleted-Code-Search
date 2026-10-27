@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 validator 반환 규약을 \"None/에러 문자열\"에서 \"값 반환/ValidationError 예외\"로 바꾼다고 밝혀, 에러 문자열을 받아 AssertionError로 바꾸던 이 헬퍼가 새 규약에 맞지 않게 됐다."}

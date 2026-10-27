@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 \"Configuring fallback handlers on the `ErrorHandler`\"를 deprecated 항목 제거 목록에 올렸고, 삭제된 finalize의 fallback 설정 로직이 이 기능 제거의 대상이다."}

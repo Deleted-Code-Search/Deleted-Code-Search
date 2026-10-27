@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|GlueJobSensor가 AwsBaseSensor[GlueJobHook]를 상속하고 aws_hook_class = GlueJobHook로 훅을 제공하도록 바뀌면서, 자체 cached_property hook 정의가 베이스 클래스의 훅 제공 방식으로 대체됐다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|PR 본문이 `tslibs.offsets.shift_quarters`를 구현한다고 밝히고, 같은 자리에 들어온 대체 코드가 `liboffsets.shift_quarters` 호출로 바뀌었다."}

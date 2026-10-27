@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 Molmo2 processor wrapper를 제거하고 HF processor를 직접 호출하도록 바꾼다고 밝혔고, 추가된 코드에서 frame_start_id가 hf_config.frame_start_token_id를 직접 참조하는 방식으로 대체됐다."}

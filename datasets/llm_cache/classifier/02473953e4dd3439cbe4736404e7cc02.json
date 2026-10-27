@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|acquire 메서드가 제거되고 같은 커밋에서 from .streams import PoolSemaphore 및 self._max_connections = PoolSemaphore(...) 로 외부 모듈의 PoolSemaphore가 세마포어 역할을 대신하게 됐다."}

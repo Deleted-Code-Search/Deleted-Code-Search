@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #1948이 응답을 래핑·파싱하던 방식을 TokenHandler 서브클래스로 재구성하면서, 같은 OAuth 2.1 오류 처리가 새 TokenHandler.response 오버라이드로 옮겨졌다."}

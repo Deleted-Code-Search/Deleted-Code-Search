@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 커밋이 warp_map 기반 _per_warp 구조를 추가하면서 semaphore_wait 호출이 warp_idx==1 분기로 옮겨졌고, 삭제된 함수의 일은 새 구조의 다른 자리에서 계속된다."}

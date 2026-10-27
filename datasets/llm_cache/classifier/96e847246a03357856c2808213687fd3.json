@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 \"Move loose print functions into QueryNotifyPrint() class\"라며 이 함수의 인쇄 로직이 같은 커밋에서 추가된 QueryNotifyPrint 클래스 메서드로 흡수됐음을 밝힌다."}

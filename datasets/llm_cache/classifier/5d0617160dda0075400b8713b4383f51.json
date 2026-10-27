@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|같은 커밋에서 pymyq 3.0.1로 의존성을 올리며 테스트가 pymyq.const의 ACCOUNTS_ENDPOINT·DEVICES_ENDPOINT와 pymyq.api.API.request를 사용하도록 바뀌어, 삭제된 자체 mock 핸들러를 외부 라이브러리 호출로 대체했다."}

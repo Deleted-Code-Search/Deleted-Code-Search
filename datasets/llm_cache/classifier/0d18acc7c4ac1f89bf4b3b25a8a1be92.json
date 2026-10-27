@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "BUG|이슈 #956이 ServerConnection.source_address가 비어 있는 잘못된 동작을 보고하고, 커밋이 source_address를 Address(connection.getsockname())로 채우도록 고치면서 이를 str로 출력하던 __str__을 제거했다."}

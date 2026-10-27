@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 \"Move the logic that belongs to / is only used by the device listener into the device listener class\"라며 디바이스 리스너 클래스로 로직을 옮긴다고 밝혔고, 추가된 코드의 async_remove_device 메서드가 삭제된 함수와 동일한 본문을 이어받는다."}

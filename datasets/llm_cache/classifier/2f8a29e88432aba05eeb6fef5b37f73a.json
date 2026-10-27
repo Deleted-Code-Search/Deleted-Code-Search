@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR 본문이 `processors.py`를 telemetry 모듈에서 제거한다고 밝혔고, 이 테스트가 검증하던 `InFlightSpanProcessor`가 그 삭제 대상 모듈에 있어 검증 대상이 사라졌다."}

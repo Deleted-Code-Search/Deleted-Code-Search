@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 자리에 들어온 대체 run()이 self.task_set 대신 self._task_set을 쓰고 RescheduleTask 예외 처리를 제거했으며, 커밋 메시지가 Locust.task_set을 공개 API에서 제거하고 tasks 속성/@task 데코레이터로 대체한다고 밝히고 있다."}

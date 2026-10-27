@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 Thumbor 의존성을 제거한다고 밝혔고, 이 테스트는 Thumbor의 source_type/s3 URL 생성 동작을 검증하던 것으로 그 기능 자체가 사라졌다."}

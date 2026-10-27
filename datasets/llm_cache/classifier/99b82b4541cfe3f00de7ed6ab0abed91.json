@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 리뷰에서 util 함수에 researcher 객체를 넘기지 말고 파라미터를 직접 넘기라고 하며 구조·인터페이스를 재편하라는 지적이 이 파일의 함수들에 반복 적용됐다."}

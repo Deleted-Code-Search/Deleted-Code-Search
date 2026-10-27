@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 Temporal의 per-run `for_run` 오버라이드(상태 격리용 run_copy)를 제거하고 공유 `DurableDynamicToolset` + `temporalize_dynamic_toolset` 팩토리로 대체했다고 밝히며, 삭제된 `for_run`의 역할이 새 공유 모듈의 `get_dynamic_tools`/`call_dynamic_tool` 경로로 옮겨졌다."}

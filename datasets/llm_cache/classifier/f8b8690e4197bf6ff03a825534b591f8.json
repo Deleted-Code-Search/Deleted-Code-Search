@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #1095가 예외 계층을 재편하면서 HTTPStatusError의 __init__이 response에서 request/response를 함께 받도록 바뀌었고, 같은 자리에 대체 __init__이 들어와 같은 일을 계속한다."}

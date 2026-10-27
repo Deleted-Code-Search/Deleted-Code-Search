@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|삭제된 `__init__` 본문이 같은 커밋에서 `_shared_setup_1`의 `FakeSentenceTransformer`로 그대로 옮겨졌을 뿐, 커밋 메시지·PR 어디에도 이 함수를 이름으로 가리키며 삭제 이유를 말하는 문장이 없다."}

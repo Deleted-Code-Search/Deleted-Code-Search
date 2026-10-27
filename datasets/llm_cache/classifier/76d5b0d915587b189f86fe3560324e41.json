@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 global context index 코드를 loading·update·build·bucketing·scoring·persistence·summarization 모듈로 재구성한다고 밝혀, 이 bucketing_strategy.py의 assign이 재편된 bucketing 모듈로 책임이 옮겨간 것으로 보인다."}

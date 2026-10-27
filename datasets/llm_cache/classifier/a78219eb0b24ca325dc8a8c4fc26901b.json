@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|삭제된 `__len__`이 `cue_blocks`를 참조하는데, 추가된 코드는 `WebVTTFile`/`AnnotatedPar` 기반으로 재작성됐을 뿐 이 함수의 삭제 이유를 이름으로 밝히는 문장이 없고 대체 코드도 화면에 없다."}

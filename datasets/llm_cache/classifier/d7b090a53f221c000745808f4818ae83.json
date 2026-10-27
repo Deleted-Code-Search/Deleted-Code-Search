@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 별도 Docker/cosign 마이그레이션 헬퍼와 그 전용 테스트를 폐기(retire)한다고 명시했고, 이 테스트는 그 헬퍼의 cosign 검증 동작을 검증하던 것이다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 \"we don't really need this any more\"라며 검증 불필요를 밝히고, 삭제된 테스트가 검증하던 Frame.default 검증 로직이 opcode 범위 검사와 바이트 렌더 메서드로 대체되어 테스트 대상이 사라졌다."}

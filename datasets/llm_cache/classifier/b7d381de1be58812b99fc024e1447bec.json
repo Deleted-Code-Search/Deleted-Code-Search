@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|삭제된 fixture `shadow_hand_cubes`는 테스트에서 호출되지 않으며, 같은 커밋이 벤치마크 스위트를 재편하면서 `make_shadow_hand_cubes`를 새로 추가했지만 이 fixture를 다시 연결하는 코드가 없다."}

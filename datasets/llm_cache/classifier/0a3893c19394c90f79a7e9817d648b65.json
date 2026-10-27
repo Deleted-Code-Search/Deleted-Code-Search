@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 자리에 시그니처와 구현이 다른 apply_rotary_pos_emb가 들어왔고, 호출부도 cos/sin과 unsqueeze_dim을 넘기도록 바뀌어 로터리 임베딩 적용 방식이 재설계됐다."}

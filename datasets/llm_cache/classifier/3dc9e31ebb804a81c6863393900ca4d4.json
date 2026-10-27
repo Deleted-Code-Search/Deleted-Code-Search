@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #804가 디스패처 인터페이스를 httpcore 인터페이스로 전환하는 작업이라 프록시 전송 책임이 httpcore.AsyncHTTPTransport로 옮겨가면서 이 send 구현이 맞지 않게 됐다."}

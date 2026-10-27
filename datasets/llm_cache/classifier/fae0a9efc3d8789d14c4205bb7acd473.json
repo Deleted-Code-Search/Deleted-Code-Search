@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 제목·본문이 deprecated `grammar` 파라미터를 제거한다고 명시했고, 삭제된 테스트는 그 파라미터의 FutureWarning 동작을 검증하던 것으로 기능 자체가 사라졌다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 Diffusion RL 기능 전체를 verl-omni 저장소로 이전한다고 밝히고, 삭제 목록에 이 파일(verl/workers/engine/fsdp/diffusers_impl.py)이 명시되어 있어 사용자 기능 자체가 제거된 경우다."}

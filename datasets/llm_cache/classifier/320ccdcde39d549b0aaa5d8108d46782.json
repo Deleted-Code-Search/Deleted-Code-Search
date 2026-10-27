@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|커밋 메시지가 테스트 러너를 unittest2로 바꾼다고 밝혀, 직접 구현한 run 대신 외부 도구 unit2 호출로 전환했다."}

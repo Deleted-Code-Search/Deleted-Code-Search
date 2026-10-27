@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "BUG|PR 본문이 #56433+#51692를 되돌려 DeepSeek-V4의 gsm8k acc가 0이 되는 정확도 붕괴를 고친다고 명시했고, 이 테스트는 그 되돌림으로 사라진 프리셔플 동작을 검증하던 테스트다."}

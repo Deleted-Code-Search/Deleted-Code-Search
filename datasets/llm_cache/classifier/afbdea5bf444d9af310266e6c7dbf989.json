@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지와 PR 본문은 키바인딩·도움말·LayoutWidget 인터페이스만 언급할 뿐 is_error 삭제 이유를 말하지 않고, 추가·대체 코드에도 이를 이어받는 줄이 없다."}

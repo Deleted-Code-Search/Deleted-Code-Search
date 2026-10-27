@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "PERF|커밋 메시지가 \"for large queries (>= ~30 rows ...) it's more efficent to hit the database than memcached\"라며 캐시 대신 DB를 쓰도록 bulk_get_streams를 바꿨고, 이에 따라 캐시 키 생성 함수가 삭제됐다."}

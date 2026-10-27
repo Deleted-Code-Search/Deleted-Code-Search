@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지와 PR/이슈가 Locust.setup·teardown 훅을 제거하고 events로 대체한다고 명시하며, 이 함수는 그 훅 지원용 플래그 설정 코드다."}

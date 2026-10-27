@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 \"get rid of prebuilt model library dependency for iOS app build\"라며 사전 빌드된 모델 라이브러리 의존성 자체를 없애는 변경임을 밝히고, 이 함수는 그 모델 라이브러리를 찾아내는 기능이었다."}

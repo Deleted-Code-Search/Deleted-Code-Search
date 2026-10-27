@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 pydom을 pyscript.web.dom으로 옮기고 \"Make html, id and text JSProperties\"라며 text를 JSProperty로 재구현했으므로, 같은 일을 다른 구조에서 계속한다."}

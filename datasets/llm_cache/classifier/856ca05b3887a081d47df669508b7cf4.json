@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "SEC|커밋 메시지가 AST 샌드박스 탈출(CVSS 9.8) 취약점 대응으로 _safe_eval_expression()을 삭제한다고 명시하고, 삭제된 본문 자체가 eval 기반 위험 패턴이다."}

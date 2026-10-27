@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 커밋이 `BaseSignalStrategy`를 새로 만들면서 `risk_degree`를 생성자 파라미터로 받아 `self.risk_degree`를 반환하도록 같은 함수를 재정의했으므로, 하드코딩된 0.95 반환이 새 인터페이스 구조에 맞지 않게 되어 대체됐다."}

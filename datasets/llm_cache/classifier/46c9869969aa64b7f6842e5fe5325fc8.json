@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|`TypeForm` 지원을 추가하며 `__init__`의 `type` 매개변수 타입이 `Any`에서 `TypeForm[T]`로 바뀌어, 기존 `Any` 기반 오버로드가 새 인터페이스에 맞지 않게 되어 제거됐다."}

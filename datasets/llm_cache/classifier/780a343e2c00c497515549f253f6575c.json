@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #1622 \"Redesign Completion System\"이 완료 시스템을 재설계하면서 item을 튜플에서 CompletionItem 객체로 바꿨고, 같은 자리에 item.type/item.value/item.help를 쓰는 새 format_completion이 들어와 같은 일을 계속한다."}

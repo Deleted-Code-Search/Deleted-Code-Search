@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 실험적 GFPO 스택(GFPOConfig·GFPOTrainer·trl.experimental.gfpo 패키지)을 제거한다고 밝히고, 공개 트레이너 목록과 문서에서도 GFPO를 삭제했으므로 사용자 기능 자체가 없어진 것이다."}

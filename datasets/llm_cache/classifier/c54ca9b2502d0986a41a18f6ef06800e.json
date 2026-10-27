@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지와 PR 본문은 `verifyTilesAndGetTransferTile`의 타일 계산 수정만 가리킬 뿐, 삭제된 `kernel` 테스트 함수를 이름으로 언급하지 않고 추가된 코드도 이 테스트를 대체하지 않는다."}

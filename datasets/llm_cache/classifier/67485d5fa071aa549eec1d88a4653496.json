@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋이 pydom을 pyscript.web으로 재구성하며 Element 클래스 계층을 Collapse하고 _js를 _dom_element로 rename하는 등 구조·인터페이스를 바꿔 이 __eq__가 맞지 않게 됐다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 `py-button`을 deprecated 요소로 명시하고 제거 대상으로 밝혔으며, 이 테스트는 제거된 `py-button`의 on_click 동작을 검증하던 테스트다."}

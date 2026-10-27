@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지 \"Remove FrozenBunch and FrozenMapping\"과 \"Remove Dataset2 class\"가 이 파일의 구조 변경을 가리키며, __repr__이 FrozenMapping의 __dict__[\"__data__\"]에 의존하던 구현이라 해당 클래스 제거로 맞지 않게 됐다."}

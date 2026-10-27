@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 \"unified tokenizer api\"를 내세우고, 추가된 코드가 `_tokenize`·`_convert_token_to_id` 등 새 통합 API 훅으로 재구성되어 `encode`가 하던 일을 상위 클래스의 통합 API가 이어받게 됐다."}

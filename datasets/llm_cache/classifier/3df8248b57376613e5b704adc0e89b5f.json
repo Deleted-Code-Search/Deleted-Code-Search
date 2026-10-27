@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 커밋이 urlencode_data의 본문(urlencode(data, doseq=True).encode(\"utf-8\"))을 encode_data의 data 분기로 옮겨 content_type까지 함께 반환하도록 인터페이스를 재구성했다."}

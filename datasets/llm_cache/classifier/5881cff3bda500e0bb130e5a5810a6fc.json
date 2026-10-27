@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 V0 encoder-decoder 지원과 BART 같은 deprecated 모델을 제거한다고 밝혀, donut 모델의 encoder prompt 생성 기능 자체가 지원 종료로 사라졌다."}

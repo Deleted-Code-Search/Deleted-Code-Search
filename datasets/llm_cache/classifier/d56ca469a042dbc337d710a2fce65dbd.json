@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|경로가 vendor/ 하위이고 커밋 메시지·PR이 pipdeptree vendoring 업데이트만 말할 뿐 이 함수 삭제의 이유를 밝히지 않으며, 같은 자리 대체 코드도 없다."}

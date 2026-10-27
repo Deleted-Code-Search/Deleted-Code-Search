@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 `TreeControl`을 새 구현으로 교체하고 `Tree`로 이름을 바꿨다고 밝혀, 이 위젯의 구조·인터페이스 재작성으로 `_cursor_guide_style`이 맞지 않게 됐다."}

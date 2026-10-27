@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 이 파일을 \"replaced\"로 명시했고, 이 파일의 테스트들이 통째로 다른 파일로 대체되면서 이 픽스처를 호출하던 테스트가 사라졌다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 \"Update component model forms to use DynamicModelChoiceField query_params\"라며 정적 선택 필드를 동적 선택 필드로 전환하고, 추가된 코드에서 parent/bridge/lag/untagged_vlan/tagged_vlans 필드가 query_params={'device_id': '$device'} 등으로 재정의되어 __init__에서 하던 쿼리 파라미터 설정을 이어받는다."}

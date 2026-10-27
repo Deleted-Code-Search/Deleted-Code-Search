@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR이 logger connector 재설계를 통합하면서 epoch-end 검증을 개별 콜백(on_validation_epoch_end)에서 teardown(stage) 훅으로 옮겨, 같은 검증이 다른 자리에서 계속된다."}

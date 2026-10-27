@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 제목과 본문이 deprecated `on_{save,load}_checkpoint` 시그니처를 제거한다고 명시하며, 이 테스트 함수가 그 폐기된 시그니처를 검증하는 대상이었다."}

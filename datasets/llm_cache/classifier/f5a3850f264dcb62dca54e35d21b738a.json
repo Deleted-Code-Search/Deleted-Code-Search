@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 커밋이 `_create_progress_callback`의 `_ProgressCallback.on_step_end`로 동일한 정지 감지 로직을 옮겨 재사용하도록 콜백 구조를 재편했다."}

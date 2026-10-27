@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #5698이 인보이싱을 별도 모듈로 옮기고 Job 인터페이스로 재작성하는 대규모 재구성이며, 이 테스트가 검증하던 InvoiceJob의 status·pending_target 흐름이 새 인터페이스로 대체됐다."}

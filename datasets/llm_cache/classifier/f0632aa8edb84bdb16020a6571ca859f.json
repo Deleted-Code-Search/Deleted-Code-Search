@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR 본문이 \"remove the previous-area distinction and compact-frame budget\"이라며 compact-frame 예산 로직을 없앴고, 이 테스트가 검증하던 `max_compact_targets`/`is_compact` 인자 기반 동작이 사라져 검증 대상이 없어졌다."}

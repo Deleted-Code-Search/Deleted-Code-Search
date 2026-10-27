@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "BUG|PR 본문이 기존 패턴 매칭이 별칭·다른 import 패턴의 abstractmethod를 놓쳐 InvalidAbstractMethod 규칙이 위반을 놓치는 문제를 수정한다고 밝히고, 삭제된 함수를 Resolver 기반 검출로 대체했다."}

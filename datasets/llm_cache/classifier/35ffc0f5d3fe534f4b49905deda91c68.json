@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR 본문이 `temporal_operations.py`에서 `invalidate_edges` import와 함수를 제거했다고 밝혔고, 이 테스트 파일 자체가 제거되어 검증 대상이 사라졌다."}

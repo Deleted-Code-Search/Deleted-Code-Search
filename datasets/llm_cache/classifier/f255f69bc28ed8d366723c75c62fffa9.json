@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 transform_dequantize를 IRModule 직접 조작에서 ir.transform.Pass 반환으로 바꾸고 BundleModelParams를 쓰도록 재구성했다고 밝히며, 같은 자리에 들어온 대체 f_replace가 quantized_params·param2qrange를 사용해 같은 디퀀타이즈 역할을 이어받는다."}

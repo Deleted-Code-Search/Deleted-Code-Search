@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지·PR 본문은 notpip를 pip으로 이름 바꾸고 pip 22.2.1을 벤더링했다고만 말할 뿐, 이 endTagCol 함수나 html5parser 모듈을 이름으로 가리키며 삭제 이유를 말하지 않고, 화면에 대체 코드나 호출자 변경도 없다."}

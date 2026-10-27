@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 자리에 들어온 대체 코드가 fake_wait 시그니처에 max_in_flight 인자를 추가한 것으로 보아, 공유 베이스 클래스 도입으로 _wait_for_terminal_status의 인터페이스가 바뀌어 테스트 스텁도 맞춰 재작성된 것이다."}

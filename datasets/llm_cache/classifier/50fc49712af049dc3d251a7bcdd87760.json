@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 llm을 포함한 컬렉션들을 제거한다고 명시했고, 이 테스트는 제거된 llm 컬렉션의 recipe 테스트다."}

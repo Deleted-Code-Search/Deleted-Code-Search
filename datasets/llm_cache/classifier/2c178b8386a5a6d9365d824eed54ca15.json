@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 \"Legacy gen interfaces\"와 \"Drop support for Python 2\"를 명시하며 gen.engine 기반 인터페이스 자체를 제거한다고 밝히고, 삭제된 코드가 그 gen.engine 사용 예제다."}

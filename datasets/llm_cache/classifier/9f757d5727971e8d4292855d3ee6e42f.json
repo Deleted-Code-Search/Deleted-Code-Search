@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 커밋이 __load_example_messages 메서드를 모듈 수준 함수 _load_example_messages(prompt_template, str_message)로 옮겨 동일한 예시 메시지 로딩 로직을 이어받았다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 exec 기반 hook_manager.py를 제거하고 hook_registry.py로 대체했다고 밝혀, 이 테스트가 검증하던 json 프록시의 __builtins__ 차단 대상이 사라졌다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지와 PR 제목이 \"cleanup and refactoring\"이라는 사실만 말할 뿐 이 테스트나 AsyncioProgressbarSemaphoreExecutor를 이름으로 가리키지 않고, 추가된 코드는 다른 executor(AsyncioQueueGeneratorExecutor)를 import할 뿐 삭제된 테스트의 대체나 호출자 변경을 보여주지 않는다."}

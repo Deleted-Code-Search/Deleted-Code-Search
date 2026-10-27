@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR 본문이 테스트에서 DB 연결 생성을 제거하고 fixture로 대체한다고 밝혀, teardown_method가 정리하던 Connection 생성이 사라져 호출 대상이 없어졌다."}

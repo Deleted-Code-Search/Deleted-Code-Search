@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 base_estimator 속성이 1.2에서 deprecated되어 1.4에서 제거된다고 밝혔고, 이 테스트는 그 제거된 base_estimator 인자를 사용하는 공개 API 기능을 검증하던 것이다."}

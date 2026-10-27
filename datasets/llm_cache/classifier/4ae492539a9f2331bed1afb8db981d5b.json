@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|커밋 메시지가 \"the route now uses the repository's\"라고 밝히고, 추가된 코드가 `from docsgpt.storage.db.repositories.attachments import ... is_archive_row`로 같은 검사를 저장소 구현에서 가져와 쓰기 때문이다."}

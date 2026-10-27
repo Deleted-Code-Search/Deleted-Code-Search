@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|tearDown의 정리 작업이 addCleanup 호출로 옮겨졌고, 리뷰 코멘트가 정리 코드가 크래시 전에 위치해야 한다고 지적하며 테스트 구조가 재편됐다."}

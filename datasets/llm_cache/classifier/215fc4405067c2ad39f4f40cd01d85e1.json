@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #290이 OnlineManager를 OnlineStrategy 집합을 관리하는 구조로 재작성하면서, 온라인 모델 목록을 반환하던 `online_models` 추상 메서드가 사라지고 그 역할이 `get_online_history`·`prepare_online_models` 등으로 옮겨졌다."}

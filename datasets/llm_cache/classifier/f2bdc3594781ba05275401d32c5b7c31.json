@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 oldforms와 Manipulator 관련 코드를 제거한다고 밝히고, 삭제된 메서드 목록에 get_manipulator_field_objs가 이름으로 명시되어 있다."}

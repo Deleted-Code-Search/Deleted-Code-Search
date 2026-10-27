@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 `celery.utils.log.ensure_process_aware_logger`를 제거한다고 함수를 이름으로 지목하며, 대체 코드 없이 공개 유틸리티 함수 자체가 사라졌다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 `enable_adapter_layers`/`disable_adapter_layers` 등 model.py 메서드들을 중복 제거를 위해 리팩터링했다고 밝히고, 이 함수는 그 `_set_adapter_layers`가 하던 일을 베이스클래스(BaseTuner)가 이어받는 구조 변경에 해당한다."}

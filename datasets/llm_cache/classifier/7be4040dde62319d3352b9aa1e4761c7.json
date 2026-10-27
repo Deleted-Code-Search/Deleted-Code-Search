@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #550이 Hydra 설정을 dataclass 기반 Draccus 설정으로 전환하면서, yaml에서 검증하던 check_value의 min_max/weight 검증이 ImageTransformConfig/ImageTransformsConfig dataclass 구조로 대체됐다."}

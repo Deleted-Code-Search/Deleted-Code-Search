@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 `type` 속성을 없애고 `tex_environment`로 바꾼다고 밝혔고, 추가된 코드에서 `get_texcode_for_expression`/`get_texcode_for_expression_in_env`가 템플릿 삽입 역할을 이어받아 이 함수의 일이 다른 인터페이스로 대체됐다."}

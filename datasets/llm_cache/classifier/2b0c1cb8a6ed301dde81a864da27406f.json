@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR 본문이 \"removed ones that provided little to no value\"라고 CLI 테스트를 가치 없어 지웠다고 밝혔고, 이 테스트가 검증하던 CliCommandException의 삭제·변경을 가리키는 문장이 없어 호출/검증 대상이 사라진 테스트 삭제로 판단된다."}

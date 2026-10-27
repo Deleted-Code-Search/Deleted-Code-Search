@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|추가된 코드가 `limited_build_community` 래퍼 대신 `build_community`를 직접 `semaphore_gather`의 `max_coroutines`로 감싸 호출하도록 바뀌어, 동시성 제한 책임이 호출부로 이동했다."}

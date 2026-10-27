@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지가 \"Revert add table eval and predict script\"라고만 하고, 이 함수가 왜 사라졌는지(버그·성능·보안·라이브러리 대체·미사용·설계 변경·기능 제거)를 이름으로 가리키며 말하지 않으며, 대체 코드나 호출자 변경도 화면에 없다."}

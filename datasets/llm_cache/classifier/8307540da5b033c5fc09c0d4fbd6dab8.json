@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR이 핸드오프 기본 경로를 새 helper로 바꾸고 `nest_handoff_history` 플래그를 도입한다고 밝혀, 이 함수가 속한 핸드오프 활성화 로직이 재구성됐기 때문이다."}

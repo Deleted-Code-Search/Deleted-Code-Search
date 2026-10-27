@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 \"Removed all the deprecated apps with their configs\"라며 Llama2App을 포함한 앱 자체를 제거했고, 삭제된 __init__의 docstring도 deprecated 표시와 함께 App 사용을 안내하고 있어 사용자 기능 자체가 폐기됐다."}

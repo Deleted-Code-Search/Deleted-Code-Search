@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지에 \"Remove unimplemented --verbose option\"이 있어 get_arguments가 정의하던 CLI 옵션 표면이 제거된 것으로 보인다."}

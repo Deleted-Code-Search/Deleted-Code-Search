@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #7747이 Datapoint 메서드를 제거하고 dispatcher 등록 방식으로 바꾸는 리팩터로, autocontrast 같은 메서드가 datapoint에서 사라지고 디스패치 구조가 대체한다."}

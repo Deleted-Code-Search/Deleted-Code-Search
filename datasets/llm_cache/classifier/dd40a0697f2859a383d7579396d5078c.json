@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 자리에 들어온 대체 render가 get_context 훅과 actions/request 컨텍스트를 받도록 패널 렌더링 인터페이스가 재구성되어, 기존 render 본문이 새 구조에 맞지 않게 됐다."}

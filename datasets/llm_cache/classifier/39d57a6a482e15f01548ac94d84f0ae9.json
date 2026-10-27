@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 enable_model_cpu_offload를 PipelineModelMixin으로 옮기고 파이프라인별 오프로드 체인을 클래스 속성으로 정의한다고 밝혔으며, 같은 커밋이 이 파일에 model_cpu_offload_seq = \"text_encoder->unet->movq\"를 추가해 같은 일을 상위 클래스에서 이어받게 했다."}

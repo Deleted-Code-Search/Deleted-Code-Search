@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 `celery.contrib.batches` 모듈 자체를 제거한다고 밝히고 있어, 이 함수가 속한 사용자 대상 기능이 폐기된 것이다."}

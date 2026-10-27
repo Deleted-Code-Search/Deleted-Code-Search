@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 LoadingContext를 전역 객체 레지스트리로 재구성한다고 밝혀, 테스트가 검증하던 LoadingContext의 start_time·deployment_specs 속성이 그 재구성으로 사라진 것."}

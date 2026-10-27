@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 oldforms 모듈 자체를 제거한다고 밝히고 있어, 이 모듈의 공개 함수였던 html2python이 제공하던 기능이 사라졌다."}

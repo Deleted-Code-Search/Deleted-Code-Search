@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|리뷰 코멘트가 `_merge` 설계가 불필요하다고 지적했고, 같은 커밋에서 Ensemble이 Serializable 기반으로 재작성되며 `__call__` 인터페이스로 대체됐다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지는 revert 사실만 말하고, 삭제된 테스트는 같은 커밋에서 runner.isolated_filesystem()을 쓰는 동일 테스트로 대체되어 순수 이동·재작성에 해당하므로 이유를 댈 근거가 없다."}

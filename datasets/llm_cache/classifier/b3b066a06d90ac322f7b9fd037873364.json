@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 \"store keypoints on detections\" 기능을 되돌리는 revert이므로, 이 테스트가 검증하던 keypoints 저장 기능 자체가 제거됐다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 `dcim.tests.test_api.ConnectionTest` 클래스 자체를 제거한다고 밝혀, 이 테스트가 검증하던 `connected_endpoint` 필드가 PR 본문에서 삭제(drop)되어 검증 대상이 사라졌다."}

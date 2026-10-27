@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 데코레이터를 WebUi 클래스로 옮긴다고 밝히고, 같은 본문이 auth_required_if_enabled 메서드로 클래스 안에 다시 나타나 커스텀 라우트에서 쓸 수 있게 인터페이스가 바뀌었다."}

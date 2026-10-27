@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR 본문이 \"Removed legacy session cache utilities\"라며 구식 session cache 유틸리티를 제거했다고 밝혔고, 이 테스트 헬퍼는 제거된 cache engine(add_qa/get_latest_qa)을 목킹하던 것이라 검증 대상이 사라져 지워졌다."}

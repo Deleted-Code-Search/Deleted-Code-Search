@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 \"Replaces local Knowledge and Memory storage with SQLite\"라며 Chroma 기반 로컬 KB 기능 자체를 폐기했고, 같은 파일에 추가된 코드는 ChromaLocalBackend 생성 시 ChromaMigrationRequiredError를 던지는 스텁만 남겼다."}

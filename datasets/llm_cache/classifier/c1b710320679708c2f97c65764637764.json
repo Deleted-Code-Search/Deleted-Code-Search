@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR 본문이 sparse NCCL을 별도 엔진으로 분리하고 GPUWorker/GPUModelRunner에서 weight-transfer 관련 코드를 제거했다고 밝혀, 이 테스트가 검증하던 apply_sparse_weight_patches가 호출자를 잃고 삭제됐다."}

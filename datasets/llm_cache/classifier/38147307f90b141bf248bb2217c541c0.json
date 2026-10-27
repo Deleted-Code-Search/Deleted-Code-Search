@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 `configure`를 포함한 동일한 lifecycle 메서드들을 새 `BimanualMixin`으로 접어 중복을 제거했다고 밝히고, 추가 코드가 `class BiOpenArmLeader(BimanualMixin, Teleoperator)`로 상속을 바꿨다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|삭제된 get_first_n(l, n)과 같은 자리에 get_first_n(li, n)이 들어왔지만, 이는 pre-commit/flake8 도입 커밋에서 매개변수명만 l→li로 바뀐 포맷·문법 수준의 변경으로 보이며, 삭제 이유를 밝히는 맥락 문장이 없다."}

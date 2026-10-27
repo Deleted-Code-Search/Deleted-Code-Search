@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 커밋이 같은 자리에 `get_size`를 `PageSize` 대신 `Size`를 반환하도록 다시 추가했으므로, 백엔드 추상화 재편에 맞춰 인터페이스가 바뀐 것이다."}

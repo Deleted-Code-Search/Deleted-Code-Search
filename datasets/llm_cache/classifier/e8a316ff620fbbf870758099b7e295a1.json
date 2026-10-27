@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 deprecated config key OLD_API_CHECK_DATASET_OWNERSHIP와 legacy endpoint를 제거한다고 밝혔고, 삭제된 함수 본문이 바로 그 deprecated 경고와 config 키를 사용하고 있다."}

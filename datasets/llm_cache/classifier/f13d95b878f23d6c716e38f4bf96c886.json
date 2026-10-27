@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 LightGBMRanker 래퍼를 제거하고 lgb.LGBMRanker를 직접 쓰라고 하며, 이 테스트 픽스처가 그 래퍼 테스트용 합성 데이터라 검증 대상이 사라졌다."}

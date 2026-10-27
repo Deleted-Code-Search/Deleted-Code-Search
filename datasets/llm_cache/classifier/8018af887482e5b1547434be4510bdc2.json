@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 `create_tiles`의 \"now-unreachable private helper cluster\"라며 `_negotiate_tiles_format`, `_generate_tiles`, `_draw_texts`와 함께 이 헬퍼들을 \"used by nothing else\"라고 명시해 호출자를 잃어 삭제됐음을 밝힌다."}

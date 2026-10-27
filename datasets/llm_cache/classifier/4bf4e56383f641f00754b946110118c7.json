@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 자리에 color 인자를 추가한 print_error가 들어와 색상 출력 여부를 선택하는 구조로 인터페이스가 바뀌었고, 색상 없는 출력 경로가 새로 생겼다."}

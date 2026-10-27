@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|삭제된 get_modules()가 하던 Factory 모듈 수집을 추가된 코드에서 외부 모듈 kivy.tools.packaging.pyinstaller_hooks의 get_factory_modules() 호출로 대체했다."}

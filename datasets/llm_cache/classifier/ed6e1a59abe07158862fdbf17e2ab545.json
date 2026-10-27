@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|삭제된 fake_signal은 테스트 헬퍼로, 같은 커밋이 이 파일에 async cancellation 관련 새 테스트들을 추가하면서 기존 signal monkeypatch 테스트 구조가 사라져 호출자를 잃었다는 근거만 화면에서 확인된다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 EntityDescription 기반으로 센서 로직을 재구성한다고 밝히고, 추가된 코드에서 attributes_fn 콜러블이 속성 반환 역할을 이어받아 같은 일이 다른 구조에서 계속된다."}

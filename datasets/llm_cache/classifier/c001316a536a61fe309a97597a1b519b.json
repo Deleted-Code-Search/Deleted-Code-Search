@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR #649 본문이 Redis 통합을 SSE 전송과 함께 제거하고 예제로 옮긴다고 밝혀, 이 테스트가 검증하던 publish_message 기능 자체가 폐기됐다."}

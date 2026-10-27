@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지 \"HTLM reports draft, 500 sites scanning by default\"는 이 함수를 이름으로 가리키지 않고, 추가된 코드(ranked_sites_dict 등)가 site_name_list의 정렬·이름 목록 기능을 이어받는지도 화면만으로는 확인할 수 없다."}

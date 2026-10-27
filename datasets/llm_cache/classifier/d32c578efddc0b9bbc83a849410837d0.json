@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 disable_adapter_layers를 중복 제거 대상으로 명시하고, PeftModel에 의존하는 메서드는 베이스클래스의 일반 메서드로 옮겨졌다고 설명하므로 같은 일이 다른 자리에서 계속된다."}

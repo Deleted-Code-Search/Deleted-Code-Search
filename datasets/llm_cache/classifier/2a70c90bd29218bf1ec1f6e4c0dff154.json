@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 \"delete screenshot\"이라고 스크린샷 기능 자체를 없앤다고 밝히고, 이 함수는 ScreenShotWidget의 생성자로 그 기능의 일부다."}

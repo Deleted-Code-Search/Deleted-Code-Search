@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 \"removed gather flag\"에 대한 테스트를 삭제한다고 밝혔고, 이 테스트가 검증하던 gather 동작이 PR 본문에서 \"return_exceptions=True was removed on purpose in 2d7108cb3 and stays removed\"라며 대상이 이미 사라졌음을 명시한다."}

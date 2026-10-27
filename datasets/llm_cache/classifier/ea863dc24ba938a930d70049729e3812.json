@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|삭제된 dump_infer_config의 export 로직이 같은 커밋에서 추가된 ppocr.utils.export_model의 export 호출로 대체됐다."}

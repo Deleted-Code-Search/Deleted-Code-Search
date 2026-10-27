@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR 본문이 \"Removes the unused Tools export to prevent mistaken imports\"라며 Tools를 제거했다고 밝혔고, 이 fixture는 그 Tools()를 반환하는 테스트 픽스처라 검증 대상이 사라져 지웠다."}

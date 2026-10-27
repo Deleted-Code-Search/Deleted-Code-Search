@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #2591이 `BaseCommand`를 `Command`로 병합하고 `MultiCommand`를 `Group`으로 병합하는 재구성이므로, `MultiCommand`의 `chain`을 참조하던 이 메서드는 새 구조에서 맞지 않게 됐다."}

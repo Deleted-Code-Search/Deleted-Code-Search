@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지 \"add superclasse for graphs\"와 추가된 `class SpeechGraph(AbstractGraph)` 및 `self.config` 사용으로 보아, 초기화 책임이 상위 클래스로 옮겨지면서 이 `__init__`이 구조 변경에 맞지 않게 됐다."}

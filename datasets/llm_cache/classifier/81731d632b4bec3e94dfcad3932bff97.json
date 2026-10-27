@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지들은 Python 2 제거·pyupgrade·무관한 버그 수정만 나열할 뿐 이 테스트나 riak 백엔드를 이름으로 가리키지 않고, 삭제된 본문에도 이유를 드러내는 표시가 없다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 `css_path`를 `CSS_PATH` 클래스변수로 옮겼다고 밝혀, 서브클래스 인자로 받던 설정이 클래스 속성 인터페이스로 재구성됐다."}

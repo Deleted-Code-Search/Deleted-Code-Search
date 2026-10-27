@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|삭제된 get_segment가 만들던 rlog URL을 같은 커밋에서 추가된 `from selfdrive.test.openpilotci import get_url`과 `get_url(r, n)` 호출이 대신하고 있다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 \"fully migrate vars into new system\"으로 vars 시스템 전환을 명시하고, 삭제된 `__getattr__`은 구 Var 시스템의 `_cached_var_name` 캐시 접근을 처리하던 것으로 새 시스템에서는 다른 방식으로 대체됐다."}

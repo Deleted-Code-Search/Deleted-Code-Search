@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 do_set_realm_* 함수들을 제거하고 이름과 값을 받는 do_set_realm_property로 대체했다고 밝히며, 추가된 do_set_realm_property가 같은 일(속성 설정·저장·이벤트 전송)을 일반화된 인터페이스로 이어받는다."}

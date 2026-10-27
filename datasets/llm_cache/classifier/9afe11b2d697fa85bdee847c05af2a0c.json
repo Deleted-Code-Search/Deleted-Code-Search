@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 `_completion`을 gone이라고 명시했고, 삭제된 테스트는 그 `_completion`을 호출하는 테스트라 검증 대상이 사라져 지워졌다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #777이 하드웨어 API를 전면 재설계하며 카메라 클래스 구조를 바꿨고, 이 파일에는 대체 코드가 추가되지 않아 __del__ 기반 정리 책임이 새 API 구조의 다른 자리로 옮겨진 것으로 보인다."}

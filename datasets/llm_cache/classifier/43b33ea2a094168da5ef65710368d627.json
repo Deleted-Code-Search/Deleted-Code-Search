@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 \"the pause/resume and fallback image plumbing goes away\"라며 이 함수가 하던 이미지 전달을 tool 메시지의 `images` 참조로 옮겼다고 밝히고, 같은 커밋이 `take_tool_images`로 그 일을 tool 메시지에 붙이는 자리로 대체했다."}

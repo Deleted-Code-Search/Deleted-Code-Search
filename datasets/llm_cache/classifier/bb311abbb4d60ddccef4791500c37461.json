@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "SEC|이슈 #16292가 GraphQL 쿼리 권한 우회(인증 우회)를 보고하고, 커밋이 pk 지정 쿼리를 제한하며 수동 resolver를 strawberry_django.field()로 교체해 권한 검사를 우회하던 경로를 제거했다."}

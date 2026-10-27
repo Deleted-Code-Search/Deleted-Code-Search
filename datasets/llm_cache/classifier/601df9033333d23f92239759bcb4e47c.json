@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 커밋이 get_input_embeddings를 임베딩 텐서를 반환하는 대신 VocabParallelEmbedding 모듈을 반환하도록 시그니처와 책임을 바꿨고, 호출부도 self.embed_tokens(input_ids)를 직접 쓰도록 바뀌었다."}

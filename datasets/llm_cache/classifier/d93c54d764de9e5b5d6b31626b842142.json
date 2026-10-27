@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|삭제된 sse_handler는 이 커밋에서 새로 추가된 테스트 파일의 픽스처(handle_sse)로 대체된 것으로 보이나, 커밋 메시지·PR 본문이 이 함수를 이름으로 가리키며 삭제 이유를 말하지 않고, 삭제 본문 자체도 이유를 드러내지 않는다."}

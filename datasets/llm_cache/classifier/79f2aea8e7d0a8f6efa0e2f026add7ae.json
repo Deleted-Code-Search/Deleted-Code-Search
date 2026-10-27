@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 `tests/ci/test_sync_client_auth.py`(OAuth2 device flow and cloud sync tests)를 제거한다고 명시해, 로그아웃 테스트가 검증하던 클라우드 동기화 인증 기능 자체가 폐기된 것으로 보인다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 \"Remove redundant xpu graph backend\"와 \"Disable XPU Graph by default\"라 XPU Graph 기능 자체를 폐기·기본 비활성화한 것이며, can_run은 그 백엔드의 공개 동작 일부다."}

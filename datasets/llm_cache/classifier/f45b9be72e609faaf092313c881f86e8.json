@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR이 ProcessorTestMixin 기반으로 프로세서 테스트 셋업을 표준화하면서, 컴포넌트별 프로세서를 얻던 get_image_processor가 _setup_image_processor 클래스메서드로 대체되어 같은 일이 다른 자리에서 계속된다."}

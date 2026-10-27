@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|리뷰 코멘트가 \"this function is useless\"라며 `get_env` 호출이 모두 제거되면 삭제하자고 했고, 이 커밋에서 `_EnvironmentVariable.unset`이 추가되어 호출자가 사라졌다."}

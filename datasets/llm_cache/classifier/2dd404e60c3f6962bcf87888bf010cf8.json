@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 자리에 StringSliceOperation 대신 ArraySliceOperation의 __init__이 들어와 슬라이스 연산이 문자열에서 배열로 재편되었고, 같은 일은 다른 클래스가 이어받는다."}

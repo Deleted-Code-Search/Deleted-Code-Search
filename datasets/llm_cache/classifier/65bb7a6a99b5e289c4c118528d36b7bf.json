@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|PR 본문의 API 매핑 표에서 v1 `searchscraper()`가 v2 `search(query=)`로 대체됐고, 추가된 코드가 `sgai_client.search(...)`를 호출하도록 바뀌어 외부 SDK 호출이 이 함수의 출력·포맷 역할을 대신하게 됐다."}

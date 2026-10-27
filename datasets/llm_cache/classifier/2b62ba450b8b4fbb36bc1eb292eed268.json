@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 \"Remove deprecated pressure conversion functions\"라며 압력 변환 함수를 제거하고 `PressureConverter.convert()`로 대체하라고 안내하므로, 사용자에게 노출된 기능 자체가 폐기·제거된 것이다."}

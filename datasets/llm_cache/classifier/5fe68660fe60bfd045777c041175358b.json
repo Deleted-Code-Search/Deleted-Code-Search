@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지 \"removed old mcp\"가 이 모듈(deprecated_mcp)의 공개 표면 제거를 가리키고, 대체 코드나 이어받는 구현이 없다."}

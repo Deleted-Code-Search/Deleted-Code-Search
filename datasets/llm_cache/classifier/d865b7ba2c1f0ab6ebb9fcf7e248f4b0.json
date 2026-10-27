@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "SEC|리뷰 코멘트가 `.bootstrap_password` 평문 자격증명을 디스크에 저장하는 것이 보안 위험이라며 디스크 영속화를 제거하라고 지적하고, 이에 따라 setup token을 DB에 저장하던 함수가 삭제됐다."}

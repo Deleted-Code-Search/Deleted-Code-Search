@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR 본문이 CI에서 오래 걸리는 테스트를 비활성화한다고 밝혔고, 같은 커밋이 이 함수 대신 `@pytest.mark.skip_on_ci` 마커를 추가해 호출자가 사라졌다."}

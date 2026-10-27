@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR #5369 본문이 Runloop 샌드박스 구현·exports·provider-specific contract coverage를 제거한다고 명시하고, 이 테스트가 검증하던 Runloop provider 자체가 폐기됐다."}

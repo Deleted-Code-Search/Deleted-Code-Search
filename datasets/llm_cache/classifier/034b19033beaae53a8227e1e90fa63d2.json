@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지가 \"refactor the pipeline module\"이라고만 하고 이 테스트 함수나 conv3x3을 이름으로 가리키지 않으며, 이 파일에 추가·대체된 코드도 없어 삭제 이유를 화면만으로 판단할 근거가 없다."}

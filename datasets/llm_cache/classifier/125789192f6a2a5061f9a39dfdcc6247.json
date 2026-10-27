@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|PR 본문은 properties.py 삭제가 #9495의 잘못된 머지 때문이라 하고 이 함수 자체의 삭제 이유는 이름으로 말하지 않으며, 이 커밋은 파일에 아무 줄도 추가하지 않아 코드로도 근거를 댈 수 없다."}

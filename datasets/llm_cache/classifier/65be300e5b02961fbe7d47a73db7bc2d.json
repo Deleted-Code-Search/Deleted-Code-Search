@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 `_get_graph`의 파일 채널 분기를 하나의 `elif file_fingerprint.fence_enabled()` 블록·단일 샘플로 재구성한다고 밝혀, 두 샘플을 전제로 하던 `unreadable_once` 헬퍼가 새 관찰 예산 구조에 맞지 않게 되어 제거됐다."}

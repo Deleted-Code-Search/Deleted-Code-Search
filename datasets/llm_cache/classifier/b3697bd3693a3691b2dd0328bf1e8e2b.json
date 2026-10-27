@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 V2에서 공개 API·기능 제거를 명시하고, 삭제된 __init__은 deprecated된 ACIToolset의 생성자로 대체 코드 없이 사라졌다."}

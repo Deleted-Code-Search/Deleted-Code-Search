@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 `httpx.StatusCodes` 대신 `httpx.codes`를 쓰라고 하며 0.17부터 경고하던 API를 완전히 폐기한다고 밝혔고, 삭제된 `__call__`은 그 `StatusCodes`의 호출 기능 자체를 없앤다."}

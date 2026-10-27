@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 \"Minor clean up that looks like it doesn't functionally affect anything\"이라 하고, 리뷰에서 \"Building template: sitemap.xml\" 로그가 대신 나온다고 하며, 같은 커밋이 build_template('index.xml', ...) 호출을 추가해 sitemap 렌더링이 build_template 경로로 이어받아짐을 보여준다."}

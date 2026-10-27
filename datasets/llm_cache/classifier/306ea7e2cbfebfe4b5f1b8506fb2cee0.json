@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋이 디스패처 인터페이스를 httpcore 인터페이스로 전환하는 작업이라, backend로 위임하던 __getattr__ 프록시가 새 인터페이스 구조에 맞지 않게 되어 제거됐다."}

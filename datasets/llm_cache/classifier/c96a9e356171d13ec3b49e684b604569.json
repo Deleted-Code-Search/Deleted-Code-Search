@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #56이 Processor·Handler·Trainer·Estimator를 포함한 Qlib 인터페이스를 재구성하고 Trainer 모듈을 재설계한다고 밝혀, 이 파일의 estimator가 제거되고 trainer 초기화 책임이 새 모듈로 옮겨진 구조 변경이다."}

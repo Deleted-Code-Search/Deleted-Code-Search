@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|PR 본문이 banned characters 검증을 self-validator로 이관한다고 밝히고, 추가 코드가 prefect.types의 Name/NonEmptyishName 타입을 import해 검증을 라이브러리 타입에 위임한다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|리뷰 코멘트가 \"docker_compose fixture calls it already\"라며 이 함수가 불필요하다고 지목했고, 추가된 코드는 이 함수 대신 fixture와 assert_log_contains로 대기 로직을 대체했다."}

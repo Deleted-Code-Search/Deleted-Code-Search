@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 ~700줄 cibuild.py를 ~300줄 build.py로 대체한다고 밝혀, 같은 빌드 작업이 다른 스크립트로 재구성되며 이 함수가 맞지 않게 됐다."}

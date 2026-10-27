@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 파일에 `test_is_url`이 `@pytest.mark.parametrize`로 확장되어 다시 추가되어, 테스트가 다른 형태로 재구성되었을 뿐 동일한 검증이 계속된다."}

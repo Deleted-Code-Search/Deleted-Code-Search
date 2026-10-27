@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 deprecated externals.joblib 제거를 명시하고, 삭제된 함수는 joblib 서브패키지를 등록하던 공개 설정 코드다."}

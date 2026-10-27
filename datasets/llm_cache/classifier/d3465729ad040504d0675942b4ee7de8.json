@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #804가 디스패처 인터페이스를 httpcore 인터페이스로 전환하는 작업이라 이 테스트가 검증하던 HTTPConnection 기반 요청 방식 자체가 새 인터페이스로 대체됐다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지와 PR 본문은 docker compose의 version 필드가 obsolete라는 것만 말할 뿐, 이 테스트 함수를 이름으로 가리키거나 삭제 이유를 설명하지 않는다."}

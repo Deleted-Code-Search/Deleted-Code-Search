@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 레이아웃 enum을 서브 속성을 가진 레이아웃으로 교체한다고 밝히고, 추가된 코드가 to_strided_fragmented_layout_attr 등 새 레이아웃 표현으로 같은 역할을 이어받고 있다."}

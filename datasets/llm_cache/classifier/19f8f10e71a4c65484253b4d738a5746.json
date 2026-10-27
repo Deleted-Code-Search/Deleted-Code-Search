@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 \"Deprecate separate prompt/completion truncation\"이라며 max_prompt_length/max_completion_length 기반 개별 절단을 폐기하고 단일 시퀀스 max_length 절단으로 전환한다고 밝혀, 이 함수가 하던 토큰화·절단 책임이 다른 방식으로 대체됐다."}

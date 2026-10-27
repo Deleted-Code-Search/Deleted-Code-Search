@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|delete가 key를 받아 validate_key를 호출하도록 시그니처와 책임이 바뀌었고, 같은 커밋이 add·set·has_key 등 다른 메서드도 동일하게 validate_key를 추가하는 구조 변경을 했다."}

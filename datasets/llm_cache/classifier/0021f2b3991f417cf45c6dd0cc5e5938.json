@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "BUG|이슈 #6853의 \"global process count incorrect with elastic, fault tolerant training\"을 고치기 위해 None을 반환하던 world_size를 _world_size(기본 1) 반환으로 바꿔 잘못된 프로세스 수를 수정했다."}

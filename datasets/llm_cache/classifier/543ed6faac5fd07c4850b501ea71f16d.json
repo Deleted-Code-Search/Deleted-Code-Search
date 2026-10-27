@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지와 PR 본문이 \"Move speaker folders\", \"Clean speaker scripts\"처럼 이동·정리만 말할 뿐 이 함수를 이름으로 가리키며 삭제 이유를 밝히지 않고, 같은 커밋이 이 파일에 추가한 코드나 대체 코드도 없어 화면만으로 이유를 댈 수 없다."}

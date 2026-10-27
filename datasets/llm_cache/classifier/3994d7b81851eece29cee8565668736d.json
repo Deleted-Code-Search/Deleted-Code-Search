@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 레이아웃 추론을 `LayoutObjectDetectionModel` 단일 경로로 통합하고 `LayoutModel`을 그 모델을 상속하는 shim으로 바꿨다고 밝혀, 이 함수의 일은 다른 클래스로 이어받아졌다."}

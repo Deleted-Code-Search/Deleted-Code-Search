@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 \"Removed support for syncing apps without migrations per deprecation timeline\"이라 마이그레이션 없는 앱 동기화 지원이라는 사용자 기능 자체를 폐기했음을 밝히고, 이 함수가 그 지원을 막던 검사 코드다."}

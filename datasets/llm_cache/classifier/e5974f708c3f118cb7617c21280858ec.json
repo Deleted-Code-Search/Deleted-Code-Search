@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 Tasks(SEP-1686)를 스펙에서 제거하고 SDK에서 모든 task 관련 코드·타입·예제·테스트·문서를 제거한다고 밝혀, task 큐 정리 기능 자체가 없어졌다."}

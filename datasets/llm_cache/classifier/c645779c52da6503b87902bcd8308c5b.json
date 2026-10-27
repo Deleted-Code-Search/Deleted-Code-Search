@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 \"The slots go. The dispatcher, the other handlers and the tests call the hook function directly.\"라고 밝혀, 포워딩 슬롯을 없애고 디스패처가 훅 함수를 직접 호출하도록 호출 경로를 옮긴 것뿐 같은 일은 계속된다."}

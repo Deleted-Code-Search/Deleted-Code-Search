@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|SecretField의 JSON 스키마 생성이 클래스메서드에서 새로 추가된 _SecretFieldValidator.__get_pydantic_json_schema__로 옮겨졌고, 같은 커밋이 __prepare_pydantic_annotations__로 검증기 구조를 재편하면서 이 코드가 맞지 않게 됐다."}

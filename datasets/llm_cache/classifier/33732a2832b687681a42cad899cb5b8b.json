@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|PR 본문이 \"In-line a helper function\"이라고만 말할 뿐, 삭제된 함수를 이름으로 가리키며 왜 지웠는지(호출자 없음, 다른 자리로 이동 등)를 밝히지 않고, 추가된 코드에서 이 함수를 대체하는 동일 본문도 보이지 않는다."}

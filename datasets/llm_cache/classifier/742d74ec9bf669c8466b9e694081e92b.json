@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|삭제된 `def foo() -> None: ...`는 같은 자리에 `def foo() -> None: ...`로 다시 추가되어 순수 이동·포맷 변경에 해당하고, 커밋 메시지도 테스트 디버깅/불안정성 완화만 언급할 뿐 이 함수를 이름으로 가리키는 삭제 이유가 없다."}

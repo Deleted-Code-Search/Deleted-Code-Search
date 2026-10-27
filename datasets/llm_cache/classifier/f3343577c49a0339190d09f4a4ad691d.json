@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|send_data가 하던 발행 역할이 같은 커밋에서 추가된 DetectionPublisher(Publisher 상속)로 옮겨졌고, 삭제된 본문의 zmq send 로직이 새 클래스의 기반 구현으로 대체됐다."}

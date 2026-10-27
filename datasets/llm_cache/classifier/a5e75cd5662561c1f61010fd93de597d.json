@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 \"Removes wrapper methods from the Airflow security manager that call the FAB methods previously using the old naming scheme\"라며 action/resource/permission 명명 체계로 통합하는 작업이라고 밝혀, 이 래퍼 메서드가 새 명명 체계의 다른 자리로 대체된 구조 변경이다."}

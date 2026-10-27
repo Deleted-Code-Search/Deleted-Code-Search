@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 `EcsTask`를 3.0 릴리스에서 제외한다고 밝혔고, 이 테스트가 검증하던 `ECSTask`의 family 결정 기능 자체가 제거됐다."}

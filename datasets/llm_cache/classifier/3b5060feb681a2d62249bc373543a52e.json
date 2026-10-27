@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR 본문이 \"API compliance tests\"를 삭제된 테스트 파일로 명시하고, 이 테스트가 검증하던 optimize_prompt 시그니처 일관성 대상(ParameterOptimizer의 optimize_prompt는 NotImplementedError로 변경)이 재편되어 검증할 대상이 사라졌다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 `USE LEGACY DATASOURCE EDITOR` 옵션 제거와 레거시 데이터소스 에디터 삭제를 명시했고, 이 검증 함수는 그 레거시 에디터 폼에서 쓰이던 공개 기능의 일부다."}

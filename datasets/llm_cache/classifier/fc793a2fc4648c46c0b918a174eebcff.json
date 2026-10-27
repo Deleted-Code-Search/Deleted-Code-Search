@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 \"This is no longer used\"라며 transform_inference 패스를 삭제했고, 이 함수는 그 패스의 규칙 등록 함수로 호출자를 잃었다."}

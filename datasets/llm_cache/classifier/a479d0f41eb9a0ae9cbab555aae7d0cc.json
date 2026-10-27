@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|리뷰 코멘트가 리스트를 통한 외부 값 수정을 해킹이라 지적해, 같은 커밋이 테스트 클래스에 self.runner_stopped 인스턴스 변수와 이벤트 리스너로 상태를 기록하는 구조로 바꿔 같은 일을 다른 자리에서 계속한다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 \"Remove is_global support\"라며 is_global 기능 자체를 없앴고, 삭제된 테스트는 그 is_global 파라미터를 검증하던 테스트다."}

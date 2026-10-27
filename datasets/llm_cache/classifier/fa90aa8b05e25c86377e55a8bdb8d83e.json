@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문에 \"Remove core schema validation hook\"이라고 명시되어 있어, 환경변수 PYDANTIC_VALIDATE_CORE_SCHEMAS로 켜던 검증 훅 기능 자체가 제거됐다."}

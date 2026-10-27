@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|삭제된 clean()의 검증 로직이 clean_status·clean_error 속성과 ManagePaymentForm의 공통 clean()으로 옮겨져 CapturePaymentForm·RefundPaymentForm 등 하위 폼에서 같은 일을 계속한다."}

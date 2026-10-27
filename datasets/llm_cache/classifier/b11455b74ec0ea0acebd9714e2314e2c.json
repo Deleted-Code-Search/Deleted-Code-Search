@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 0.11.0의 breaking changes를 명시하고, 리뷰 코멘트가 ServiceContext 마이그레이션 문서를 안내하는 stub 유지까지 논의한 것으로 보아 ServiceContext 관련 공개 기능 자체가 제거된 폐기 작업이다."}

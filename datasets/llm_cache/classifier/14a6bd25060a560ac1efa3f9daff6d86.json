@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|plotly.js v4.0.0-rc.0 코드젠으로 `customdatasrc` 속성이 제거되었고, 같은 파일에 이를 대체하는 코드가 없어 공개 속성 자체가 사라졌다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|커밋 메시지가 \"Replace to_basestring with an alias for to_unicode\"라고 밝히고, 추가된 코드에 `to_basestring = to_unicode`가 있어 표준 라이브러리 함수 호출로 대체됐다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 정확도 문제로 mobilenet_v3_small 양자화 모델 엔드포인트를 조사 때까지 제거한다고 밝혔고, __all__에서도 공개 표면에서 사라졌다."}

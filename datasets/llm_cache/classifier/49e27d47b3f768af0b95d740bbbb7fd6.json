@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR #2443 본문이 \"Drop support for Python 2\"와 \"Non-asyncio IOLoop and Future implementations\" 삭제를 명시했고, 이 함수는 TwistedReactor 테스트용 서브클래스 생성기로 커밋 메시지 \"Delete TwistedReactor and its tests\"에 따라 지원 자체가 제거됐다."}

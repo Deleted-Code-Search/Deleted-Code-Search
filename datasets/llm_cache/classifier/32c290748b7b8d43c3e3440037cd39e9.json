@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 \"Remove the public surface\"라며 미출시 `Agent.connect()`·Responses WebSocket API를 되돌린다고 밝혔고, 이 함수는 그 WebSocket 모델 파일에 속한 기능 전용 코드다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 자리에 `connect(self, calibrate: bool = True)` 시그니처로 대체되어 Teleoperator ABC의 connect() 인터페이스에 맞춘 재구성이므로, 호출 경로가 바뀐 DESIGN이다."}

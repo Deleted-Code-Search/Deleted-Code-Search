@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 커밋이 prefill_index_width를 window_size에서 window_size+max_image_tokens로 넓히고 prefill_left_visible/right_visible 기반의 이미지 양방향 가시성 경로를 추가해, 기존 window_size 고정 SWA 인덱스 커널이 새 인터페이스에 맞지 않게 됐다."}

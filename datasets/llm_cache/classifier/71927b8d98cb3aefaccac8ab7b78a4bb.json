@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR #2752 본문이 auth provider의 자동 환경변수 로딩 제거를 명시하고, 이 테스트는 그 로딩 동작(base_url 누락 시 ValueError)을 검증하던 것이라 기능 자체가 폐기됨."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 Sparse Attention 기능 자체를 제거(deprecate)하고 sparse_attention 설정이 DeepSpeedConfigError로 실패한다고 명시하므로, 이 함수가 제공하던 기능이 사용자 표면에서 사라졌다."}
