@@ -512,11 +512,19 @@ def test_llm_never_replaces_an_explicit_quote():
 
 
 def test_version_says_whether_and_which_llm_was_used():
-    """LLM 유무·모델이 다른 두 예측 파일이 같은 버전을 달면 가를 수 없다."""
-    with_llm = clf.Classifier(llm=fake_llm("DEAD|x"))
+    """LLM 유무·모델이 다른 두 예측 파일이 같은 버전을 달면 가를 수 없다.
 
-    assert clf.Classifier().version == clf.CLASSIFIER_VERSION
-    assert with_llm.version == f"{clf.CLASSIFIER_VERSION}+llm:{with_llm.llm.runner.model}"
+    모델만 버전에는 프롬프트 버전(c3)이 붙지 않는다 - 붙으면 `r1+m2+c3` 로 거를 때 모델만 라벨이
+    섞여 나온다 (#180). LLM 을 쓴 문자열은 게이트 2 때와 같아야 한다.
+    """
+    with_llm = clf.Classifier(llm=fake_llm("DEAD|x"))
+    model = with_llm.llm.runner.model
+
+    base = f"{clf.RULES_VERSION}+{clf.MODEL_VERSION}"
+
+    assert clf.Classifier().version == base
+    assert clf.CANDIDATE_PROMPT_VERSION not in clf.Classifier().version
+    assert with_llm.version == f"{base}+{clf.CANDIDATE_PROMPT_VERSION}+llm:{model}"
     assert with_llm.classify(make_record(commit_message="Remove unused.")).version == (
         with_llm.version
     )
