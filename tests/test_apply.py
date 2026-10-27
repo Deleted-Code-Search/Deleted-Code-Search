@@ -92,9 +92,15 @@ def test_bad_shard_is_refused(text):
 
 
 def test_model_only_run_labels_only_eligible_records_with_the_model_only_version(tmp_path, capsys):
-    """모델만 버전 - 대상만 내고, 버전에 c3 가 없고, 학습은 train split 만 쓴다."""
+    """모델만 버전 - 대상만 내고, 버전에 c3 가 없고, 학습은 train split 만 쓴다.
+
+    `training_repo` 는 학습 레코드 파일(확정 500건)에 나오는 저장소인가다.
+    """
     first = write_jsonl(tmp_path / "a.jsonl", [record("x1"), record("x2", kind="PARTIAL")])
-    second = write_jsonl(tmp_path / "b.jsonl", [record("x3", status="NOISE_FORMAT"), record("x4")])
+    second = write_jsonl(
+        tmp_path / "b.jsonl",
+        [record("x3", status="NOISE_FORMAT"), record("x4"), record("x5", repo="z/new")],
+    )
     out = tmp_path / "out" / "model_only.jsonl"
 
     code = apply.main(
@@ -104,11 +110,13 @@ def test_model_only_run_labels_only_eligible_records_with_the_model_only_version
 
     rows = [json.loads(line) for line in out.read_text(encoding="utf-8").splitlines()]
     assert code == 0
-    assert [row["record_id"] for row in rows] == ["x1", "x4"]
+    assert [row["record_id"] for row in rows] == ["x1", "x4", "x5"]
+    assert [row["training_repo"] for row in rows] == [True, True, False]
     assert {row["classifier_version"] for row in rows} == {"r1+m2"}
     assert set(rows[0]) == {
         "record_id",
         "repo",
+        "training_repo",
         "label",
         "evidence_grade",
         "evidence_text",
@@ -117,6 +125,7 @@ def test_model_only_run_labels_only_eligible_records_with_the_model_only_version
     }
     printed = capsys.readouterr().out
     assert "학습 split: train /" in printed
+    assert "학습 저장소 2건 / 신규 저장소 1건" in printed
     assert not (tmp_path / "out" / "model_only.jsonl.tmp").exists()
 
 

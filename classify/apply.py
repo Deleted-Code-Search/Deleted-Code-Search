@@ -11,6 +11,11 @@
 
     성능은 버전마다 그 숫자로만 말한다. 모델만 라벨에 60.0% 를 붙이지 않는다.
 
+학습 저장소 플래그 (`training_repo`):
+    그 레코드의 저장소가 확정 500건(학습·검증·평가)을 뽑은 저장소인가. 두 숫자(val 52.0%,
+    test 60.0%)는 모두 그 저장소 안에서 쟀다 - 처음 보는 저장소에서는 모델만 버전이 사실상
+    UNK·DESIGN 만 낸다. 쓰는 사람이 걸러낼 수 있게 행마다 붙인다 (#180, 성제 결정).
+
 한 줄씩 읽고 쓰는 이유:
     저장소 20개 조립 결과만 13.6GB 다. `classify.classifier` CLI 는 레코드를 전부 메모리에 읽는다.
 
@@ -115,12 +120,15 @@ def sample_per_repo(
     ]
 
 
-def output_row(record: dict[str, Any], classifier: Classifier) -> dict[str, Any]:
-    """출력 한 줄 - `record_id`·`repo` + §4.4 `reason` 그대로 (#83 이 붙인다)."""
+def output_row(
+    record: dict[str, Any], classifier: Classifier, training_repos: set[str]
+) -> dict[str, Any]:
+    """출력 한 줄 - `record_id`·`repo`·`training_repo` + §4.4 `reason` 그대로 (#83 이 붙인다)."""
     result = classifier.classify(record)
     return {
         "record_id": record_id_of(record),
         "repo": record.get("repo"),
+        "training_repo": record.get("repo") in training_repos,
         **result.to_schema_reason(),
     }
 
@@ -237,6 +245,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         llm = LlmCandidate(runner)
     splits = WITH_LLM_TRAINING if args.llm else MODEL_ONLY_TRAINING
     classifier = build_classifier(splits, args.labels, args.training_records, llm)
+    training_repos = {str(record.get("repo")) for record in read_jsonl(args.training_records)}
 
     if args.sample_per_repo > 0:
         exclude = set(load_final_labels(read_jsonl(args.labels)))
@@ -249,21 +258,24 @@ def main(argv: Sequence[str] | None = None) -> int:
     started = time.monotonic()
     labels: Counter[str] = Counter()
     grades: Counter[str] = Counter()
+    in_training_repos = 0
     args.out.parent.mkdir(parents=True, exist_ok=True)
     temporary = args.out.with_name(args.out.name + ".tmp")
     with temporary.open("w", encoding="utf-8", newline="\n") as handle:
         for record in targets:
             if not in_shard(record_id_of(record), shard):
                 continue
-            row = output_row(record, classifier)
+            row = output_row(record, classifier, training_repos)
             handle.write(json.dumps(row, ensure_ascii=False) + "\n")
             labels[row["label"]] += 1
             grades[row["evidence_grade"]] += 1
+            in_training_repos += row["training_repo"]
     temporary.replace(args.out)
 
     total = sum(labels.values())
     print(f"분류기 {classifier.version} - {total:,}건 ({time.monotonic() - started:,.0f}초)")
     print(f"  학습 split: {'+'.join(splits)} / 출력: {args.out}")
+    print(f"  학습 저장소 {in_training_repos:,}건 / 신규 저장소 {total - in_training_repos:,}건")
     print("  라벨: " + ", ".join(f"{k} {v:,}" for k, v in labels.most_common()))
     print("  등급: " + ", ".join(f"{k} {v:,}" for k, v in grades.most_common()))
     if llm is not None:
