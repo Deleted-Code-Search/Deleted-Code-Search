@@ -270,7 +270,18 @@ def main(argv: Sequence[str] | None = None) -> int:
             labels[row["label"]] += 1
             grades[row["evidence_grade"]] += 1
             in_training_repos += row["training_repo"]
-    temporary.replace(args.out)
+    # 호출이 실패한 건은 LLM 표 없이 분류되는데 버전은 LLM 포함이라고 적힌다. 그 행이 섞이면
+    # 모델만 버전과의 일치율이 부풀려진다 - 출력을 남기지 않는다. 답을 못 읽은 건은 분류기
+    # 설계대로다 (같은 답이면 늘 같다, test 60.0% 도 그렇게 쟀다).
+    call_failures = sum(
+        count
+        for reason, count in (llm.failures if llm else {}).items()
+        if reason.startswith("호출 실패")
+    )
+    if call_failures:
+        temporary.unlink()
+    else:
+        temporary.replace(args.out)
 
     total = sum(labels.values())
     print(f"분류기 {classifier.version} - {total:,}건 ({time.monotonic() - started:,.0f}초)")
@@ -282,6 +293,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"  LLM: API {llm.runner.calls}회 / 캐시 {llm.runner.cache_hits}회")
         if llm.failures:
             print("  LLM 실패: " + ", ".join(f"{k} {v}건" for k, v in llm.failures.items()))
+    if call_failures:
+        print(
+            f"LLM 호출 실패 {call_failures}건 - 출력을 남기지 않았다. 캐시가 차면 다시 돌린다.",
+            file=sys.stderr,
+        )
+        return 1
     return 0
 
 

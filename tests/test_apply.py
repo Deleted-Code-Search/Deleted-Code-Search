@@ -157,6 +157,36 @@ def test_llm_sample_uses_train_and_val_and_the_gate2_version(tmp_path, monkeypat
     assert "학습 split: train+val /" in capsys.readouterr().out
 
 
+def test_a_failed_llm_call_leaves_no_output(tmp_path, monkeypatch, capsys):
+    """호출이 실패한 건은 LLM 없이 분류되는데 버전은 LLM 포함이다 - 그런 출력은 남기지 않는다."""
+
+    def timing_out(system, prompt, model):
+        raise TimeoutError("timed out")
+
+    monkeypatch.setattr(apply, "caller_from_env", lambda provider: timing_out)
+    source = write_jsonl(tmp_path / "a.jsonl", [record(f"x{i}") for i in range(3)])
+    out = tmp_path / "llm.jsonl"
+    args = ["--input", str(source), "--out", str(out), "--llm", "--sample-per-repo", "2"]
+
+    code = apply.main(args + ["--cache-dir", str(tmp_path / "cache")] + training_files(tmp_path))
+
+    assert code == 1
+    assert not out.exists() and not (tmp_path / "llm.jsonl.tmp").exists()
+    assert "LLM 호출 실패 2건" in capsys.readouterr().err
+
+
+def test_an_unreadable_llm_answer_still_gives_output(tmp_path, monkeypatch):
+    """답을 못 읽은 건은 분류기 설계대로 LLM 표 없이 간다 - 같은 답이면 늘 같으므로 막지 않는다."""
+    monkeypatch.setattr(apply, "caller_from_env", lambda provider: lambda s, p, m: "no label here")
+    source = write_jsonl(tmp_path / "a.jsonl", [record("x1")])
+    out = tmp_path / "llm.jsonl"
+    args = ["--input", str(source), "--out", str(out), "--llm", "--sample-per-repo", "1"]
+
+    code = apply.main(args + ["--cache-dir", str(tmp_path / "cache")] + training_files(tmp_path))
+
+    assert code == 0 and out.exists()
+
+
 def test_missing_input_is_refused(tmp_path, capsys):
     code = apply.main(["--input", str(tmp_path / "none.jsonl"), "--out", str(tmp_path / "o.jsonl")])
 
