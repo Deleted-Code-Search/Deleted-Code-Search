@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|이 파일에 있던 verify_document 정의를 지우고 `from .verify_utils import verify_document`로 가져와 호출하도록 바꿔, 직접 구현을 공용 헬퍼로 대체했다."}

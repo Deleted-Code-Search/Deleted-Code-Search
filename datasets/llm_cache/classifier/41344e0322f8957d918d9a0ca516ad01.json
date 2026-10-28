@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 \"model hub integration\"을 제거한다고 밝히고, 이 테스트는 삭제된 hub.load 기능을 검증하던 테스트이므로 사용자 기능 자체가 없어진 FEAT에 해당한다."}

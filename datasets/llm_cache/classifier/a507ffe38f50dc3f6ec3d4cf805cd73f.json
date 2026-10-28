@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #4271이 ETA 계산과 렌더링 구조를 재작성하면서 `_label_text` 반응형 속성과 그 watch 메서드가 사라졌고, 같은 파일에 `render`/`PercentageStatus` 기반 렌더링이 새로 들어와 표시 책임이 다른 자리로 옮겨졌다."}

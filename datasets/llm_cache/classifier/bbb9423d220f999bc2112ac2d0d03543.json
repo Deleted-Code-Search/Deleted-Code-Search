@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "PERF|커밋 메시지가 \"more performant file detection by only reading the first 500b header\"라며, 전체 파일을 읽던 `_is_marimo_app` 메서드가 헤더 512바이트만 읽는 모듈 함수 `is_marimo_app`으로 대체됐다."}

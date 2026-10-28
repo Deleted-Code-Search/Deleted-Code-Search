@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 pyarrow 로직을 없애고 narwhals로 옮긴다고 밝혀, 이 pyarrow 기반 테스트가 검증 대상(manager의 pyarrow 로직)을 잃어 삭제됐다."}

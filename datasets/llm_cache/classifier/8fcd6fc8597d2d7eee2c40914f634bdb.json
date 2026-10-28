@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 \"Consolidate logic in the basic HTML form and use it in both Radix and Chakra form wrappers\"라며 공통 폼 기능을 rx.el.forms로 옮긴다고 밝혔고, 같은 파일에서 FormRoot가 HTMLForm을 상속하도록 바뀌어 이 로직이 기반 HTML 폼으로 이동했다."}

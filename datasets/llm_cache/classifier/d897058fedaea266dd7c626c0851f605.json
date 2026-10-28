@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "BUG|커밋 메시지가 \"Fix Spotify\"라고 이 함수가 다루는 Spotify 활성화를 이름으로 가리키며 고쳤다고 말하므로, 잘못된 동작을 고치려고 삭제한 것으로 판단한다."}

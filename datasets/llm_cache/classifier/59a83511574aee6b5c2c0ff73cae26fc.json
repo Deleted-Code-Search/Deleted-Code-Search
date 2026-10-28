@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지 \"Remove old tests\"와 PR 본문은 import 경로·문법 오류 수정과 문서 정리를 말할 뿐, 이 테스트 함수를 이름으로 가리키며 삭제 이유를 밝히지 않고 대체 코드도 없다."}

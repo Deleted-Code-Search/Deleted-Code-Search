@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지는 pyextra 서브트리 스쿼시와 \"remove everything\"만 말할 뿐 click/core.py의 main 함수를 이름으로 가리키지 않고, 이 파일에 추가되거나 대체된 코드도 없어 삭제 이유를 화면만으로 판단할 수 없다."}

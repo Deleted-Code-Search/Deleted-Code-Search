@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋이 Python 3.7 지원을 중단하면서 ast3 및 3.8에서 deprecated된 ast.Str/Num/NameConstant 노드를 Constant로 매핑하던 이 함수가 더 이상 필요 없어졌고, 추가된 코드에서도 이 함수를 호출하는 자리가 사라졌다."}

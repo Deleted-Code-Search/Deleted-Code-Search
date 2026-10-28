@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|삭제된 함수 본문이 같은 커밋에서 추가된 `_CountingCamConditioner.compute_scale_shift`에 동일하게 존재하나, 이는 테스트 스텁을 파일 내 공용 클래스로 옮긴 순수 이동·중복 제거로 보이며 8종 이유 중 어느 것에도 해당한다는 근거가 화면에 없다."}

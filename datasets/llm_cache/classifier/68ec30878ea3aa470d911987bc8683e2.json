@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 FastMCP가 Provider를 상속하도록 클래스 계층을 재구성하면서 `_get_*`/`_list_*` 메서드가 Provider의 transform chain으로 대체됐다고 밝히고, 삭제된 `base` 헬퍼는 `root.get_resource_template` 호출을 감싸던 내부 조회 로직으로 이 재구성에서 자리를 잃었다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 per-backend dispatch 파일(oft/aqlm.py)을 제거하고 resolve_quantization_backend 기반의 일반 양자화 프레임워크로 이관한다고 밝혀, 이 forward의 양자화 백엔드 처리가 다른 자리(OFTLayer/백엔드 메커니즘)로 옮겨졌다."}

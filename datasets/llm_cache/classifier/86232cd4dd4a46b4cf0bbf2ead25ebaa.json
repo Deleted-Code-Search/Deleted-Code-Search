@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 verify_export를 pathlib로 리팩터하고 새 verify_export를 테스트에서 재사용한다고 밝히며, 추가된 코드가 verify_utils에서 verify_export를 import하므로 같은 일이 다른 자리로 옮겨졌다."}

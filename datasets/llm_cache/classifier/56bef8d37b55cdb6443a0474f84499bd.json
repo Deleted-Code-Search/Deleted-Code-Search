@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 \"take the relevant parts from there move to class init\\run method\"라며 기존 load 함수 의존을 제거하고 관련 로직을 클래스 init/run으로 옮겼다고 밝혀, 이 정적 메서드의 역할이 재구성된 구조로 흡수됐다."}

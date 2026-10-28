@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 Model 클래스를 단일 __call__ 메서드로 단순화한다고 밝히고, 추가된 FakeLLMModel.__call__이 tools_to_call_from 인자로 같은 툴 호출 응답을 반환하도록 대체하고 있다."}

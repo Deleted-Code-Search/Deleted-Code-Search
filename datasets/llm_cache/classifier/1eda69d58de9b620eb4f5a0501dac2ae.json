@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "BUG|커밋 메시지가 `ValidationInfo.field_name` 누락을 수정한다고 밝히고, 삭제된 테스트는 이슈 #13074의 `model_validate_json` 시 ValidationInfo.data 누락 버그를 재현하는 테스트다."}

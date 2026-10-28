@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 AgentConfig→Config, AgentConfigManager→ConfigManager로 이름을 바꾸고 API를 재설계했다고 밝히며, 추가된 코드에서 AgentConfig 대신 Config를 import하고 test_base_class__has_empty_field_names로 대체되어 같은 검증이 다른 API로 계속된다."}

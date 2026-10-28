@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|커밋 메시지가 Python 2.6의 구식 unittest 모듈을 위한 호환 워크어라운드를 제거한다고 밝혀, 표준 라이브러리 unittest의 assertLess가 이 일을 대신하게 됐다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 자리에 들어온 `ListOfItems.pre_validation`이 `self._config`/`self._key_name`을 저장하는 새 구조로 바뀌어, 기존 `config_dir` 설정 책임이 새 클래스 구조로 재편되었다."}

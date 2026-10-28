@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|Flask의 current_app 기반 rate limit 조회 함수가 제거되고, 같은 커밋에서 slowapi의 Limiter와 RateLimiter 클래스로 대체되어 외부 라이브러리가 그 역할을 이어받았다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 \"The _wrap_for_task_http_headers hack is deleted\"라며 컨텍스트 전달을 단일 TaskContextSnapshot 시스템으로 재작성했고, FunctionTool이 raw 함수를 Docket에 등록하도록 바뀌어 이 래핑이 불필요해졌다고 밝힌다."}

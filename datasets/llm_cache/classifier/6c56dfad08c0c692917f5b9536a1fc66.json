@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 커밋이 같은 자리에 `_ppermute_batcher(frame, vals_in, dims_in, axis_name, perm)`를 새 시그니처로 추가해, split_axis 규칙 제거와 collective 규칙 단일화라는 규칙 구조 재편에 맞춰 이 코드가 다른 인터페이스로 이어받아졌다."}

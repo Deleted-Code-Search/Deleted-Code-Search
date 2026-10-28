@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR 본문이 #68175를 되돌리며 그 PR이 추가한 auth-manager get_cli_user 토큰 지원을 제거한다고 밝혔고, 이 테스트가 부르는 get_cli_user가 삭제되어 검증 대상이 사라졌다."}

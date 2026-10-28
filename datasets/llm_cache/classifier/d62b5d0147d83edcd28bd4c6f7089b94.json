@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 provision 시점의 CSS 인라인 아키텍처를 제거하고 빌드 시점(send_email.py의 get_inlined_template)으로 옮긴다고 밝혀, 같은 일이 다른 자리에서 계속된다."}

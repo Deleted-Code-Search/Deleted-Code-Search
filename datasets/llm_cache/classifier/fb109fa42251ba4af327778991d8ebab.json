@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 제목과 본문이 keras < 2.3.0 및 tensorflow < 2.0.0 지원 중단을 명시하고, 이 테스트 픽스처는 그 구버전 지원 경로를 검증하던 대상이 사라져 제거됐다."}

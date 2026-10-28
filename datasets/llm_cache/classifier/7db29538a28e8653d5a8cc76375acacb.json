@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|pydantic2 전환으로 index 필드가 Field(default_factory=...)로 선언형이 되면서 __init__에서 수동으로 defaultdict를 만들던 초기화 책임이 모델 필드 선언으로 옮겨졌다."}

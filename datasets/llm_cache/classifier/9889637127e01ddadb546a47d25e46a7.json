@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR이 Starlink에 button 플랫폼을 추가하는 기능 변경이고, 리뷰 코멘트가 이 블록을 불필요해졌다며 제거를 지시했으며, 같은 파일에 coordinator import가 StarlinkData로 바뀌는 등 엔티티 구조가 재편되어 이 __init__이 맞지 않게 됐다."}

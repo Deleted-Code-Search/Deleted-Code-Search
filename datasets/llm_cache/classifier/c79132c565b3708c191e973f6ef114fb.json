@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 GPTQ group/dynamic activation ordering 기능 자체를 vLLM에서 완전히 제거한다고 밝히고, 이 함수는 그 actorder 지원 여부를 판정하던 코드다."}

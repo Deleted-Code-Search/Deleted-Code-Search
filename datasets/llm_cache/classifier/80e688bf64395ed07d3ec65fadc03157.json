@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR 본문이 체크아웃 배송 웹훅 흐름에서 캐시 계층을 제거한다고 밝혀, 이 테스트가 검증하던 `_get_cache_data_for_shipping_list_methods_for_checkout` 대상이 사라졌기 때문이다."}

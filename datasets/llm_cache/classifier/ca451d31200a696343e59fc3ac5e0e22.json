@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지와 PR 본문은 inplace op 지원, colotensor 분산 기능 제거, static placement policy 추가, GeminiDDP/GeminiOptimizer 리팩터링을 말할 뿐 이 테스트 함수를 이름으로 가리키지 않고, 삭제된 본문이나 대체 코드에서도 이 테스트가 왜 지워졌는지 드러나지 않는다."}

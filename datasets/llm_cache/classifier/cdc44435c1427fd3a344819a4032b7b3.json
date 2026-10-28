@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 `deepspeed.compression` 라이브러리를 unused/unmaintained 기능으로 명시해 제거한다고 밝혔고, 이 함수는 그 라이브러리의 양자화 forward 구현이다."}

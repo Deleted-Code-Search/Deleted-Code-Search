@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지가 \"Remove deprecated execution plan API code\"를 되돌린 revert라는 사실만 말할 뿐, 이 __init__ 삭제의 이유를 이름으로 가리키지 않고 대체 코드도 없어 근거를 댈 수 없다."}

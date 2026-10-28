@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|PR 본문이 내부 관리 trimesh 배포판을 삭제하고 공식 버전에 의존한다고 밝혀, 이 함수 구현이 외부 라이브러리로 대체됐다."}

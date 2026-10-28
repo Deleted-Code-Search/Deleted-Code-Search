@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 `sv.ByteTrack`을 0.31.0에서 제거 예정대로 삭제하고 외부 `trackers` 패키지의 `ByteTrackTracker`로 대체하라고 명시하며, 이 함수가 속한 `supervision.tracker` 패키지 전체가 공개 API에서 제거됐다."}

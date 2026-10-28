@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|삭제된 코드의 @deprecated 메시지가 \"`Color.black()` is deprecated and will be removed in `supervision-0.22.0`. Use `Color.BLACK` instead.\"라고 밝혀, 공개 API인 Color.black()을 제거하고 Color.BLACK으로 대체한 폐기·지원 종료다."}

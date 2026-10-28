@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 이름의 `_get_test_case`가 추가 코드에서 `category` 대신 `name`을 받아 `unittest.TestCase` 기반 클래스로 바꾸는 등 테스트 케이스 생성 책임이 재구성됐고, `test_cases` 프로퍼티가 이를 호출하도록 옮겨졌다."}

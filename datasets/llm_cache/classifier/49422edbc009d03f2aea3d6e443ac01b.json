@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|이슈 #4878이 CustomFieldValue 테이블 대신 각 모델의 custom_field_data JSONField로 저장 방식을 재설계했고, 같은 커밋이 이 파일에 custom_field_data를 반환하는 convenience wrapper를 추가해 같은 일을 다른 자리에서 계속한다."}

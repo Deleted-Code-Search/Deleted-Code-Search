@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|PR 본문은 test_types.py를 여러 파일로 분할하고 TypeAdapter로 마이그레이션한다고만 말할 뿐, test_list_strict 삭제의 이유를 이름으로 가리키지 않으며, 같은 자리에 들어온 대체 코드도 없다."}

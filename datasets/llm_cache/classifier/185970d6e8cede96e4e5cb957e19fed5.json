@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|삭제된 `check_quantity`는 `pass`만 있는 빈 스텁이고, 맥락 문장은 이 함수를 이름으로 가리키지 않으며, 같은 커밋이 추가한 코드에서 이 함수의 일을 이어받는 대체 코드도 보이지 않는다."}

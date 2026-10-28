@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|커밋 메시지가 \"use narwhals for more logic, get rid of dataprotocol and pyarrow logic\"이라며 이 dataprotocol 추상 메서드의 역할을 외부 라이브러리 narwhals로 이전했음을 밝힌다."}

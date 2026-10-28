@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋이 EngineConfig 인터페이스를 재구성하면서 KVCacheConfig의 JSON 생성 방식이 새 EngineConfig 구조로 대체되어 같은 일이 다른 자리에서 이어지므로."}

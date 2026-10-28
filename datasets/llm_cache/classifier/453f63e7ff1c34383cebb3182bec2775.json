@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "SEC|PR 본문이 in-band delimiter 삽입·이스케이프를 제거한다고 밝히며, 이 함수가 SQL Lab URL 쿼리 파라미터에 sanitize_for_llm_context로 마커를 삽입하던 위험 패턴을 없앤다."}

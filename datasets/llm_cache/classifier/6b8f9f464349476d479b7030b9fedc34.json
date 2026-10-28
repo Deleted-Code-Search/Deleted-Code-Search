@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|PR 본문이 \"cleanup fa4 by using sgl-fa4 pkg\"라며 복사한 FA4 소스를 외부 패키지(sgl-fa4)로 대체했고, 이슈에서도 python/sglang/jit_kernel/flash_attention의 복사 소스를 제거하고 sgl-fa4 wheel에 의존한다고 밝히고 있다."}

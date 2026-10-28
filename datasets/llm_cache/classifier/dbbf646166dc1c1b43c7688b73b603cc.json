@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 \"Remove tests for deprecated pipelines\"라며 폐기된 파이프라인의 테스트를 없앴다고 밝히고, 리뷰 코멘트도 \"we will stop testing the pipelines\"라고 지원 중단을 명시하므로 기능 폐기로 분류한다."}

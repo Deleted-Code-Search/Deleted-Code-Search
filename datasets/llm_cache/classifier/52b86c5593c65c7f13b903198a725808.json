@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|커밋 메시지가 \"Remove BaseURL reference and use AnyURL\"이라 pydantic의 AnyUrl로 교체했고, 추가된 코드에서 field_validator가 AnyUrl(uri)로 직접 변환을 대신한다."}

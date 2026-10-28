@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 \"fully migrate vars into new system\"으로 vars 시스템 전환을 명시하고, 이 파일에 대체 코드가 추가되지 않았으므로 구조·인터페이스 재편으로 이 코드가 맞지 않게 됐다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 \"Separate out executor logic from stream methods\"라며 executor 로직을 langgraph.pregel.executor로 분리했고, 추가 코드가 그 모듈의 BackgroundExecutor/AsyncBackgroundExecutor를 import해 실행기 관련 처리가 새 위치로 옮겨졌음을 보여준다."}

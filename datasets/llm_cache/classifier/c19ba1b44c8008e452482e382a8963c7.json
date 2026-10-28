@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "BUG|PR 본문이 \"OptionList updates caches on idle\"로 인한 경쟁 조건/타이밍 문제를 설명하며, on_idle에서 지연되던 _populate() 호출을 다른 시점으로 옮겨 캐시가 실제 항목을 반영하도록 고친 것으로 보인다."}

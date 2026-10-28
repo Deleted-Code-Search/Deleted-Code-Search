@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "BUG|PR 제목과 본문이 AttrDict의 중첩 케이스 변환 실패로 인한 yaml 저장 오류(#15700)를 고치는 fix라고 명시하고, 삭제된 _to_plain_dict는 중첩 dict를 처리하지 못해 이를 _to_builtin으로 교체한 것이다."}

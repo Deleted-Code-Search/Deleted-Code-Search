@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|커밋 메시지가 PyYAML 사용을 제거하고 ruamel.yaml로 YAML 파싱을 재작업한다고 밝혀, PyYAML용 커스텀 생성자 등록 함수가 외부 라이브러리 교체로 삭제됐다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|삭제된 테스트 본문에 @pytest.mark.skip(reason=\"Skipped as test is extremely flaky\")가 붙어 있어 검증 대상이 없어진 상태였고, 커밋 메시지 \"clean up 1.x code\"가 이 테스트가 속한 1.x 코드 정리를 가리킨다."}

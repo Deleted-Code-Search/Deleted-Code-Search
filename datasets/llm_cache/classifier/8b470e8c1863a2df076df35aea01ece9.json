@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|PR 본문이 \"Using pyobvector as middleware\"라며 OceanBaseStore 구현을 pyobvector 기반으로 교체한다고 밝혔고, 추가 코드에 `from pyobvector import ObVecClient`가 있어 락 처리를 포함한 구현이 외부 라이브러리로 대체됐다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "BUG|커밋 메시지가 이 함수를 이름으로 가리키며 filename 파라미터를 무시하는 버그가 있었다고 밝히고, 삭제된 본문도 filename 대신 locustfile을 사용하고 있다."}

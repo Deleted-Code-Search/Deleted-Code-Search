@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR #3505 \"Remove colorama\"와 이슈 #2986 \"Drop colorama\"가 colorama 의존성과 Windows ANSI 래핑 기능 자체를 제거한다고 명시하며, 이 함수가 그 colorama 래핑을 수행하던 공개 동작을 없앤다."}

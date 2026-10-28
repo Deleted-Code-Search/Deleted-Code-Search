@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 \"this PR also removes the old script that the Makefile was trying to use\"라고 밝혀, Makefile 기반 실행 방식 전환과 함께 이 스크립트 자체가 제거됐다."}

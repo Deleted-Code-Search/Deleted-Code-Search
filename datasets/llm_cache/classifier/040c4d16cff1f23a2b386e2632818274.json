@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 workers 코드와 분기를 폐기·삭제하고 model engine 추상화로 전환한다고 밝혀, workers/actor의 이 함수가 제공하던 기능 자체가 제거된 것으로 판단된다."}

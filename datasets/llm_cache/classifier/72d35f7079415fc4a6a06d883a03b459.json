@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR이 구독 쿼리 검증을 재구성하며 SubscriptionQuery 클래스로 파싱·이벤트 추출 책임을 옮겼고, 이 함수의 일은 그 클래스가 이어받았다."}

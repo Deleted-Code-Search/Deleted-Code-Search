@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR #8737이 레거시 st.cache 구현을 제거하고 st.cache_resource/st.cache_data로 대체한다고 명시했으며, 이 함수는 제거된 legacy_caching/hashing.py에 속한다."}

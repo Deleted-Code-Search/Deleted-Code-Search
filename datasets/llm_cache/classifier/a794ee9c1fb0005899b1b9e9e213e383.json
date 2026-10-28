@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|맥락의 커밋 메시지·PR·이슈는 모두 evaluate 스크립트의 overlapping entities 수정에 관한 것으로, pip의 parseopts 함수 삭제 이유를 가리키는 문장이 없고 대체 코드도 없다."}

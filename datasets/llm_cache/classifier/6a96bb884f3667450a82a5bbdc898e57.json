@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "PERF|커밋 메시지가 \"OPTIM: sparse vectorizer uses COO\"라 성능 최적화를 말하고, 추가된 `_term_count_dicts_to_matrix`가 `np.zeros`로 행렬을 직접 만들어 `_init_matrix` 호출을 대체한다."}

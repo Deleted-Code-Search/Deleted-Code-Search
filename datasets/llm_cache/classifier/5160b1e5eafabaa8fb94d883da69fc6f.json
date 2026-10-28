@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 FriendFeed 서비스 종료와 deprecated auth mixin 제거를 명시하며, 이 함수는 FriendFeedMixin의 공개 인증 기능을 없앤다."}

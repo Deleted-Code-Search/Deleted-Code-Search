@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|삭제된 `_get`은 `with ipv6(...)` 블록 안으로 들여쓰기되어 같은 본문 그대로 재등장하며, IPv6 지원을 위한 컨텍스트 관리자 구조로 호출 경로가 재편되었다."}

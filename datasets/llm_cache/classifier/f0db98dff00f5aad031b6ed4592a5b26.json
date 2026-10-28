@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|ResnetBlock 클래스가 src/diffusers/models/resnet.py로 옮겨져 이 파일에서는 from .resnet import ResnetBlock으로 가져다 쓰게 됐고, 같은 본문이 주석 처리된 채 남아 있다."}

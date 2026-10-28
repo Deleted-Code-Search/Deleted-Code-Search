@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 \"Delete the old kriging.py module\"이라 하고 PR #14가 새 kriging 모델 클래스로 대체하는 새 기능을 도입하므로, 기존 kriging.py 모듈 자체가 폐기·제거된 것이다."}

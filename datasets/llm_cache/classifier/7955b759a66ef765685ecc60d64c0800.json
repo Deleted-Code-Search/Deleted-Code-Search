@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #804가 디스패처 인터페이스를 httpcore 인터페이스로 전환하는 작업이라 base.py의 send 추상 메서드가 새 인터페이스 구조에 맞지 않게 됐다."}

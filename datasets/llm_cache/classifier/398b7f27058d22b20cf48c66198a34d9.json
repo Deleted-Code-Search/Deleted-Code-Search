@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 TensorFlow 지원을 제거한다고 명시했고, 이 함수는 TF 전용 분포 클래스의 메서드로 TF 지원 자체가 폐기되면서 사라졌다."}

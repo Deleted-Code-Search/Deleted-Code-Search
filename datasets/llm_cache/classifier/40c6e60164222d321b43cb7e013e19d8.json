@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 모든 병렬 프리미티브를 multiple_results=False로 바꾸며 코드를 대폭 단순화한다고 밝히고, 삭제된 f는 multiple_results=True 전제의 Zero 처리 로직으로 이 구조 변경에서 맞지 않게 됐다."}

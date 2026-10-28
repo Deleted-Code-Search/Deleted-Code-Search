@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #4126이 from_crawler 팩토리와 crawler를 받는 __init__으로 핸들러 생성 방식을 바꾸면서, 같은 자리에 `__init__(self, settings, crawler)`가 대체 코드로 들어왔다."}

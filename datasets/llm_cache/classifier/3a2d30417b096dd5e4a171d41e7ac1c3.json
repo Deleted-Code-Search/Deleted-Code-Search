@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 test_gpu_ids에 시간 여유를 주려 한다고 밝혔고, 추가된 코드에서 f3 대신 get_gpu_ids(num_gpus_per_worker) 헬퍼와 f0~f5로 GPU id 검증을 재구성해 같은 일을 이어받았다."}

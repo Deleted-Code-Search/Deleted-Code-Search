@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 `host.on`을 포함한 기존 등록 API(`activate(host)`)를 없애고 선언적 `Plugin` 서브클래스로 교체한다고 밝혀, 플러그인 작성자가 쓰던 `on` 기능 자체가 제거됐다."}

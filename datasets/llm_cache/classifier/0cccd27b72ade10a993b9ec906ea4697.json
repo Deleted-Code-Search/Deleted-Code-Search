@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|커밋 메시지가 \"removing custom scripts and using the official `paddleocr api` CLI directly\"라며 직접 구현을 외부 CLI 호출로 대체했음을 밝힌다."}

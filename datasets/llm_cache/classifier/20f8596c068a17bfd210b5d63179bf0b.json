@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 \"Refactor LabelledString and relevant classes\"라고 이 클래스의 재구성을 명시하고, 추가된 코드에서 specified_items·label_span_list 등으로 지정 문자열 처리가 다른 구조로 대체되어 같은 일이 다른 자리에서 계속된다."}

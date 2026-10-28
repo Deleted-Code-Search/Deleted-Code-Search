@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 자리에 `_load_layer_tensors_from_disk(self, layer_idx, num_experts)` 시그니처로 대체 구현이 들어와 같은 일을 계속하고, `QUANT_TO_AMX_MAP`·`PROJ_MAPPINGS` 상수 추출과 `num_experts` 인자화로 구조가 재편됐다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|커밋 메시지가 \"transfer custom allreduce from trt kernel to vllm kernel\"이라 하고, 추가된 코드에서 `use_vllm_custom_allreduce`일 때 `torch.ops._C_custom_ar`의 `all_reduce`를 호출하도록 외부 vllm 커널로 교체했다."}

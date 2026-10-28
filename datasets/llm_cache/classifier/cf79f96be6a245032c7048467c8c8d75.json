@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 \"Remove 7 specialized metrics (misinformation, graphic content, etc.)\"라며 misinformation 메트릭 자체를 제거한다고 명시하므로, 이 메트릭의 내부 함수도 기능 폐기로 삭제됐다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 채팅 에이전트 시나리오 로직을 플러그인 선택 방식에서 dbgpts/agent 대화 방식으로 바꿨다고 밝히고, 같은 파일에 agent_chat·_build_chat_manager 등 새 대화 흐름이 추가되어 기존 stream_generator의 역할이 다른 구조로 대체됐다."}

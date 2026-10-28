@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 MinerU 기반 멀티모달 문서 처리를 RAG-Anything으로 전환한다고 밝혀, MinerU 파싱 결과를 다루던 이 함수가 제공하던 기능 자체가 제거됐다."}

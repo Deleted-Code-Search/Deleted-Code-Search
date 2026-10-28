@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 자리에 export_averagepool_2d_pads가 get_output_shape_explicit_padding과 새 pool 시그니처를 쓰도록 재작성되어, 함수 자체는 유지되고 내부 구현만 새 인터페이스로 옮겨졌다."}

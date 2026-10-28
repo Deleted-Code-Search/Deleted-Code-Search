@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 \"move most of Block.interpolate to an array method\"라고 밝히고, 추가된 코드가 같은 파일에서 missing.interpolate_array_2d로 같은 interpolate 작업을 이어받으므로 구조 변경으로 이 코드가 다른 자리로 옮겨졌다."}

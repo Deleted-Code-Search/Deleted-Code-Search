@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 자리에 들어온 대체 코드가 get_output_shape_explicit_padding·get_pad_shape 등 새 참조 구현 API로 같은 테스트를 계속 수행하므로, 구조·인터페이스 변경에 따라 코드가 맞지 않게 됐다."}

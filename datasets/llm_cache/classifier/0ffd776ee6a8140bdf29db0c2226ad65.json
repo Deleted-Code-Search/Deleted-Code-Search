@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 `_replace_module`을 중복 제거 대상 메서드로 명시하고, 이 커밋이 해당 구현을 공통 베이스(BaseTuner)로 옮겨 각 PEFT 메서드가 상속·오버라이드로 같은 일을 계속하도록 재구성했기 때문이다."}

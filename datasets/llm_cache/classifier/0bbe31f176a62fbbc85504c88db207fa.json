@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 \"This PR removes the old UI\"라며 구 UI 자체를 폐기하고 FAB UI로 대체한다고 명시했고, 이 함수는 삭제된 구 UI(airflow/www/views.py)의 템플릿 필터로 대체 코드 없이 사라졌다."}

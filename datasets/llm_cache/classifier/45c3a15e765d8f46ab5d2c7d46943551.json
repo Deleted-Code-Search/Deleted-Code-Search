@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지 \"clean up 1.x code\"가 1.x 기능 제거를 나타내며, track_artifacts는 MLflow 아티팩트 로깅이라는 사용자 대상 기능으로 대체 코드 없이 삭제됐다."}

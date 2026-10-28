@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "BUG|커밋 메시지가 \"Fix regression: unexpected parentheses around non-mathematical powers\"라며 #909의 과도한 괄호 적용으로 생긴 회귀(#1041)를 고친다고 밝히고, 대체 코드는 `operand.children[1].type == token.DOUBLESTAR` 조건을 추가해 잘못된 괄호 삽입을 막는다."}

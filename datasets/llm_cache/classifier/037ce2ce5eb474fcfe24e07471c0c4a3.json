@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 \"Remove the experimental SSD trainer\"라고 실험적 SSD 트레이너 자체를 제거한다고 밝히고, 대체 코드나 이어받는 코드가 없어 사용자 기능이 없어진 경우다."}

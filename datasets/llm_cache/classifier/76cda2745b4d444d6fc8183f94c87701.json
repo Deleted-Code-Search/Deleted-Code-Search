@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR이 \"Remove old UI and webserver\"로 AIP-79에 따라 구 webserver/UI를 제거하는 작업이며, 리뷰에서 이 테스트가 Flask 앱을 필요로 해서 제거했다고 밝혀 구 UI 기능 자체가 폐기됐다."}

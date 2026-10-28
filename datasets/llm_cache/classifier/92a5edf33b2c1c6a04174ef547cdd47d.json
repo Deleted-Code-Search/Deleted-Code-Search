@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 \"delete screenshot\"으로 스크린샷 기능 자체를 제거했고, 이 함수는 그 스크린샷 위젯의 드래그 시작점 설정 기능이라 공개 기능이 사라진 경우다."}

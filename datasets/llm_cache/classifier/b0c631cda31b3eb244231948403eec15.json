@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "BUG|커밋 메시지가 262bdf0에서 도입된 EOFError 처리가 File 타입 stdin 사용 시 Abort를 유발하는 회귀(#2939)를 고치려고 이 __next__ 오버라이드를 제거하고 EOFError 발생을 프롬프트 함수로 옮겼다고 명시한다."}

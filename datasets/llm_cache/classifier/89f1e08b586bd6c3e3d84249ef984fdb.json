@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|HdfsTarget이 Format 체이닝과 AtomicWebHdfsFile 기반으로 재구성되면서 임시 파일 정리 책임이 AtomicLocalFile 쪽으로 옮겨져 이 __del__이 맞지 않게 됐다."}

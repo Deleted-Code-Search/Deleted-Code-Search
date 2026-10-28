@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #2573이 Playwright 기반 이벤트 리스너(on_download_will_begin)를 제거하고 cdp-use 기반 이벤트 API로 전환하면서, 같은 커밋의 추가 코드에서 해당 리스너 블록이 주석 처리된 채 downloads_path 조건 분기로 대체되어 다운로드 처리 책임이 다른 구조로 옮겨졌다."}

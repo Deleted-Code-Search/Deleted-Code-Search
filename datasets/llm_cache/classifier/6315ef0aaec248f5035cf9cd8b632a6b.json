@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지 \"Minor Update 2\", \"Config file update\"는 이유를 말하지 않고, PR 본문은 새 전략 추가 설명뿐이며, 삭제된 validate_bool을 대체하는 코드나 호출자 변경도 화면에 없다."}

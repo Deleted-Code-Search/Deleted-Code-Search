@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 TRIPLET_EMBEDDING·TRIPLET_COMPLETION·memify를 공개 표면에서 제거한다고 명시했고, 이 테스트는 그 제거된 기능(TRIPLET_EMBEDDING 환경변수, SearchType.TRIPLET_COMPLETION)을 검증하던 테스트다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 \"Moved Markdown COMPONENT_CLASSES to MarkdownBlock\"이라며 컴포넌트 클래스와 콘텐츠 처리를 MarkdownBlock으로 옮겼고, on_mount의 set_content 호출이 그 재구성으로 사라졌다."}

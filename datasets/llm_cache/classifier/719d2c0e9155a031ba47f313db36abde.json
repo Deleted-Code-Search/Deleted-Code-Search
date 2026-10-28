@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|이슈 #13355가 `prefect deployment build` CLI를 3.0에서 제거한다고 명시했고, 이 테스트는 그 CLI 명령을 검증하는 테스트다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 \"Table extraction now uses Strategy Design Pattern\"이라며 테이블 추출을 전략 패턴으로 재구성했고, 추가된 코드에서 table_extraction.extract_tables(...) 호출로 같은 일을 다른 자리(전략 객체)가 이어받는다."}

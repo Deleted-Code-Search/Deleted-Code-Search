@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지와 PR 제목이 `eval_type_backport()` 지원 제거를 명시하고, 이 테스트는 그 기능(미설치 시 TypeError 안내)을 검증하던 테스트다."}

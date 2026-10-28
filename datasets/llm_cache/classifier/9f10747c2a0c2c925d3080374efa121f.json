@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "PERF|커밋 메시지가 새 softmax-with-temperature 함수가 temperature 나눗셈을 인라인해 배치가 클 때 성능이 더 좋다고 명시한다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지·PR 본문은 phi→agno 대규모 리팩터와 인터페이스 변경만 나열할 뿐 validate_workspace_settings나 WorkspaceSettings를 이름으로 가리키지 않고, 이 파일에 추가·대체된 코드도 없어 삭제 이유를 화면만으로 판단할 근거가 없다."}

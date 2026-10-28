@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|커밋 제목이 voluptuous 사용을 밝히고, 추가된 PLATFORM_SCHEMA가 vol.Match 정규식으로 sender 검증을 대체한다."}

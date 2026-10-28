@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 SEP-1686(FastMCP 3의 wire protocol)이 SEP-2663으로 대체됐다고 밝히며, 이 함수는 SEP-1686의 tasks/list 핸들러라 폐기된 프로토콜과 함께 사라졌다."}

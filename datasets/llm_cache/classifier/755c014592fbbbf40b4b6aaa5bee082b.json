@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 register_kernel API를 Dynamo-friendly하게 재구성해 초기화 로직을 HelionKernelWrapper.__init__으로 옮기고 config_picker를 필수 인자로 바꿨다고 밝히며, 추가된 코드가 HelionKernelWrapper(config_picker=...) 기반 테스트로 대체되어 같은 등록·설정 일이 다른 인터페이스에서 계속된다."}

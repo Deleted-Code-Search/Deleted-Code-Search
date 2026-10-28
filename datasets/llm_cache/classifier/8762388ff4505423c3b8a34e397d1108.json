@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|테스트 파일에서 호출되지 않는 `add` 태스크 정의가 제거됐고, 커밋 메시지는 state.requests 매핑 추가만 언급해 이 함수 삭제 이유를 밝히지 않는다."}

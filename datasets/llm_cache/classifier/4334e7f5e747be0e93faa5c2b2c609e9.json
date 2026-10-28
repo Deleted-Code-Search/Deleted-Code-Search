@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|Blueprint.route 오버라이드가 사라지고 lazy(BaseSanic.route) 래퍼가 kwargs[\"apply\"]=False와 등록 후 재적용 로직을 대신 맡아, 같은 기능이 다른 구조로 이어받았다."}

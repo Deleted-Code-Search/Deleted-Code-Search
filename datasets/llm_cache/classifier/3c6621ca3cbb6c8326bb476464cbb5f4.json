@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 커밋이 test_as_dataset을 pytest 기반 test_builder_as_dataset으로 재작성하면서 split 파라미터화와 in_memory 검증을 추가해 같은 검증을 다른 구조로 이어받았다."}

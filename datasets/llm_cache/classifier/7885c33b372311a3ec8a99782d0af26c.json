@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|추가된 코드의 주석이 \"Move the document storage operations related to WriteDesign to the save operation of WriteDesign\"이라며 문서 저장 작업을 WriteDesign의 save로 옮겼다고 밝혀, 같은 일이 다른 자리에서 계속된다."}

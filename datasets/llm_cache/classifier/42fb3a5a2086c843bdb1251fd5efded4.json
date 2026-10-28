@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 \"chore: remove old demos\"로 이 데모 파일 자체를 정리 대상으로 지웠고, 삭제된 함수는 이 데모에서만 쓰이던 스모크 데이터 수집 헬퍼라 호출자를 잃었다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 argparse 기반 CLI를 jsonargparse/auto_cli로 교체하고 main 함수로 인자를 넘기도록 바꿨다고 명시하며, 추가된 코드에서 main이 인자를 받고 auto_cli가 파싱을 대신한다."}

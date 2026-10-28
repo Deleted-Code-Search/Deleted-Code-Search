@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 \"Remove SparseList from pandas API\"라 공개 API 표면에서 SparseList 자체를 제거한 폐기 작업이다."}

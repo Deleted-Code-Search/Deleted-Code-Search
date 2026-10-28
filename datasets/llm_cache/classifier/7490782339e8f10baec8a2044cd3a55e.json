@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 \"Taking `get_tensor_transport_metadata` out of the tensor transport manager\"라며 추출 책임을 src actor 호출로 옮기고 구현자는 extract만 하도록 인터페이스를 재편한다고 밝힌다."}

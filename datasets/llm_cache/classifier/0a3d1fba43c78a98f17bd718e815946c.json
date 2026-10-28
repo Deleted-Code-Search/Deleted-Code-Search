@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 \"removing old generated validators\"이고 PR이 \"refactor validators to remove duplicate files\"라 밝혀, 생성된 검증기 파일이 중복 제거로 삭제됐으며 이 파일에 대체 코드가 추가되지 않았다."}

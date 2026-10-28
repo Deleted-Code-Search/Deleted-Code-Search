@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR #5968이 ListView를 RecycleView로 대체하며 완전히 제거한다고 밝혔고, 삭제된 FruitItem 클래스는 ListView 예제용 테스트 코드이므로 사용자 기능 자체가 폐기됐다."}

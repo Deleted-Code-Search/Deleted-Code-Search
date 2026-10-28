@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "BUG|커밋 메시지가 `# fmt: off`가 첫 함수 이후 무시되던 문제(#335)를 고치려고 예외 기반 처리를 제거했다고 밝히며, 삭제된 `__str__`은 그 hacky exception-based handling에 쓰이던 코드다."}

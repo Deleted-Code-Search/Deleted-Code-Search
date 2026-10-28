@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 커밋이 WebUI 클래스를 도입하며 서버 기동 로직을 WebUI.start(self, host, port) 메서드로 옮겼고, 삭제된 모듈 함수의 pywsgi.WSGIServer serve_forever 동작이 그대로 이어받아졌다."}

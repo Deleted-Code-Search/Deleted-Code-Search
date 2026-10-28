@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "BUG|같은 자리에 들어온 대체 코드가 \"a newer connection may have taken over the key already\" 주석과 함께 `self._connections.get(key) is conn` 확인 후 삭제하도록 바뀌어, 새 연결이 키를 대체한 경우 기존 연결의 콜백이 새 연결을 잘못 제거하던 경쟁 조건을 고친 것으로 보인다."}

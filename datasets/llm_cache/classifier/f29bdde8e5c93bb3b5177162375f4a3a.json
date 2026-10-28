@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋이 체크포인터 인터페이스를 get_tuple/list 중심으로 재편하면서 get이 하던 일(체크포인트 반환)이 get_tuple을 통한 접근으로 대체됐다."}

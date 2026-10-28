@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #5338이 CoreMetadata를 TypedDict로 바꾸면서 setter 기반 API가 사라졌고, 같은 커밋이 pydantic_cs_update_function 필드와 metadata() 접근자를 추가해 같은 일을 다른 인터페이스로 이어받았다."}

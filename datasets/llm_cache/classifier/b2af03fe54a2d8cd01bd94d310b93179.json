@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 `_mpl.py`에서 서버 매니저·starlette 앱·WS 프록시·iframe 템플릿을 제거하고 MarimoComm 기반 `from_mpl_interactive.py`로 대체했다고 밝혀, 호스트/서버 아키텍처가 사라지며 이 함수가 맞지 않게 됐다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR 본문이 \"This class is not used\"라며 LocalRunnerTask 클래스 자체를 사용되지 않아 삭제했고, 이 테스트는 그 클래스를 검증하는 테스트라 대상이 사라져 함께 삭제됐다."}

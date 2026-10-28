@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 자리에 `__init__(self, args)`가 추가되어 기존 초기화 로직을 이어받고 비전·LLM 관련 속성을 확장했으므로, 인터페이스 변경에 따른 재구성이다."}

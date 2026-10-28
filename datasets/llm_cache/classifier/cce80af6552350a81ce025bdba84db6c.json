@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 \"[V0 Deprecation] Remove more V0 tests\"로 V0 기능 폐기를 명시하고, 이 테스트가 검증하던 V0 모델 러너의 MLA 어텐션 백엔드 기능 자체가 제거됐다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지·PR 본문은 VLM 트레이너 이미지 리사이즈 패치와 cherry-pick/revert를 말할 뿐 vLLMSamplingParams 삭제 이유를 이름으로 가리키지 않고, 추가된 코드에도 이 함수를 대체하는 줄이 없다."}

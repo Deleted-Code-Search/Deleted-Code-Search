@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 \"Refactor ZHA sensor to use the registry\"라 밝히고, 추가된 코드에서 Sensor.formatter가 _decimals/_divisor/_multiplier 기반으로 온도 변환을 포함한 포맷팅을 이어받아 같은 일이 다른 구조에서 계속된다."}

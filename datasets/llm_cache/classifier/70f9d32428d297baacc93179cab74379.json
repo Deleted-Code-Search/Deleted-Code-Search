@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|삭제된 함수는 'online' 모듈에서만 쓰인다고 독스트링에 명시돼 있고, 이 커밋은 Highfreq Backtest 지원을 위한 대규모 재구성으로 이 함수를 호출하던 자리나 대체 구현이 화면에 없어 호출자를 잃은 내부 함수로 보인다."}

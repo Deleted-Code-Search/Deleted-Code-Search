@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 `delete_adapter`를 중복 제거 대상 메서드로 명시하고, 이 파일은 `BaseTuner`를 상속해 공통 구현을 물려받는 구조로 바뀌었으므로 같은 일이 베이스 클래스에서 계속된다."}

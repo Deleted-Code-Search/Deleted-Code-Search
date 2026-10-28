@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #6571이 enable_vae_slicing()을 EfficiencyMixin(StableDiffusionMixin)으로 옮긴다고 명시했고, 추가된 코드에서 해당 파이프라인이 StableDiffusionMixin을 상속받도록 바뀌어 같은 기능이 다른 자리에서 계속된다."}

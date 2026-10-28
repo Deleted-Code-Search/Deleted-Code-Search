@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 \"Port checkpointer/store fixtures ... to idiomatic pattern\"이라 하고, 추가된 코드에서 `_store_postgres_pipe`를 import해 `sync_store`/`async_store` 파라미터화 픽스처가 같은 일을 이어받으므로 구조·인터페이스 재편으로 삭제됐다."}

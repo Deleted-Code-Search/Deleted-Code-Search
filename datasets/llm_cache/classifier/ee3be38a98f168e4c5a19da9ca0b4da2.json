@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR #2399가 `max_execution_time` 필드를 추가하면서 `_should_continue`가 시간 제한까지 검사하도록 시그니처와 본문이 바뀌었고, 기존 반복 횟수만 검사하던 함수는 새 기능(실행 시간 제한)을 위해 대체되었다."}

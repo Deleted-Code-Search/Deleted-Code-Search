@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR 본문이 `image_zoom_in_tool`을 \"dormant or duplicated plugin entry points that no in-tree code uses\"라며 \"Zero in-tree consumers\"라고 명시해 호출자가 없어 제거된 것으로 판단된다."}

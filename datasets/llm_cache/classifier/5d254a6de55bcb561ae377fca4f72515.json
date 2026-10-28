@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 `_fixed_detection_callback` 모듈 함수를 `fixed_detection_callback` fixture로 전환한다고 밝히고, 추가된 코드에 동일한 상수 검출을 반환하는 fixture가 있어 같은 일이 다른 자리에서 계속된다."}

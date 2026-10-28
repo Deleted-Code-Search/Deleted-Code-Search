@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #777이 로봇 추상화를 form factor 기반(`MobileManipulator`)에서 `Robot`/`Teleoperator` 분리 구조로 재설계하는 대규모 API 변경이라, 이 클래스의 연결 해제 책임이 새 구조의 다른 자리로 옮겨가면서 삭제됐다."}

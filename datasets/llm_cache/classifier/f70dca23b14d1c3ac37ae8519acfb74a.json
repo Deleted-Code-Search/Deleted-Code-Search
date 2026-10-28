@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "BUG|커밋 메시지와 PR 제목이 \"Fix LBVH stuck in infinite loop\"라고 삭제의 이유를 명시하고, 삭제된 newtons_method가 그 무한 루프의 원인 코드다."}

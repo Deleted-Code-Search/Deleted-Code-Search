@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR 본문이 \"Removed monkeypatched batch-key capture tests\"라고 이 테스트를 지목하며, 이 테스트가 검증하던 compute_loss 입력 키 캡처 방식이 GRPO 형태 재작성으로 호출 경로가 바뀌어 검증 대상이 사라졌다."}

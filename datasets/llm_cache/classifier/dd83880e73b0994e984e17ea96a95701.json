@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 \"Remove E2E tests and update migration unit tests\"·\"Delete E2E workflows and test files\"라고 E2E 테스트 파일 자체를 지운다고 밝혀, 이 테스트가 검증하던 E2E 대상이 사라져 삭제됐다."}

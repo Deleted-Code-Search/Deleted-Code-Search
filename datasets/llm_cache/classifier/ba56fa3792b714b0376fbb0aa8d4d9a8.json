@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지 \"Delete scripts directory\"로 scripts 디렉터리 전체가 삭제되었고, 이 함수를 호출하던 자리나 대체 구현이 화면에 없어 호출자를 잃은 내부 함수로 판단된다."}

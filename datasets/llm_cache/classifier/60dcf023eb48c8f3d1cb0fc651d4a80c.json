@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 lowlevel Server의 데코레이터 기반 핸들러 등록을 생성자의 on_* 키워드 인자로 교체하는 리팩터라 밝히고, 추가된 코드가 on_* 핸들러와 (ctx, params) -> result 시그니처로 같은 등록 기능을 이어받는다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 자리에 `_parse_property_attributes`가 재귀적으로 중첩 객체·배열을 파싱하도록 다시 작성되어, 기존 함수가 하던 속성 파싱 일을 새 구현이 이어받는다."}

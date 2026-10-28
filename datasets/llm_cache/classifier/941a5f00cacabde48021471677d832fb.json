@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 \"Deprecate old flow\"라며 구 흐름을 폐기하고 새 흐름으로 전환한다고 밝히고, 이 함수는 그 구 흐름(redpajama_q4f32_mod)의 일부로 대체 코드 없이 제거됐다."}

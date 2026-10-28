@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 \"Removed stale interface\"라며 레거시 정리를 말하고, 이 파일에 대체 코드나 호출자 변경이 없어 호출되지 않는 잔재를 치운 것으로 보인다."}

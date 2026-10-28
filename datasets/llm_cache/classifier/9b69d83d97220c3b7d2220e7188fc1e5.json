@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|PR 본문은 test_with_metadata.py가 YouTube 검색 결과를 monkeypatch하고 Pafy.download를 대체한다고만 말할 뿐, test_embed_in_mp3 삭제의 이유를 이름으로 밝히지 않으며, 삭제된 본문 자체에도 이유가 드러나지 않는다."}

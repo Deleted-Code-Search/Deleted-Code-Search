@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 V2에서 v1.100.0에서 deprecation된 공개 API 제거를 명시하고, 삭제된 __getattr__는 _RENAMED_TYPE_ALIASES에 대한 PydanticAIDeprecationWarning 경고를 내보내는 공개 표면의 하위 호환 shim이었다."}

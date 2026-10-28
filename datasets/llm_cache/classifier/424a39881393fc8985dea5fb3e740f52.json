@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 이벤트 인과 순서 로직을 클래스로 추출해 여러 소비자가 재사용하도록 바꿨다고 밝히고, 추가된 코드에서 `causal_ordering().get_lost_followers()`가 같은 일을 이어받는다."}

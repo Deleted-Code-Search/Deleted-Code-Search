@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 \"Action building moves from `_resolvers.resolve_action` to `_actions.build_action` (class-based handlers); ref resolution lives in `_refs`\"라고 런타임 액션 빌드 구조를 옮겼음을 밝히고, 리뷰 코멘트도 \"Moved from resolver to here\"라며 같은 일이 `_actions`의 클래스 기반 핸들러로 이어짐을 가리킨다."}

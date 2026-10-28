@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|삭제된 start_trial의 메시지 출력 로직이 같은 커밋에서 추가된 display_trial_start 함수로 옮겨졌고, 이는 구조·책임 재편에 따른 이동이다."}

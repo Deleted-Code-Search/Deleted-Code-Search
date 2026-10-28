@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 deprecated Model._meta 메서드 제거를 명시하고, 이 테스트는 제거된 get_all_related_m2m_objects_with_model을 검증하던 공개 API 기능이라 폐기로 사라졌다."}

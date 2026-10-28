@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|PR 본문은 테스트가 통합 내부(runtime_data)와 직접 상호작용하지 않도록 바꾼다고만 하고, set_signal 함수나 그 삭제 이유를 이름으로 가리키지 않으며, 삭제된 본문(event.set())이나 추가된 코드에서 이 함수의 일을 이어받는 줄을 찾을 수 없다."}

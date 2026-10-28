@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 `declarative_mixin`을 `DeclarativeBase`로 교체하고 모델들을 `orm_models.<model>` 직접 사용으로 바꾸는 구조 전환이라고 밝히며, 삭제된 `deployment_id`는 이 믹스인 기반 컬럼 정의 방식이 새 Base/모델 구조로 재편되면서 맞지 않게 된 코드다."}

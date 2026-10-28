@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR #5369가 Runloop provider 자체를 제거하고 그 구현·export·provider 전용 계약 테스트를 삭제한다고 명시하므로, 이 Runloop 전용 테스트도 폐기된 기능과 함께 사라졌다."}

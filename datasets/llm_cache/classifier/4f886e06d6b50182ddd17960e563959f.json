@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|커밋 메시지 \"consolidate Upsample\"과 추가된 `from .resnet import Upsample` 및 `Upsample(block_in, use_conv=...)` 호출이 이 클래스의 구현을 resnet 모듈의 Upsample로 대체했음을 보여준다."}

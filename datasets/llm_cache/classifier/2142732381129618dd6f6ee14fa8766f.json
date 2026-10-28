@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 제목·본문이 pybabel setuptools 통합을 제거한다고 밝혔고, 이 테스트는 그 통합의 extract_messages 명령 동작을 검증하던 것이다."}

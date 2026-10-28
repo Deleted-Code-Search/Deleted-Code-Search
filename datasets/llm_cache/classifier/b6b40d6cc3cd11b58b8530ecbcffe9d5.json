@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR이 \"Input validation refactoring\"으로 검증 로직을 check_array/_ensure_sparse_format로 재구성하면서, _atleast2d_or_sparse의 흩어진 검증·변환 책임이 새 함수들로 옮겨졌다."}

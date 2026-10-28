@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|경로가 vendor/ 아래이고 커밋 메시지가 \"Delete vendored pip9\"로 벤더 코드 삭제를 밝히며, 이 함수 자체의 삭제 이유를 이름으로 가리키는 문장이 없다."}

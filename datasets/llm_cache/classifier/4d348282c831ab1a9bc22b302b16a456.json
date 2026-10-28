@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 \"Remove lateral MPC library\"라고 이 테스트가 의존하는 LateralMpc 라이브러리 제거를 명시해 검증 대상이 사라졌다."}

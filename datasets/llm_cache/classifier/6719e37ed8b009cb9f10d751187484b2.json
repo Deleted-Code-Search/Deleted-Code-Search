@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 `utils/llm_utils.py`가 auto-triage 분류기 전용이었고 호출자가 사라졌다고 밝히며, 이 테스트가 검증하던 `_extract_json`을 포함한 모듈 전체가 삭제됐다."}

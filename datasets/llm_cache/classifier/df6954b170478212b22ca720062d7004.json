@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지는 langchain-community로의 모듈 이동을 말하지만 이 테스트 파일이나 mock_lakefs_client 함수를 이름으로 가리키지 않고, 화면에 대체 코드나 호출자 변경도 없어 삭제 이유를 댈 근거가 없다."}

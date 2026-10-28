@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 tfds Features 메커니즘을 단일 features.py로 추출·리팩터링한다고 밝혀, 이 파일의 _flatten이 그 재구성으로 맞지 않게 됐다."}

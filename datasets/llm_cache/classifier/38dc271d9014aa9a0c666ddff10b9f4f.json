@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 제목·본문이 pybabel setuptools 통합을 제거한다고 명시했고, 삭제된 테스트는 그 통합 기능(ThemeMixin의 entry_points 기반 테마 탐색)을 검증하던 것으로 기능 자체가 없어졌다."}

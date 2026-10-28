@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 dispatch-tier 미들웨어 훅을 제거하고 테스트를 `Server.middleware`로 재작업했다고 밝히며, 추가된 코드가 `server.middleware.append(drop_params)`로 같은 검증을 컨텍스트 티어에서 이어받는다."}

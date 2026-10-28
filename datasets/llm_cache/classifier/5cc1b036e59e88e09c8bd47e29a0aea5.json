@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 \"Separate flow loading so we can load a deployment without failing\"이라 밝히고, root_validator의 자동 flow 로딩이 제거되어 load_flow 메서드로 옮겨졌으므로 구조·책임 변경으로 인한 삭제다."}

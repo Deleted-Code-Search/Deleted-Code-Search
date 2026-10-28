@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 \"Introduces new top-level converter interface (changed arguments)\"라며 convert_single이 사라진 새 converter 인터페이스(convert)를 도입했고, 같은 파일에 test_convert_path/test_convert_stream이 converter.convert를 쓰도록 추가되어 같은 검증이 다른 API로 이어진다."}

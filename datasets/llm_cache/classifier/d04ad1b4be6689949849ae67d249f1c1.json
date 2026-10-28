@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지의 \"Removals\" 항목에 \"Removed all references to `Assistant`\"라고 명시되어 있어, Assistant 클래스 자체가 제거되면서 그 메서드도 함께 사라졌다."}

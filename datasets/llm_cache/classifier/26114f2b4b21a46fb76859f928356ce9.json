@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|이 파일이 `BoundingBox` 클래스로 위임하는 공개 API 래퍼들로 재작성되면서, `_rel_xyxy_to_xyxy`가 하던 상대좌표→절대좌표 변환은 `BoundingBox.convert_format`(height/width 인자)이 이어받았다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR #16748 \"Remove DP\"가 DataParallel 자체를 제거한다고 명시하고, 이 함수는 DP 전략의 공개 메서드로 기능 자체가 사라졌다."}

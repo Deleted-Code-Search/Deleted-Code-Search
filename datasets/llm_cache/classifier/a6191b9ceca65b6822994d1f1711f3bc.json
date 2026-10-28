@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR 본문이 \"Reuse DSA's existing split-K reduction and split heuristics in sparse decode\"라며 이 파일의 `_kv_splits_heuristic`을 DSA의 기존 구현으로 대체(재사용)한다고 밝히고, 추가 코드에서도 DSA의 `_kv_splits_heuristic`을 import하고 있다."}

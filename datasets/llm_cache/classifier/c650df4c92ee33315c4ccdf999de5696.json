@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 `add_*_choices` 래퍼들을 레지스트리 옆의 bound `list.extend` 별칭으로 교체한다고 밝혔고, 추가된 코드에 `add_fp8_gemm_runner_backend_choices = FP8_GEMM_RUNNER_BACKEND_CHOICES.extend`가 있어 같은 일이 다른 형태로 계속된다."}

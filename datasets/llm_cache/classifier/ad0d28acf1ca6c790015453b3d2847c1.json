@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "PERF|PR #94 본문이 \"For optimisation purpose it's better to open the file only one time\"이라며 매번 파일을 여는 비용을 줄이려고 open_file로 한 번만 열도록 바꿨다."}

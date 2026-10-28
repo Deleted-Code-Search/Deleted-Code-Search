@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|경로에 third_party/ 가 있고 커밋 메시지·PR 은 ruff 검사 제한과 push 테스트 활성화만 말할 뿐 이 함수 삭제의 이유를 밝히지 않으며, 대체 코드도 없다."}

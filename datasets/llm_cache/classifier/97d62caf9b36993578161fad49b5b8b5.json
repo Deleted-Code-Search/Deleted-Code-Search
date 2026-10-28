@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지·PR 본문·리뷰 어디에도 이 테스트나 `test_missing_name_returns_no_name`이 지워진 이유를 밝히는 문장이 없고, 추가된 코드에도 이 테스트가 검증하던 `/api/upload_index`의 \"no name\" 동작을 대체하는 줄이 없다."}

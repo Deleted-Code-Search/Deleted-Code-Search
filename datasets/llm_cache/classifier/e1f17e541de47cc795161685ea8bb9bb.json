@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 \"Don't define __ne__ methods, they're implicit since Py3\"라고 밝혀, Python 3에서 __ne__가 __eq__로부터 암묵적으로 생성되므로 이 메서드는 더 이상 호출될 필요가 없어 제거됐다."}

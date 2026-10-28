@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|삭제된 함수에 \"Deprecated since 1.18. Scheduled to remove in 1.20\" 경고가 붙어 있었고, 커밋 메시지가 \"Remove deprecated methods that are scheduled to removed in 1.20\"이라 공개 API 기능 자체를 폐기한 것이다."}

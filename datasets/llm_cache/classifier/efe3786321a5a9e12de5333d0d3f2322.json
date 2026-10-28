@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|PR 본문은 내부 관리 trimesh 배포판을 공식 버전으로 대체하고 패치를 monkeypatching으로 backport한다고만 말할 뿐, material.py의 name 프로퍼티 삭제 이유를 이름으로 가리키지 않으며 이 파일에 추가되거나 대체된 코드도 없다."}

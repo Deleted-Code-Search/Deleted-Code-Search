@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 lowlevel Server의 데코레이터 기반 핸들러 등록을 생성자의 on_* 키워드 인자로 교체한다고 밝혔고, 같은 파일에 on_list_tools=handle_list_tools로 등록하는 새 핸들러가 추가되어 같은 일이 다른 인터페이스로 계속된다."}

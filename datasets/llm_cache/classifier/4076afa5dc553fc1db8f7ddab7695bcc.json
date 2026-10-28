@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|`cookie_compat` 프로퍼티가 `CookieCompatResponse`를 반환하던 자리를, 같은 커밋이 `Cookies` 모델과 `Response.cookies` 프로퍼티로 쿠키 인터페이스를 재구성하면서 대체했다."}

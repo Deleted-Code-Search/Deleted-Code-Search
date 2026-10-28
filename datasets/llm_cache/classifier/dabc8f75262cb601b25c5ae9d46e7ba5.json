@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 더미를 라이브러리에 정의하는 대신 의존성 누락 시 동적으로 생성하는 방식으로 바꾼다고 밝혀, 정적 더미 클래스의 __init__이 새 구조에서 불필요해졌다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|clean_db는 테스트 픽스처용 정적 헬퍼로, 이 커밋에서 DagFileProcessorManager 기반의 _process_file/_parse_file 구조로 재편되면서 이를 호출하던 테스트들이 사라져 호출자를 잃었다."}

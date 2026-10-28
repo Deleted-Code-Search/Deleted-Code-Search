@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 REST API 테스트를 APIViewTestCases로 재구성한다고 밝혔고, 추가된 GraphTest가 APIViewTestCase를 상속해 삭제된 test_delete_graph의 삭제 검증을 표준 테스트 케이스가 이어받는다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 워크스페이스 권한을 단일 `('workspace', '*')` 슬롯의 USE/MANAGE 2단계로 단순화하고 레거시 `resource_type='*'` 판별자를 제거한다고 명시해, READ 권한으로 create를 막던 기존 동작 자체가 사라졌다."}

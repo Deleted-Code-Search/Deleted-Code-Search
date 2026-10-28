@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 커밋이 `_body`를 `_sources_body(retrieval, guardrails)`로 대체해 소스 기본값 응답에 guardrails와 injection_model을 함께 싣도록 응답 구조를 바꿨다."}

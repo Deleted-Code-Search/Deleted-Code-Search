@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "BUG|PR 본문이 OSMesa 경로가 32x32 뷰포트로 하드코딩되어 카메라 해상도와 무관하게 이미지를 반환하지 못하던 문제를 고쳤다고 명시한다."}

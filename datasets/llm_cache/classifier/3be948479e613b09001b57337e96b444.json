@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|커밋 메시지가 빌드 시스템을 setup.py 기반에서 scikit-build-core로 전환한다고 밝혀, setup.py의 옵션 초기화 구현이 외부 빌드 도구로 대체됐다."}

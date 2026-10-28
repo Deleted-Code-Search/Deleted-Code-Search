@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 `xmap`과 `jax.experimental.maps` 모듈을 삭제한다고 밝히고, 이 테스트 유틸리티는 xmap의 axis_resources용 스케줄을 생성하는 xmap 전용 코드이므로 사용자 기능 자체가 제거됐다."}

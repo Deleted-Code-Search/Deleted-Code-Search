@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 \"Legacy gen interfaces\"와 \"Drop support for Python 2\"를 명시하며, 삭제된 함수는 gen.Callback/Wait/YieldPoint 기반의 legacy gen 인터페이스를 사용하는 공개 기능이 제거된 것이다."}

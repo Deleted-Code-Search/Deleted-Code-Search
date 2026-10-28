@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|async checkpointer 픽스처들이 anyio 플러그인 기반의 awith_checkpointer 컨텍스트 매니저로 재구성되면서, 이 개별 픽스처가 하던 일이 새 헬퍼로 옮겨졌다."}

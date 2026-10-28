@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지와 PR 본문은 test_before_pypi 디렉터리가 실수로 저장소에 추가된 것을 .gitignore로 고치는 내용일 뿐, roperator.py의 ror_ 함수 삭제 이유를 이름으로 가리키거나 코드로 추론할 근거가 없다."}

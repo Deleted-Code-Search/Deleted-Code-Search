@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 datapoints에서 메서드를 제거하고 dispatcher 등록 메커니즘으로 대체하는 리팩터라고 밝히고, 리뷰 코멘트도 \"datapoint method\"에 있던 중간 계층이 등록 방식으로 옮겨졌다고 설명하므로 같은 일이 다른 자리(디스패처)에서 계속된다."}

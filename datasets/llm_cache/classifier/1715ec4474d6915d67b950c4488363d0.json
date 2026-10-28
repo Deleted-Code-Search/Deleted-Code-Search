@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 YAML 문자열 검증을 제거하기로 결정했다고 밝혔고(issues #3437, #3642), 이 테스트는 그 검증 동작을 검증하던 대상이 사라져 삭제됐다."}

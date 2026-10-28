@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지가 \"Restructuring Spotdl\"이라는 대규모 재구성만 언급할 뿐 이 테스트 함수를 이름으로 가리키는 이유 문장이 없고, 삭제된 본문의 @pytest.mark.xfail 외에는 대체 코드나 호출자 변경 등 판단 근거가 화면에 없다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 flow_serializer.py 삭제와 flow structure 모델링의 flow_definition.py 이전을 명시하고, 이 테스트 파일의 display 함수는 그 serializer/구조 검증 대상에 속한다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "BUG|삭제된 테스트는 get_chunk_by_key가 None을 반환하는 동작을 검증했지만, 같은 커밋이 추가한 테스트는 None이 \"청크가 사라졌다\"로 읽히면 안 된다며 NotImplementedError를 기대하도록 바뀌었으므로 잘못된 동작을 고친 것이다."}

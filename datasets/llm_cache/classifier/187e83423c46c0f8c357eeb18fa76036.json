@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지에 이 테스트를 이름으로 가리키며 삭제 이유를 말하는 문장이 없고, 추가된 코드에서 이 테스트가 검증하던 동작(컬렉션 없는 요소에 value 설정 시 AttributeError)을 이어받는 대체 코드도 보이지 않는다."}

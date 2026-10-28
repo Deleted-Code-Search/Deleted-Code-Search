@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 \"soft-deprecate missing rx.memo annotations instead of erroring\"이라며 누락된 어노테이션을 에러 대신 경고로 바꿔, 이 테스트가 검증하던 TypeError 요구 동작 자체가 폐기됐다."}

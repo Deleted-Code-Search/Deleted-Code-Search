@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지 \"delete big_pattent and cnn_daily\"가 데이터셋 자체를 제거함을 밝히고, 이 함수는 cnn_dailymail 데이터셋 로딩의 핵심 처리 함수로 대체 코드 없이 삭제됐다."}

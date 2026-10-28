@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|리뷰에서 \"I simplified skeleton resolving logic here\"라며 스켈레톤 해석을 `resolve_skeleton_by_vertex_count`/`resolve_skeleton_by_edge_count` 함수로 옮겼고, `__init__(self, limbs)`를 가진 클래스 대신 `Skeleton` Enum 기반 구조로 바뀌어 같은 일이 다른 자리에서 계속된다."}

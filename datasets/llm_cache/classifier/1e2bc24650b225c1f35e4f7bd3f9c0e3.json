@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 allocate_ids를 리스트 반환으로 바꾸고 호출자를 갱신했다고 말하며, 삭제된 test_reset_id가 검증하던 reset_sequence/get_next_id는 이 커밋의 추가 코드 어디에서도 이어받지 않아 검증 대상이 사라졌다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|PR 본문이 Google Photos 클라이언트 라이브러리를 새 외부 패키지(google-photos-library-api)로 교체한다고 밝히고, 추가된 코드가 그 패키지의 api.AbstractAuth를 import해 쓰므로 외부 라이브러리가 이 함수의 역할을 이어받았다."}

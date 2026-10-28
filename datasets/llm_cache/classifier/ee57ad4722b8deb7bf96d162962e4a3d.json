@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 k-diffusion 패키지가 더 이상 유지보수되지 않아 파이프라인을 완전히 제거한다고 밝혔고, 이 함수는 k_diffusion 백엔드 요구사항을 선언하는 더미 객체의 일부다."}

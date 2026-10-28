@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR이 vega 관련 차팅 백엔드 로직을 `vega_charts`와 `built_in_chart_utils`로 재구성·이전한다고 명시했고, `area_chart`는 그 대상 명령 중 하나로 나열되어 있어 구조 변경으로 이 코드가 다른 자리로 옮겨진 것이다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 `huggingface_hub`로 대체한다며 기존 user 명령을 제거한다고 밝혀, 사용자가 쓰던 CLI 기능 자체가 없어진다."}

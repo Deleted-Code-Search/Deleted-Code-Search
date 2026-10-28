@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋이 \"create BaseWindow\"를 되돌리면서 렌더러 생성이 _create_renderer 메서드에서 _run 스레드 내부로 옮겨졌고, 같은 일이 다른 자리에서 계속된다."}

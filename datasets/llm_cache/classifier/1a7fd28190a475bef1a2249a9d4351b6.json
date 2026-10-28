@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지·PR 본문은 새 공개 API st.skeleton() 추가를 설명할 뿐 _skeleton 함수 삭제의 이유를 이름으로 가리키지 않고, 같은 파일에 추가되거나 대체된 코드도 화면에 없어 근거를 댈 수 없다."}

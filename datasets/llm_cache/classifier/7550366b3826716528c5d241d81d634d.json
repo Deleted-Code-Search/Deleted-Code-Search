@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 \"[quic] rewrite to match TunnelLayer\"이고, 같은 파일에 QuicLayer가 tunnel.TunnelLayer를 상속하도록 추가되어 핸드셰이크 완료 처리가 TunnelLayer 구조로 재편되면서 이 메서드가 그 구조에 맞지 않게 됐다."}

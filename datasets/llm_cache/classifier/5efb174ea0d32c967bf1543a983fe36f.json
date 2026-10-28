@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지와 PR이 \"Remove deprecated video_pygst.py\", \"Remove deprecated video providers\"라며 폐기된 pygst 비디오 프로바이더 기능 자체를 제거한다고 밝히고 있다."}

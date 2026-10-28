@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 Sparse Attention 기능 자체를 제거(deprecate)하고 sparse-attention API를 더 이상 사용할 수 없다고 명시하므로, 이 테스트 헬퍼가 지원하던 기능이 폐기됐다."}

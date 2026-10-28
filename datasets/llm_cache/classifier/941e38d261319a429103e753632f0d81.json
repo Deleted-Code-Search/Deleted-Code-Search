@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #2057이 \"Parameterize tests\"로 for 루프를 pytest.mark.parametrize로 바꾸면서 test_boolean_option의 두 루프가 test_boolean_switch와 test_boolean_flag로 재구성됐다."}

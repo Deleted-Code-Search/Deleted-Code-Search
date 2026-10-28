@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 \"Refactored to use spotify_tools.SpotifyAuthorize class\"라며 삭제된 set_client_credentials의 토큰 생성·Spotipy 초기화 역할을 새 SpotifyAuthorize 클래스의 __init__/generate_token이 이어받았다."}

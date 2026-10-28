@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #1281이 테스트를 `MockTransport(<handler_function>)` 방식으로 재구성하면서, httpcore 바이트 단위 `request()` 스텁 대신 `hello_world(request) -> httpx.Response` 핸들러 함수와 `MockTransport`로 같은 요청/응답 테스트를 이어받았다."}

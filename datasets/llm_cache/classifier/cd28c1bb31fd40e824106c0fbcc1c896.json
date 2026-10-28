@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|리뷰 코멘트가 `evaluate_valid` 같은 래퍼 함수 대신 `model.fit`/`model.predict` 패턴을 따르라고 지적했고, 같은 커밋이 `SASRecDataSet` 클래스와 모델의 `train` 메서드로 데이터 처리·평가 구조를 재편해 이 함수의 역할이 다른 자리로 옮겨졌다."}

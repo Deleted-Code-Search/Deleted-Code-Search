@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 서빙 시그니처를 `__init__`에서 자동 추론하도록 재구성하고 \"Obliterate lots and lots of serving sig and dummy overrides\"라며 수동 override를 제거한다고 밝혀, 같은 서빙 출력 기능이 새 자동화 경로로 이어받아짐."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 `reflex_cli/utils/hosting.py`의 수제 HTTP 계층을 `reflex-build-sdk`로 대체했다고 밝혔고, 이 테스트가 패치하던 `httpx.post`/`httpx.put` 기반 예약·업로드 경로가 사라져 검증 대상이 없어졌다."}

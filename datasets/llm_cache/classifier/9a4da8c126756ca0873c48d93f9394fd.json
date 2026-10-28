@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 TrialExecutor 기반 클래스를 제거하고 남은 기능을 RayTrialExecutor로 옮긴다고 밝혀, 추상 메서드 save가 그 구조 변경으로 사라졌다."}

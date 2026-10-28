@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지 \"del custom ops test for check the CI status\"는 삭제 사실만 말할 뿐 이유를 밝히지 않고, 삭제된 __init__ 본문이나 대체 코드에서도 이유를 알 근거가 없다."}

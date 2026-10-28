@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "SEC|PR 본문이 Python random 모듈은 암호학적 용도로 권장되지 않는다며 os.urandom으로 교체한다고 밝혀, 약한 난수 생성 코드를 제거한 보안 목적 삭제다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #2573이 Playwright를 제거하고 cdp-use 기반으로 BrowserSession을 전면 재작성하면서 탭 정보 조회가 get_current_page_url/get_current_page_title 등 다른 메서드로 대체됐고, 삭제된 함수를 이름으로 가리키는 이유 문장은 없다."}

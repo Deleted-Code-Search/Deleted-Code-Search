@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|삭제된 exec는 테스트용 페이크 세션의 메서드로, 같은 커밋이 scripted_sandbox_session 기반 _shell_session/_pty_session 헬퍼로 테스트 세션 구성을 대체해 이 페이크 클래스의 호출자가 사라졌다."}

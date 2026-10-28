@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 커밋이 `_mock_stream_completion_response` 헬퍼 안에 `mock_stream`을 `yield b\"import pandas as pd\"`로 다시 정의해, 테스트가 새 스트리밍 경로(StreamingResponse)에 맞게 재구성됐다."}

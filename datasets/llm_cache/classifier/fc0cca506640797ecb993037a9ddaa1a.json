@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #56이 Processor·Handler·Trainer·Estimator를 포함한 Qlib 인터페이스를 재구성한다고 밝히고, 같은 자리에 들어온 대체 __init__이 start_date/end_date·processor 인자 대신 instruments·data_loader 기반으로 바뀌어 핸들러 구조·인터페이스 변경에 따른 것임."}

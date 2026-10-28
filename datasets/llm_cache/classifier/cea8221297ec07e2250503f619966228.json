@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #741이 프록시/프로토콜 코어의 계층 분리를 재구성하면서 이 함수가 속한 primitives.py의 역할이 바뀌었고, 같은 일은 새 계층 구조의 다른 자리에서 계속된다."}

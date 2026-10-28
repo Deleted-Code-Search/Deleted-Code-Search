@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|Exit 예외가 ClickException pretty-printing을 상속하지 않도록 RuntimeError 서브클래스로 재구성되면서, ctx를 받던 __init__이 code만 받는 새 Exit.__init__으로 대체됐다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #1572 본문이 `Response(on_close=...)`를 공개 API에서 제거하고 대신 응답 인스턴스의 스트림을 `BoundSyncStream`/`BoundAsyncStream`으로 업그레이드해 타이머 종료 시 elapsed를 설정하도록 바꿨다고 밝히며, 삭제된 on_close 콜백의 역할을 새 BoundStream 클래스가 이어받는다."}

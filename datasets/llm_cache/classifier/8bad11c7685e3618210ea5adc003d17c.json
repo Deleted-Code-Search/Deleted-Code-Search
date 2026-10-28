@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|삭제된 `def run(self): pass`는 빈 스텁으로, 커밋 메시지가 \"code repetition and unnecessary code blocks\"를 정리했다고 밝혀 호출되지 않는 불필요한 코드 제거로 판단된다."}

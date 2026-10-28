@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋이 Extractor의 입출력 수집 구조를 value_infos 기반 _collect_new_io로 재편하면서, graph.output만 보던 _collect_new_outputs가 새 인터페이스에 맞지 않게 되어 제거됐다."}

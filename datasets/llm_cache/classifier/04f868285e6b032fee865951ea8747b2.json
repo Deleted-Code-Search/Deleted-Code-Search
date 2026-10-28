@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 #36093을 되돌리는 revert이고, 추가된 코드에서 start_server 이벤트 핸들러가 server.start()와 설정 저장 로직을 이어받아 같은 일이 다른 구조로 계속된다."}

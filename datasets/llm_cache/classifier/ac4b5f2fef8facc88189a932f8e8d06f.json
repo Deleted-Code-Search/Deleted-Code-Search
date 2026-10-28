@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|삭제된 테스트가 검증하던 `without_wrapping_backticks`의 백틱 제거 동작이 같은 커밋에서 추가된 `test_without_wrapping_backticks` 파라미터화 테스트로 대체되어, 기존 단일 케이스 테스트는 검증 대상이 없어져 지웠다."}

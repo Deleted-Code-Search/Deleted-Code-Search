@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #3868 \"revamp entire metrics\"가 metrics API를 재작성하면서 classification.py의 클래스 기반 metric이 별도 파일로 분리·재구성됐고, 이 forward 메서드는 그 재편 과정에서 자리를 잃었다."}

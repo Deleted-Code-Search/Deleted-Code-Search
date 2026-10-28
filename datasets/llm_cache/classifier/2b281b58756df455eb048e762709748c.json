@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 \"Remove password confirmation in modal\"이라며 비밀번호 확인 요구 자체를 없앴다고 밝히고, 삭제된 테스트는 그 확인 불일치 검증을 담당했다."}

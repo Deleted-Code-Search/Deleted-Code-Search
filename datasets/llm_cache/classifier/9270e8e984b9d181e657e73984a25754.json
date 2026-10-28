@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|PR 본문이 naive retry 구현을 tenacity 라이브러리 데코레이터로 대체한다고 밝혔고, 테스트의 _wait 대기 로직도 scheduler._rpc_retry_wait 설정으로 바뀌었다."}

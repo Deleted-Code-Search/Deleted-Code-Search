@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지와 PR 본문이 luigi.util의 deprecated 항목을 제거했다고 밝히고, 삭제된 subtasks가 그 대상이므로 사용자 기능 자체가 없어진 FEAT이다."}

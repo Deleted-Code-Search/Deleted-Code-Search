@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 rpyc 의존성을 완전히 제거하기 위해 TP/DP 워커를 재작성했다고 밝혀, rpyc 서비스 프로세스를 띄우던 이 함수의 기능 자체가 사라졌다."}

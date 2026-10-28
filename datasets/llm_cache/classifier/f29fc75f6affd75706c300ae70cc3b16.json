@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지와 PR 본문이 \"feat: V2.0.0\"과 \"Changelog TBD\"뿐이라 이 테스트 삭제의 이유를 이름으로 가리키는 문장이 없고, 삭제된 본문에도 @skip·deprecated 같은 이유가 드러나지 않는다."}

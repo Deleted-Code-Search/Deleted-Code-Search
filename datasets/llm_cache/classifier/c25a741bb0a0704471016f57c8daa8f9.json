@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지와 PR 본문은 lang.py를 모듈로 분할·이동했다고만 말할 뿐 delayed_call_fn의 삭제 이유를 밝히지 않고, 추가된 코드는 import문뿐이라 이 함수의 일을 이어받는 대체 코드를 화면에서 찾을 수 없다."}

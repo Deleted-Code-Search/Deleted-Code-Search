@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 `attn_processors`/`set_attn_processor`의 복사 구현을 `AttentionMixin` 상속으로 대체한다고 밝히고, 같은 커밋이 이 파일의 클래스들에 `AttentionMixin`을 추가했으므로 이 재귀 헬퍼의 역할이 믹스인으로 옮겨졌다."}

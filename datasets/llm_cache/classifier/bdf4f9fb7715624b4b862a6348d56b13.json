@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #4761이 MemoryScope를 Pydantic BaseModel로 전환하면서 __init__이 model_validator(_accept_memory)와 필드 선언으로 대체됐고, 같은 초기화·정규화·read_only 처리가 새 구조에서 계속된다."}

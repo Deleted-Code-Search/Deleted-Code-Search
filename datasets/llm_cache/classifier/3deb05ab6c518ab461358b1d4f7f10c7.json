@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지에 \"Make html, id and text JSProperties\"가 있어 id가 property에서 JSProperty로 대체되었고, 이는 구조·인터페이스 변경으로 같은 일이 다른 방식으로 계속됨을 보여준다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR #5369가 Runloop provider 구현·export·optional dependency를 제거한다고 명시해, 사용자가 쓰던 Runloop 샌드박스 기능 자체가 폐기됐다."}

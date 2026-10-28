@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 제목과 커밋 메시지가 \"remove publish command from reflex custom components\"라고 publish 명령 자체를 없앴음을 밝히고, 추가된 코드에서도 publish가 deprecated 스텁으로만 남아 실제 버전 조회 기능이 사라졌다."}

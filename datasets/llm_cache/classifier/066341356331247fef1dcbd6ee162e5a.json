@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지는 \"removed old files\"뿐이고, 리뷰 코멘트들은 디렉터리 구조·util 함수 파라미터·RetrieverAgent 명명 등 일반적 리팩터링을 논할 뿐 이 get_new_urls 함수를 이름으로 가리키며 삭제 이유를 말하지 않으며, 같은 자리 대체 코드도 없다."}

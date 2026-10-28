@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 InputFileParameter·OutputFileParameter 클래스 추가를 되돌리는(revert) 작업이라 하고, 삭제된 parse는 그 클래스의 일부로 사용자에게 제공되던 기능이 제거된 것이다."}

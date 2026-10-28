@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 `commands.history.prev` 명령으로 `get_prev`가 재작성되어 필터링·인덱스 상태를 `filtered_history` 기반으로 옮기면서 기존 `filtered_commands`/`last_filtered_index` 로직이 맞지 않게 됐다."}

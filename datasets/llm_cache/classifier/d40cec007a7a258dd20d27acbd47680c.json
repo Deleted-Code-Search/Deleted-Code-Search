@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 \"All side-effects have thus been moved to config.runtime_config\"라며 설정 파싱의 부수효과(마스크 생성 등)를 런타임 설정 객체로 옮겼고, 이 build 클래스메서드가 그 부수효과를 담당했으므로 구조 변경으로 삭제됐다."}

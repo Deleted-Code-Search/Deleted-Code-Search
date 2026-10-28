@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|커밋 메시지가 get_members_backend를 get_raw_user_data 사용으로 리팩터링한다고 밝히고, 추가된 코드가 zerver.lib.events의 get_raw_user_data를 import해 호출하므로 구현이 라이브러리 호출로 대체됐다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 SyncSchedulerClient를 offline generate용과 http endpoint용 AsyncSchedulerClient로 분리하는 구조 변경이라 했고, 이 initialize는 zmq.REQ 기반 동기 클라이언트 초기화로 그 재편에 맞지 않게 됐다."}

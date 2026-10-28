@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 \"@human_feedback only stamps __human_feedback_config__ on the method\"라며 데코레이터를 순수 메타데이터 스탬퍼로 바꾸고 HITL 실행을 Flow 런타임(_run_human_feedback_step 등)으로 옮겼다고 밝혀, 이 스탬핑 함수의 역할이 재구성됐다."}

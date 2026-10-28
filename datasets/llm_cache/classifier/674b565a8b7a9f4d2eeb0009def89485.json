@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 커밋이 docker_compose_down을 단일 compose_file 대신 compose_files 리스트와 project_name을 받는 새 시그니처로 다시 구현했고, 내부적으로 __prepare_and_execute_compose_cmd를 호출하도록 바뀌어 compose 파일 병합 구조에 맞춰 인터페이스가 재편됐다."}

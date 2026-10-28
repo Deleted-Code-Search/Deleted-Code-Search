@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 uv 호출 로직을 `marimo._environments.uv`/`script_metadata` 두 모듈로 중앙화한다고 밝히고, 테스트의 `_run_sync` 스텁이 `script_metadata.uv`를 monkeypatch하는 `fake_uv`/`run`으로 대체되어 같은 일이 다른 자리에서 계속된다."}

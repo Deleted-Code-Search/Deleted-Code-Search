@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 \"assign roles when single input and consolidate validation\"이라 역할 할당 방식과 검증 위치를 재편한 것이며, check_config의 역할 검증이 다른 자리로 통합된 것으로 보인다."}

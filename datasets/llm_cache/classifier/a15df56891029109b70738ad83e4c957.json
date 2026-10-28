@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 자리에 들어온 대체 reset_step이 PartitionedParameterCoordinator의 __step_id·__param_queue·trace_complete 등 새 상태를 초기화하도록 바뀌어, 구조 재편으로 기존 코드가 맞지 않게 됐다."}

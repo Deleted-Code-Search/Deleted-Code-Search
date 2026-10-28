@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|PR 본문이 vendored 포크를 native transformers.models.qwen2_5_vl 클래스(Qwen2_5_VLTextModel 등)로 rebase하고 서브클래싱한다고 밝혀, 이 forward가 표준 라이브러리 구현으로 대체됐다."}

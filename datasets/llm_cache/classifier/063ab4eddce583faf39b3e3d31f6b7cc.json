@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 graphene-django를 strawberry-django로 교체하는 GraphQL 엔진 전환이라고 밝히고, 이 파일의 graphene 기반 옵티마이저 __init__이 그 재작성 영역에 속해 더 이상 맞지 않게 됐다."}

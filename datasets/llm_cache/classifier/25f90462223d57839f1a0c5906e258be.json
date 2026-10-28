@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 리뷰에서 `--daemon`, `--pid`, `--stdout`, `--stderr`, `--log-file` 등 gunicorn 기반 옵션들이 uvicorn.run() 전환으로 사라진다고 명시했고, 이 테스트는 바로 그 `--daemon` 백그라운드 실행 기능을 검증하던 테스트다."}

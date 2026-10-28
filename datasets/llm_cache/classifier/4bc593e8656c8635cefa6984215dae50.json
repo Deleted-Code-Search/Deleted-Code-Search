@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|이 파일이 `environment_factory` 기반의 `WordleEnv` 클래스 예제로 재작성되면서, 메시지 이력을 문자열로 만들던 `format_history`가 새 구조(환경 상태를 직접 다루는 방식)에 맞지 않게 되어 사라졌다."}

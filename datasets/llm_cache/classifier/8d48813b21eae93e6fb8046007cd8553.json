@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 \"Removed Prefetch.get_current_queryset() and get_prefetch_queryset() per deprecation timeline\"이라며 이 함수를 이름으로 지목해 폐기 일정에 따라 제거했음을 밝힌다."}

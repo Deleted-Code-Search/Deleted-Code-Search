@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 \"snakebite removed (#2833)\"라고 이 모듈(snakebite_client.py)의 제거를 명시하므로, snakebite 기반 HDFS 클라이언트 기능 자체가 폐기됐다."}

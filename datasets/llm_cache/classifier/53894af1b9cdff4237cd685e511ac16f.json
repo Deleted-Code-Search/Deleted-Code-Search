@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|이 커밋은 TaskCollector를 Collector/RecorderCollector 구조로 재작성하면서 list_recorders_by_task가 RecorderCollector의 group/rec_filter_func 기반 수집 인터페이스로 대체됐다."}

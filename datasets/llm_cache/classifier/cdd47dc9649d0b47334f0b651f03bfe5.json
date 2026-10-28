@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|같은 자리에 들어온 대체 코드가 self.assertEqual을 assert로, open/write를 write_text로 바꾼 것뿐인 순수 리팩터링이라 삭제 이유를 화면만으로 특정할 수 없다."}

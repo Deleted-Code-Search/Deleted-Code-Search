@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 deprecated 코드를 장기간 유지보수되지 않았고 의존하는 demo/example도 없어 제거한다고 밝혀, 사용자 기능 자체를 없앤 폐기로 판단된다."}

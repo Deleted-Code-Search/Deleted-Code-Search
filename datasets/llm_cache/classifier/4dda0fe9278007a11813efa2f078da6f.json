@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 \"remove tests for deprecated pipelines\"라고 테스트 대상 파이프라인이 폐기됐음을 밝히고, 이 테스트가 부르는 TextToVideoSDPipeline이 그 폐기 대상이라 검증할 대상이 없어져 지웠다."}

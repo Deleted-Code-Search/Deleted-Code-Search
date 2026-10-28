@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 `_Clock`을 없애고 시간 관련 유틸을 `_time.py`로 옮긴다고 밝히며, 리뷰에서 async 버전이 mockable clock 아이디어의 잔재라 불필요하다고 했으므로 동기 `get_time`으로 대체됨."}

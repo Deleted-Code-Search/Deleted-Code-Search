@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #117이 파이프라인에 execute·assemble_document 책임을 넘기는 새 인터페이스를 도입했고, 페이지 이미지 채우기 로직이 이 파일의 _populate_page_images에서 파이프라인 쪽으로 이동했기 때문이다."}

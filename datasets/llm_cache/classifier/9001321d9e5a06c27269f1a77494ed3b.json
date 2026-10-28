@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋이 graphene을 Strawberry로 교체하며 같은 파일에 DCIMQuery 클래스와 strawberry_django.field() 기반 리졸버를 새로 추가했고, 삭제된 graphene용 resolve_* 메서드의 역할을 이 새 구조가 이어받는다."}

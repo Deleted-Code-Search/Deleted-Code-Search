@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR 본문과 리뷰 코멘트가 vLLM 0.11 지원 중단으로 `_patch_vllm_cached_tokenizer`의 버전 가드가 항상 False가 되어 도달 불가능한 dead code가 되었다고 명시한다."}

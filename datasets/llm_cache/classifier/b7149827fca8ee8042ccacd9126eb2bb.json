@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 config 처리를 dataclass로 재구성한다고 밝히고, 같은 파일에 CameraConfig 등 dataclass들이 추가되어 best_image_timeout 프로퍼티가 dataclass 필드로 대체됐다."}

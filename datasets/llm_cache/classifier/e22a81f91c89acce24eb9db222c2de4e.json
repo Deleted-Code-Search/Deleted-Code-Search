@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|`callback`은 `f.result()`로 백그라운드 컴파일 오류를 즉시 출력하려던 콜백인데, 추가된 코드에서 `self._compile(...)` 호출이 콜백 없이 바뀌어 호출자를 잃었다."}

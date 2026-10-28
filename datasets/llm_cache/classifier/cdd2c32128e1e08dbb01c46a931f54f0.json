@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #56이 Processor·Handler·Trainer·Estimator를 포함한 Qlib 인터페이스를 리팩터링하고 Dataset·Recorder 등 새 모듈을 추가한다고 밝혀, data.py의 클래스 조회 방식이 새 구조로 재편되면서 이 함수가 맞지 않게 됐다."}

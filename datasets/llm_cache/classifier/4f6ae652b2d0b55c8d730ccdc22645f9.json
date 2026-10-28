@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 커밋이 core.utils에서 clear_data를 import해 쓰도록 바꾸면서, 클래스 메서드 clear_data가 하던 일이 외부 함수로 옮겨졌다."}

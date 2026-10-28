@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|이슈 #3955가 Strategy.prepare()를 재편하고 unwrap_model/get_base_model을 정리하는 작업이라 명시하며, prepare_model의 Actor 분기 로직이 그 재편으로 사라졌다."}

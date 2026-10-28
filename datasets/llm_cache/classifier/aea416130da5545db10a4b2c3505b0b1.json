@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문에 \"Remove Oracle storage completely\"라고 Oracle 저장소 구현 자체를 제거한다고 명시했고, 이 함수는 그 Oracle 구현 파일의 일부다."}

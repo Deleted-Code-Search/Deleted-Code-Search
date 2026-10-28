@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지에 \"moved all the diarization eval to der.py\"라고 명시되어 있고, 같은 커밋이 der.py의 concat_perm_word_error_rate를 import하며 diarization 평가 로직이 der.py로 이전되었으므로 이 함수도 그 이동의 일부다."}

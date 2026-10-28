@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지와 PR 제목이 \"Remove old docstore\"로, old_docstore.py 파일 자체가 제거 대상임을 밝히고 있어 공개 표면에서 기능이 사라진 FEAT로 판단한다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 \"Converted GIS lookups to use the new Lookup API\"라 하고, 삭제된 PostGISRelate.__init__의 역할이 같은 자리에 들어온 PostGISOperator.__init__ 및 gis_operators의 'relate': PostGISOperator(func='ST_Relate')로 이어받아지므로 구조·인터페이스 재편에 따른 삭제다."}

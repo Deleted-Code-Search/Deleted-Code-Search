@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 마이그레이션 파일 정리로 인해 이전 버전으로 롤백할 수 없게 되었고 `--use-migration-files` 옵션도 제거되었다고 명시하므로, downgrade 함수가 제공하던 롤백 기능 자체가 없어진 것이다."}

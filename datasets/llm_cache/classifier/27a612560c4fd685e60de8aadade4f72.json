@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 \"clean up 1.x code\"로 이 함수가 1.x 시절 코드의 잔재이며, 같은 파일에 대체 코드나 호출자가 추가되지 않아 호출자를 잃고 제거된 것으로 보인다."}

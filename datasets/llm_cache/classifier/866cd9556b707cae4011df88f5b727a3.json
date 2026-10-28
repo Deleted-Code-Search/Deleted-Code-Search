@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지와 PR 본문이 \"Remove duplicated files in tests\"라고만 말할 뿐 이 on_handoff 함수나 그 삭제 이유를 이름으로 가리키지 않고, 추가·대체 코드도 없어 화면만으로는 근거를 댈 수 없다."}

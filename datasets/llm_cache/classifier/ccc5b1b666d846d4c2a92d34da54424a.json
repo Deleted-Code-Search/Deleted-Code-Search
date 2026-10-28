@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 \"Reduce exposed namespace\"라 공개 표면인 storage.__all__ 노출을 줄이는 변경이고, 삭제된 테스트는 그 __all__ 목록을 검증하던 것이라 검증 대상 기능 자체가 제거됐다."}

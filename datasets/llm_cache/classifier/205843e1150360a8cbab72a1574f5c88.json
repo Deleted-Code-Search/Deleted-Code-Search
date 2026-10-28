@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 \"removes the unused local top-p sampler, since rollout sampling delegates to Transformers\"라고 `_sample_top_p`를 이름으로 가리키며 미사용이라 지웠다고 밝히고, 이 테스트는 그 삭제된 `_sample_top_p`를 검증하던 대상이라 함께 제거됐다."}

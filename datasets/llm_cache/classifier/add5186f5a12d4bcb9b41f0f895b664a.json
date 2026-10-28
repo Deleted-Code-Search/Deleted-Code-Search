@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|삭제된 `complete` 메서드는 테스트 내부 헬퍼로, 커밋 메시지가 \"code repetition and unnecessary code blocks\"를 정리해 \"denser\"하게 만들었다고 밝히고 있어 호출자를 잃은 불필요한 코드 제거로 판단된다."}

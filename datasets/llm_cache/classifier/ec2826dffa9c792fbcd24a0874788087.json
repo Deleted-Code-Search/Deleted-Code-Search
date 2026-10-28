@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|이슈 #4666 본문이 \"delete everything in `pydantic/schema.py` and start again\"이라며 pydantic-core 스키마 기반으로 JSON Schema 생성을 재작성하겠다고 밝혀, 이 파일의 기존 구현이 새 구조로 대체된 것이다."}

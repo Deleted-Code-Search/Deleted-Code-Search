@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 자리에 `def __init__(self, host, **kwargs)`가 들어와 `RemoteContext(host, **kwargs)`로 같은 일을 계속하므로, 명시적 인자 인터페이스를 kwargs 방식으로 바꾼 구조 변경이다."}

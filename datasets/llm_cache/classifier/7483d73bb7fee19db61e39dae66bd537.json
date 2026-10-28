@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 \"The four untyped dictionaries every parser built and threw away already were that description, so they became records that the build consumes\"라며 파싱 결과를 레코드로 재구성했고, 추가된 코드에서 RigidGeomDescription의 friction 계열 필드가 이제 해석된 값(float)으로 채워지는 구조로 바뀌어 __post_init__의 기본값 대체 로직이 그 자리를 잃었다."}

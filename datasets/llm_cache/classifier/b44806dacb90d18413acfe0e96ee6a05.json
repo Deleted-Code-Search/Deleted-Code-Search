@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지 \"finalized MCP\"와 PR 본문은 서버 생성만 말할 뿐 ping 함수 삭제 이유를 이름으로 가리키지 않고, 추가된 코드에도 ping을 대체하거나 호출자를 바꾼 흔적이 없다."}

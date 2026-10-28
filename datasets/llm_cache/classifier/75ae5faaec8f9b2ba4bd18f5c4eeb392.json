@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #690이 라이브러리 사용성 개선을 위한 대규모 리팩터링·부분 재작성이라 밝혀, 설정 처리 책임이 재구성되면서 이 함수가 맞지 않게 됐다."}

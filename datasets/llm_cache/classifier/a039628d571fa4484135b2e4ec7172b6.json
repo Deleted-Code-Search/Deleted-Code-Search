@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR이 config 데이터 구조를 재편하면서 추상 메서드 get_config가 MarimoConfigManager의 get_config로 대체됐고, 같은 일(설정 반환·hide_secrets 마스킹)이 새 클래스에서 계속된다."}

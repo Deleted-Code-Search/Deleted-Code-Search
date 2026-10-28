@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 staged-update 경로와 그 stage-progress/stage-failed 이벤트·staged Tauri 명령들을 제거한다고 밝혀, 이 실패 스테이징을 모델링하던 테스트 헬퍼는 검증할 대상(스테이징 경로)이 사라져 지워졌다."}

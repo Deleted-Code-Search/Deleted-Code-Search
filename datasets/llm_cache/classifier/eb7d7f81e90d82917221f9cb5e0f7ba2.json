@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 per-call 승인을 \"canonical invocation fingerprint\"에 결속하도록 바꿨다고 밝혔고, 삭제된 `_tool_search_fingerprint`는 raw_item을 JSON으로 직렬화해 지문을 만들던 함수로 이 새로운 결속 방식에 맞지 않게 되어 제거된 것으로 보인다."}

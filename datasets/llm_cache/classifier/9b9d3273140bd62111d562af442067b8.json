@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 llama-index-tools-scrapegraph 통합 패키지 자체를 제거한다고 밝히고, 사용자는 유지보수되는 외부 버전을 직접 설치하라고 안내하므로 공개 표면의 기능이 사라진 것이다."}

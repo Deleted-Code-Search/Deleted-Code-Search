@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 \"Remove chunking code for entity-dense episodes\"와 \"Remove obsolete chunking tests (test_entity_extraction.py)\"라며 청킹 코드 제거를 명시했고, 이 테스트가 검증하던 should_chunk 기반 청킹 경로 자체가 사라져 검증 대상이 없어졌다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|삭제된 test_specs 픽스처가 제공하던 상수·설정값이 추가된 코드에서 NUM_ROWS·RATIOS·SEED·TOL 모듈 상수와 spark_dataset 픽스처로 재구성되어, 테스트 구조 재편 과정에서 이 픽스처가 맞지 않게 됐다."}

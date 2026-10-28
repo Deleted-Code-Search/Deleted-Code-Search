@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 Docker 서버가 기본적으로 인증을 요구하도록 바뀌는 BREAKING CHANGE를 명시했고, 이 health 엔드포인트가 삭제되어 공개 표면에서 사라졌다."}

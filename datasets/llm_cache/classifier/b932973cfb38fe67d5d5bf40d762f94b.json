@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지와 PR 본문이 \"remove bit com\"·\"Remove connectors that didn't meet the criteria in the last poll\"이라며 커넥터 자체를 제거했으므로, 이 함수가 속한 bit_com_perpetual 커넥터의 기능이 폐기된 것이다."}

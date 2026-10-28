@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "PERF|PR #1809 본문이 \"Refactoring of the dispatch logic to improve performance\"라며 UsersDispatcher를 성능 문제 해결을 위해 완전히 재작성했다고 밝히고, 이 테스트는 그 재작성 대상인 dispatch 로직을 검증하던 것이다."}

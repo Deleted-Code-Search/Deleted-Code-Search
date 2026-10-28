@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 \"Use default load() implementation in doc loaders\"라 기본 구현으로 대체했음을 밝히고, 리뷰도 lazy_load가 문서를 갖고 있다고 하므로 같은 일을 상위 기본 구현이 이어받았다."}

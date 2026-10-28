@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 ConcurrencyLimit CRUD 메서드를 독립 모듈로 리팩터링한다고 밝혔고, 같은 커밋이 `_concurrency_limits.client`의 `ConcurrencyLimitAsyncClient`를 import하도록 추가했으므로 같은 일이 다른 자리로 옮겨졌다."}

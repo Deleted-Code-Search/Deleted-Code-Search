@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 `disable_adapter_layers`를 이름으로 지목해 중복 제거를 위해 리팩터링된 메서드 목록에 넣었고, `self.active_adapters`에 의존하므로 PeftModel 메서드로 남겨 공통 구현이 이어받는다고 밝혔다."}

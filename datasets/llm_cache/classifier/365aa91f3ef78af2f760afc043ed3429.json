@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 \"remove command line from llama-index-core\"라며 CLI 기능 자체를 core에서 제거하고 llama-index-cli 패키지로 옮긴다고 밝혀, 공개 표면에서 기능이 사라진 FEAT에 해당한다."}

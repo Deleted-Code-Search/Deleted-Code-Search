@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 mock 기반 robustness 테스트를 제거한다고 밝혔고, 이 테스트가 검증하던 대상이 사라져 삭제됐다."}

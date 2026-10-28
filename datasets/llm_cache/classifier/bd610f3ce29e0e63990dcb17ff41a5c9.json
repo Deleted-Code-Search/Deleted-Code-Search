@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|같은 커밋이 이 테스트가 부르던 master.Master의 start/shutdown 기반 큐 메커니즘을 제거하고 asyncio 기반 run으로 대체해, 테스트 대상이 사라져 지웠다."}

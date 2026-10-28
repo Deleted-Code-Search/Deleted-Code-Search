@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 PATCH /users/me/subscriptions 엔드포인트 자체를 제거한다고 밝히고, 이 테스트는 그 엔드포인트의 delete 파라미터 검증만 하던 것이라 공개 API 표면에서 기능이 사라졌다."}

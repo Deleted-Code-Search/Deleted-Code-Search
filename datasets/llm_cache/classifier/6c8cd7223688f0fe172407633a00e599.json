@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|PR 본문이 모델 카드 생성 코드를 ad hoc 파싱·작성 대신 huggingface_hub 클래스(ModelCard.load)를 쓰도록 리팩터링했다고 밝혀, 수동 파싱 함수가 외부 라이브러리 호출로 대체됐다."}

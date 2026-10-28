@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|삭제된 함수는 pip의 vendored retrying.py 내부 코드인데, 커밋 메시지·PR·이슈는 모두 evaluate 스크립트의 overlapping entities 수정에 관한 내용이라 이 함수 삭제 이유를 가리키는 근거가 없다."}

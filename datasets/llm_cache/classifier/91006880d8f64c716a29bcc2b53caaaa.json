@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|삭제된 테스트의 단정문들이 같은 커밋에서 추가된 test_bad_input 함수로 그대로 옮겨졌으므로, 테스트가 다른 자리로 재배치된 구조 변경이다."}

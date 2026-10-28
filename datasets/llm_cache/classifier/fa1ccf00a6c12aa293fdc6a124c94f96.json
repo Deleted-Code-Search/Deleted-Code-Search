@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|삭제된 modified_path_exists는 테스트 내부 헬퍼로, 같은 커밋이 플랫폼 감지 로직을 KIVY_BUILD·P4A_BOOTSTRAP·ANDROID_ARGUMENT 환경변수 기반으로 바꾸면서 이 헬퍼를 호출하던 경로가 사라져 호출자를 잃었다."}

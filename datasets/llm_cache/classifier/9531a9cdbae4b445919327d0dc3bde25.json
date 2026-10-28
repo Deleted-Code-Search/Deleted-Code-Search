@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|리뷰 코멘트에서 \"migrator was moved to new module\"이라며 마이그레이션 로직을 `rasa.core.migrate.Migrator` 클래스로 옮겼고, 추가된 코드가 `Migrator(...).publish_events()`를 호출하므로 같은 일이 다른 자리에서 계속된다."}

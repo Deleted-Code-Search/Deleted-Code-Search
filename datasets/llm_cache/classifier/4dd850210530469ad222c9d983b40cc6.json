@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 realm_alert_words_automaton_cache_key를 이름으로 가리키며 realm 대신 realm_id를 받도록 인터페이스를 바꾼다고 밝히고, 같은 자리에 realm_id를 받는 동일 함수가 추가되어 있다."}

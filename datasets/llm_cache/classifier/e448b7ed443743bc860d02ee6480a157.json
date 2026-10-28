@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 자리에 `_replace_string`이 다시 추가되었고, 삭제된 함수의 일(문자열 치환)을 이어받되 발생 횟수 출력과 조건부 쓰기로 인터페이스가 바뀌었으므로 구조 변경에 따른 재작성이다."}

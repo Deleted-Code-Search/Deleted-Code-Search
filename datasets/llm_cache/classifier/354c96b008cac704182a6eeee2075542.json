@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 \"100% coverage for celery.utils\"로 테스트 커버리지 작업이며, 삭제된 test_padlist가 검증하던 functional.padlist 함수가 이 커밋에서 제거되었다는 문장이 없고, 추가된 코드에도 padlist를 대체하는 내용이 없어 호출 대상이 사라진 테스트로 볼 근거가 화면에 없다."}

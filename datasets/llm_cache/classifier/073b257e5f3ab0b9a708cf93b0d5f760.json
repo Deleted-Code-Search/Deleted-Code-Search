@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 \"Deprecate old flow\"라며 구 흐름을 폐기하고 새 흐름으로 전환한다고 밝히고, 이 파일은 그 구 흐름의 모델 디스패치 코드이므로 기능 자체가 제거된 것이다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR 본문이 commlib의 paho 스레드·health/restart 기계 일체를 삭제하고 aiomqtt 단일 connect/reconnect 루프로 대체했다고 밝혀, 이 fake의 loop_forever를 부르던 commlib식 호출 경로가 사라졌다."}

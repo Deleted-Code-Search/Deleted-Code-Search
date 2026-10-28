@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "SEC|PR 본문이 이 삭제로 CVE-2024-5980과 GHSA-mr7h-w2qc-ffc2를 고친다고 명시했고, 삭제된 load 함수는 pickle.load로 신뢰할 수 없는 데이터를 역직렬화하는 위험 패턴이다."}

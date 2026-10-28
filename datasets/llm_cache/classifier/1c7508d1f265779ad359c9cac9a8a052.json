@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 `send_if_off` 설정 파라미터가 폐기 후 제거되어 사용자가 쓰던 옵션 자체가 없어졌다고 명시한다."}

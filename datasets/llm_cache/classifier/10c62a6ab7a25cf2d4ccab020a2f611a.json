@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 `_safe_eval_expression()`을 \"eval path was already disabled\"라며 죽은 보안 민감 코드로 지웠다고 밝히고, 추가된 코드도 이 함수가 삭제됐음을 검증하는 테스트라 검증 대상이 사라져 테스트가 제거됐다."}

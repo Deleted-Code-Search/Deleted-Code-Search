@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #724가 ProjectRepo 구현으로 GitRepository/FileRepository 래핑 구조를 바꾸면서 file_repo 프로퍼티가 그 구조에 맞지 않게 됐다."}

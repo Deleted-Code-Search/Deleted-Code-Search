@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 제목이 `FastMCP`를 `MCPServer`로 이름을 바꾸는 리네임이며, 이 함수는 그 리네임으로 인터페이스가 재편되면서 맞지 않게 된 코드다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 \"This replaces the follow-up user message the attachments tool used\"라며 도구 결과 뒤 후속 user 메시지로 이미지를 붙이던 방식을 없애고 tool result 내부로 옮긴다고 밝혀, 이 테스트가 검증하던 사용자 동작(후속 메시지 첨부) 자체가 제거됐다."}

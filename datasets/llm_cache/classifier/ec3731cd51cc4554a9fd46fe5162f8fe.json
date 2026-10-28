@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #690이 커맨드라인 함수를 클래스로 재구성하는 리팩터링이라 이 함수가 그 구조 변경에 맞지 않게 되어 삭제됐다."}

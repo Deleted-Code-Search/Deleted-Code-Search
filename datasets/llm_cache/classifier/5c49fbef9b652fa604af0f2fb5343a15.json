@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|SparkSubmitTask가 ExternalProgramTask를 상속하도록 재구성되면서 kill_job의 프로세스 종료·시그널 처리 책임이 부모 클래스로 옮겨졌고, 커밋 메시지가 \"Rebase SparkSubmitTask onto ExternalProgramTask\"라 밝히고 있다."}

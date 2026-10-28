@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 \"move has_holes and mask_has_multiple_segments to detections utils\"라고 밝히고, 추가된 코드가 supervision.detection.utils에서 mask_has_multiple_segments를 import해 같은 일을 이어받는다."}

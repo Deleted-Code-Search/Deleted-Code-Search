@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 파일에서 PassMessageComponent로 클래스가 재작성되며 build_config 대신 inputs/outputs 선언과 pass_message 메서드로 입력·출력 정의 방식이 바뀌었다."}

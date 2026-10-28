@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "BUG|이슈 #15553에서 함수로 정의된 서브쿼리는 GraphQL 필터링이 적용되지 않는 오류가 보고됐고, 이를 타입 정의로 바꿔 필터링이 동작하도록 수정했다."}

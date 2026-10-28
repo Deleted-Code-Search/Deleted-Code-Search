@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지와 PR 본문은 내부 관리 trimesh 의존성을 제거하고 공식 버전에 의존한다고만 말할 뿐, 이 파일의 _create_mesh 함수를 이름으로 가리키며 삭제 이유를 밝히지 않으며, 화면에 대체 코드나 호출자 변경도 없다."}

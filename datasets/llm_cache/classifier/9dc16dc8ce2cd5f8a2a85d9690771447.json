@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 `ClientSession` 내부를 디스패처 위로 재작성하고 `mcp.shared.session`이 호환 모듈로 축소됐다고 밝혀, 수신 루프의 응답 처리가 디스패처 경로로 옮겨졌음을 보여준다."}

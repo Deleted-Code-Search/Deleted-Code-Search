@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 \"Removed utils.py is_daemon_alive() (stale duplicate of main.py version)\"라고 이 함수를 이름으로 지목하며 main.py 버전의 중복 잔재라고 밝힌다."}

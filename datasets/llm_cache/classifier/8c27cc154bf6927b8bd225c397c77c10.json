@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 pages_iwa의 공유 리더 부분을 archives.py로 옮기고 pages_iwa는 Pages 고유 네임스페이스만 남긴다고 밝히며, 추가된 코드에서 PagesReader가 IWAReader를 상속해 같은 초기화 역할을 이어받는다."}

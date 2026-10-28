@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #5674가 `__prepare_pydantic_annotations__` 훅을 도입해 `SecretField`의 스키마 준비를 `_pre_core_schema` 대신 새 훅과 `_SecretFieldValidator`로 옮기면서 이 클래스메서드가 맞지 않게 됐다."}

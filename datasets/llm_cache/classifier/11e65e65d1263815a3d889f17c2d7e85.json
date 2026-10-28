@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 `lerobot[async]`와 레거시 async 명령을 `lerobot[remote]`로 대체하는 breaking change라 명시했고, 이 파일은 그 폐기된 async_inference 모듈에 속한다."}

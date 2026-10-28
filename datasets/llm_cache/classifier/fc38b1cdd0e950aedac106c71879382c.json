@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR 본문이 \"remove text-based chunk matching fallback and require _source_span\"이라며 텍스트 매칭 폴백을 제거했고, 이 테스트는 그 폴백(중복 텍스트의 최좌측 매칭 해석)을 검증하던 것이라 검증 대상이 사라졌다."}

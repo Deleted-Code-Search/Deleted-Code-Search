@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR이 @triggered 데코레이터를 인스턴스 격리·디바운싱·지연 초기화를 지원하는 _TriggeredWrapper/_BoundTrigger 구조로 재작성하면서, 삭제된 cb_function이 _TriggeredWrapper.cb_function으로 같은 일(저장된 args/kwargs로 원 함수 호출)을 이어받았다."}

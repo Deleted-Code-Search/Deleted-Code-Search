@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "BUG|커밋 메시지가 \"unparsable cell is not idempotent\"라는 잘못된 동작을 고친다고 밝히고, 삭제된 테스트는 바로 그 멱등성(idempotent)을 검증하던 테스트다."}

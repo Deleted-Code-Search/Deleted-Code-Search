@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 \"remove asdt\"로 asdt 기능 자체를 제거했고, 이 파일 scrapegraphai/asdt/dom_tree.py의 함수가 그 제거 대상에 포함된다."}

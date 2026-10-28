@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "BUG|삭제된 테스트가 검증하던 validate_output_path는 문자열 검사만으로 우회 가능(symlink/TOCTOU, sibling-prefix)해 임의 쓰기→RCE 취약점이 있었고, 추가된 코드가 \"the real fix is that no caller path is accepted at all\"이라며 취약점 제거를 이유로 밝히고 있다."}

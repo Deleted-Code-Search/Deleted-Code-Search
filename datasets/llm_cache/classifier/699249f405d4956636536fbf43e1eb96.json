@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋이 REST API 테스트를 APIViewTestCases 기반으로 재구성하면서, 삭제된 bulk 생성 테스트의 검증이 새 ExportTemplateTest 클래스의 create_data와 APIViewTestCase 공통 테스트로 이어받아졌다."}

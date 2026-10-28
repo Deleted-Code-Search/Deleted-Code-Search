@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 자리에 `close(self, linger=None)` 시그니처로 대체되어 소켓 종료 책임이 linger 인자를 받는 형태로 재구성됐다."}

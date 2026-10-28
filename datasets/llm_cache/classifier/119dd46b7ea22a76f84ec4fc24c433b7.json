@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 \"Remove the legacy `verl.utils.modelopt` implementation\"이라며 이 파일이 속한 레거시 구현을 제거한다고 명시하므로, 사용자 기능 자체를 없앤 FEAT이다."}

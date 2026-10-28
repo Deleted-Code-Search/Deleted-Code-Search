@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지가 cleanup·refactoring만 말하고 이 get 메서드를 이름으로 가리키지 않으며, 추가된 코드는 urlparse 관련으로 삭제된 get의 역할을 이어받지 않는다."}

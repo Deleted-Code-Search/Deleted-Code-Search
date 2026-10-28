@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 OFT를 제네릭 양자화 프레임워크로 옮기며 per-backend dispatch 파일(gptq.py 포함)을 삭제하고 resolve_quantization_backend/get_base_weight 등으로 대체한다고 밝혀, 같은 일이 다른 자리에서 계속된다."}

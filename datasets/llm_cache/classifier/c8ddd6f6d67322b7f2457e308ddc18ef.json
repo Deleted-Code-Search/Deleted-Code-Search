@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지와 PR 제목이 \"remove gi audio and video providers\"라 하고, 이슈 #4224가 deprecated video/audio provider(pygi 포함) 제거를 요청하므로 사용자 기능 자체를 없앤 것이다."}

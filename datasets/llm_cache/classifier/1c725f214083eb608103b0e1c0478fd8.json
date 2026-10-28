@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 pyarrow 로직을 없앴다고 밝혀 테스트 대상인 pyarrow 기반 manager.search 가 사라졌으므로 검증할 대상이 없어져 삭제됐다."}

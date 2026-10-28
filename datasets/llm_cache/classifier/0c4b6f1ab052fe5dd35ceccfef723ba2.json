@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|리뷰 코멘트에서 \"You can remove these 2 commented functions\"라며 주석 처리된 함수를 지우라고 했고, 작성자가 \"edge case에 필요할까 봐 남겨뒀지만 그럴 일이 없다\"고 답해 호출되지 않는 잔재를 제거한 것으로 보인다."}

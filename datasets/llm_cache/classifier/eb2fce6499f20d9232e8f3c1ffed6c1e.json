@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 EventLog를 StreamChannel로 병합하고 _event_log.py를 삭제한다고 밝혀, _fail이 위임하던 self._log가 사라지고 라이프사이클(close/fail)이 mux 관리로 재편되면서 이 코드가 맞지 않게 됐다."}

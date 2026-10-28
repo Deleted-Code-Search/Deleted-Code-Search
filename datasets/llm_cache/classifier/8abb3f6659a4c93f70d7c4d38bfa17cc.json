@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|이 테스트 헬퍼는 `agent._root_capability`에서 `Instrumentation` 능력을 확인하는데, PR #5427이 `instrument=` 브리지를 제거하고 모든 레거시 진입점이 `_instrument`로 수렴하도록 바꾸면서 호출자를 잃었다."}

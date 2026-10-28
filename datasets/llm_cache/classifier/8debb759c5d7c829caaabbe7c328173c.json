@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 커밋이 recorder.py를 addon 클래스로 전환하면서 prox가 CallLogger.__getattr__ 내부로 옮겨져 같은 로깅 일을 계속 수행한다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지에 \"removed old unused implmentation\"이 있고, 이 함수는 전역 `_working_flow`를 다루는 내부 헬퍼로 호출자를 잃어 제거된 것으로 보이며, 같은 자리에 대체 코드가 없다."}

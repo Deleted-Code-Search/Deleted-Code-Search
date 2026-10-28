@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|리뷰 코멘트 622714228에서 `get_online_tag?`라며 반환 타입 일관성을 논의하고 622719112에서 `just leave it to user`라고 했으며, 같은 커밋이 OnlineManager를 OnlineStrategy 기반으로 재구성해 태그 조회 책임이 사용자/전략 쪽으로 옮겨졌다."}

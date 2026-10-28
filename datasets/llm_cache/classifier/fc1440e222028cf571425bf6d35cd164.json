@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지가 \"Moved resolve_text_background_xyxy() function into utils.py\"라고 함수를 이름으로 지목하지만 이는 순수 이동(같은 본문이 utils.py로 옮겨짐)에 해당해 8종 이유 중 어디에도 배울 게 없는 삭제다."}

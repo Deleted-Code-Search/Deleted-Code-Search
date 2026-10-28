@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|커밋 메시지 \"remove poster!\"와 PR 제목 \"urllib2 => urllib3\"가 poster 패키지 제거와 urllib3로의 전환을 밝히며, 이 파일은 그 poster 패키지 내부 구현이다."}

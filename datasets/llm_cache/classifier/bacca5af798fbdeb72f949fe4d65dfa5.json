@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지에 '[test] remove useless tests'가 있고, 이 테스트가 호출하는 대상이 제거되었다는 문장이 없으며, 삭제된 본문 자체도 이유를 드러내지 않아 호출되지 않는 테스트로 판단된다."}

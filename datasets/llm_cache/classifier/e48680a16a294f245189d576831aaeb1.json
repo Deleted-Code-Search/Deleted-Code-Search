@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|PR 본문이 Poetry의 핵심 유틸리티를 별도 패키지 poetry-core로 추출한다고 밝혔고, 이 파일의 semver 구현이 그 추출 대상에 해당한다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 커밋이 prompt/messages를 _standardize_prompts와 formatted_messages로 재구성하면서 format 메서드가 그 구조에 맞지 않게 되어 사라졌다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 \"Remove Python 2 support\"라고 Python 2 지원 자체를 제거한다고 밝히고, 이 테스트는 Python 2 감지 기능을 검증하던 테스트라 기능 폐기로 삭제됐다."}

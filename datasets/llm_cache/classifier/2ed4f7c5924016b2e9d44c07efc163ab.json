@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR이 kivy.uix.listview의 중복 SelectableView 정의를 제거하고 kivy.uix.selectableview.SelectableView로 참조를 교체한다고 밝혔으며, deselect는 그 mixin 클래스의 메서드로 다른 모듈에서 계속 제공된다."}

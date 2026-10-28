@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|setup_method가 하던 crawler·spider·stats 초기화가 같은 커밋에서 pytest fixture(crawler, stats)로 옮겨졌고, PR 본문이 \"class-level state was changed into fixtures\"라고 밝히고 있다."}

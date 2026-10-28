@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 로깅 큐 설정을 프로세스 기반 구조로 재편한다고 밝히고, 같은 파일에 setup_logging()·_stop_logging() 등 새 로깅 초기화 구조가 추가되어 기존 handler 프로퍼티가 맞지 않게 됐다."}

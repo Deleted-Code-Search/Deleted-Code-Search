@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|같은 자리에 `assemble_response`가 `*args, **kwargs`와 `NotImplementedError`로 바뀌어 들어온 것은 시그니처·문법 수준의 변경일 뿐, 커밋 메시지 \"fix minor style offences\"나 PR 본문 어디에도 이 함수 삭제의 이유를 밝히는 문장이 없다."}

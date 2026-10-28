@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 deprecated brokers(`SQLProducer` 포함)를 제거한다고 명시했고, 삭제된 `__init__`은 `SQLProducer`의 deprecated 경고를 띄우는 생성자이므로 사용자 기능 자체가 제거된 것이다."}

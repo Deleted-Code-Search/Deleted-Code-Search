@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 `experimental.new-installer` 설정과 old installer를 제거한다고 명시했고, 이 테스트 파일은 제거된 old installer를 검증하던 테스트라서 기능 자체가 없어졌다."}

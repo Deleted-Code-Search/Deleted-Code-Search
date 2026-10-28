@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|close()가 하던 정리(_notifier.stop(), _wm.close())가 stop()/loop 종료 시점의 _wm.close() 호출과 _wm/_notifier=None 대입으로 다른 자리에서 이어받도록 이벤트 처리 구조가 바뀌었다."}

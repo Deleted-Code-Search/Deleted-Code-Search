@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|커밋 메시지가 \"Vendor: drop distlib - use the one from pip._vendor\"라며 이 파일의 distlib 구현을 pip._vendor의 것으로 대체했으므로 외부 라이브러리 호출로 바뀐 LIB다."}

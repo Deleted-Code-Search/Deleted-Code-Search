@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 snakebite 제거를 명시했고, 이 테스트는 snakebite 기반 hadoop contrib 테스트로 해당 기능 자체가 폐기됐다."}

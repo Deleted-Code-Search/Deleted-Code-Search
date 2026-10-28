@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|이슈 #6679와 커밋 메시지가 tests/test_loader_deprecated.py 파일 자체를 제거한다고 밝히고, 이 테스트가 검증하던 대상이 이미 사라져 더 이상 호출·검증될 대상이 없다."}

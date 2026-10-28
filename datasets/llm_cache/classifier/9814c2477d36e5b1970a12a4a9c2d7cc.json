@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 자리의 base 함수가 version 파라미터를 받도록 시그니처가 바뀌었고, get_tool도 version 인자를 받게 되어 버전 필터링 인터페이스 도입에 맞춰 재구성된 것이다."}

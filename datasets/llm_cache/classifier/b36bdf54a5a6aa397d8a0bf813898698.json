@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 제목과 본문이 \"remove chat scheduler\"라 하고, 이슈 #2618이 ChatScheduler를 Agent Loop로 대체하며 제거한다고 명시해 사용자 기능 자체가 없어졌다."}

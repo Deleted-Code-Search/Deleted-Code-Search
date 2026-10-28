@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR이 임의 텍스트 선택 기능을 추가하며 offset을 meta로 옮기는 rich_style_with_offset이 새로 들어왔고, 삭제된 offset 프로퍼티의 일을 이 새 메서드가 이어받는다."}

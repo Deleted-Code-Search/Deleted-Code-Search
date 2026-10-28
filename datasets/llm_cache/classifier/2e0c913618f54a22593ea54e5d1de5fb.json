@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지 \"Remove nivida/apex (#16149)\"가 apex 지원 종료를 알리며, 삭제된 __getitem__은 _DeprecatedEnumMeta의 deprecate() 호출로 폐기 예정 멤버를 처리하던 코드라 지원 종료와 함께 제거됐다."}

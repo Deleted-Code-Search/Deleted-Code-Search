@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 자리에 들어온 대체 테스트가 get_filepath_or_buffer의 반환값을 4-튜플에서 ioargs 객체로 바꾸고 path_type 파라미터를 추가한 것으로 보아, 인터페이스 변경에 맞춰 테스트를 재작성한 것이다."}

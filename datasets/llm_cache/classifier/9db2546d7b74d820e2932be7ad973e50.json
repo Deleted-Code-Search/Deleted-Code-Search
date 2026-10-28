@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 \"remove stale message index diff suppression\"이라며 억제 로직을 없앴고, 이 테스트가 검증하던 `_filter_expression_index_metadata_noise`의 해당 동작이 사라져 검증 대상이 없어졌다."}

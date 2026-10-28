@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 \"Deprecate jax.experimental.loops\"라며 해당 모듈의 폐기를 명시했고, 이 테스트는 그 폐기된 loops 모듈의 기능을 검증하던 것이다."}

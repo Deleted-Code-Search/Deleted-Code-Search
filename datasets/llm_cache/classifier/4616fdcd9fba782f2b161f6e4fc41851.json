@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 OpenMemory 선셋(#4923)에 따라 `openmemory/` 디렉터리 전체를 제거한다고 밝혀, 이 라우터가 제공하던 pause 기능 자체가 공개 표면에서 사라졌다."}

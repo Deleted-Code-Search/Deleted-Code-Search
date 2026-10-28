@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 제목과 본문이 TF/JAX 지원 자체를 폐기(deprecate)한다고 밝히고, 커밋 메시지도 \"Delete the tests\"라며 TF HuBERT 테스트를 제거하므로 사용자 기능 폐기에 해당한다."}

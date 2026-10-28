@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|PR 본문이 sanic-routing 의존성 도입과 Router 재작성을 밝히고, 추가된 코드가 `from sanic_routing import BaseRouter` 로 상속해 `self.resolve(...)` 로 라우팅 조회를 외부 라이브러리에 위임한다."}

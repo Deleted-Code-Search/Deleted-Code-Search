@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|optparse에서 argparse로 파서 체계를 바꾸면서 lax 옵션을 별도로 출력하던 print_help가 불필요해졌고, 추가된 코드에서 CommandParser 기반 파싱으로 대체됐다."}

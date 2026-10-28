@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #4516이 pydantic_core로 전환하며 내부 로직을 _internal 모듈로 옮기고 스키마 생성을 재구성했으므로, 이 검증 함수의 역할이 pydantic-core 스키마 생성 쪽으로 이전됐다."}

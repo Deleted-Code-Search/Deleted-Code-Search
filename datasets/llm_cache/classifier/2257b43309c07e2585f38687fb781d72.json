@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋이 pydom을 pyscript.web으로 재구성하며 Element 클래스 계층을 Collapse하고 dom 모듈을 인스턴스로 대체하는 등 구조·인터페이스를 바꿨고, 이 __iter__가 속한 클래스의 역할이 재편되어 맞지 않게 됐다."}

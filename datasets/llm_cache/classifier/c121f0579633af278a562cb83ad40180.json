@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|`_get_storage_class`가 인자 없는 전체 매핑 반환에서 `storage_name`을 받아 `STORAGES` 매핑과 `lazy_external_import`로 단일 클래스를 반환하는 방식으로 바뀌었고, PR 본문의 \"load only the necessary storage classes instead of all 20\"이 이를 뒷받침한다."}

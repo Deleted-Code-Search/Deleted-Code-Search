@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 Adyen 플러그인이 3.23에서 deprecated되어 영구 제거된다고 밝히고, 커밋 메시지도 \"Remove Adyen plugin\"이라 플러그인 기능 자체가 없어진 것이므로 이 테스트가 검증하던 기능이 폐기됐다."}

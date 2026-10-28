@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 \"The application no longer installs Chroma, langchain-chroma or ALTK\"라며 ALTK 지원 종료를 명시했고, 같은 파일에 추가된 코드가 ALTK 래퍼들을 ALTKRetiredError를 내는 은퇴 스텁으로 바꿔 기능 자체가 제거됐다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 제목이 main.py의 인자 파싱/검증을 argument_parser.py로 옮긴다고 밝혀, 이 검증 함수가 그 이동으로 다른 자리에서 이어지게 됐다."}

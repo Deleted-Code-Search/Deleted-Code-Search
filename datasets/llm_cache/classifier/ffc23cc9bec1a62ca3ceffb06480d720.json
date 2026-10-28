@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR 본문이 클라우드 모델 작업과 API 키 의존성, workflow-history receipt machinery를 제거한다고 밝혔고, 이 테스트 헬퍼 trusted_run은 그 제거된 workflow_run 기반 릴리스 평가 경로를 흉내 내는 스텁이라 호출 대상이 사라져 지워졌다."}

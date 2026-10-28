@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 제목이 \"Revert 'feat(studio): consistent SSH restrictions with approved-server allowlist'\"로, 승인 서버 허용목록 기반 SSH 제한 기능 자체를 되돌려 제거한 커밋이므로 이 함수가 속한 기능이 폐기됐다."}

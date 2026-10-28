@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 OpenAI CLIP 모델 사용을 Jina AI CLIP 모델로 교체하는 breaking change라 명시하고, 커밋 메시지에 \"remove old clip and minilm code\"가 있어 기존 CLIP 모델 지원 기능 자체가 제거됐다."}

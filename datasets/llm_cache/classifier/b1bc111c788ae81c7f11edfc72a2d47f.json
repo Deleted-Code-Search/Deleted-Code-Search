@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|이슈 #11955와 PR 본문이 CSVDataField·CSVFileField가 더 이상 사용되지 않아 제거한다고 밝혔고, 이 테스트는 그 필드의 clean을 검증하는 테스트라 대상이 사라져 삭제됐다."}

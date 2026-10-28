@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 max_body_size 테스트를 HTTPClientMaxBodySizeTestCase 추상 베이스로 공유·재편한다고 밝히고, 이 파일에는 그 베이스를 상속하는 SimpleHTTPClientMaxBodySizeTestCase가 추가되어 테스트 구조가 바뀌었다."}

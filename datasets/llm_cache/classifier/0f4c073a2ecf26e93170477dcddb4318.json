@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR 본문이 ToolManager 삭제를 명시했고, 이 테스트는 삭제된 ToolManager를 검증하던 테스트라 검증 대상이 사라져 지워졌다."}

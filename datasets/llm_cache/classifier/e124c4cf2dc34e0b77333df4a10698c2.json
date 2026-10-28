@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR 본문이 \"tests that read back constants or restate a one-line predicate\"를 신호 없는 테스트로 지웠다고 밝혔고, 삭제된 테스트는 상수 `fused_shared_experts_architecture` 값을 그대로 읽어 확인하는 것뿐이다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #992가 ColoTensor를 torch.Tensor 상속 구조로 재작성하면서, 기존의 size/dtype/device/torch_tensor 인자를 받던 생성자 기반 팩토리 대신 `from_torch_tensor`(as_subclass + __init__)가 같은 역할을 이어받았다."}

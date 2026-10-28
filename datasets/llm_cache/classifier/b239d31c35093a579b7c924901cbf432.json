@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 deprecated된 트레이너들을 제거한다고 밝혔고, 이 테스트 헬퍼가 검증하던 diffusers 의존 대상이 사라져 호출자를 잃었다."}

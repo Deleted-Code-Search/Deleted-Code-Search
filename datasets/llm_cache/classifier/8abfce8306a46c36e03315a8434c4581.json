@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|research_web.py가 Pydantic 기반 ProxyConfig 모델과 SearchConfig 검증으로 재구성되면서 dict/str을 수동 변환하던 format_proxy가 그 구조에 맞지 않게 되어 제거됐다."}

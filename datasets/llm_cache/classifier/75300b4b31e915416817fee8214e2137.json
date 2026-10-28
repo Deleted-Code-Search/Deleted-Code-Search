@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 커밋이 같은 자리에 `save_csv_report(filename, username, results)`를 추가해 CSV 저장 책임을 새 인터페이스로 재구성했고, 삭제된 함수의 일은 `generate_csv_report` 호출로 이어받았다."}

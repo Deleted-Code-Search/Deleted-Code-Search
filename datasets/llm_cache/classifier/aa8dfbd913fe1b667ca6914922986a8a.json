@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 \"Removed legacy transaction management per the deprecation timeline\"이라 폐기 일정에 따라 트랜잭션 관리 기능 자체를 제거했음을 밝히고, 이 테스트가 검증하던 autocommit 동작이 그 제거 대상에 속한다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 자리에 `@deprecated('3.2', '3.3')` 데코레이터가 붙은 동일 함수가 다시 추가되어, 기능은 유지한 채 폐기 예정 인터페이스로 재구성됐다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 Tasks(SEP-1686)를 스펙에서 제거하고 관련 코드·테스트·문서를 전부 삭제한다고 밝혀, task 관련 기능 자체가 없어진 것이다."}

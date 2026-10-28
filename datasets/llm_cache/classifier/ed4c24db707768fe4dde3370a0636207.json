@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR #1630이 clone()이 비파라미터 속성까지 전파하도록 바꾸면서 clone_parent()를 호출하던 이 테스트용 requires가 호출자를 잃었고, 같은 파일에 대체 코드가 추가되지 않았다."}

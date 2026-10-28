@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 BAML/LLMGateway 리팩터와 동적 응답 모델 생성을 말하고, 같은 파일에 DefaultContentPrediction 대신 ResponseModel 기반 클래스들이 추가되어 구조 변경으로 기존 코드가 맞지 않게 됐다."}

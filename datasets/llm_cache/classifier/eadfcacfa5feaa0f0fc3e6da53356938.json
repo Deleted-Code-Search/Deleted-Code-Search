@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR 본문이 `resolve_extracted_edge()`를 리팩터링하며 `dedupe_extracted_edge()`와 `resolve_edge_contradictions()`를 제거한다고 밝혔고, 이 테스트는 제거된 `dedupe_extracted_edge`를 monkeypatch하는 등 삭제된 대상에 의존한다."}

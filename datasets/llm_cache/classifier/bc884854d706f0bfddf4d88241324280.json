@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지 \"consolidate Upsample\"과 추가 코드가 `from .resnet import Upsample`로 같은 이름의 Upsample을 resnet에서 가져와 쓰도록 바꾼 것으로 보아, 이 파일의 Upsample 구현이 resnet 쪽으로 통합되면서 삭제됐다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 자리에 들어온 대체 코드가 `__call__(self) -> Value: return self.value`로 시그니처(step 인자 제거)와 반환 방식(copy 제거)이 바뀌어, step/stop 로직을 PregelLoop와 공유하도록 인터페이스가 재편된 것을 보여준다."}

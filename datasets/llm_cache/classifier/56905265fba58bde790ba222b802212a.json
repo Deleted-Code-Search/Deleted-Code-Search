@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지 \"Remove deprecated template variables\"와 이슈 #1168 \"Remove all deprecated code in prep for 1.0\"이 deprecated 템플릿 변수 지원 자체를 제거한다고 밝히고, 삭제된 resolve가 바로 그 deprecated 변수 경고를 담당하던 코드다."}

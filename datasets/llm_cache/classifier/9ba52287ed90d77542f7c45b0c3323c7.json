@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "BUG|커밋 메시지가 \"head request may cause 301 redirect which can be interpreted wrong\"이라며 리다이렉트 오해를 고치려는 것이고, 추가 코드에서 HEAD 대신 GET으로 바꿔 응답을 제대로 분석하도록 수정했다."}

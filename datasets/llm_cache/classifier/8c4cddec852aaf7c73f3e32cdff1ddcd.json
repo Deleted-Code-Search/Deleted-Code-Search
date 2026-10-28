@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 Cheers 아키텍처를 \"Fully removed\" 목록에 넣고 `_PREVIOUSLY_SUPPORTED_MODELS`에 등록해 지원 종료를 명시했으며, 이 파일에 대체 코드가 추가되지 않았다."}

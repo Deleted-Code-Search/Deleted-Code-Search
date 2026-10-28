@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "BUG|삭제된 함수는 `image[BOTTOM:TOP, LEFT:RIGHT, :]`로 슬라이스했지만 대체 함수는 `image.crop((LEFT, TOP, RIGHT, BOTTOM))`로 바뀌어, TOP/BOTTOM 순서가 뒤바뀌어 잘못 크롭되던 동작을 고친 것으로 보인다."}

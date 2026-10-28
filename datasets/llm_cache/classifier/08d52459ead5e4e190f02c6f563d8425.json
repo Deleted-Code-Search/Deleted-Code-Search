@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 add_conditional_edge(..., then=) 기능을 제거한다고 밝히고, 이 함수는 그 then= 기능의 가용성 판정에 쓰이던 것으로 보인다."}

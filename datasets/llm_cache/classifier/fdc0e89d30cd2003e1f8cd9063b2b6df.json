@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|경로가 vendor/이고 커밋 메시지가 vendoring(외부 코드를 그대로 가져옴)을 말할 뿐, 이 함수 삭제의 이유를 이름으로 가리키는 문장이 없다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 V2 백엔드 파일 삭제와 DLPARSE_V2 폐기를 명시하고, 같은 파일에 추가된 코드가 DoclingParseV2DocumentBackend를 DoclingParseDocumentBackend로 라우팅하는 FutureWarning 스텁으로 바뀌어 기존 V2 백엔드 기능이 폐기·지원 종료됐다."}

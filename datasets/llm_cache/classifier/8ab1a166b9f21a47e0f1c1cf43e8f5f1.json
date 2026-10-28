@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 `_put` 본문이 `with ipv6(...)` 블록 안으로 옮겨져 `return _put(*args, **kwargs)`로 이어지므로, IPv6 지원을 위한 호출 경로 재구성으로 자리가 바뀐 것이다."}

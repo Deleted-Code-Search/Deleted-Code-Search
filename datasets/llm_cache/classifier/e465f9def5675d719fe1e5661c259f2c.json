@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "BUG|커밋 메시지가 \"Reading multiindex, incorrectly names columns without name\"이라며 다중 인덱스 컬럼 이름 오류를 고치려는 것이고, 삭제된 grouper의 count 누적 로직이 이 버그와 관련된 잘못된 동작을 유발한 것으로 보인다."}

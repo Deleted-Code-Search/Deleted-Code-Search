@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 문서 생성 단계를 없애고 Sphinx 설정을 단순화했다고 밝혀, 이 함수를 호출하던 자동 생성 파이프라인이 사라져 호출자를 잃었다."}

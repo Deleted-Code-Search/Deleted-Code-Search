@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 커밋이 `from kg.neo4j import GraphStorage`를 추가해 그래프 저장소 구현이 별도 모듈로 옮겨졌고, 삭제된 `close`는 그 이동된 구현이 이어받은 것으로 보인다."}

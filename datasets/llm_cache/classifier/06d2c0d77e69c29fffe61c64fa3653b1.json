@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|리뷰에서 G_LOGGER 대신 nemo.logging을 쓰도록 리팩터링하기로 했고, 이 커밋이 로깅을 통합하면서 이 로거 구현이 다른 자리(nemo.logging)로 대체됐다."}

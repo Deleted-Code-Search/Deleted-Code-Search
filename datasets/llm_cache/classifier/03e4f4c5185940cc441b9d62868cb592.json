@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "SEC|PR 본문이 s3server 데모의 경로 검증에 잠재적 보안 문제가 있다고 밝히며, 이 함수가 os.listdir/os.stat로 경로를 다루는 부분이 그 취약점 영역에 해당한다."}

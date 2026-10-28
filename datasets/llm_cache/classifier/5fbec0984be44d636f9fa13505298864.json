@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지와 PR 본문이 \"Revert ... (#5599)\"라고만 밝히고 있어 이 테스트의 close 함수 삭제 이유를 이름으로 가리키는 문장이 없고, 삭제된 본문(pass)이나 대체 코드에서도 근거를 찾을 수 없다."}

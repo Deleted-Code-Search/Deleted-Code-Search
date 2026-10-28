@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "BUG|PR #1340이 \"Add timeout mechanism for code execution\"을 되돌리며, 이슈 #1339에서 signal 기반 timeout 데코레이터가 non-main 스레드에서 CodeAgent를 깨뜨린다고 보고했으므로, 스레드 환경에서의 잘못된 동작을 고치려고 삭제했다."}

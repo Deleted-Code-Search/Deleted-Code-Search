@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 \"get_feature_names is replaced by get_feature_names_out\"이라며 공개 메서드 get_feature_names를 제거했고, 삭제된 본문도 1.0에서 deprecated되어 1.2에서 제거 예정임을 명시한다."}

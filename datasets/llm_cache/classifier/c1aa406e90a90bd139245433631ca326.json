@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 제목·본문이 \"Move function to methods on models.TaskInstance\"라며 이 함수를 TaskInstance의 메서드로 옮긴 구조 변경이고, 같은 일이 다른 자리(메서드)에서 계속된다."}

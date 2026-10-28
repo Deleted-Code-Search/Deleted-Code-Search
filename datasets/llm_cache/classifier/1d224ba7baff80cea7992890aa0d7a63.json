@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지와 PR 본문이 docs 워크플로를 GHA로 마이그레이션한다고만 하고, 이 함수나 .circleci/regenerate.py를 이름으로 가리키며 삭제 이유를 말하는 문장이 없다."}

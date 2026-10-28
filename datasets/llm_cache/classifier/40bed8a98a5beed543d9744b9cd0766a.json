@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지 \"Remove shared session\"이 session 픽스처를 제거했고, 이 테스트는 session을 인자로 받아 사용하므로 검증 대상이 사라져 지웠다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 자리에 post 메서드가 strict_slashes 인자를 추가해 재작성됐고, route/add_route 등 라우팅 인터페이스가 확장되면서 시그니처가 바뀌었다."}

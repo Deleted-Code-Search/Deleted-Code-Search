@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR이 dispatch를 단일 UsersDispatcher 클래스로 재작성하며 마스터가 분배를 계산·디스패치하도록 구조를 바꿨고, 이 함수가 속한 이전 분배 로직이 새 클래스로 대체됐다."}

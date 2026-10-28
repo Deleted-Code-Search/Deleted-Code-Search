@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|`@app.listener(\"after_server_start\")`가 `@app.after_server_start`로 바뀌어 같은 콜백이 새 리스너 API로 이어지고, PR 본문이 예제들을 최신 방식으로 고치는 작업이라고 밝히고 있다."}

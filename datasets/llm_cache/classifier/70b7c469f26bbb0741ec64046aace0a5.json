@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|PR 본문이 \"Remove `save` and `load` from all policies\"라며 PytorchModelHubMixin의 save_pretrained/from_pretrained로 대체했고, 추가 코드에서 ACTPolicy가 PyTorchModelHubMixin을 상속하도록 바뀌었다."}

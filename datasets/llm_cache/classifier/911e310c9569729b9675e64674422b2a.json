@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지가 vendored-in google ads library 제거를 말하지만 이 함수 자체의 삭제 이유를 이름으로 가리키지 않고, 경로에 vendor가 있으나 판단 순서 1의 vendor 규칙은 경로가 vendor/·vendored/·third_party/인 경우를 말하는데 이 경로는 google_vendor라 해당하지 않으며 대체 코드도 없어 근거를 댈 수 없다."}

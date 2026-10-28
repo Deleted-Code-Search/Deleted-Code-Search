@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|리뷰에서 \"I simplified skeleton resolving logic here\"라며 스켈레톤 해석 로직을 `resolve_skeleton_by_vertex_count`/`resolve_skeleton_by_edge_count` 모듈 함수로 재구성했고, `get_skeleton`의 자동 생성·캐시 역할이 그쪽으로 대체됐다."}

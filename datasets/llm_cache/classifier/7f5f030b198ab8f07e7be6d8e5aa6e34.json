@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 `prompt_separator` 등 separator 파라미터를 제거한다고 명시했고, 이 테스트는 그 폐기된 separator 기능을 검증하던 테스트라 기능 자체가 사라져 삭제됐다."}

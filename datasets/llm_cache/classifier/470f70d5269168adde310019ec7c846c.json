@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|삭제된 `_empty_subscribe`는 아무 동작 없이 `return`만 하는 빈 스텁이고, 같은 커밋이 이 파일에 추가한 코드는 `read_snapshot_lines`·`_user_owns_message` 등 실제 대상을 검증하는 테스트들로 대체되어 이 스텁을 호출하는 자리가 사라졌다."}

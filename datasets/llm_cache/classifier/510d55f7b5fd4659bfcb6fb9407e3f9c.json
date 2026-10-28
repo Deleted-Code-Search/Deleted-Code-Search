@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 \"Replace all usage of flow runners with infrastructure\"로 flow runner 사용 자체를 인프라로 대체·제거했음을 밝히고, 이 테스트는 flow runner의 image 설정 기능을 검증하던 것이라 그 기능이 사라진다."}

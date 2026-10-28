@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 제목·본문이 pybabel setuptools 통합을 제거한다고 명시했고, 이 테스트는 그 통합 기능(babel.extract_messages의 테마 추출)을 검증하던 테스트라 기능 자체가 사라졌다."}

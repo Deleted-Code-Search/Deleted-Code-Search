@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR #544가 sync 지원을 전면 제거한다고 밝혔고, `__enter__`는 sync 클라이언트의 컨텍스트 매니저 진입점으로 공개 표면에서 사라졌다."}

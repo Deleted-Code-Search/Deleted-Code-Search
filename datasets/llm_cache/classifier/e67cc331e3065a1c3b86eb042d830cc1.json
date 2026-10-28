@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 forward message cache를 \"프론트엔드에만 메시지를 저장하고 해시 목록을 백엔드로 보내는\" 구조로 재작성한다고 밝혀, 서버 측 참조 카운트 기반 캐시 관리(has_refs)가 새 구조에 맞지 않게 됐다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|이슈 #4755에서 랙 예약을 랙 ID 없이 직접 생성할 수 있게 하려고, 랙에 종속되던 units 선택 초기화 로직을 제거하고 units를 독립적인 NumericArrayField로 재구성했다."}

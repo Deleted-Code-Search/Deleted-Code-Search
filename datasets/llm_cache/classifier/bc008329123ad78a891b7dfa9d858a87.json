@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|삭제된 본문의 @deprecated 경고가 \"VBGMM.eval was renamed to VBGMM.score_samples in 0.14 and will be removed in 0.16\"이라 밝히고, 커밋 메시지 \"MAINT remove deprecated code\"가 공개 표면에서 폐기된 기능을 제거했음을 보여준다."}

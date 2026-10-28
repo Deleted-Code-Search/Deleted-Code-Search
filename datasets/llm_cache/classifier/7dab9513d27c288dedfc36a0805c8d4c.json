@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 \"Most PEFT method's model classes like `LoraModel` had an `__init__` that effectively just called `super()` with the same arguments. removed these `__init__` methods\"라고 밝혀, super()만 호출하던 불필요한 __init__을 제거한 것이다."}

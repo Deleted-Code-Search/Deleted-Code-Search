@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #4362 본문이 \"Existing provider-neutral fake models and representable Realtime, Voice, and Sandbox doubles are migrated to the new utilities\"라며 이 테스트의 fake 세션을 `scripted_sandbox_session()` 기반으로 재편했고, 추가 코드가 `_shell_session`/`_pty_session` 헬퍼로 같은 exec 호출 검증을 이어받는다."}

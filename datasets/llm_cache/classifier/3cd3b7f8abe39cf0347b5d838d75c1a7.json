@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지는 \"refactored test SAR SQL setup class into reusable functions\"라고만 하고, 삭제된 `_index_and_fit_sql` 함수를 이름으로 가리키며 삭제의 \"왜\"를 말하지 않으며, 화면의 추가 코드는 `[1/1] new_start 7`뿐이라 이 함수의 일을 이어받는 대체 코드를 가리킬 수 없다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|삭제된 테스트가 호출하던 convert_generics 함수가 이 커밋에서 사라졌고, 추가된 코드는 is_namedtuple·is_none_type·origin_is_union 등 다른 함수를 테스트할 뿐 convert_generics를 대체하지 않는다."}

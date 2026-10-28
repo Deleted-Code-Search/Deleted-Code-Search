@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 자리에 `_build_shell_rejection`이 async로 재작성되어 `resolve_approval_rejection_message`로 rejection_message를 계산하는 새 인터페이스로 대체되었고, 이는 tool_error_formatter 기능 추가에 맞춘 구조 변경이다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 `multi_source/`가 `company_qa/`로 바뀌고 소스가 SQL DB·티켓·문서 폴더를 읽도록 재구성됐다고 밝히며, 삭제된 `ingest_relational`의 SQL 적재 역할은 새 `scripts/ingest.py`의 `ingest(args.database, tables, ...)` 호출로 이어받는다."}

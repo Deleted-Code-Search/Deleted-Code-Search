@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 자리에 `get_pixel_height`가 `self.get_pixel_shape()[1]`을 반환하도록 다시 구현되어, 프레임 버퍼 기반 구조로 바뀌면서 픽셀 크기 조회 방식이 재편된 것이다."}

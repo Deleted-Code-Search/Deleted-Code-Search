@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|PR 본문이 `Repository.push_to_hub` 대신 `upload_folder`를 쓰도록 스크립트를 바꾼다고 밝히고, 추가된 코드가 `create_repo`·`upload_folder`를 import해 기존 `get_full_repo_name`+`Repository` 경로를 대체한다."}

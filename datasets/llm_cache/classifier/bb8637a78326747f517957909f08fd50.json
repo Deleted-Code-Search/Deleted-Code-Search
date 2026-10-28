@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지 \"Deprecate invalid sorters\"가 이 테스트가 검증하던 정렬 기능(DASHBOARD_VARIANT_POSITION/DASHBOARD_PRODUCT_POSITION)을 폐기했음을 밝히고 있다."}

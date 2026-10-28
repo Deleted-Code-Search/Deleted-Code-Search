@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|`key(f)`가 `_file_sort_key(f)`로 이름만 바뀌어 같은 정렬 로직이 그대로 이어지고, 호출부도 `filenames.sort(key=_file_sort_key)`로 옮겨졌다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 \"Refactor lasso coordinate descent code\"이고, 추가된 코드에서 lasso_coordinate_descent 호출로 학습 경로가 재구성되어 _dual_gap_func가 쓰이던 구조가 바뀌었다."}

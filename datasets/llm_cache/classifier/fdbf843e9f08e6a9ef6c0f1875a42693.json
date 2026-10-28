@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|삭제된 함수 params_to_query_string는 테스트 헬퍼로 보이나, 커밋 메시지·PR 본문은 GetSampledHistoryBulkInterval 샘플링 로직 수정만 언급할 뿐 이 함수를 이름으로 가리키지 않고, 추가된 코드도 _get_sampled_steps_from_steps 테스트로 대체·이전을 확인할 수 없다."}

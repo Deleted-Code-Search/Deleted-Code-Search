@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR 본문이 \"removed some Document unit tests that were outdated\"라고 밝혔고, 삭제된 테스트가 검증하던 meta 내 객체 비교 동작은 Document의 blob 타입 변경·mime_type 제거와 무관하게 남아 있으나 이 테스트를 대체하는 코드가 같은 자리에 없다."}

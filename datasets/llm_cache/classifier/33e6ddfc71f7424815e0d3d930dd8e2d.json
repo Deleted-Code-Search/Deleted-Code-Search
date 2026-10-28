@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|커밋 메시지가 Werkzeug의 LocalProxy를 가져왔다고 밝히고, 삭제된 함수 호출이 추가된 코드에서 LocalProxy(lambda: instantiate(...))로 대체됐다."}

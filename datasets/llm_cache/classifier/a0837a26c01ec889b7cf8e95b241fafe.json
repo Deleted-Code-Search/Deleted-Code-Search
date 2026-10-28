@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 제목·본문이 TaskSequence와 @seq_task를 SequentialTaskSet으로 대체한다고 밝혀, 이 테스트가 검증하던 TaskSequence 기반 기능 자체가 제거됐다."}

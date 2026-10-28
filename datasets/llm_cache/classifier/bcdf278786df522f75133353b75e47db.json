@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 `rasa.core.utils`의 `EndpointConfig` 중복 코드를 제거하고 `rasa.utils`로 복사했다고 밝히며, 같은 커밋이 이 파일에 `from rasa.utils import EndpointConfig`를 추가해 같은 일이 다른 자리에서 계속된다."}

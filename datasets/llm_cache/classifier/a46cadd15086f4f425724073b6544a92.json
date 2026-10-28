@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|build_config 메서드가 사라지고 같은 설정 항목들이 inputs 리스트(DropdownInput, StrInput, BoolInput)로 옮겨졌으며, 클래스가 LCToolComponent 상속으로 재구성됨."}

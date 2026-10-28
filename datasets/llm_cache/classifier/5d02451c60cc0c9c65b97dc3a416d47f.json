@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "BUG|PR 본문이 `check_site_for_username()`의 await 누락과 `process_site_result()`의 중복 동기 activation 블록, 공유 checker 상태로 인한 경쟁 조건을 근본 원인으로 명시하고, 이 테스트 파일의 `__init__`이 aiohttp용 FakeSession/쿠키 객체로 재작성되어 async 전환·경쟁 조건 수정을 검증하도록 바뀌었다."}

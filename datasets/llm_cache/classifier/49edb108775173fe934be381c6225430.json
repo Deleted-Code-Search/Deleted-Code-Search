@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지와 이슈 #6356이 AMQP result backend를 deprecated 후 제거한다고 명시하며, 이 테스트가 검증하던 백엔드 기능 자체가 사라졌다."}

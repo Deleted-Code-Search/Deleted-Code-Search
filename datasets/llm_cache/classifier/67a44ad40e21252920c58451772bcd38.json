@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR이 CombinedLoader를 pytrees 기반으로 재구현하면서 배치 수 계산이 _CombinedDataset의 __len__/_calc_num_batches로 옮겨졌고, 삭제된 _calc_num_batches의 로직(apply_to_collection/get_len/_reduce_data)이 새 코드의 lengths 계산으로 대체됐다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 자리에 zero_cpu_offload가 다시 추가되었지만 본문이 offload_optimizer 존재 여부를 반환하도록 바뀌어, ZeRO-Infinity 도입으로 offload 설정 인터페이스가 재편되면서 기존 cpu_offload 플래그 조회가 새 구조에 맞지 않게 됐다."}

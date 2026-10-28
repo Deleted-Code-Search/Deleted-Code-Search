@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "BUG|리뷰 코멘트가 이 함수가 cuda에서 텐서를 만들어 CUDA GPU가 없는 머신에서 벤치마크가 실패한다고 지적한다."}

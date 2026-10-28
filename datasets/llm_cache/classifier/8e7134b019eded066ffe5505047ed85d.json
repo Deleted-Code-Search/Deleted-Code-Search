@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "BUG|PR #6330이 `cast_lm_head_to_fp32=True`가 FSDP2/ZeRO-3 혼합정밀도에서 fp32 입력 × bf16 가중치 dtype 불일치로 크래시(#4867)하는 문제를 고치려, pre-hook 대신 `lm_head.forward`를 fp32 캐스팅 linear로 교체하며 기존 `cast_inputs_to_fp32`를 삭제했다."}

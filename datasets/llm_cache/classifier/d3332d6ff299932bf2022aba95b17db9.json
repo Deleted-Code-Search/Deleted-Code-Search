@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 \"[V0 Deprecation] Remove V0 model runner base\"로 V0 모델 러너 기반 자체를 폐기·제거한다고 밝히고, 이 함수는 그 기반 클래스의 추상 메서드다."}

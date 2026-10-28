@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 `autocompletion` 파라미터가 `shell_complete`로 대체되었다고 명시하며, 이 함수는 제거된 `autocompletion` 파라미터를 호출하는 어댑터이므로 사용자 기능 자체가 없어진 FEAT이다."}

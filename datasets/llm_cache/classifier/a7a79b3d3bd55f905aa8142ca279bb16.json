@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 \"Remove DynamicSlice from Experiment Ops\"라며 DynamicSlice 연산 자체를 제거한다고 밝혀, 이 연산을 검증하던 테스트가 대상 기능 폐기로 삭제됐다."}

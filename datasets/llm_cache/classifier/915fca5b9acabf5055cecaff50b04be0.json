@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|삭제된 addon 헬퍼는 테스트 파일에서 호출되지 않으며, 같은 커밋이 추가한 테스트들은 eventsequence.iterate를 직접 호출할 뿐 이 헬퍼를 쓰지 않는다."}

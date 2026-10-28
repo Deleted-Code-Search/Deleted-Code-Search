@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #1326이 이미지를 `List[str]`로 지연 로딩하도록 `DetectionDataset`·`ClassificationDataset`·로더들을 재구성하면서, 이미지를 디스크에 저장하던 이 함수가 새 데이터 흐름에 맞지 않게 되어 제거됐다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #33이 DatasetInfo/Features/SplitDict를 dataclasses 기반으로 재구성하면서 CFQConfig의 __init__이 그 구조에 맞지 않게 됐고, 같은 파일에 대체 코드가 없어 다른 자리에서 이어받은 것으로 보인다."}

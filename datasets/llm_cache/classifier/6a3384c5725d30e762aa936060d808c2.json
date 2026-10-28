@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지 \"clean up 1.x code\"가 1.x API 표면을 제거하는 작업임을 밝히고, 삭제된 테스트가 검증하던 /documents/delete_by_filters 엔드포인트의 대체 코드가 같은 커밋에 추가되지 않았다."}

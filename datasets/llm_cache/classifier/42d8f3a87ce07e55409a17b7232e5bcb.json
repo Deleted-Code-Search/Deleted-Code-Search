@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 커밋이 BracketTracker로 delimiter token skipping을 옮기면서 self.bracket_tracker.depth 대신 self.depth를 쓰는 새 버전의 maybe_increment_for_loop_variable을 추가했고, 삭제된 함수의 역할이 BracketTracker 내부로 재배치됐다."}

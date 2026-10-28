@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 커밋이 같은 자리에 async get_collection을 추가해 has_collection 검사와 CollectionNotFoundError를 던지도록 인터페이스를 바꿨고, 삭제된 동기 버전의 일(collection 반환)은 이 새 메서드가 이어받는다."}

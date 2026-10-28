@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 \"Canvas refactor\"라 하고, 같은 커밋이 이 파일에 group/chord 처리를 maybe_signature 기반으로 재작성한 코드를 추가해 prepare가 하던 group_id·GroupResult 구성 책임이 다른 구조로 옮겨졌음을 보여준다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 vlm을 포함한 컬렉션들을 제거(deprecated collections 제거)한다고 명시했고, 이 테스트는 그 vlm 컬렉션의 finetune_recipe 기능을 검증하던 것이라 기능 자체가 폐기됐다."}

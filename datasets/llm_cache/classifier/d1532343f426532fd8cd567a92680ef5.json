@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 \"Introduced ErrorPageDetector class\"라며 detect_error_page의 세 가지 검출 로직을 클래스 메서드로 분리했다고 밝히고, 추가된 코드가 ErrorPageDetector.detect 호출로 같은 일을 이어받는다."}

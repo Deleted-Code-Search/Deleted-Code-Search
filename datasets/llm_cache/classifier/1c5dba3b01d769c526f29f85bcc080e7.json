@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|커밋 메시지가 `required_torch_version` 검사를 `deepspeed.utils.torch`로 옮기고 `deepspeed/comm/torch.py`의 검사들을 이 함수로 바꾼다고 밝히며, 추가된 코드가 `from deepspeed.utils.torch import required_torch_version`으로 대체 호출을 보여준다."}

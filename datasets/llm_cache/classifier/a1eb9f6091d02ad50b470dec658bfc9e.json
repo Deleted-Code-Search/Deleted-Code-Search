@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 제목 \"Use entity attributes in Obihai sensor\"와 추가된 `self._attr_name` 대입이 보여주듯, `name` 프로퍼티가 하던 이름 반환을 엔티티 속성(`_attr_name`)으로 옮기면서 이 코드가 맞지 않게 됐다."}

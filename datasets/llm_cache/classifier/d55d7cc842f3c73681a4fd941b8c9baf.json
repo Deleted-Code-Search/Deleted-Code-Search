@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지와 리뷰 코멘트는 오류 가독성·비CUDA 친화성·CPU 로딩·경로 출력을 말할 뿐 main() 삭제의 이유를 밝히지 않고, 대체 코드나 호출자 변경도 화면에 없다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|get_results()의 DB 조회 로직이 같은 커밋에서 모듈 레벨 _get_events()로 옮겨졌고, LogbookView가 run_in_executor로 이를 호출하도록 바뀌어 같은 일이 다른 자리에서 계속된다."}

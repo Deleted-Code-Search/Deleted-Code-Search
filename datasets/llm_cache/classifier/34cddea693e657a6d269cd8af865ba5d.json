@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋이 exp pool에 BM25 저장소 지원을 추가하면서 storage_type(BM25/CHROMA) 기반 _resolve_storage 구조로 바뀌었고, vector_store 속성 검증 테스트는 새 storage 추상화 테스트(test_storage_property, test_resolve_storage_bm25 등)로 대체되어 같은 검증이 다른 자리에서 이어진다."}

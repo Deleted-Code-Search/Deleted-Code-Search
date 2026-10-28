@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #7100이 WeightsEnum을 공개 API로 만들면서 __init__을 제거하고 value를 dataclass로 다루도록 구조를 바꿨으며, 추가된 코드에서 url/transforms/meta가 self.value를 통해 접근되도록 이어받았다."}

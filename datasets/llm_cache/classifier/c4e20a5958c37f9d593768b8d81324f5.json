@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 내부 validators 모듈의 검증 로직을 `types`의 self-validating 타입으로 옮긴다고 밝혀, 이 overload 스텁이 그 재구성으로 맞지 않게 됐다."}

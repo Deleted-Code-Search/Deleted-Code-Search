@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 `.num_channels` 프로퍼티를 이미지·마스크·비디오 데이터포인트 클래스에서 제거한다고 명시하고, 기능이 `F.get_*` 함수로 옮겨졌다고 밝히므로 공개 표면에서 기능이 사라진 FEAT다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|삭제된 본문이 `raise NotImplementedError(\"FA2 is not implemented (yet)\")`인 미구현 스텁이고, 같은 커밋이 이 파일에 대체 코드를 추가하지 않아 호출자가 없는 잔재를 치운 것으로 보인다."}

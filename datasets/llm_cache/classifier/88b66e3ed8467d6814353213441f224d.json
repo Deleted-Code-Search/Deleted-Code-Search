@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|같은 커밋이 `fastmcp.client.oauth_callback`의 `create_oauth_callback_server`를 import해 콜백 서버 생성을 외부 모듈 호출로 대체했다."}

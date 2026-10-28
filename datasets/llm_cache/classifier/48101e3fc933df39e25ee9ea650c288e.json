@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "BUG|PR이 301 리다이렉트가 비GET 메서드를 GET으로 바꾸고 본문을 버리는 문제(#1738)를 고치려 308을 도입했고, 삭제된 테스트는 GET 301만 검증하던 것을 메서드별 상태코드를 검증하는 test_default_redirect_by_method로 대체했다."}

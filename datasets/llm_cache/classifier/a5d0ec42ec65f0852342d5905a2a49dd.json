@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|삭제된 것은 `call_tool`의 `@overload` 스텁 한 줄이고, 커밋 메시지·PR·리뷰 어디에도 이 오버로드 시그니처를 이름으로 가리키며 삭제 이유를 말하는 문장이 없으며 추가된 코드에서 이를 대체·이어받는 줄도 보이지 않는다."}

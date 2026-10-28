@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #2206 본문이 \"Checkout class is removed and all data needed for that process are now saved in database within Cart model\"이라며 Checkout 클래스 자체를 Cart로 병합·제거했고, 이 테스트가 검증하던 checkout.shipping_method setter가 그 제거된 클래스에 속하므로 구조 변경으로 사라졌다."}

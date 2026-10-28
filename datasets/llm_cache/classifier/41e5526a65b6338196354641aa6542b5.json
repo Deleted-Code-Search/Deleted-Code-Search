@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 자리에 들어온 대체 코드가 object_pairs_hook 파라미터를 추가해 같은 load 기능을 이어받았으므로, 인터페이스 변경에 따른 재작성이다."}

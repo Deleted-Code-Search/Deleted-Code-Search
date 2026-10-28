@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋이 통계 산출을 재작성하면서 사이트 목록 나열 대신 집계 방식으로 바꿨고, get_site_label은 그 목록 출력에 쓰이던 라벨 생성기라 새 통계 구조에서 자리가 없어졌다."}

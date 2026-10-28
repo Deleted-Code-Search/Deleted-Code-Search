@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #148이 --output/--folderoutput 옵션을 추가하면서 파일 열기·쓰기 로직이 main의 인자 처리 분기(new_start 470~485)로 옮겨졌고, write_to_file의 url 한 줄 쓰기 역할은 그 자리의 file.write 호출이 이어받았다."}

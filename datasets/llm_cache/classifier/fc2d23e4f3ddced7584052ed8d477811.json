@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|테스트 파일에서 @observe() 데코레이터가 붙은 내부 헬퍼 함수 restaurant_finder가 삭제됐고, 같은 커밋이 이 파일에 추가한 코드가 없어 호출자를 잃은 테스트 전용 스텁으로 보인다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|커밋 메시지가 Python 2 호환 제거를 명시하고, 추가된 코드에서 `input()`을 직접 호출해 `user_input`의 버전 분기 역할을 표준 내장 함수가 대신하게 됐다."}

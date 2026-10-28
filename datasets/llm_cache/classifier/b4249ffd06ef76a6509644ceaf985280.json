@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #2626이 Inspector를 TCP 소켓에서 Sanic 앱 기반 HTTP Inspector로 전환하면서, 삭제된 test_shutdown의 검증 대상(inspector.shutdown()의 publisher.send(\"__TERMINATE__\"))이 추가된 test_run_inspector_shutdown의 HTTP /shutdown 엔드포인트 호출로 같은 일을 이어받았다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 커밋이 `_key_down`/`_key_up`을 주석 처리하고 `action_scroll_up`/`action_scroll_down`과 BINDINGS로 스크롤 동작을 액션 기반으로 옮겨, 키 처리 책임이 다른 인터페이스로 재구성됐다."}

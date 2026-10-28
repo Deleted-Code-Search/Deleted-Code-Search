@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지·PR·이슈는 301 리다이렉트 해석 오류(#95)만 말할 뿐 print_banner 삭제를 이름으로 가리키지 않고, 추가된 코드에도 이를 대체하는 줄이 없다."}

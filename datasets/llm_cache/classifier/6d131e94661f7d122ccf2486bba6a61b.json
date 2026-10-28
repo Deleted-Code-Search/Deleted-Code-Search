@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 본문의 함수가 self를 받는 메서드로 클래스 안에 다시 추가되어, 구조 변경으로 코드가 다른 자리로 옮겨졌다."}

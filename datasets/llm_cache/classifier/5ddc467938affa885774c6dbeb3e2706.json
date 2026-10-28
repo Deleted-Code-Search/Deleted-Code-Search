@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지와 PR 본문이 \"Use upstream FastMCP\", \"FastMCP 2.0\", \"Merge 2.x branch to main\"이라고만 할 뿐 이 테스트나 그 대상(run 명령의 dependencies 미처리 동작)을 이름으로 가리키며 삭제 이유를 말하지 않고, 삭제된 본문 자체에도 이유를 드러내는 표시가 없다."}

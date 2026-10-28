@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|PR 본문이 itemloaders 라이브러리로 옮기고 scrapy의 ItemLoader를 그 라이브러리 기반 클래스의 확장으로 만든다고 밝히며, replace_css는 itemloaders.ItemLoader가 제공하는 기능으로 대체됐다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|리뷰 코멘트가 이 정의를 `lax_reference.py`로 옮기고 `lax_reference.top_k`를 직접 호출하라고 했고, 추가된 코드가 `ref_op = lambda vs: lax_reference.top_k(vs, k=k)`로 대체했다."}

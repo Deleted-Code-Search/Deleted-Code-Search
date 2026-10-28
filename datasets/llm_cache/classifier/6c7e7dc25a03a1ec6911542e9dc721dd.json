@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 \"Complete refactoring with modular architecture\"와 factory pattern 기반 재구성을 명시하고, 이 함수가 하던 클라이언트 생성·드라이버 구성이 새 모듈 구조로 옮겨졌음을 시사한다."}

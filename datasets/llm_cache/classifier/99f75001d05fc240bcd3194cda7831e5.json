@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|같은 자리에 들어온 대체 코드가 httpx.Request/Response를 httpx2.Request/Response로 바꾼 것으로, 커밋 메시지 \"Use `httpx2` for compatible HTTP clients\"에 따라 외부 라이브러리 호출로 교체된 것이다."}

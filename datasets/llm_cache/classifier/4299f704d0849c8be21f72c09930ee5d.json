@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 \"Remove option `return_sequence` from featurizers\"라고 명시했고, 삭제된 `__init__`이 바로 그 `return_sequence` 옵션을 읽는 코드다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR 본문이 이 테스트 파일을 이름으로 지목해 \"asserts `mamba2_layer_cache` / gather call counts against a mock pool, which pins how prep is wired rather than what the model computes\"라며 삭제한다고 밝혔고, 이 커밋에서 `mamba2_layer_cache`의 캐시 구조가 바뀌어 검증 대상이 사라졌다."}

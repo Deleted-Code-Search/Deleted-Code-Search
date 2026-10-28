@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 q3_k GPU 디퀀타이즈 지원을 추가한다고 밝히며, NotImplementedError 스텁이 실제 KTransformersOps.dequantize_q3_k 구현으로 대체됐다."}

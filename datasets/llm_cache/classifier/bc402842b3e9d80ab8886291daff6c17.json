@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|`_set_dataloader`가 하던 fit dataloader 주입을 같은 커밋의 `__set_fit_dataloaders`가 `patch_train_dataloader`/`patch_val_dataloader`/`patch_test_dataloader`로 대체하고 있어, 구조 변경으로 이 코드가 맞지 않게 됐다."}

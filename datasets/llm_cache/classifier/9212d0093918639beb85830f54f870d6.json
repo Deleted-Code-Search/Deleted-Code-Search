@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR 본문이 pypi json api 제거에 대비한 픽스처 생성 개선을 말하고, 삭제된 known_missing_files는 PROJECT_SPECS의 ignore_missing_files를 참조하는데 추가된 코드에서 이 속성이나 호출자를 이어받는 자리가 보이지 않는다."}

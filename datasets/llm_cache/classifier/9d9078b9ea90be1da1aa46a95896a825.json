@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|같은 자리에 들어온 대체 코드가 boto의 get_contents_to_filename 대신 boto3의 self.s3.meta.client.download_file 호출로 바뀌었고, PR 본문이 boto에서 Boto3로 전환한다고 밝히고 있다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지와 PR이 \"Remove depreciated camera providers\"라며 camera_pygst.py를 폐기 대상으로 명시했고, 이 파일 전체가 제거되어 사용자 기능 자체가 사라졌다."}

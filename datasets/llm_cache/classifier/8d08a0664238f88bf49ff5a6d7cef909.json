@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #833이 `Graph.run`의 로직을 `GraphRun` 객체와 `next` 기반 반복으로 재구성하면서, `run_to_result`가 하던 모델 요청·스트리밍·결과 생성 흐름이 `ModelRequestNode._stream`/`_make_request`와 `HandleResponseNode`로 옮겨졌다."}

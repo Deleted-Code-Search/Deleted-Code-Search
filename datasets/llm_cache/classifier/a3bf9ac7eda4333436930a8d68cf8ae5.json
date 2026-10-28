@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 제목과 본문이 `GPUStatsMonitor` 콜백을 제거한다고 명시하고, 이 테스트는 그 콜백의 `_get_gpu_ids`를 검증하므로 공개 기능 자체가 없어진 FEAT이다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|삭제된 함수 본문이 `pass` 뿐인 빈 스텁이고, 같은 커밋이 이 파일에 대체 코드나 호출자를 추가하지 않아 호출되지 않는 잔재를 치운 것으로 보인다."}

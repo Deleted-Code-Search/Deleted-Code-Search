@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 \"Generate GeoManager from GeoQuerySet\"이라며 GeoManager를 GeoQuerySet에서 생성하도록 구조를 바꿨고, 추가된 `Manager.from_queryset(GeoQuerySet)`가 위임 메서드들을 대체하므로 같은 일이 다른 자리에서 계속된다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR이 SAP coupler를 Rigid body-FEM 접촉까지 다루도록 일반화하면서 contact 처리 구조가 `self.contacts` 루프에서 `contact_handlers` 기반으로 재편되어, 기존 `compute_Ap`의 contact 순회 코드가 새 구조에 맞지 않게 됐다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 \"Callback arguments\"와 \"Legacy gen interfaces\"를 obsolete로 지운다고 밝혀, callback 인자를 받는 이 테스트용 인터페이스 자체가 제거된 기능이다."}

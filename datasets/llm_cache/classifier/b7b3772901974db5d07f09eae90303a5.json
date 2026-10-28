@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|삭제된 함수 본문에 \"`post_process_segmentation` is deprecated and will be removed in v5 of Transformers, please use `post_process_semantic_segmentation`\"라는 폐기 경고가 있고, PR이 v5 릴리스용 deprecation 삭제를 선언하므로 사용자 기능 자체가 제거된 것이다."}

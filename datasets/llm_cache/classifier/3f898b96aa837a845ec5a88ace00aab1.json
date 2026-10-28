@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #7747이 Datapoint 메서드들을 제거하고 dispatcher 등록 방식으로 바꾸는 dispatch 메커니즘 리팩터이며, 리뷰 코멘트가 \"our dispatch scheme has changed\"라며 resize의 dispatch check가 비활성화됐다고 설명한다."}

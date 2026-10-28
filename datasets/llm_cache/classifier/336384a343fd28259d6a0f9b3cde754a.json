@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "BUG|PR 본문이 \"active run이 thread-local이 되어 worker thread에서 mlflow.active_run()이 None을 반환해 source run 정보가 소실된다\"는 추적 버그를 고치려는 것이고, 삭제된 call_api 래퍼가 바로 그 스레드 로컬 active run 스택 복사 로직이었다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 datapoints에서 메서드를 제거하고 dispatcher 등록 방식으로 대체하는 dispatch 메커니즘 재구성이라고 밝히고, 리뷰 코멘트도 \"dispatch scheme has changed\"라며 resize의 dispatch check가 비활성화됐다고 설명하므로."}

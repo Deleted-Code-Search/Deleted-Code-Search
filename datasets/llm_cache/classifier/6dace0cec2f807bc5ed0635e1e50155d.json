@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|이 파일이 zmq_proxy의 Publisher/Subscriber 기반 클래스로 재구성되면서 기존 소켓·컨텍스트를 직접 관리하던 stop 메서드가 새 구조에 맞지 않게 됐다."}

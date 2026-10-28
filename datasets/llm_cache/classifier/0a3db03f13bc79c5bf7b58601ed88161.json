@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 \"Remove Proxy List Support\"라며 프록시 목록 지원 기능 자체를 제거한다고 밝히고, check_proxy는 그 프록시 목록 검증에 쓰이던 함수다."}

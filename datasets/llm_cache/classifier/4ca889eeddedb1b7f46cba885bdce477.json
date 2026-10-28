@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 `Viewer`/base `ViewerPlugin`에서 GUI 관련 배관을 제거하고 rebuild/pause 폴링을 없애며 `InteractiveScene`이 rebuild 상태를 소유하도록 재구성했다고 밝혀, 이 폴링 메서드의 책임이 다른 계층으로 이동했다."}

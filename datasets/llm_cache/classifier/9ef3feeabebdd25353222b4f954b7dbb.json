@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 커밋이 `cache_attempt`/`cache_hit` API를 `HashKey` 기반 `cache_hit(key(...))`와 `cache_attempt(defs, key(...), set())` 시그니처로 재작성하면서, 옛 시그니처(`defs, \"hash1\", stateful_refs, \"Pure\"`)를 검증하던 이 테스트가 맞지 않게 됐다."}

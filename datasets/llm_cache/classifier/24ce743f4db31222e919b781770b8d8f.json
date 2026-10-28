@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 `test_train_dataset_required`를 `test_init_with_train_dataset`로 대체한다고 명시했고, 추가된 코드가 `none` 케이스에서 같은 `ValueError(\"train_dataset` is required\")` 검증을 이어받는다."}

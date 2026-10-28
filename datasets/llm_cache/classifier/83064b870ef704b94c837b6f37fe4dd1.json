@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|`_more_tags`가 반환하던 `pairwise` 태그가 `_pairwise` 속성 제거 커밋에서 사라졌고, 이 테스트 클래스가 검증하던 대상이 없어져 호출자를 잃었다."}

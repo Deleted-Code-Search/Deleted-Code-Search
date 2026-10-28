@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지와 PR 제목이 \"setheaders -> addon\"으로 이 모듈의 setheaders 기능이 애드온 구조로 재편됨을 밝히고 있어, 구조 변경으로 이 코드가 맞지 않게 된 DESIGN에 해당한다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 자리에 들어온 대체 코드가 self_unused와 support_field 인자를 제거하고 타입을 array_class로 바꾼 동일한 support_driver로, 커밋 메시지의 \"Most kernels are standalone pure functions now\" 마이그레이션에 맞춰 인터페이스가 재구성된 것이다."}

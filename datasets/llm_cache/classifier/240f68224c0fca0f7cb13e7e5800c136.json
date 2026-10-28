@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR 제목이 테스트 공유(TST: share)를 말하고, 추가된 코드에서 TestCustomBusinessDay가 TestBusinessDay를 상속하도록 바뀌어 test_hash를 포함한 중복 테스트가 상속으로 대체되어 호출 대상이 사라졌다."}

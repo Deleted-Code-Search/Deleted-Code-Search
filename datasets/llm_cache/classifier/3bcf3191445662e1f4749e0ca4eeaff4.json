@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 config 처리를 dataclass로 재구성한다고 밝히고, `default` 프로퍼티가 있던 클래스가 `@dataclasses.dataclass` 기반 클래스로 대체되어 같은 역할이 dataclass 필드/`build` 클래스메서드로 옮겨졌다."}

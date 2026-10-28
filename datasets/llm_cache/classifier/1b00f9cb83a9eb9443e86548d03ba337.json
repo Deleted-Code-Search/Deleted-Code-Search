@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 커밋이 같은 자리에 `@router.get(\"/profile\")` FastAPI 핸들러를 추가해 동일한 username 반환 기능을 이어받았으므로, Flask에서 FastAPI로의 프레임워크 전환에 따른 구조 변경이다."}

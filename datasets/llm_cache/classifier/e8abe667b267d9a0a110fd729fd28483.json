@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|경로가 pipenv/vendor/requests/packages/chardet/chardistribution.py로 vendor/ 아래에 있고, 커밋 메시지가 \"unvendor requests\"라 벤더링 해제(다른 저장소로 이동)에 해당해 판단 근거가 없다."}

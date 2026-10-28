@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "BUG|이슈 #1018의 `AttributeError: 'NoneType' object has no attribute 'download'`와 `FileNotFoundError`가 이 함수의 `trackAudioStream.download` 호출 및 `remove(fileName)`에서 발생했고, PR #1022가 저작권 문제로 실패하던 다운로드를 고치려 이 함수를 제거했다."}

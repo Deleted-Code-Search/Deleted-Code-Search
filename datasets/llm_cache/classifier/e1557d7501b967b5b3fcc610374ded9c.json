@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 \"Slot\"과 \"DrawList\"를 wgpu에 대응물이 없는 이름이라며 렌더러를 수명주기 기준 다섯 클래스로 재구성한다고 밝히고, run-grouping 테스트를 둘로 나눴다고 하므로 이 함수가 속한 Slot 기반 그룹화 구조 자체가 Drawing/Material 중심으로 재편된 것이다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 \"Legacy gen interfaces\"와 \"Tests that use `exec`...\"를 제거 대상으로 명시했고, 이 테스트는 삭제된 legacy gen 인터페이스(gen.engine)를 검증하던 테스트라 지원 종료로 사라졌다."}

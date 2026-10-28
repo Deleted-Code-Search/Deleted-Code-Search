@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 \"Completly refactored the payments process\"라며 Django payments를 버리고 API 기반 새 결제 흐름으로 바꿨고, 같은 파일에 추상 Payment form 기반 클래스가 추가되어 이 폼의 책임·인터페이스가 재편됐다."}

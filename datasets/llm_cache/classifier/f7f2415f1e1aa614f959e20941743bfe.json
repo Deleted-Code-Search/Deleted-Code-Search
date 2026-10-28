@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 \"replace old var system with immutable one\"이라 기존 var 시스템을 새 불변 시스템으로 재구성한 것이며, __hash__가 의존하던 _var_name 기반 구조가 새 API로 대체됐다."}

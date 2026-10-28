@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 \"removing all nemo1 multimodal and vision models, the support will not be continued\"라며 nemo1 멀티모달·비전 모델 지원 자체를 종료한다고 밝히고, 이 함수는 그 모델의 list_available_models 공개 표면이다."}

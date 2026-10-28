@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "BUG|리뷰 코멘트가 `_load_input_files`가 모든 safetensors 파일 핸들을 열어둬 'too many open files' 오류가 날 수 있다고 지적하며, 파일을 on-demand로 열도록 `_load_tensor`를 `with safe_open(...)`으로 바꾸라고 해서 핸들 맵을 쓰던 이 함수가 제거됐다."}

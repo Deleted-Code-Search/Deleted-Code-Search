@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 deprecated된 on_dropfile 이벤트를 on_drop_file로 대체 완료하며 마이그레이션 문서로 사용자 전환을 안내한다고 밝혀, 공개 이벤트 표면에서 기능이 제거됐다."}

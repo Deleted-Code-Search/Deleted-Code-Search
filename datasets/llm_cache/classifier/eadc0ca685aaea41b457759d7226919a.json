@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 LightGBMRanker 래퍼를 제거하고 lgb.LGBMRanker를 직접 쓰기로 했으며, 이 테스트가 호출하는 LightGBMRanker 클래스가 삭제되어 검증 대상이 없어졌다."}

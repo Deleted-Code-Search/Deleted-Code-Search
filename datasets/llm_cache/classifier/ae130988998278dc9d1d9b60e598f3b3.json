@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "BUG|PR 본문이 _onnx_heatmaps_to_keypoints의 end_scores_i 인덱싱 버그를 수정한다고 밝히고, 삭제된 forward는 keypoints_scores를 제외한 출력만 반환하던 우회 코드로 이 버그 때문에 존재했다."}

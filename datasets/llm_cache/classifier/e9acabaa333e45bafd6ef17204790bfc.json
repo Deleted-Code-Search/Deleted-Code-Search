@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 자리에 export_lppool_2d_same_lower가 다시 추가되었고, get_output_shape가 get_output_shape_auto_pad로 바뀌고 pool 호출에 pads 인자가 추가되는 등 참조 구현 API 변경에 맞춰 코드가 재작성되었다."}

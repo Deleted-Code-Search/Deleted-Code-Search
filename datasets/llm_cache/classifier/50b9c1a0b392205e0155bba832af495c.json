@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 자리에 `_convert_listlike(arg, box)` 시그니처로 대체 함수가 들어와 format/errors/dayfirst/coerce/unit 처리까지 이어받으므로, 인터페이스 변경에 따른 재구성이다."}

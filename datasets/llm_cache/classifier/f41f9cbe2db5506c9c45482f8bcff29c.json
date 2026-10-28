@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 \"Use small models from Hub instead of creating new ones\"라며 테스트용 모델을 직접 생성하던 방식을 Hub 모델 로드로 바꿨고, 추가된 코드가 MODELS_TO_TEST와 from_pretrained(model_id)로 이를 대체한다."}

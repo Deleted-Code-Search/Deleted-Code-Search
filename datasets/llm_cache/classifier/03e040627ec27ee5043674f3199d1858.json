@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR #461이 MiniGPT4 멀티모달 지원을 되돌리면서 그 기능의 이미지 전처리 함수가 제거됐고, 같은 자리에 대체 코드가 없다."}

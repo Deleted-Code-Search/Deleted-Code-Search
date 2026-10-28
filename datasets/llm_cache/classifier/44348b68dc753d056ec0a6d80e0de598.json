@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 \"standardized how we get the password from the callable\"이라며 콜러블에서 비밀번호를 얻는 방식을 재구성했고, 같은 자리에 entered_passwords.pop(0)을 반환하는 동일 이름의 함수가 대체 코드로 들어왔다."}

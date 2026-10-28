@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR #4648 본문이 서버 API에서 서버 주도 sampling을 제거한다고 밝히고, 추가된 테스트가 `Context.sample`/`sample_step`/`list_roots` 부재와 `FastMCP(sampling_handler=...)`의 TypeError를 검증하므로 사용자 기능 자체가 폐기됐다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지 \"tests: parameterize test\"와 추가된 test_default_redirect_by_method가 OPTIONS를 포함한 여러 메서드를 파라미터로 검증하도록 재구성해, 삭제된 개별 테스트의 검증이 같은 파일 내 다른 테스트로 이어받아졌다."}

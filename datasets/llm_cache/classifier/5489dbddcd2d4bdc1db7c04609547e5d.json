@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 pydantic의 any attribute 허용 config를 제거해 자동완성을 지원하려는 작업이라 밝히고, 삭제된 __init__의 config pop 및 agent_ops_agent_name 설정이 같은 커밋에서 model_validator로 옮겨졌다."}

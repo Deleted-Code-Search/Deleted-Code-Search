@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지 \"Remove old em module.\"이 em 모듈 자체를 제거했음을 밝히고, 이 테스트는 그 모듈의 테스트이므로 사용자 기능 폐기로 판단한다."}

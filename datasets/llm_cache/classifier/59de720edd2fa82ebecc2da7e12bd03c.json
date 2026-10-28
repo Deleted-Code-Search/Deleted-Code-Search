@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 vLLM이 PaliGemma의 특수 어텐션 마스크를 지원하지 않아 커스텀 구현을 제거하고 Transformers 백엔드를 쓰도록 했으며, 리뷰에서 `_TRANSFORMERS_SUPPORTED_MODELS`에 항목을 추가해 기본 백엔드로 전환한다고 밝혀 사용자 기능이 폐기됐다."}

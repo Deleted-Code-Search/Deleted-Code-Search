@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 gen_rst.py의 하드코딩된 경로 처리(백레퍼런스 이미지 경로)를 sphinx-gallery의 설정 딕셔너리 방식으로 대체한다고 밝히고 있어, 링크 치환 로직이 외부 도구로 이관되며 삭제됐다."}

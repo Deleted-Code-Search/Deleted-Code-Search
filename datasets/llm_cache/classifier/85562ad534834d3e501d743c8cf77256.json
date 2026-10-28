@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 \"Remove auth handlers — create headers by hand\"라고 인증 핸들러를 없애고 헤더를 직접 만드는 구조 변경을 명시했고, 삭제된 __init__은 urllib2.HTTPBasicAuthHandler 초기화를 호출하는 인증 핸들러 코드다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 `gateway_adapter._get_max_context_tokens`를 `_get_model_cost` 대신 `_lookup_model_info`를 쓰도록 고쳤다고 밝혔고, 삭제된 테스트가 mock하던 `_get_model_cost`가 같은 커밋에서 제거되어 테스트가 `_lookup_model_info`를 mock하는 `test_lookup_with_provider`로 대체됐다."}

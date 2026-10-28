@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 \"All Markdown handling is now contained within the `Page` object\"라며 페이지 컨텍스트 생성 책임을 Page 객체로 옮겼고, 추가된 코드에서 page.load_markdown()·page.render()로 그 일을 이어받는다."}

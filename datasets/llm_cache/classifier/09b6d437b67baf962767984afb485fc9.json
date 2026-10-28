@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 \"an empty stored cron means trigger-only for every schedule\"라며 빈 cron을 on-demand로 재정의했고, 추가된 코드에서 `validate_cron_expr(\"\")`가 True로 바뀌어 기존 빈 cron 무효 검증 기능 자체가 제거됐다."}

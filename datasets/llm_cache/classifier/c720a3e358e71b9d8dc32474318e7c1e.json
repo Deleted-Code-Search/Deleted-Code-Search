@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋이 ButtonsColumn을 ActionsColumn으로 교체하며 테이블 액션 렌더링 구조를 재편했고, 삭제된 header 메서드의 역할이 새 ActionsColumn의 렌더링 로직으로 대체됐다."}

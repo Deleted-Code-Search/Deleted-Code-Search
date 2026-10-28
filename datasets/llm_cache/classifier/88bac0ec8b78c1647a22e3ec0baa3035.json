@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|리뷰에서 skip 데코레이터를 mock.py에서 test/helpers로 옮기기로 했고, 이 커밋이 그 이동의 일부로 wrapper를 제거했다."}

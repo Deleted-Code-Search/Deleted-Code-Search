@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 deprecated된 experimental cached widget replay 기능 로직을 제거한다고 명시하고, 추가된 코드에 해당 기능이 1.38에서 제거되었다는 사용자 안내 메시지가 있다."}

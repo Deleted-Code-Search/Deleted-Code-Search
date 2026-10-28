@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지와 PR 본문이 \"Delete vendored pip9\", \"Drop pip9 support\"라고만 말할 뿐 이 함수나 파일을 이름으로 가리키며 삭제 이유를 밝히지 않고, 경로가 vendor/ 하위라 판단 근거가 없다."}

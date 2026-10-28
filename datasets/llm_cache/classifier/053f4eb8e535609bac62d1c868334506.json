@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 \"switch to external bubus lib\"로 EventBus 구현이 외부 라이브러리로 대체됐고, 이 테스트 내부 핸들러 함수는 호출자를 잃어 검증할 대상이 사라졌다."}

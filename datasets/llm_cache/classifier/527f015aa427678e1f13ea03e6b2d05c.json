@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #2069 본문이 \"Moved all mounting logic from managers ... to the FastMCP server\"라며 마운트 로직을 매니저에서 서버로 옮겼다고 밝히고, 이 함수는 마운트된 서버 순회·필터링·프리픽스 병합을 하던 마운트 로직이라 서버로 책임이 이동했다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 BatchNormalization(12) 스펙을 되돌린다고 밝혀, 해당 스펙이 제공하던 training_mode 기반 기능 자체가 제거됐다."}

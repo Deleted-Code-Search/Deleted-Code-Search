@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 `GRPOWithReplayBufferTrainer`를 포함한 `trl.experimental.grpo_with_replay_buffer` 패키지 자체를 제거하고 사용자가 표준 `GRPOTrainer`로 전환해야 한다고 명시하므로, 이 테스트가 검증하던 실험적 트레이너 기능이 폐기된 것이다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #5421이 디스패처(고수준 커널) 계층을 제거하고 트랜스폼이 직접 디스패치를 담당하도록 바꾸면서, `@dispatch` 데코레이터로 등록되던 이 커널이 사라졌고 같은 파일에 `convert_bounding_box_format` 등 저수준 함수가 새로 추가됐다."}

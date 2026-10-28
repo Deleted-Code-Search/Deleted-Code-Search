@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 \"removing old generated validators\"라고 생성된 검증기 파일들을 제거한다고 밝히고, 이 파일은 codegen으로 생성되는 validator이며 대체 코드나 호출자 변경이 화면에 없다."}

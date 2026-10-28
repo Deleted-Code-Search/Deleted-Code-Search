@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR 리뷰에서 \"removal of various features\" 후 AddonManager에 남은 가치 있는 코드를 확인하자는 논의가 있었고, 삭제된 check_dependency_clashes를 호출하던 자리나 이를 대체하는 코드가 같은 커밋의 추가 코드에 없다."}

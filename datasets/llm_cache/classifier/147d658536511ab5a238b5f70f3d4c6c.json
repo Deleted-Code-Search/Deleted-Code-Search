@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #1699가 `Browser`·`BrowserConfig`·`BrowserContextConfig`를 `BrowserProfile`·`BrowserSession`으로 대체하는 재구성이므로, 옛 `Browser`를 흉내 내던 테스트 더미의 `__init__`이 새 모델에 맞지 않게 됐다."}

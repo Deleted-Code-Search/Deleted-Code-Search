@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지와 PR 본문이 \"Delete vendored pip9\", \"Drop pip9 support\"라고만 말할 뿐 이 함수나 pyparsing 모듈을 이름으로 가리키지 않고, 삭제된 본문 자체도 이유를 드러내지 않는다."}

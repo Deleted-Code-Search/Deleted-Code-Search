@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 커밋에서 `generate_schema` 변수가 `generate_schema_button`으로 이름이 바뀌고, 이 버튼을 받아 `write_schema(\"session\")`/`write_schema(\"notebook\")`을 호출하는 새 셀이 같은 자리에 들어와 스키마 생성 역할이 재구성됐다."}

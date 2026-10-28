@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "PERF|PR #1017 본문이 \"Removed redundant `._keys_factory()` method\"라며 이 키 팩토리 메서드를 이름으로 지목하고, 같은 PR이 `._iter()`에서 `if by_alias and k in self.__fields__: k = self.__fields__[k].alias`로 alias 처리를 인라인화해 10x 속도 향상을 노린다."}

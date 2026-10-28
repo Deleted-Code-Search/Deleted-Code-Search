@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 \"setup.py-related functionality that we no longer need\"라며 이 테스트 파일 자체를 제거한다고 밝혀, 검증 대상이 사라져 테스트가 지워졌다."}

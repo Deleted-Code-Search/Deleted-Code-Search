@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR 본문이 \"Removes E2E smoke tests - snapshot tests will fail if an app doesn't start\"라며 E2E 테스트 자체를 스냅샷 테스트로 대체해 제거한다고 밝혀, 이 테스트 앱의 render가 검증 대상에서 사라졌다."}

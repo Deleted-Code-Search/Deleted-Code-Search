@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 `_compute_entropy_mask`를 `get_high_entropy_mask`로 바꾸고 private 메서드 테스트를 피하자고 했으며, 같은 커밋이 `get_high_entropy_mask`를 import해 동일한 검증을 새 테스트 클래스로 옮겼다."}

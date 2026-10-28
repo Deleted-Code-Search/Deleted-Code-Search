@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|PR 본문이 graphene-django를 strawberry-django로 교체한다고 밝히고, 추가된 코드가 data_file_list를 strawberry_django.field()로 대체하고 있다."}

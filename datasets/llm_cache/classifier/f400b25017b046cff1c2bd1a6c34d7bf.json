@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 \"Back out class-level default assignment\"라며 클래스 속성으로 선언된 var의 기본값을 갱신하고 브라우저 스토리지를 유지하던 기능 자체를 되돌린다고 밝히고, 대체 코드 없이 해당 동작을 제거했다."}

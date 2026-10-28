@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 \"Replaced hardcoded components with dynamic tool fetching\"이라며 Composio 컴포넌트를 동적 도구 조회 기반으로 재구성했고, 이에 따라 하드코딩된 action 매핑·실행 로직인 execute_action이 composio_base.py의 동적 시스템으로 대체되어 맞지 않게 됐다."}

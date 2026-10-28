@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 hybrid retrieval 헬퍼들을 ranking·pairing·context formatting·entities·result handling 등 초점화된 모듈로 분리한다고 밝혔고, 추가된 코드가 hybrid.chunks·hybrid.context·hybrid.entities 등 새 모듈에서 함수들을 import해 쓰고 있어 _payload의 역할이 재구성된 구조로 옮겨진 것으로 보인다."}

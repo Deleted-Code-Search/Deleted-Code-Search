@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|테스트 파일에서 삭제된 restaurant_finder는 테스트 대상이 되는 함수가 아니라 테스트 내부의 헬퍼로, 커밋이 \"Added tests for metrics\"로 테스트를 추가하는 작업이며 이 함수를 호출하던 자리나 검증 대상이 화면에 없어 호출자를 잃은 잔재로 보인다."}

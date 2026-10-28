@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지는 \"Revert 'first commit'\"뿐이고 PR #415는 `_handle_entity_relation_summary`의 튜플 인자 문제를 다루며 `local_query` 삭제 이유를 이름으로 밝히지 않으며, 같은 커밋이 이 파일에 추가한 코드나 대체 코드도 없어 화면만으로 삭제 이유를 댈 수 없다."}

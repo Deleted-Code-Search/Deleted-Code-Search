@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋이 CustomFieldValue 모델을 버리고 custom_field_data JSONField로 전환하면서, 캐시 역할을 하던 이 메서드 대신 custom_field_data 속성이 그 일을 이어받았다."}

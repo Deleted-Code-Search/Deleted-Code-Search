@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR #7490이 start_requests() 지원을 제거(2.13.0에서 폐기됨)한다고 밝혀, 폐기된 기능 자체가 없어진 것에 대한 테스트 삭제다."}

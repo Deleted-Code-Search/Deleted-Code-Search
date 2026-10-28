@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|삭제된 Flask 라우트가 같은 커밋에서 추가된 `from frigate.http import create_app` 및 `self.flask_app = create_app(self.db)`로 웹 서버 구성이 별도 모듈로 옮겨가면서 이 파일의 라우트 정의가 맞지 않게 됐다."}

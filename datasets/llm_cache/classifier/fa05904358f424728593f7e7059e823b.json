@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #2591이 BaseCommand를 Command에 병합하면서 __init__ 본문이 Command 클래스로 옮겨졌고, 추가된 코드 [4/10]에 동일한 name/context_settings 초기화 줄이 그대로 나타난다."}

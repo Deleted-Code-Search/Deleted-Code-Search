@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|이슈 #18071이 legacy staged changes Python API(checkout() context manager와 Branch/StagedChange 모델)를 완전히 제거한다고 명시했고, 이 함수는 그 staging 기능의 일부다."}

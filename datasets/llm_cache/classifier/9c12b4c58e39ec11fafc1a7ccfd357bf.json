@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 Megatron-Bridge로의 마이그레이션에 따라 구식 mcore 설정 변환 코드를 제거한다고 밝혀, 이 함수가 제공하던 HF→mcore 설정 변환 기능 자체가 사라졌다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|커밋 메시지가 pytest-asyncio·pytest-trio를 anyio로 교체한다고 밝혀, 이 두 플러그인을 묶던 async_environment 픽스처가 anyio 기반으로 대체된 외부 라이브러리 전환이다."}

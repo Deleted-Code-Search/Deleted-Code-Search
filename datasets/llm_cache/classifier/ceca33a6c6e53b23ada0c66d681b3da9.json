@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|삭제된 본문이 `_fetch_state_dict` 메서드의 deprecation 경고와 제거 예정(0.35.0)을 명시하고 있어, 공개 표면에서 해당 메서드 사용 기능 자체가 제거된 폐기 작업이다."}

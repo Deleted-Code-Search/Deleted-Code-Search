@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 `GRPOWithReplayBufferTrainer` 등 실험적 트레이너 패키지와 그 전용 테스트·문서를 제거한다고 밝혀, 사용자가 쓰던 기능 자체가 폐기됐다."}

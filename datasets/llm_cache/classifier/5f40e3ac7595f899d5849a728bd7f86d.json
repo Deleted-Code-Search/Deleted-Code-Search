@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 \"settings are being deprecated\"라고 이 기능(requests.settings)의 폐기를 명시하고, 삭제된 테스트가 그 공개 API를 검증하던 것이다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR 본문이 `get_ca_bundle_from_env`를 이름으로 지웠다고 말하지 않고, 삭제된 테스트가 부르던 대상이 이 커밋에서 제거됐다는 문장도 없어 테스트 대상 상실을 근거로 댈 수 없다."}

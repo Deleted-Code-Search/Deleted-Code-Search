@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 \"Move loose print functions into QueryNotifyPrint() class\"라 하고, 추가된 코드의 QueryNotifyPrint 메서드들이 같은 출력 로직을 이어받아 수행한다."}

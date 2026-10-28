@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|메서드 본문이 사라지고 같은 커밋에서 `from ..utils.save_code_to_file import save_code_to_file` 임포트와 `save_code_to_file(generated_code, filename)` 호출이 추가되어, 파일 저장 구현이 외부 유틸 모듈 호출로 대체됐다."}

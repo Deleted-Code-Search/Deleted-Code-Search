@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 \"Remove scheduler-kafka library\"와 \"Superseded by upcoming distributed runner\"라고 밝혀, 라이브러리 자체가 폐기되고 후속 러너로 대체되면서 공개 표면에서 사라진 기능 제거다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 Sanic Server WorkerManager 재구성으로 serve/run 흐름을 새 API(single_serve, serve_legacy 등)로 바꾼다고 밝히고, 이 run 메서드는 그 재편에 맞지 않게 되어 제거된 것으로 보인다."}

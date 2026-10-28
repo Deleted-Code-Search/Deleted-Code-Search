@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 커밋이 이 파일에 동일한 join/로그 본문을 모듈 레벨로 옮겨 추가했으므로, 함수가 사라진 게 아니라 종료 로직이 다른 자리로 재배치된 구조 변경이다."}

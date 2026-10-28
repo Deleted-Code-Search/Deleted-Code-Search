@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #404가 venv 감지·관리 방식을 재구성하면서 이 property가 그 구조에 맞지 않게 됐고, 같은 파일에 대체 코드가 추가되지 않았다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR #30781이 낮은 사용량 때문에 jukebox 모델을 폐기(deprecate)한다고 밝혔고, 이 테스트는 그 폐기된 모델의 샘플링 기능을 검증하던 테스트다."}

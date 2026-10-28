@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 \"remove vae from ldm uncond pipe\"이고 PR이 \"move the VAE models in src/models\"라 밝혀, VAE 구현이 이 파이프라인에서 src/models로 옮겨졌으므로 같은 일이 다른 자리에서 계속된다."}

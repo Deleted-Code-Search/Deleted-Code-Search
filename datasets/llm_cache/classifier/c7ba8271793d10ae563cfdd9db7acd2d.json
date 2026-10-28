@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 pytest.mark.parametrize로 테스트를 정리한다고 밝혔고, 같은 파일에 test_reshape_and_cache가 parametrize 데코레이터를 단 형태로 다시 추가되어 같은 검증이 다른 구조로 이어지기 때문이다."}

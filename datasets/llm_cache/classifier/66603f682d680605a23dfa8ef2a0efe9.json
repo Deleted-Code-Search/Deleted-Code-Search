@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 opik-ai-backend 서비스 자체를 OSS 저장소에서 제거한다고 밝히고, 이 함수가 그 서비스 디렉터리(apps/opik-ai-backend/) 안에 있어 기능 자체가 없어진 경우다."}

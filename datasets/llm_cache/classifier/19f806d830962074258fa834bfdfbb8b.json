@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 sql_json 뷰를 execution context 기반으로 리팩터링한다고 밝히고, 추가된 코드가 `_create_response_from_execution_context`로 응답 생성을 옮겨 같은 일을 다른 자리에서 계속한다."}

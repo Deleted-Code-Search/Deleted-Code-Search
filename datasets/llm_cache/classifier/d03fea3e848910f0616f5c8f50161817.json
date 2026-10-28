@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 이름의 bake_query가 self.datasource.query(**self.query_obj())로 대체되어 Druid 전용 클라이언트 호출이 데이터소스 공통 쿼리 인터페이스로 옮겨졌다."}

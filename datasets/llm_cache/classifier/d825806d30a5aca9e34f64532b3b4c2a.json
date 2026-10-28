@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 WSGIAdapter/WSGIApplication 지원 제거를 명시했고, 커밋 메시지도 \"Remove WSGIAdapter/WSGIApplication\"이라 밝혀 WSGIApplication을 쓰던 이 테스트 헬퍼가 함께 사라졌다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR 제목이 \"Remove more serve-specific logic from core tests\"로, 이 테스트가 serve 관련 로직 제거로 검증 대상이 없어져 삭제된 것으로 보이며, 대체 코드나 호출자 변경 근거가 없다."}

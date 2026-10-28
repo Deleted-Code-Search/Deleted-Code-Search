@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 BearerAuthProvider를 JWTVerifier로 대체하는 AS/RS 분리 재구성을 명시했고, 이 파일은 JWTVerifier로의 backwards-compatible shim으로 바뀌어 exchange_authorization_code가 맞지 않게 됐다."}

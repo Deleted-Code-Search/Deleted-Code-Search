@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 \"Code cleanup and refactoring\"이라 하고, 같은 파일에 asyncio.create_task 기반 코드가 추가되어 _run의 gather 기반 실행이 다른 방식으로 대체된 정황뿐, 함수를 이름으로 지목한 이유 문장이 없다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 \"Removed legacy daemon CLI (`browser_use/skill_cli/**/*`)\"라며 레거시 데몬 CLI를 새 skill 중심 CLI로 교체했다고 명시했고, 이 테스트 헬퍼는 삭제된 `browser_use.skill_cli.daemon`을 띄우는 코드다."}

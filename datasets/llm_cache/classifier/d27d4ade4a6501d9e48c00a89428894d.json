@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 `noconnect`/`omitConnectTunnel` 지원을 폐기·제거한다고 밝혔고, 이 테스트는 그 옵션에 의존하는 로직과 함께 삭제됐다."}

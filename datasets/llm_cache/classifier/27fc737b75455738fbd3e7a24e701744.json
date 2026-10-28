@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|PR 본문이 Jinja2 2.9에 추가된 builtin `tojson` 필터로 대체한다고 밝히고, 삭제된 커스텀 필터의 기능을 외부 라이브러리 호출이 이어받는다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 \"Move uuids reconstruction fuctions to render\"라고 이 함수의 역할 이동을 명시했고, 같은 커밋이 `_resolve_vision_chunk_items`에서 UUID 처리를 이어받고 있다."}

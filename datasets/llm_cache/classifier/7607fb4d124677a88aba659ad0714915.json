@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 함수가 mock_client 픽스처 내부로 옮겨져 MOCK_APPLIANCES 대신 픽스처 인자 appliances를 참조하도록 재구성됐다."}

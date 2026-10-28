@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|리뷰 코멘트가 \"we store the subtotal in the model\"이라며 모델 필드로 대체되어 메서드를 완전히 제거했고, 같은 커밋이 subtotal 필드를 추가했다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 `test_unrecognized_hint_falls_back_to_content`와 `test_hint_takes_precedence_over_content`를 하나의 파라미터화된 `test_detect_with_hint`로 병합한다고 밝혔고, 추가된 코드에 `(PYTHON_FUNC, \"not-a-language\", CodeLanguageLabel.PYTHON)` 케이스로 같은 검증이 이어지고 있다."}

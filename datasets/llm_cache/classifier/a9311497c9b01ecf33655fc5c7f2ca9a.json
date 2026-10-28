@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR #5201이 debug= 플래그를 print_mode= 로 대체하며 폐기한다고 밝혀, 사용자가 쓰던 debug 출력 기능 자체가 제거됐다."}

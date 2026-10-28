@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지와 리뷰는 config 파싱을 validator 구조로 재편했다는 것만 말할 뿐, test_missing_site_name 테스트를 이름으로 가리키며 삭제 이유를 밝히는 문장이 없고, 이 파일에 추가·대체된 코드도 없어 근거를 댈 수 없다."}

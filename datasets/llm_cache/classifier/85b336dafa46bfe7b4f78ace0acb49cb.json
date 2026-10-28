@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #438이 volume limit을 문자열 표현식 기반의 buy/sell vol_limit 체계로 재설계하면서, 기존의 단순 volume_threshold 곱셈 방식 함수가 새 구조에 맞지 않게 되어 제거됐다."}

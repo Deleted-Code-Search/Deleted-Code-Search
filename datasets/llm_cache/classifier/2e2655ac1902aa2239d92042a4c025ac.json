@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 `Context.sample()`을 제거한다고 명시하고, 서버 API에서 서버 주도 샘플링 기능 자체를 없앤 폐기·지원 종료이므로."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 \"refactor(mcp): remove old pipelines.py\"와 \"add LocalExecutor for local inference\"로 이 파일의 입력 처리 책임이 새 Executor 구조로 옮겨졌음을 밝히고, 삭제된 함수의 입력 처리 로직이 LocalExecutor로 이전됐다."}

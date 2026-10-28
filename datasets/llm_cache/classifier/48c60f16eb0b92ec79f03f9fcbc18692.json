@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|커밋 메시지가 \"检测和识别的resnet使用paddleclass里的\"라며 PaddleClass의 resnet_vd로 교체한다고 밝히고, 추가된 코드가 paddle.nn 기반 ConvBNLayer.forward로 같은 풀링·conv·bn 연산을 이어받는다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 자리에 `not_expect_any`가 `stream` 인자와 `on_fail` 호출로 재작성되어 인터페이스가 바뀌었고, PR이 \"Optimize unit tests\"로 테스트 구조를 재편한 것이 근거다."}

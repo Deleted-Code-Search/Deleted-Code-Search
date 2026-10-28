@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "SEC|삭제된 본문이 신뢰할 수 없는 config.py 내용을 eval로 실행하는 위험 패턴이라, YAML 전환으로 이 eval 기반 설정 읽기를 없앴다."}

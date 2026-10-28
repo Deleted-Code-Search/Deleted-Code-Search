@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지 \"clean up 1.x code\"와 삭제된 테스트가 Elasticsearch 8용 분기(@pytest.mark.skipif(VERSION[0] == 8))를 포함한 1.x 시절 코드 정리이며, 이 테스트가 호출하던 상위 테스트 대상이 더 이상 검증할 대상이 없어져 제거된 것으로 보인다."}

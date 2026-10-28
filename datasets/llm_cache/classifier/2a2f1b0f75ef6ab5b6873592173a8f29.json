@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 `TemporalType` 참조를 `get_column_spec` 호출로 대체하는 리팩터라 밝히고, 이 파일에 `column_type_mappings`와 `get_sqla_column_type` 기반 로직이 새로 추가되어 같은 일이 다른 구조로 이어받아졌다."}

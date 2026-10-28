@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 config 처리를 dataclass로 재구성한다고 밝히고, 추가된 코드에서 height 프로퍼티 대신 dataclass 필드로 대체되어 같은 일이 다른 구조에서 계속된다."}

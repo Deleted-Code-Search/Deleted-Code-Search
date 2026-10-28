@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "BUG|PR 본문이 \"fixing order total calculations with a voucher\"라며 바우처가 주문 총액에 반영되지 않던 계산 오류를 고치려고 이 함수를 재작성했다고 밝힌다."}

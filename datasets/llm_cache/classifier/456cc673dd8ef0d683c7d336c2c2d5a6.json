@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR 본문이 v1 `BaseSession` 서버 루프가 사라졌다고 밝히고, 이 테스트의 `run_server`는 그 제거된 `ServerSession` 메시지 루프를 검증하던 헬퍼라 대상이 없어져 함께 삭제됐다."}

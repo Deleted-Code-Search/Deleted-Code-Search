@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 \"Tests replace the byte-level SDK mocks with an in-memory rustypot.Bus\"라며 이 mock의 바이트 수준 SDK 인터페이스 자체가 테스트에서 더 이상 쓰이지 않게 됐음을 밝힌다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지가 \"remote inference engine\" 추가를 되돌린다고만 하고, 이 테스트가 검증하던 로컬·원격 admission 일치 동작이 왜 사라져야 하는지 이 테스트나 그 대상을 이름으로 가리키며 말하지 않는다."}

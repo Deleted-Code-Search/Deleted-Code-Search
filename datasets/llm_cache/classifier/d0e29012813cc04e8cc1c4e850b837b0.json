@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지는 \"revert: rollback to v2.0 installation method, remove local thirdparty installation\"이라고만 말할 뿐 이 loader 함수나 distrib.py를 이름으로 가리키지 않고, 경로가 thirdparty/라서 판단 근거가 부족하다."}

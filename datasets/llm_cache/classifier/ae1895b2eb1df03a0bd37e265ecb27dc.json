@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|PR 본문이 Poetry의 핵심 유틸리티를 별도 패키지 poetry-core로 추출한다고 밝혀, 이 함수의 구현이 외부 라이브러리로 이전됐다."}

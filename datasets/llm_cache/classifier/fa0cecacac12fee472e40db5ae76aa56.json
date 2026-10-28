@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 \"clean up 1.x code\"로 이 파일의 코드 정리를 말할 뿐, 이 __init__의 호출자 상실이나 대체 구현을 화면에서 확인할 수 없다."}

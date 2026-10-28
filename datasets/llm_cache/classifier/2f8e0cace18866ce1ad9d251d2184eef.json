@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 `nginx.tmpl` 추출이 이제 불필요하다고 밝혔고, 이 픽스처를 사용하던 테스트가 사라져 검증할 대상이 없어졌다."}

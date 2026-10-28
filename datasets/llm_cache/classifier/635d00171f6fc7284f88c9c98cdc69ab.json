@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지가 `triplet_enrichment` improve 스테이지를 제거했다고 명시하고, 이 테스트는 그 스테이지의 순서를 검증하던 것이라 검증 대상 기능 자체가 사라졌다."}

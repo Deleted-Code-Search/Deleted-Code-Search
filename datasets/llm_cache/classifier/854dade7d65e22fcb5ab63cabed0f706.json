@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 자리에 `@expect(events.Start)` 데코레이터가 붙은 `state_start`가 새로 들어와 `self._handle_event = self.state_ready`로 상태 전이를 재구성했으므로, 상태 머신 구조 변경에 따라 기존 구현이 대체된 것이다."}

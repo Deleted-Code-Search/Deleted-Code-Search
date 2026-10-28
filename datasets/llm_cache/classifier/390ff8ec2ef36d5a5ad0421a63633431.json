@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 커밋이 함수 기반 스크립트를 InfoCollector 클래스와 fire CLI로 재구성하면서 linux_distribution 함수가 새 구조에 맞지 않게 되어 사라졌다."}
