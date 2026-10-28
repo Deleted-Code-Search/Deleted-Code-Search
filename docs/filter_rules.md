@@ -1,6 +1,6 @@
 # 필터 규칙
 
-버전: v0.8. 담당: 재헌 (NOISE_FORMAT 사후 필터는 성제). 규칙 변경 시 이 문서의 버전을 올리고, `DeletionRecord.filter_rule_version`에 반영하며(코드 상수 `pipeline/filter.py:FILTER_RULE_VERSION`을 같은 PR에서 같은 값으로 올린다 — 테스트가 둘이 같은지 확인한다), PR에 테스트와 정밀도 재측정 결과를 첨부한다. 재측정은 수동 200건 (통과 100 + 제외 100)이다 (CHARTER.md §8.4, §10.1).
+버전: v0.9. 담당: 재헌 (NOISE_FORMAT 사후 필터는 성제). 규칙 변경 시 이 문서의 버전을 올리고, `DeletionRecord.filter_rule_version`에 반영하며(코드 상수 `pipeline/filter.py:FILTER_RULE_VERSION`을 같은 PR에서 같은 값으로 올린다 — 테스트가 둘이 같은지 확인한다), PR에 테스트와 정밀도 재측정 결과를 첨부한다. 재측정은 수동 200건 (통과 100 + 제외 100)이다 (CHARTER.md §8.4, §10.1).
 
 NOISE_MOVE의 정규화·유사도·후보 범위는 ADR-014(`docs/adr/014-move-detection-rules.md`)가 최종 기준이다. 이 문서는 ADR-014의 결정을 요약해 필터 규칙 전체(다른 노이즈 유형 포함)와 나란히 두고, ADR-014가 정하지 않고 #52 구현에서 결정한 세부사항(같은 위치 판정 방법, 1:1 매칭 알고리즘, 실제 added-line 겹침 조건)을 함께 기록한다. ADR-014와 이 문서가 어긋나면 ADR-014가 옳다 — 이 문서를 고친다.
 
@@ -11,7 +11,7 @@ NOISE_MOVE의 정규화·유사도·후보 범위는 ADR-014(`docs/adr/014-move-
 | NOISE_RENAME | 본문 동일, 이름만 변경 | 미구현 |
 | NOISE_FORMAT | 포맷·주석·독스트링만 변경. 구현 범위는 그중 **포맷 커밋의 재포맷**뿐이다: 커밋 메시지 첫 줄에 포맷 키워드가 있고 삭제 줄의 90% 이상이 같은 파일 추가 헝크에 다시 나타나면 제외 — 아래 절 | 일부 구현, **사후 적용** (`pipeline/postfilter.py`, #152, v0.8). KEPT 행만 대상. 타입 표기 현대화·독스트링만 삭제는 미구현. 회귀 테스트는 `tests/test_postfilter.py` |
 | NOISE_BULK | 파일 전체 삭제 + "remove/delete directory/module" 계열 메시지 + 함수 100개 이상 | 미구현 |
-| NOISE_GENERATED | 마이그레이션·자동 생성·vendored 경로 패턴 | 미구현 |
+| NOISE_GENERATED | 마이그레이션·자동 생성·vendored 경로 패턴. 구현 범위는 그중 **경로로 명백한 것**뿐이다: 디렉터리 segment가 `site-packages`·`dist-packages`, venv 뿌리(`.venv`, 배치 segment가 뒤따르는 `venv`, `lib/pythonX.Y`), 벤더 디렉터리(`vendor`·`vendored`·`_vendor`·`_vendored`), 파일 이름 `*_pb2.py`·`*_pb2_grpc.py` — 아래 절 | 일부 구현, **사후 적용** (`pipeline/postfilter.py`, #184). KEPT 행만 대상, NOISE_FORMAT보다 먼저 본다. 마이그레이션·코드 생성기 출력 디렉터리·파일 헤더는 미구현. 회귀 테스트는 `tests/test_postfilter.py` |
 | NOISE_TRIVIAL | PARTIAL 레코드 중 `deleted_body`가 **4줄 이하**인 것. 줄 수는 `len(deleted_body.splitlines())`(빈 줄 포함, 마지막 빈 줄은 세지 않음 — 아래 절). 5줄 이상 PARTIAL만 데이터셋에 유지한다. FULL_FUNCTION은 대상이 아니다. 라벨링 대상 범위는 바꾸지 않는다 (ADR-015) | 구현 (`pipeline/filter.py:partition_trivial` + `pipeline/extract.py`, #63). 회귀 테스트는 `tests/test_filter.py`, `tests/test_extract.py`. 정밀도 재측정은 §10.1 필터 평가(#89)에서 한다 |
 
 테스트 코드 삭제는 제외하지 않고 `is_test_code` 플래그로 구분한다.
@@ -261,16 +261,40 @@ diff 헝크(`git diff --unified=0`의 `@@ -old_start,old_count +new_start,new_co
 
 **사후 적용.** 규칙이 쓰는 필드가 조립 결과에 이미 있어 추출·맥락 결합을 다시 돌리지 않는다. `pipeline/postfilter.py`가 맥락 결합 뒤의 `records.jsonl`을 줄 단위로 읽어 새 파일로 쓴다(임시 파일에 다 쓴 뒤 교체, 입력은 덮어쓰지 않는다).
 
-    python -m pipeline.postfilter --input data/assembled/records.jsonl --out data/assembled/records_v0.8.jsonl
+    python -m pipeline.postfilter --input data/assembled/records_v0.8.jsonl --out data/assembled/records_v0.9.jsonl
 
-- 모든 행의 `filter_rule_version`을 v0.8로 올린다. 입력은 v0.7 또는 v0.8 행만 받는다(다른 버전이 섞이면 거부).
-- **v0.8 = v0.7 추출 + 이 사후 필터**다. v0.8 코드로 추출(`pipeline.run`)만 돌린 결과에는 NOISE_FORMAT이 없다 — 추출 결과에 `filter_rule_version` v0.8이 찍혀 있어도 이 단계를 거쳐야 v0.8 데이터다.
+- 모든 행의 `filter_rule_version`을 지금 버전(v0.9)으로 올린다. 입력은 v0.7·v0.8·v0.9 행만 받는다(다른 버전이 섞이면 거부). v0.7은 사후 필터 전 조립 결과, v0.8은 NOISE_FORMAT까지 적용한 결과(또는 v0.8 코드로 추출만 한 결과), v0.9는 다시 돌리기다.
+- **v0.8 = v0.7 추출 + NOISE_FORMAT 사후 필터, v0.9 = v0.7 추출 + NOISE_GENERATED·NOISE_FORMAT 사후 필터**다(#184). 추출은 v0.7·v0.8·v0.9가 같다. 지금 코드로 추출(`pipeline.run`)만 돌린 결과에는 NOISE_FORMAT·NOISE_GENERATED가 없다 — 추출 결과에 `filter_rule_version` v0.9가 찍혀 있어도 이 단계를 거쳐야 v0.9 데이터다.
+- v0.9는 추출을 다시 돌리지 않는다. 기존 v0.8 조립 결과를 이 사후 필터에 넣어 v0.9로 만든다. `pipeline.run`은 바꾸지 않았다 — 실행 기록의 규칙 버전이 지금 버전과 다르면 다시 도는 원칙(#81) 그대로라, v0.8 실행 디렉터리에 `pipeline.run`을 다시 돌리면 추출부터 다시 한다.
+- v0.8 결과를 넣은 것과 v0.7에서 바로 돌린 것은 KEPT 집합이 같다. 포맷 조건과 경로 조건을 둘 다 만족하는 행만 사유가 다르다 — v0.8을 거치면 이미 NOISE_FORMAT이라 그대로(NOISE_* 행은 건드리지 않는다), v0.7에서 바로 오면 NOISE_GENERATED다. 100개 v0.8 파일에서 이런 행은 protobuf 경로 14건이다.
 - 맥락 결합(`pipeline.context --attach`) **뒤**에 돌린다. `filtered.jsonl`에 먼저 적용하면 NOISE_FORMAT이 된 FULL_FUNCTION 행을 가리키는 맥락을 붙이기 단계가 거부한다. NOISE_FORMAT 행의 `context`·`replacement`는 그대로 남는다.
-- 보고서 `<out stem>_postfilter.json`: 적용 전후 `filter_status` 건수, NOISE_FORMAT으로 바뀐 건수(저장소별·`deletion_kind`별).
+- 보고서 `<out stem>_postfilter.json`: 적용 전후 `filter_status` 건수, 이번 실행에서 NOISE_FORMAT·NOISE_GENERATED로 바뀐 건수(각각 저장소별·`deletion_kind`별, NOISE_GENERATED는 `path_category`별도). 키는 `noise_format_*`(전과 같다)과 `noise_generated_count`·`_by_kind`·`_by_category`·`_by_repo`.
 
 **검증 (#89 표본 200건).** `data/filter_precision/key.json`의 200건을 조립 결과에서 찾아 적용했다. KEPT 100건 중 11건(fp-004, 017, 028, 037, 052, 057, 087, 089, 102, 108, 167)이 NOISE_FORMAT이 됐고 모두 다수결 "아니오"다("예" 손실 0). NOISE_MOVE·NOISE_TRIVIAL 100건은 바뀐 것이 없다. 분석 문서 A1과 같다. 표본 안 정밀도 추정은 57/89 = 64.0%지만 **규칙을 고른 표본으로 센 것이라 낙관적이다** — §8.4대로 새 표본으로 다시 재야 한다.
 
 **한계.** 타입 표기 현대화(fp-027, 143, 재등장 0%), 독스트링만 삭제(fp-174), 포맷 키워드가 없는 커밋의 재들여쓰기(fp-115, 141)는 잡지 않는다. 기능 커밋 첫 줄에 "style"·"lint"가 붙은 경우는 재등장 90% 조건이 막는다.
+
+## NOISE_GENERATED — 가상환경·설치본·벤더링·protoc 출력 경로 (사후 적용, #184)
+
+근거: #184 조사(희수). 실수로 커밋된 venv 통삭제 3건(dspy `3cb512641` `test_before_pypi/lib/python3.9/site-packages/...`, rasa `c1bc17db5` `deactivate/lib/python3.6/...`, dash `0911675d3` `venv/lib/python2.7/...`)이 NOISE_MOVE(추가 0이라 짝 없음)·NOISE_TRIVIAL(전부 FULL_FUNCTION)·NOISE_FORMAT(키워드·추가 헝크 없음)을 모두 빠져나가 KEPT·FULL_FUNCTION 103,753건으로 남았다(분류 대상의 11.9%).
+
+**규칙.** `filter_status == KEPT`인 행의 `file_path`를 `/`로 나눠, 마지막 segment(파일 이름)를 뺀 **디렉터리 segment**를 대소문자 무시로 본다. 아래 범주 순서로 처음 맞는 것 하나를 근거로 남긴다.
+1. `site-packages` — segment가 `site-packages` 또는 `dist-packages`.
+2. `venv` — segment가 `.venv`이거나, `venv`이고 바로 다음 segment가 `bin`·`scripts`·`lib`·`lib64`·`include` 중 하나이거나, `lib`·`lib64`이고 바로 다음 segment가 `pythonX.Y`(`python\d+\.\d+`)다. 마지막은 venv 뿌리(`pyvenv.cfg`가 있는 층)의 `lib/pythonX.Y/`라 뿌리 이름(`test_before_pypi`, `deactivate`)을 보지 않고 site-packages 밖의 표준 라이브러리 사본(dash 40건)까지 잡는다. 행에는 다른 파일 목록이 없어 `pyvenv.cfg` 자체는 볼 수 없다.
+3. `vendor` — segment가 `vendor`·`vendored`·`_vendor`·`_vendored`.
+4. `protobuf` — 파일 이름이 `*_pb2.py`·`*_pb2_grpc.py` (protoc 출력).
+
+판정 순서는 NOISE_GENERATED → NOISE_FORMAT이다. 경로는 코드의 출처(프로젝트가 쓴 코드가 아니다)에 대한 사실이라 커밋 성격(포맷)보다 앞선다 — 포맷 커밋이 벤더 디렉터리를 재포맷해도 NOISE_GENERATED다. 이미 `NOISE_*`인 행은 판정·`filter_evidence`를 건드리지 않는다.
+
+**일부러 넣지 않은 것 (오탐보다 미탐).**
+- segment 일치만 본다. `vendor.py`, `vendor_utils/`, `vendors/`, `google_vendor/`, `vendoring/`는 걸리지 않는다.
+- `venv`만으로는 걸지 않는다. `hatch/venv/core.py`처럼 venv를 다루는 패키지 이름일 수 있다.
+- `third_party/`·`externals/`(scikit-learn)·`generated/`는 넣지 않았다 — 직접 고친 포크나 프로젝트 코드가 섞일 수 있어 경로만으로 명백하지 않다.
+- 마이그레이션(`migrations/`)은 손으로 쓴 `RunPython` 함수가 들어 있다. 코드 생성기 출력 디렉터리(plotly `validators/` 등)는 저장소마다 달라 일반 규칙이 아니다.
+- 생성 파일 헤더("DO NOT EDIT" 류)는 행에 파일 머리가 없어(`deleted_body`는 함수 본문) 보지 않는다.
+- 크기·삭제 건수·커밋 메시지는 보지 않는다. #184 상위 30개 커밋의 "대규모 정리·개편"과 "다른 저장소로 이전"은 실제 삭제다.
+
+**적용 결과 (100개 v0.8 파일 4개, 경로만 추출해 규칙을 돌린 사전 확인).** v0.8 → v0.9 사후 필터로 넣으면 KEPT 중 바뀌는 행은 site-packages 103,713 · venv 40 · vendor 46,580 · protobuf 528건이다. site-packages+venv 103,753건은 #184 조사 숫자와 같다. vendor는 pipenv(`pipenv/vendor`, `pipenv/patched/*/_vendor(ed)`), saleor(`vendored/`), prefect·airflow·pandas·dspy·fastmcp의 `_vendor(ed)`다. 확정 라벨(`main500_records`·`pre200_records`) 700건 중 걸리는 경로는 0건이다. 이 값은 정밀도가 아니다 — §8.4 재측정은 따로 해야 한다.
 
 ## 제외 레코드 보존 (#97)
 
@@ -290,6 +314,7 @@ diff 헝크(`git diff --unified=0`의 `@@ -old_start,old_count +new_start,new_co
 |---|---|---|
 | NOISE_MOVE | `{"file_path", "function_name", "start_line", "end_line", "similarity"}` — **이동 목적지**(자식 커밋) 함수의 경로·이름·줄 범위와 greedy 매칭이 확정한 유사도(`_move_similarity` 값 그대로, 완전 일치면 1.0). 삭제 쪽 값은 행의 최상위 필드에 있다. 함수 이름에 클래스 한정자가 없어 줄 범위를 함께 남긴다 | 구현 (#97) |
 | NOISE_FORMAT | `{"keywords", "reappear_ratio", "reappeared_lines", "deleted_lines"}` — 커밋 메시지 첫 줄에서 찾은 키워드(소문자, 처음 나온 순서), 재등장 비율(소수 4자리), 재등장한 삭제 줄 수, 센 삭제 줄 수(공백뿐인 줄 제외). 사후 필터가 KEPT 행에 더한다 | 구현 (#152) |
+| NOISE_GENERATED | `{"path_category", "matched_segment", "matched_prefix"}` — 맞은 범주(`site-packages`·`venv`·`vendor`·`protobuf`), 원래 대소문자의 맞은 segment(`lib/pythonX.Y`는 두 segment, protobuf는 파일 이름), `file_path`의 처음부터 맞은 segment까지(venv 뿌리·벤더 디렉터리를 묶어 보기 위해. protobuf는 경로 전체). 사후 필터가 KEPT 행에 더한다 | 구현 (#184) |
 | NOISE_TRIVIAL | `{"line_count"}` — 판정에 쓴 줄 수 `len(deleted_body.splitlines())` (int, 0~4). 마지막 빈 줄은 세지 않은 값이다(NOISE_TRIVIAL 절 "한계") | 구현 (#63) |
 
 **출력 경로.** writer는 호출자가 준 경로에 쓰기만 한다 (경로 정책을 코드가 정하지 않는다). 운영 시 추출 JSONL이 `<stem>.jsonl`이면 excluded JSONL은 `<stem>_excluded.jsonl`로 둔다. 제외가 0건이어도 **빈 파일을 만든다** — "제외 없음"과 "excluded 출력을 안 돌림"을 구분하기 위해서다. 둘 다 생성 데이터라 `data/` 아래에 두고 커밋하지 않는다 (`.gitignore`).
@@ -310,3 +335,4 @@ diff 헝크(`git diff --unified=0`의 `@@ -old_start,old_count +new_start,new_co
 | v0.6 | 2026-09-24 | NOISE_TRIVIAL 실제 구현 (Issue #63 / PR #125, ADR-015 후속 메모): PARTIAL만 대상, `len(deleted_body.splitlines()) <= 4`이면 `NOISE_TRIVIAL`로 제외하고 5줄 이상은 유지. FULL_FUNCTION은 비적용. 마지막 빈 줄(trailing empty line)은 보정하지 않는다. 판정 줄 수를 `filter_evidence.line_count`에 기록하고, 제외 레코드는 #97 `ExcludedRecord`로 excluded JSONL에 보존. 기존 NOISE_MOVE 공개 API(`find_moved`·`partition_moved`·`exclude_moved`) 계약 유지. 정밀도 재측정은 #89에서 진행 | — (#89에서 재측정) |
 | v0.7 | 2026-09-24 | NOISE_MOVE 1:1 greedy 매칭의 동점 tie-break 변경 (Issue #80, 283e72d9): 정렬 key를 `(-정규화 유사도, record_key, candidate_key)`에서 `(-정규화 유사도, -원문 유사도, record_key, candidate_key)`로. 원문 유사도는 줄마다 strip·빈 줄 제거한 원문 줄 목록의 `SequenceMatcher(삭제, 추가, autojunk=False).ratio()`이고, threshold를 통과한 pair의 정렬 순서에만 쓴다 — 판정 threshold(0.9)·정규화·후보 범위·1:1·`filter_evidence` 키와 `similarity` 값(정규화 유사도)은 그대로다. 같은 입력의 NOISE_MOVE/KEPT 판정이 바뀔 수 있어 버전을 올린다 (pydantic 사전 분석: 3커밋 24건, 커밋별 NOISE_MOVE 수 불변). ADR-014 결정 내용 변경 없음 | — (#89에서 재측정) |
 | v0.8 | 2026-10-02 | NOISE_FORMAT 사후 필터 (Issue #152, 근거 #151 분석 후보 A1): 커밋 메시지 첫 줄 포맷 키워드 + 삭제 줄 재등장 ≥ 0.9인 KEPT 행을 `NOISE_FORMAT`으로. 추출·NOISE_MOVE·NOISE_TRIVIAL은 v0.7과 같고, 조립·맥락 결합 결과에 `pipeline/postfilter.py`로 **사후 적용**한다 — v0.8 = v0.7 추출 + 사후 필터. 위 "NOISE_FORMAT" 절 | 표본 안 추정 57.0% → 64.0%(같은 표본으로 고른 규칙이라 낙관적). 새 표본 재측정 필요 |
+| v0.9 | 2026-10-28 | NOISE_GENERATED 사후 필터 (Issue #184, 근거 #184 조사): KEPT 행의 `file_path` 디렉터리 segment가 `site-packages`·`dist-packages`, venv 뿌리(`.venv`, 배치 segment가 뒤따르는 `venv`, `lib(64)/pythonX.Y`), 벤더 디렉터리(`vendor`·`vendored`·`_vendor`·`_vendored`)이거나 파일 이름이 `*_pb2.py`·`*_pb2_grpc.py`이면 `NOISE_GENERATED`. NOISE_FORMAT보다 먼저 본다. 추출·NOISE_MOVE·NOISE_TRIVIAL·NOISE_FORMAT 규칙은 v0.8과 같고 `pipeline/postfilter.py`로 **사후 적용**한다 — v0.9 = v0.7 추출 + 사후 필터 두 개. 입력은 v0.7·v0.8·v0.9를 받는다. 추출은 다시 돌리지 않는다(`pipeline.run` 변경 없음). 위 "NOISE_GENERATED" 절 | 재측정 전. 100개 v0.8 파일 사전 확인에서 KEPT 150,861건이 바뀐다(정밀도 아님) |
