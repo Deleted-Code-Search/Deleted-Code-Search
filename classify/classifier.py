@@ -62,7 +62,8 @@ from pipeline.select_repos import load_env_file
 
 METHOD_OURS = "ours"
 CANDIDATE_PROMPT_VERSION = "c3"
-CLASSIFIER_VERSION = f"{RULES_VERSION}+{MODEL_VERSION}+{CANDIDATE_PROMPT_VERSION}"
+# LLM 을 쓰지 않는 버전. LLM 을 쓰면 `Classifier.version` 이 프롬프트·모델을 덧붙인다.
+CLASSIFIER_VERSION = f"{RULES_VERSION}+{MODEL_VERSION}"
 
 EXPLICIT, INFERRED, UNKNOWN = EVIDENCE_GRADES
 # 점수가 같을 때의 순서. 기준선 A 규칙 순서 = 가이드 §11-1 우선순위 (SEC > LIB > ... > DESIGN).
@@ -310,14 +311,16 @@ class Classifier:
 
     @property
     def version(self) -> str:
-        """분류기 버전. LLM 을 쓰면 모델 이름까지 넣는다.
+        """분류기 버전. LLM 을 쓰면 프롬프트 버전과 모델 이름까지 넣는다.
 
         LLM 유무·모델이 다른 두 예측 파일이 같은 버전 문자열을 달면 나중에 가를 수 없다.
-        기준선 B 가 `프롬프트/모델` 을 버전에 넣는 것과 같은 이유다.
+        기준선 B 가 `프롬프트/모델` 을 버전에 넣는 것과 같은 이유다. LLM 을 안 쓰면 프롬프트
+        버전(c3)을 붙이지 않는다 - 붙이면 `r1+m2+c3` 로 거를 때 모델만 라벨이 섞여 나온다 (#180,
+        PR #179 리뷰). LLM 을 쓴 버전 문자열은 게이트 2 때(`r1+m2+c3+llm:<모델>`)와 같다.
         """
         if self.llm is None:
             return CLASSIFIER_VERSION
-        return f"{CLASSIFIER_VERSION}+llm:{self.llm.runner.model}"
+        return f"{CLASSIFIER_VERSION}+{CANDIDATE_PROMPT_VERSION}+llm:{self.llm.runner.model}"
 
     def classify(self, record: dict[str, Any]) -> Classification:
         """레코드 하나. 순서는 모듈 독스트링 "어떻게 고르나"."""

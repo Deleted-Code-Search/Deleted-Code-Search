@@ -81,7 +81,9 @@ NVIDIA_API_URL = "https://integrate.api.nvidia.com/v1/chat/completions"
 # 한도보다 조금 느리게 부른다. 캐시에 있는 건은 호출기를 거치지 않아 기다리지 않는다.
 NVIDIA_MIN_INTERVAL_SECONDS = 1.6
 # 무료 한도는 대기열이 길 때가 있다 (실측 한 건 7~13초, 다른 모델은 60초를 넘기기도 했다).
-NVIDIA_TIMEOUT_SECONDS = 120
+# 2026-10-27 저녁에는 "OK" 한 마디에 96초 걸려 HTTP 200 이 왔다 - 오류 코드 없이 줄을 선다.
+# 120초면 그런 때 거의 모든 건이 시간 초과다 (#180).
+NVIDIA_TIMEOUT_SECONDS = 300
 ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages"
 ANTHROPIC_API_VERSION = "2023-06-01"
 MAX_ANSWER_TOKENS = 256

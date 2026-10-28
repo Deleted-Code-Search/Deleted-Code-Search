@@ -1,0 +1,985 @@
+{
+  "model_only": {
+    "n": 870115,
+    "versions": {
+      "r1+m2": 870115
+    },
+    "labels": {
+      "DESIGN": 423688,
+      "UNK": 423279,
+      "FEAT": 13744,
+      "DEAD": 7922,
+      "LIB": 1450,
+      "BUG": 31,
+      "SEC": 1
+    },
+    "labels_by_repo_group": {
+      "training_repos": {
+        "DESIGN": 127174,
+        "UNK": 100165,
+        "FEAT": 13744,
+        "DEAD": 7922,
+        "LIB": 1449,
+        "BUG": 31,
+        "SEC": 1
+      },
+      "new_repos": {
+        "UNK": 323114,
+        "DESIGN": 296514,
+        "LIB": 1
+      }
+    },
+    "grades": {
+      "INFERRED": 445026,
+      "UNKNOWN": 423279,
+      "EXPLICIT": 1810
+    },
+    "repos": {
+      "3b1b/manim": 16020,
+      "FoundationAgents/MetaGPT": 3988,
+      "Genesis-Embodied-AI/genesis-world": 4035,
+      "HKUDS/LightRAG": 2667,
+      "Huanshere/VideoLingo": 1858,
+      "Lightning-AI/pytorch-lightning": 13727,
+      "ManimCommunity/manim": 14786,
+      "NVIDIA-NeMo/Speech": 23494,
+      "PaddlePaddle/PaddleOCR": 2029,
+      "PrefectHQ/fastmcp": 4842,
+      "PrefectHQ/prefect": 9223,
+      "RasaHQ/rasa": 12196,
+      "ScrapeGraphAI/Scrapegraph-ai": 386,
+      "Textualize/textual": 2713,
+      "agno-agi/agno": 7321,
+      "apache/airflow": 26188,
+      "apache/superset": 4882,
+      "arc53/DocsGPT": 2205,
+      "assafelovic/gpt-researcher": 596,
+      "blakeblackshear/frigate": 878,
+      "browser-use/browser-use": 4639,
+      "celery/celery": 6926,
+      "comet-ml/opik": 3416,
+      "commaai/openpilot": 12502,
+      "confident-ai/deepeval": 5031,
+      "crewAIInc/crewAI": 2131,
+      "deepset-ai/haystack": 8933,
+      "deepspeedai/DeepSpeed": 2670,
+      "django/django": 12179,
+      "docling-project/docling": 519,
+      "encode/httpx": 947,
+      "eosphoros-ai/DB-GPT": 2698,
+      "exo-explore/exo": 9322,
+      "getzep/graphiti": 247,
+      "home-assistant/core": 49911,
+      "hpcaitech/ColossalAI": 8220,
+      "huggingface/datasets": 6668,
+      "huggingface/diffusers": 7300,
+      "huggingface/lerobot": 3801,
+      "huggingface/peft": 717,
+      "huggingface/smolagents": 374,
+      "huggingface/transformers": 42403,
+      "huggingface/trl": 2270,
+      "hummingbot/hummingbot": 24542,
+      "jax-ml/jax": 19994,
+      "keras-team/keras": 26615,
+      "kivy/kivy": 1123,
+      "kvcache-ai/ktransformers": 173,
+      "langchain-ai/langchain": 21453,
+      "langchain-ai/langgraph": 1977,
+      "langflow-ai/langflow": 5543,
+      "locustio/locust": 541,
+      "marimo-team/marimo": 2733,
+      "mem0ai/mem0": 2558,
+      "microsoft/qlib": 1473,
+      "mitmproxy/mitmproxy": 6765,
+      "mkdocs/mkdocs": 464,
+      "mlc-ai/mlc-llm": 2250,
+      "mlflow/mlflow": 6225,
+      "modelcontextprotocol/python-sdk": 1891,
+      "modelscope/FunASR": 6043,
+      "netbox-community/netbox": 3720,
+      "nginx-proxy/nginx-proxy": 42,
+      "onnx/onnx": 715,
+      "openai/openai-agents-python": 1544,
+      "pallets/click": 425,
+      "pandas-dev/pandas": 25053,
+      "plotly/dash": 6929,
+      "plotly/plotly.py": 48498,
+      "psf/black": 430,
+      "psf/requests": 2085,
+      "pydantic/pydantic": 3054,
+      "pydantic/pydantic-ai": 5219,
+      "pypa/pipenv": 41567,
+      "pyscript/pyscript": 1257,
+      "python-poetry/poetry": 3042,
+      "pytorch/vision": 3156,
+      "ray-project/ray": 36156,
+      "recommenders-team/recommenders": 2137,
+      "reflex-dev/reflex": 2554,
+      "roboflow/supervision": 727,
+      "run-llama/llama_index": 12734,
+      "saleor/saleor": 13292,
+      "sanic-org/sanic": 1141,
+      "scikit-learn/scikit-learn": 9303,
+      "scrapy/scrapy": 2831,
+      "sgl-project/sglang": 19072,
+      "sherlock-project/sherlock": 51,
+      "soxoj/maigret": 110,
+      "spotDL/spotify-downloader": 1108,
+      "spotify/luigi": 978,
+      "stanfordnlp/dspy": 95448,
+      "streamlit/streamlit": 4430,
+      "topoteretes/cognee": 7845,
+      "tornadoweb/tornado": 1049,
+      "unclecode/crawl4ai": 1091,
+      "unslothai/unsloth": 4209,
+      "verl-project/verl": 3924,
+      "vllm-project/vllm": 18026,
+      "zulip/zulip": 4942
+    },
+    "human_labeled_overlap": 500
+  },
+  "with_llm": {
+    "n": 3000,
+    "versions": {
+      "r1+m2+c3+llm:deepseek-ai/deepseek-v4.1-flash": 3000
+    },
+    "labels": {
+      "UNK": 1250,
+      "DESIGN": 1020,
+      "FEAT": 417,
+      "DEAD": 230,
+      "LIB": 59,
+      "BUG": 13,
+      "SEC": 8,
+      "PERF": 3
+    },
+    "labels_by_repo_group": {
+      "training_repos": {
+        "UNK": 276,
+        "DESIGN": 200,
+        "FEAT": 65,
+        "DEAD": 40,
+        "LIB": 16,
+        "BUG": 2,
+        "SEC": 1
+      },
+      "new_repos": {
+        "UNK": 974,
+        "DESIGN": 820,
+        "FEAT": 352,
+        "DEAD": 190,
+        "LIB": 43,
+        "BUG": 11,
+        "SEC": 7,
+        "PERF": 3
+      }
+    },
+    "grades": {
+      "INFERRED": 1735,
+      "UNKNOWN": 1250,
+      "EXPLICIT": 15
+    },
+    "repos": {
+      "3b1b/manim": 30,
+      "FoundationAgents/MetaGPT": 30,
+      "Genesis-Embodied-AI/genesis-world": 30,
+      "HKUDS/LightRAG": 30,
+      "Huanshere/VideoLingo": 30,
+      "Lightning-AI/pytorch-lightning": 30,
+      "ManimCommunity/manim": 30,
+      "NVIDIA-NeMo/Speech": 30,
+      "PaddlePaddle/PaddleOCR": 30,
+      "PrefectHQ/fastmcp": 30,
+      "PrefectHQ/prefect": 30,
+      "RasaHQ/rasa": 30,
+      "ScrapeGraphAI/Scrapegraph-ai": 30,
+      "Textualize/textual": 30,
+      "agno-agi/agno": 30,
+      "apache/airflow": 30,
+      "apache/superset": 30,
+      "arc53/DocsGPT": 30,
+      "assafelovic/gpt-researcher": 30,
+      "blakeblackshear/frigate": 30,
+      "browser-use/browser-use": 30,
+      "celery/celery": 30,
+      "comet-ml/opik": 30,
+      "commaai/openpilot": 30,
+      "confident-ai/deepeval": 30,
+      "crewAIInc/crewAI": 30,
+      "deepset-ai/haystack": 30,
+      "deepspeedai/DeepSpeed": 30,
+      "django/django": 30,
+      "docling-project/docling": 30,
+      "encode/httpx": 30,
+      "eosphoros-ai/DB-GPT": 30,
+      "exo-explore/exo": 30,
+      "getzep/graphiti": 30,
+      "home-assistant/core": 30,
+      "hpcaitech/ColossalAI": 30,
+      "huggingface/datasets": 30,
+      "huggingface/diffusers": 30,
+      "huggingface/lerobot": 30,
+      "huggingface/peft": 30,
+      "huggingface/smolagents": 30,
+      "huggingface/transformers": 30,
+      "huggingface/trl": 30,
+      "hummingbot/hummingbot": 30,
+      "jax-ml/jax": 30,
+      "keras-team/keras": 30,
+      "kivy/kivy": 30,
+      "kvcache-ai/ktransformers": 30,
+      "langchain-ai/langchain": 30,
+      "langchain-ai/langgraph": 30,
+      "langflow-ai/langflow": 30,
+      "locustio/locust": 30,
+      "marimo-team/marimo": 30,
+      "mem0ai/mem0": 30,
+      "microsoft/qlib": 30,
+      "mitmproxy/mitmproxy": 30,
+      "mkdocs/mkdocs": 30,
+      "mlc-ai/mlc-llm": 30,
+      "mlflow/mlflow": 30,
+      "modelcontextprotocol/python-sdk": 30,
+      "modelscope/FunASR": 30,
+      "netbox-community/netbox": 30,
+      "nginx-proxy/nginx-proxy": 30,
+      "onnx/onnx": 30,
+      "openai/openai-agents-python": 30,
+      "pallets/click": 30,
+      "pandas-dev/pandas": 30,
+      "plotly/dash": 30,
+      "plotly/plotly.py": 30,
+      "psf/black": 30,
+      "psf/requests": 30,
+      "pydantic/pydantic": 30,
+      "pydantic/pydantic-ai": 30,
+      "pypa/pipenv": 30,
+      "pyscript/pyscript": 30,
+      "python-poetry/poetry": 30,
+      "pytorch/vision": 30,
+      "ray-project/ray": 30,
+      "recommenders-team/recommenders": 30,
+      "reflex-dev/reflex": 30,
+      "roboflow/supervision": 30,
+      "run-llama/llama_index": 30,
+      "saleor/saleor": 30,
+      "sanic-org/sanic": 30,
+      "scikit-learn/scikit-learn": 30,
+      "scrapy/scrapy": 30,
+      "sgl-project/sglang": 30,
+      "sherlock-project/sherlock": 30,
+      "soxoj/maigret": 30,
+      "spotDL/spotify-downloader": 30,
+      "spotify/luigi": 30,
+      "stanfordnlp/dspy": 30,
+      "streamlit/streamlit": 30,
+      "topoteretes/cognee": 30,
+      "tornadoweb/tornado": 30,
+      "unclecode/crawl4ai": 30,
+      "unslothai/unsloth": 30,
+      "verl-project/verl": 30,
+      "vllm-project/vllm": 30,
+      "zulip/zulip": 30
+    },
+    "human_labeled_overlap": 0
+  },
+  "sample_agreement": {
+    "n": 3000,
+    "agree": 1876,
+    "agreement": 0.6253333333333333,
+    "wilson95": [
+      0.6079,
+      0.6425
+    ],
+    "kappa": 0.4051,
+    "by_llm_label": {
+      "UNK": {
+        "n": 1250,
+        "agree": 886
+      },
+      "DESIGN": {
+        "n": 1020,
+        "agree": 969
+      },
+      "FEAT": {
+        "n": 417,
+        "agree": 8
+      },
+      "DEAD": {
+        "n": 230,
+        "agree": 6
+      },
+      "LIB": {
+        "n": 59,
+        "agree": 7
+      },
+      "BUG": {
+        "n": 13,
+        "agree": 0
+      },
+      "SEC": {
+        "n": 8,
+        "agree": 0
+      },
+      "PERF": {
+        "n": 3,
+        "agree": 0
+      }
+    },
+    "outside_unclear": {
+      "n": 730,
+      "agree": 21,
+      "agreement": 0.028767123287671233
+    },
+    "by_repo_group": {
+      "training_repos": {
+        "n": 600,
+        "agree": 436,
+        "agreement": 0.7266666666666667,
+        "wilson95": [
+          0.6896,
+          0.7608
+        ],
+        "kappa": 0.5592,
+        "by_llm_label": {
+          "UNK": {
+            "n": 276,
+            "agree": 233
+          },
+          "DESIGN": {
+            "n": 200,
+            "agree": 182
+          },
+          "FEAT": {
+            "n": 65,
+            "agree": 8
+          },
+          "DEAD": {
+            "n": 40,
+            "agree": 6
+          },
+          "LIB": {
+            "n": 16,
+            "agree": 7
+          },
+          "BUG": {
+            "n": 2,
+            "agree": 0
+          },
+          "SEC": {
+            "n": 1,
+            "agree": 0
+          }
+        },
+        "outside_unclear": {
+          "n": 124,
+          "agree": 21,
+          "agreement": 0.1693548387096774
+        }
+      },
+      "new_repos": {
+        "n": 2400,
+        "agree": 1440,
+        "agreement": 0.6,
+        "wilson95": [
+          0.5803,
+          0.6194
+        ],
+        "kappa": 0.3666,
+        "by_llm_label": {
+          "UNK": {
+            "n": 974,
+            "agree": 653
+          },
+          "DESIGN": {
+            "n": 820,
+            "agree": 787
+          },
+          "FEAT": {
+            "n": 352,
+            "agree": 0
+          },
+          "DEAD": {
+            "n": 190,
+            "agree": 0
+          },
+          "LIB": {
+            "n": 43,
+            "agree": 0
+          },
+          "BUG": {
+            "n": 11,
+            "agree": 0
+          },
+          "SEC": {
+            "n": 7,
+            "agree": 0
+          },
+          "PERF": {
+            "n": 3,
+            "agree": 0
+          }
+        },
+        "outside_unclear": {
+          "n": 606,
+          "agree": 0,
+          "agreement": 0.0
+        }
+      }
+    },
+    "per_repo": {
+      "3b1b/manim": {
+        "n": 30,
+        "agree": 18,
+        "agreement": 0.6
+      },
+      "FoundationAgents/MetaGPT": {
+        "n": 30,
+        "agree": 16,
+        "agreement": 0.5333333333333333
+      },
+      "Genesis-Embodied-AI/genesis-world": {
+        "n": 30,
+        "agree": 20,
+        "agreement": 0.6666666666666666
+      },
+      "HKUDS/LightRAG": {
+        "n": 30,
+        "agree": 18,
+        "agreement": 0.6
+      },
+      "Huanshere/VideoLingo": {
+        "n": 30,
+        "agree": 30,
+        "agreement": 1.0
+      },
+      "Lightning-AI/pytorch-lightning": {
+        "n": 30,
+        "agree": 11,
+        "agreement": 0.36666666666666664
+      },
+      "ManimCommunity/manim": {
+        "n": 30,
+        "agree": 29,
+        "agreement": 0.9666666666666667
+      },
+      "NVIDIA-NeMo/Speech": {
+        "n": 30,
+        "agree": 7,
+        "agreement": 0.23333333333333334
+      },
+      "PaddlePaddle/PaddleOCR": {
+        "n": 30,
+        "agree": 26,
+        "agreement": 0.8666666666666667
+      },
+      "PrefectHQ/fastmcp": {
+        "n": 30,
+        "agree": 21,
+        "agreement": 0.7
+      },
+      "PrefectHQ/prefect": {
+        "n": 30,
+        "agree": 18,
+        "agreement": 0.6
+      },
+      "RasaHQ/rasa": {
+        "n": 30,
+        "agree": 7,
+        "agreement": 0.23333333333333334
+      },
+      "ScrapeGraphAI/Scrapegraph-ai": {
+        "n": 30,
+        "agree": 29,
+        "agreement": 0.9666666666666667
+      },
+      "Textualize/textual": {
+        "n": 30,
+        "agree": 20,
+        "agreement": 0.6666666666666666
+      },
+      "agno-agi/agno": {
+        "n": 30,
+        "agree": 23,
+        "agreement": 0.7666666666666667
+      },
+      "apache/airflow": {
+        "n": 30,
+        "agree": 20,
+        "agreement": 0.6666666666666666
+      },
+      "apache/superset": {
+        "n": 30,
+        "agree": 18,
+        "agreement": 0.6
+      },
+      "arc53/DocsGPT": {
+        "n": 30,
+        "agree": 19,
+        "agreement": 0.6333333333333333
+      },
+      "assafelovic/gpt-researcher": {
+        "n": 30,
+        "agree": 27,
+        "agreement": 0.9
+      },
+      "blakeblackshear/frigate": {
+        "n": 30,
+        "agree": 22,
+        "agreement": 0.7333333333333333
+      },
+      "browser-use/browser-use": {
+        "n": 30,
+        "agree": 16,
+        "agreement": 0.5333333333333333
+      },
+      "celery/celery": {
+        "n": 30,
+        "agree": 24,
+        "agreement": 0.8
+      },
+      "comet-ml/opik": {
+        "n": 30,
+        "agree": 10,
+        "agreement": 0.3333333333333333
+      },
+      "commaai/openpilot": {
+        "n": 30,
+        "agree": 27,
+        "agreement": 0.9
+      },
+      "confident-ai/deepeval": {
+        "n": 30,
+        "agree": 27,
+        "agreement": 0.9
+      },
+      "crewAIInc/crewAI": {
+        "n": 30,
+        "agree": 20,
+        "agreement": 0.6666666666666666
+      },
+      "deepset-ai/haystack": {
+        "n": 30,
+        "agree": 22,
+        "agreement": 0.7333333333333333
+      },
+      "deepspeedai/DeepSpeed": {
+        "n": 30,
+        "agree": 19,
+        "agreement": 0.6333333333333333
+      },
+      "django/django": {
+        "n": 30,
+        "agree": 17,
+        "agreement": 0.5666666666666667
+      },
+      "docling-project/docling": {
+        "n": 30,
+        "agree": 23,
+        "agreement": 0.7666666666666667
+      },
+      "encode/httpx": {
+        "n": 30,
+        "agree": 23,
+        "agreement": 0.7666666666666667
+      },
+      "eosphoros-ai/DB-GPT": {
+        "n": 30,
+        "agree": 27,
+        "agreement": 0.9
+      },
+      "exo-explore/exo": {
+        "n": 30,
+        "agree": 28,
+        "agreement": 0.9333333333333333
+      },
+      "getzep/graphiti": {
+        "n": 30,
+        "agree": 19,
+        "agreement": 0.6333333333333333
+      },
+      "home-assistant/core": {
+        "n": 30,
+        "agree": 13,
+        "agreement": 0.43333333333333335
+      },
+      "hpcaitech/ColossalAI": {
+        "n": 30,
+        "agree": 18,
+        "agreement": 0.6
+      },
+      "huggingface/datasets": {
+        "n": 30,
+        "agree": 9,
+        "agreement": 0.3
+      },
+      "huggingface/diffusers": {
+        "n": 30,
+        "agree": 15,
+        "agreement": 0.5
+      },
+      "huggingface/lerobot": {
+        "n": 30,
+        "agree": 23,
+        "agreement": 0.7666666666666667
+      },
+      "huggingface/peft": {
+        "n": 30,
+        "agree": 22,
+        "agreement": 0.7333333333333333
+      },
+      "huggingface/smolagents": {
+        "n": 30,
+        "agree": 28,
+        "agreement": 0.9333333333333333
+      },
+      "huggingface/transformers": {
+        "n": 30,
+        "agree": 22,
+        "agreement": 0.7333333333333333
+      },
+      "huggingface/trl": {
+        "n": 30,
+        "agree": 17,
+        "agreement": 0.5666666666666667
+      },
+      "hummingbot/hummingbot": {
+        "n": 30,
+        "agree": 9,
+        "agreement": 0.3
+      },
+      "jax-ml/jax": {
+        "n": 30,
+        "agree": 18,
+        "agreement": 0.6
+      },
+      "keras-team/keras": {
+        "n": 30,
+        "agree": 29,
+        "agreement": 0.9666666666666667
+      },
+      "kivy/kivy": {
+        "n": 30,
+        "agree": 8,
+        "agreement": 0.26666666666666666
+      },
+      "kvcache-ai/ktransformers": {
+        "n": 30,
+        "agree": 20,
+        "agreement": 0.6666666666666666
+      },
+      "langchain-ai/langchain": {
+        "n": 30,
+        "agree": 28,
+        "agreement": 0.9333333333333333
+      },
+      "langchain-ai/langgraph": {
+        "n": 30,
+        "agree": 19,
+        "agreement": 0.6333333333333333
+      },
+      "langflow-ai/langflow": {
+        "n": 30,
+        "agree": 14,
+        "agreement": 0.4666666666666667
+      },
+      "locustio/locust": {
+        "n": 30,
+        "agree": 20,
+        "agreement": 0.6666666666666666
+      },
+      "marimo-team/marimo": {
+        "n": 30,
+        "agree": 20,
+        "agreement": 0.6666666666666666
+      },
+      "mem0ai/mem0": {
+        "n": 30,
+        "agree": 22,
+        "agreement": 0.7333333333333333
+      },
+      "microsoft/qlib": {
+        "n": 30,
+        "agree": 22,
+        "agreement": 0.7333333333333333
+      },
+      "mitmproxy/mitmproxy": {
+        "n": 30,
+        "agree": 20,
+        "agreement": 0.6666666666666666
+      },
+      "mkdocs/mkdocs": {
+        "n": 30,
+        "agree": 17,
+        "agreement": 0.5666666666666667
+      },
+      "mlc-ai/mlc-llm": {
+        "n": 30,
+        "agree": 11,
+        "agreement": 0.36666666666666664
+      },
+      "mlflow/mlflow": {
+        "n": 30,
+        "agree": 12,
+        "agreement": 0.4
+      },
+      "modelcontextprotocol/python-sdk": {
+        "n": 30,
+        "agree": 20,
+        "agreement": 0.6666666666666666
+      },
+      "modelscope/FunASR": {
+        "n": 30,
+        "agree": 29,
+        "agreement": 0.9666666666666667
+      },
+      "netbox-community/netbox": {
+        "n": 30,
+        "agree": 22,
+        "agreement": 0.7333333333333333
+      },
+      "nginx-proxy/nginx-proxy": {
+        "n": 30,
+        "agree": 21,
+        "agreement": 0.7
+      },
+      "onnx/onnx": {
+        "n": 30,
+        "agree": 11,
+        "agreement": 0.36666666666666664
+      },
+      "openai/openai-agents-python": {
+        "n": 30,
+        "agree": 23,
+        "agreement": 0.7666666666666667
+      },
+      "pallets/click": {
+        "n": 30,
+        "agree": 24,
+        "agreement": 0.8
+      },
+      "pandas-dev/pandas": {
+        "n": 30,
+        "agree": 20,
+        "agreement": 0.6666666666666666
+      },
+      "plotly/dash": {
+        "n": 30,
+        "agree": 29,
+        "agreement": 0.9666666666666667
+      },
+      "plotly/plotly.py": {
+        "n": 30,
+        "agree": 6,
+        "agreement": 0.2
+      },
+      "psf/black": {
+        "n": 30,
+        "agree": 15,
+        "agreement": 0.5
+      },
+      "psf/requests": {
+        "n": 30,
+        "agree": 26,
+        "agreement": 0.8666666666666667
+      },
+      "pydantic/pydantic": {
+        "n": 30,
+        "agree": 20,
+        "agreement": 0.6666666666666666
+      },
+      "pydantic/pydantic-ai": {
+        "n": 30,
+        "agree": 15,
+        "agreement": 0.5
+      },
+      "pypa/pipenv": {
+        "n": 30,
+        "agree": 19,
+        "agreement": 0.6333333333333333
+      },
+      "pyscript/pyscript": {
+        "n": 30,
+        "agree": 9,
+        "agreement": 0.3
+      },
+      "python-poetry/poetry": {
+        "n": 30,
+        "agree": 6,
+        "agreement": 0.2
+      },
+      "pytorch/vision": {
+        "n": 30,
+        "agree": 14,
+        "agreement": 0.4666666666666667
+      },
+      "ray-project/ray": {
+        "n": 30,
+        "agree": 8,
+        "agreement": 0.26666666666666666
+      },
+      "recommenders-team/recommenders": {
+        "n": 30,
+        "agree": 23,
+        "agreement": 0.7666666666666667
+      },
+      "reflex-dev/reflex": {
+        "n": 30,
+        "agree": 20,
+        "agreement": 0.6666666666666666
+      },
+      "roboflow/supervision": {
+        "n": 30,
+        "agree": 16,
+        "agreement": 0.5333333333333333
+      },
+      "run-llama/llama_index": {
+        "n": 30,
+        "agree": 6,
+        "agreement": 0.2
+      },
+      "saleor/saleor": {
+        "n": 30,
+        "agree": 19,
+        "agreement": 0.6333333333333333
+      },
+      "sanic-org/sanic": {
+        "n": 30,
+        "agree": 17,
+        "agreement": 0.5666666666666667
+      },
+      "scikit-learn/scikit-learn": {
+        "n": 30,
+        "agree": 17,
+        "agreement": 0.5666666666666667
+      },
+      "scrapy/scrapy": {
+        "n": 30,
+        "agree": 15,
+        "agreement": 0.5
+      },
+      "sgl-project/sglang": {
+        "n": 30,
+        "agree": 14,
+        "agreement": 0.4666666666666667
+      },
+      "sherlock-project/sherlock": {
+        "n": 30,
+        "agree": 13,
+        "agreement": 0.43333333333333335
+      },
+      "soxoj/maigret": {
+        "n": 30,
+        "agree": 22,
+        "agreement": 0.7333333333333333
+      },
+      "spotDL/spotify-downloader": {
+        "n": 30,
+        "agree": 8,
+        "agreement": 0.26666666666666666
+      },
+      "spotify/luigi": {
+        "n": 30,
+        "agree": 18,
+        "agreement": 0.6
+      },
+      "stanfordnlp/dspy": {
+        "n": 30,
+        "agree": 30,
+        "agreement": 1.0
+      },
+      "streamlit/streamlit": {
+        "n": 30,
+        "agree": 15,
+        "agreement": 0.5
+      },
+      "topoteretes/cognee": {
+        "n": 30,
+        "agree": 9,
+        "agreement": 0.3
+      },
+      "tornadoweb/tornado": {
+        "n": 30,
+        "agree": 15,
+        "agreement": 0.5
+      },
+      "unclecode/crawl4ai": {
+        "n": 30,
+        "agree": 29,
+        "agreement": 0.9666666666666667
+      },
+      "unslothai/unsloth": {
+        "n": 30,
+        "agree": 22,
+        "agreement": 0.7333333333333333
+      },
+      "verl-project/verl": {
+        "n": 30,
+        "agree": 14,
+        "agreement": 0.4666666666666667
+      },
+      "vllm-project/vllm": {
+        "n": 30,
+        "agree": 20,
+        "agreement": 0.6666666666666666
+      },
+      "zulip/zulip": {
+        "n": 30,
+        "agree": 20,
+        "agreement": 0.6666666666666666
+      }
+    },
+    "disagreements_top": [
+      {
+        "model_only": "DESIGN",
+        "with_llm": "UNK",
+        "count": 364
+      },
+      {
+        "model_only": "UNK",
+        "with_llm": "FEAT",
+        "count": 239
+      },
+      {
+        "model_only": "DESIGN",
+        "with_llm": "FEAT",
+        "count": 165
+      },
+      {
+        "model_only": "DESIGN",
+        "with_llm": "DEAD",
+        "count": 130
+      },
+      {
+        "model_only": "UNK",
+        "with_llm": "DEAD",
+        "count": 91
+      },
+      {
+        "model_only": "UNK",
+        "with_llm": "DESIGN",
+        "count": 46
+      },
+      {
+        "model_only": "DESIGN",
+        "with_llm": "LIB",
+        "count": 26
+      },
+      {
+        "model_only": "UNK",
+        "with_llm": "LIB",
+        "count": 25
+      },
+      {
+        "model_only": "DESIGN",
+        "with_llm": "BUG",
+        "count": 9
+      },
+      {
+        "model_only": "UNK",
+        "with_llm": "SEC",
+        "count": 7
+      }
+    ]
+  }
+}
