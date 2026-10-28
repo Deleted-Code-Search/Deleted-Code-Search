@@ -166,6 +166,7 @@ def test_a_failed_llm_call_leaves_no_output(tmp_path, monkeypatch, capsys):
     monkeypatch.setattr(apply, "caller_from_env", lambda provider: timing_out)
     source = write_jsonl(tmp_path / "a.jsonl", [record(f"x{i}") for i in range(3)])
     out = tmp_path / "llm.jsonl"
+    out.write_text('{"record_id": "old"}\n', encoding="utf-8")  # 예전 실행 결과
     args = ["--input", str(source), "--out", str(out), "--llm", "--sample-per-repo", "2"]
 
     code = apply.main(args + ["--cache-dir", str(tmp_path / "cache")] + training_files(tmp_path))
@@ -185,6 +186,26 @@ def test_an_unreadable_llm_answer_still_gives_output(tmp_path, monkeypatch):
     code = apply.main(args + ["--cache-dir", str(tmp_path / "cache")] + training_files(tmp_path))
 
     assert code == 0 and out.exists()
+
+
+def test_a_duplicate_record_id_in_the_sample_is_refused():
+    """같은 id 가 두 번이면 (입력 파일이 겹치면) 힙이 dict 를 비교하다 TypeError 로 멈춘다."""
+    rows = [record("r1", message="a"), record("r2"), record("r1", message="b")]
+
+    with pytest.raises(ValueError, match="같은 record_id 가 두 번 들어왔다: r1"):
+        apply.sample_per_repo(iter(rows), 5, 1, set())
+
+
+def test_missing_labels_file_is_refused(tmp_path, capsys):
+    """라벨 파일이 없으면 확정 500건을 빼지 못한다 - 빈 목록으로 읽고 넘어가지 않는다."""
+    source = write_jsonl(tmp_path / "a.jsonl", [record("x1")])
+    args = ["--input", str(source), "--out", str(tmp_path / "s.jsonl"), "--sample-only"]
+
+    code = apply.main(args + ["--sample-per-repo", "1", "--labels", str(tmp_path / "none.jsonl")])
+
+    assert code == 2
+    assert "none.jsonl" in capsys.readouterr().err
+    assert not (tmp_path / "s.jsonl").exists()
 
 
 def test_missing_input_is_refused(tmp_path, capsys):

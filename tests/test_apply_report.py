@@ -111,6 +111,32 @@ def test_a_sample_record_missing_from_the_model_only_output_is_refused(tmp_path)
         apply_report.compare([model], [llm])
 
 
+def test_a_duplicate_record_id_is_refused_in_both_inputs(tmp_path):
+    """같은 파일을 두 번 넘기면 분포는 두 번 세고 일치율은 덮어쓴다 - 분모가 갈리기 전에 멈춘다."""
+    model = write(tmp_path / "m.jsonl", [row("x1", "DEAD", "v")])
+    llm = write(tmp_path / "l.jsonl", [row("x1", "DEAD", "w")])
+
+    with pytest.raises(ValueError, match="같은 record_id 가 두 번 나온다: x1"):
+        apply_report.compare([model], [llm, llm])
+    with pytest.raises(ValueError, match="같은 record_id 가 두 번 나온다: x1"):
+        apply_report.compare([model, model], [llm])
+    with pytest.raises(ValueError, match="같은 record_id 가 두 번 나온다: x1"):
+        apply_report.distribution([llm, llm], labeled=set())
+
+
+def test_missing_labels_file_is_refused(tmp_path, capsys):
+    """라벨 파일이 없으면 확정 500건 겹침이 조용히 0 이 된다 - 보고서를 쓰지 않는다."""
+    model = write(tmp_path / "m.jsonl", [row("x1", "DEAD", "v")])
+    out = tmp_path / "report.json"
+    args = ["--model-only", str(model), "--with-llm", str(model), "--json", str(out)]
+
+    code = apply_report.main(args + ["--labels", str(tmp_path / "none.jsonl")])
+
+    assert code == 2
+    assert "라벨 파일이 없다" in capsys.readouterr().err
+    assert not out.exists()
+
+
 def test_output_without_the_training_repo_flag_is_refused(tmp_path):
     """플래그 전 출력이면 그룹을 나눌 수 없다 - 조용히 한쪽으로 몰지 않는다."""
     old = {k: v for k, v in row("x1", "DEAD", "r1+m2").items() if k != "training_repo"}

@@ -35,12 +35,21 @@ UNCLEAR_LABELS = ("UNK", "DESIGN")
 
 
 def iter_rows(paths: Sequence[Path]) -> Iterator[dict[str, Any]]:
-    """출력 파일들을 한 줄씩. 모델만 출력은 수십만 줄이다."""
+    """출력 파일들을 한 줄씩. 모델만 출력은 수십만 줄이다.
+
+    같은 `record_id` 가 두 번 나오면 거부한다 - 분포는 두 번 세고 일치율은 덮어써서 두 숫자의
+    분모가 갈린다 (같은 파일을 두 번 넘긴 경우 등).
+    """
+    seen: set[str] = set()
     for path in paths:
         with path.open(encoding="utf-8") as handle:
             for line in handle:
                 if line.strip():
-                    yield json.loads(line)
+                    row = json.loads(line)
+                    if row["record_id"] in seen:
+                        raise ValueError(f"같은 record_id 가 두 번 나온다: {row['record_id']}")
+                    seen.add(row["record_id"])
+                    yield row
 
 
 def repo_group(row: dict[str, Any]) -> str:
@@ -194,6 +203,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     """요약을 찍고 원하면 JSON 으로 남긴다."""
     args = build_parser().parse_args(argv)
     sys.stdout.reconfigure(encoding="utf-8")
+    # `read_jsonl` 은 없는 파일을 빈 목록으로 읽는다 - 경로가 틀리면 겹침이 0 으로 조용히 남는다.
+    if not args.labels.is_file():
+        print(f"라벨 파일이 없다: {args.labels}", file=sys.stderr)
+        return 2
     labeled = {str(row["record_id"]) for row in read_jsonl(args.labels)}
     try:
         result = {

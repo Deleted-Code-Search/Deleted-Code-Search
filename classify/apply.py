@@ -111,10 +111,16 @@ def sample_per_repo(
             continue
         heap = heaps.setdefault(str(record.get("repo")), [])
         item = (-stable_key(seed, record_id), record_id, record)
-        if len(heap) < size:
-            heapq.heappush(heap, item)
-        elif item[0] > heap[0][0]:
-            heapq.heapreplace(heap, item)
+        if len(heap) < size or item[0] > heap[0][0]:
+            # 같은 id 는 키도 같아 튜플 비교가 dict 까지 가서 TypeError 가 난다. 힙에 든 것과만
+            # 대조한다 - 힙에 못 든 사본은 표본을 바꾸지 않고, 전체 id 를 모으면 메모리가 입력에
+            # 비례한다.
+            if any(rid == record_id for _key, rid, _record in heap):
+                raise ValueError(f"같은 record_id 가 두 번 들어왔다: {record_id} (입력이 겹치나?)")
+            if len(heap) < size:
+                heapq.heappush(heap, item)
+            else:
+                heapq.heapreplace(heap, item)
     return [
         record for repo in sorted(heaps) for _key, _rid, record in sorted(heaps[repo], reverse=True)
     ]
@@ -220,7 +226,9 @@ def main(argv: Sequence[str] | None = None) -> int:
             "--llm 은 --sample-per-repo 와 함께만 쓴다 (LLM 포함 버전은 표본에만).", file=sys.stderr
         )
         return 2
-    missing = [path for path in args.input if not path.is_file()]
+    # 라벨 파일도 본다. `read_jsonl` 은 없는 파일을 빈 목록으로 읽어, 경로가 틀리면 확정 500건을
+    # 빼지 않은 표본이 조용히 나온다.
+    missing = [path for path in [*args.input, args.labels] if not path.is_file()]
     if missing:
         print(f"입력 파일이 없다: {missing}", file=sys.stderr)
         return 2
@@ -279,7 +287,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         if reason.startswith("호출 실패")
     )
     if call_failures:
+        # 같은 `--out` 의 예전 결과도 지운다 - 남아 있으면 이번 실행 결과로 오해한다.
         temporary.unlink()
+        args.out.unlink(missing_ok=True)
     else:
         temporary.replace(args.out)
 
