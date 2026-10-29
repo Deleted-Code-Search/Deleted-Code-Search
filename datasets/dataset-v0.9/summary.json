@@ -1,0 +1,1790 @@
+{
+  "dataset_version": "dataset-v0.9",
+  "filter_rule_version": "v0.9",
+  "ok": true,
+  "totals": {
+    "records": 1354052,
+    "by_kind": {
+      "PARTIAL": 630965,
+      "FULL_FUNCTION": 723087
+    },
+    "by_source": {
+      "NOT_CLASSIFIED": 630965,
+      "MODEL_ONLY": 249247,
+      "HUMAN": 500,
+      "MODEL_LLM": 2891,
+      "UNDISTINGUISHED": 470449
+    },
+    "with_context": 723087,
+    "by_code_policy": {
+      "CODE_INCLUDED": 1319661,
+      "LINK_ONLY": 34391
+    },
+    "link_only_by_rule": {
+      "unslothai/unsloth|studio/|<*": 12677,
+      "unslothai/unsloth|unsloth/kernels/moe/|<*": 218,
+      "exo-explore/exo|*|<2025-12-18": 9759,
+      "NVIDIA-NeMo/Speech|*|<2020-09-25": 5561,
+      "agno-agi/agno|*|<2025-02-10": 2830,
+      "PrefectHQ/prefect|*|<2022-03-08": 2496,
+      "hpcaitech/ColossalAI|examples/images/diffusion/|<*": 353,
+      "blakeblackshear/frigate|*|<2020-07-26": 256,
+      "zulip/zulip|*|<2015-09-25": 217,
+      "run-llama/llama_index|llama-index-integrations/callbacks/llama-index-callbacks-uptrain/|<*": 1,
+      "run-llama/llama_index|llama-index-integrations/llms/llama-index-llms-upstage/|<*": 8,
+      "run-llama/llama_index|llama-index-integrations/readers/llama-index-readers-boarddocs/|<*": 0,
+      "run-llama/llama_index|llama-index-integrations/readers/llama-index-readers-imdb-review/|<*": 0,
+      "run-llama/llama_index|llama-index-integrations/readers/llama-index-readers-kaltura/|<*": 0,
+      "run-llama/llama_index|llama-index-integrations/readers/llama-index-readers-markitdown/|<*": 1,
+      "run-llama/llama_index|llama-index-integrations/readers/llama-index-readers-nougat-ocr/|<*": 0,
+      "run-llama/llama_index|llama-index-integrations/readers/llama-index-readers-pdf-marker/|<*": 0,
+      "run-llama/llama_index|llama-index-integrations/readers/llama-index-readers-pdf-table/|<*": 0,
+      "run-llama/llama_index|llama-index-integrations/readers/llama-index-readers-service-now/|<*": 0,
+      "run-llama/llama_index|llama-index-integrations/readers/llama-index-readers-stripe-docs/|<*": 0,
+      "run-llama/llama_index|llama-index-integrations/readers/llama-index-readers-upstage/|<*": 0,
+      "run-llama/llama_index|llama-index-integrations/readers/llama-index-readers-web/|<*": 14
+    }
+  },
+  "training_repos": [
+    "apache/superset",
+    "browser-use/browser-use",
+    "celery/celery",
+    "commaai/openpilot",
+    "crewAIInc/crewAI",
+    "django/django",
+    "docling-project/docling",
+    "encode/httpx",
+    "home-assistant/core",
+    "huggingface/transformers",
+    "keras-team/keras",
+    "langchain-ai/langchain",
+    "mem0ai/mem0",
+    "pandas-dev/pandas",
+    "psf/requests",
+    "pydantic/pydantic",
+    "scikit-learn/scikit-learn",
+    "unclecode/crawl4ai",
+    "unslothai/unsloth",
+    "vllm-project/vllm"
+  ],
+  "checks": {
+    "repos_expected": 100,
+    "repos_exported": 100,
+    "repos_missing": [],
+    "repos_unexpected": [],
+    "training_repos_count": 20,
+    "training_repos_missing_from_export": [],
+    "duplicate_record_ids": 0,
+    "join": {
+      "classifier_target_rows": 723087,
+      "classifier_target_joined": 723087,
+      "classifier_target_missing": 0,
+      "model_only_rows": 870115,
+      "model_only_matched": 723087,
+      "model_only_unmatched": 147028,
+      "model_only_unmatched_by_v09_status": {
+        "NOISE_GENERATED": 147028
+      },
+      "llm_rows": 3000,
+      "llm_matched": 2891,
+      "llm_unmatched": 109,
+      "llm_unmatched_by_v09_status": {
+        "NOISE_GENERATED": 109
+      },
+      "llm_not_in_model_only": 0,
+      "duplicate_record_ids_in_classified": 0
+    },
+    "human": {
+      "expected": 500,
+      "found": 500,
+      "missing": [],
+      "changed": [],
+      "split": {
+        "test": 100,
+        "train": 300,
+        "val": 100
+      },
+      "label": {
+        "UNK": 224,
+        "DESIGN": 148,
+        "FEAT": 33,
+        "LIB": 17,
+        "DEAD": 69,
+        "SEC": 1,
+        "BUG": 8
+      },
+      "grade": {
+        "UNKNOWN": 224,
+        "INFERRED": 166,
+        "EXPLICIT": 110
+      },
+      "link_only": [
+        "0a1e55a4-858a-504c-8757-574916396085",
+        "102a3083-262e-523f-9edd-2a317dc42666",
+        "18912a8f-7396-538d-9dec-5a44d636dbe0",
+        "1966cc1e-d89b-5b28-94af-efb64633b710",
+        "405e6cf7-9f36-54fd-b5fc-f093047d2140",
+        "4554cc32-6b3b-5303-8687-3a5f8f298091",
+        "4afe3395-69e7-5db9-bb93-744cf0643fc2",
+        "67a6bcd4-fa5a-57b0-94d3-1ca7551fffc4",
+        "76d4455c-a378-5c27-a776-937f9adb27da",
+        "7e527b73-72f3-5eb7-a76e-75c6560a780c",
+        "8eef37c5-c349-5691-8c28-41103248e31d",
+        "bde615fa-f1aa-57f4-b5aa-9bfbd4a010d0",
+        "cdb2982d-98eb-5632-a8eb-8aa442a30f58",
+        "d14a3f18-8b51-563e-bbb5-386c62e3d06d",
+        "e3d613ad-5735-599e-8c28-7312a145c6b0",
+        "e4ee5290-313e-5b2c-88c7-13013923b45a",
+        "ea3509f1-0227-5220-a3e1-a7ef1ca4bac3",
+        "ec5b9374-3171-5c66-9fc9-f767f1348733",
+        "f2edd4fa-8bd3-5a47-8f30-458d33b72713"
+      ]
+    },
+    "filter_status": {
+      "all_rows": {
+        "KEPT": 1354052,
+        "NOISE_FORMAT": 77559,
+        "NOISE_MOVE": 946350,
+        "NOISE_TRIVIAL": 2855071,
+        "NOISE_GENERATED": 150861
+      },
+      "exported_only": "KEPT",
+      "exported_rows": 1354052,
+      "kept_rows": 1354052,
+      "matches_postfilter_report": true
+    },
+    "max_file_bytes": 51818372,
+    "max_file_limit": 2000000000,
+    "code_policy": {
+      "exported": {
+        "CODE_INCLUDED": 1319661,
+        "LINK_ONLY": 34391
+      },
+      "readback": {
+        "CODE_INCLUDED": 1319661,
+        "LINK_ONLY": 34391
+      },
+      "link_only_by_override": 34391,
+      "link_only_by_repo_license": 0
+    },
+    "file_problems": []
+  },
+  "files": [
+    {
+      "name": "3b1b__manim-00000-of-00001.parquet",
+      "repo": "3b1b/manim",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 20486
+    },
+    {
+      "name": "3b1b__manim-00000-of-00001.jsonl.gz",
+      "repo": "3b1b/manim",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 20486
+    },
+    {
+      "name": "FoundationAgents__MetaGPT-00000-of-00001.parquet",
+      "repo": "FoundationAgents/MetaGPT",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 6441
+    },
+    {
+      "name": "FoundationAgents__MetaGPT-00000-of-00001.jsonl.gz",
+      "repo": "FoundationAgents/MetaGPT",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 6441
+    },
+    {
+      "name": "Genesis-Embodied-AI__genesis-world-00000-of-00001.parquet",
+      "repo": "Genesis-Embodied-AI/genesis-world",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 10270
+    },
+    {
+      "name": "Genesis-Embodied-AI__genesis-world-00000-of-00001.jsonl.gz",
+      "repo": "Genesis-Embodied-AI/genesis-world",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 10270
+    },
+    {
+      "name": "HKUDS__LightRAG-00000-of-00001.parquet",
+      "repo": "HKUDS/LightRAG",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 8306
+    },
+    {
+      "name": "HKUDS__LightRAG-00000-of-00001.jsonl.gz",
+      "repo": "HKUDS/LightRAG",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 8306
+    },
+    {
+      "name": "Huanshere__VideoLingo-00000-of-00001.parquet",
+      "repo": "Huanshere/VideoLingo",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 2337
+    },
+    {
+      "name": "Huanshere__VideoLingo-00000-of-00001.jsonl.gz",
+      "repo": "Huanshere/VideoLingo",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 2337
+    },
+    {
+      "name": "Lightning-AI__pytorch-lightning-00000-of-00001.parquet",
+      "repo": "Lightning-AI/pytorch-lightning",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 20456
+    },
+    {
+      "name": "Lightning-AI__pytorch-lightning-00000-of-00001.jsonl.gz",
+      "repo": "Lightning-AI/pytorch-lightning",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 20456
+    },
+    {
+      "name": "ManimCommunity__manim-00000-of-00001.parquet",
+      "repo": "ManimCommunity/manim",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 19100
+    },
+    {
+      "name": "ManimCommunity__manim-00000-of-00001.jsonl.gz",
+      "repo": "ManimCommunity/manim",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 19100
+    },
+    {
+      "name": "NVIDIA-NeMo__Speech-00000-of-00001.parquet",
+      "repo": "NVIDIA-NeMo/Speech",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 30663
+    },
+    {
+      "name": "NVIDIA-NeMo__Speech-00000-of-00001.jsonl.gz",
+      "repo": "NVIDIA-NeMo/Speech",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 30663
+    },
+    {
+      "name": "PaddlePaddle__PaddleOCR-00000-of-00001.parquet",
+      "repo": "PaddlePaddle/PaddleOCR",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 4166
+    },
+    {
+      "name": "PaddlePaddle__PaddleOCR-00000-of-00001.jsonl.gz",
+      "repo": "PaddlePaddle/PaddleOCR",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 4166
+    },
+    {
+      "name": "PrefectHQ__fastmcp-00000-of-00001.parquet",
+      "repo": "PrefectHQ/fastmcp",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 8289
+    },
+    {
+      "name": "PrefectHQ__fastmcp-00000-of-00001.jsonl.gz",
+      "repo": "PrefectHQ/fastmcp",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 8289
+    },
+    {
+      "name": "PrefectHQ__prefect-00000-of-00001.parquet",
+      "repo": "PrefectHQ/prefect",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 16620
+    },
+    {
+      "name": "PrefectHQ__prefect-00000-of-00001.jsonl.gz",
+      "repo": "PrefectHQ/prefect",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 16620
+    },
+    {
+      "name": "RasaHQ__rasa-00000-of-00001.parquet",
+      "repo": "RasaHQ/rasa",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 15212
+    },
+    {
+      "name": "RasaHQ__rasa-00000-of-00001.jsonl.gz",
+      "repo": "RasaHQ/rasa",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 15212
+    },
+    {
+      "name": "ScrapeGraphAI__Scrapegraph-ai-00000-of-00001.parquet",
+      "repo": "ScrapeGraphAI/Scrapegraph-ai",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 1102
+    },
+    {
+      "name": "ScrapeGraphAI__Scrapegraph-ai-00000-of-00001.jsonl.gz",
+      "repo": "ScrapeGraphAI/Scrapegraph-ai",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 1102
+    },
+    {
+      "name": "Textualize__textual-00000-of-00001.parquet",
+      "repo": "Textualize/textual",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 5789
+    },
+    {
+      "name": "Textualize__textual-00000-of-00001.jsonl.gz",
+      "repo": "Textualize/textual",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 5789
+    },
+    {
+      "name": "agno-agi__agno-00000-of-00001.parquet",
+      "repo": "agno-agi/agno",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 14585
+    },
+    {
+      "name": "agno-agi__agno-00000-of-00001.jsonl.gz",
+      "repo": "agno-agi/agno",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 14585
+    },
+    {
+      "name": "apache__airflow-00000-of-00001.parquet",
+      "repo": "apache/airflow",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 53033
+    },
+    {
+      "name": "apache__airflow-00000-of-00001.jsonl.gz",
+      "repo": "apache/airflow",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 53033
+    },
+    {
+      "name": "apache__superset-00000-of-00001.parquet",
+      "repo": "apache/superset",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 11024
+    },
+    {
+      "name": "apache__superset-00000-of-00001.jsonl.gz",
+      "repo": "apache/superset",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 11024
+    },
+    {
+      "name": "arc53__DocsGPT-00000-of-00001.parquet",
+      "repo": "arc53/DocsGPT",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 4954
+    },
+    {
+      "name": "arc53__DocsGPT-00000-of-00001.jsonl.gz",
+      "repo": "arc53/DocsGPT",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 4954
+    },
+    {
+      "name": "assafelovic__gpt-researcher-00000-of-00001.parquet",
+      "repo": "assafelovic/gpt-researcher",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 1069
+    },
+    {
+      "name": "assafelovic__gpt-researcher-00000-of-00001.jsonl.gz",
+      "repo": "assafelovic/gpt-researcher",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 1069
+    },
+    {
+      "name": "blakeblackshear__frigate-00000-of-00001.parquet",
+      "repo": "blakeblackshear/frigate",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 3034
+    },
+    {
+      "name": "blakeblackshear__frigate-00000-of-00001.jsonl.gz",
+      "repo": "blakeblackshear/frigate",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 3034
+    },
+    {
+      "name": "browser-use__browser-use-00000-of-00001.parquet",
+      "repo": "browser-use/browser-use",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 8556
+    },
+    {
+      "name": "browser-use__browser-use-00000-of-00001.jsonl.gz",
+      "repo": "browser-use/browser-use",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 8556
+    },
+    {
+      "name": "celery__celery-00000-of-00001.parquet",
+      "repo": "celery/celery",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 10336
+    },
+    {
+      "name": "celery__celery-00000-of-00001.jsonl.gz",
+      "repo": "celery/celery",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 10336
+    },
+    {
+      "name": "comet-ml__opik-00000-of-00001.parquet",
+      "repo": "comet-ml/opik",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 6632
+    },
+    {
+      "name": "comet-ml__opik-00000-of-00001.jsonl.gz",
+      "repo": "comet-ml/opik",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 6632
+    },
+    {
+      "name": "commaai__openpilot-00000-of-00001.parquet",
+      "repo": "commaai/openpilot",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 16839
+    },
+    {
+      "name": "commaai__openpilot-00000-of-00001.jsonl.gz",
+      "repo": "commaai/openpilot",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 16839
+    },
+    {
+      "name": "confident-ai__deepeval-00000-of-00001.parquet",
+      "repo": "confident-ai/deepeval",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 10216
+    },
+    {
+      "name": "confident-ai__deepeval-00000-of-00001.jsonl.gz",
+      "repo": "confident-ai/deepeval",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 10216
+    },
+    {
+      "name": "crewAIInc__crewAI-00000-of-00001.parquet",
+      "repo": "crewAIInc/crewAI",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 4808
+    },
+    {
+      "name": "crewAIInc__crewAI-00000-of-00001.jsonl.gz",
+      "repo": "crewAIInc/crewAI",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 4808
+    },
+    {
+      "name": "deepset-ai__haystack-00000-of-00001.parquet",
+      "repo": "deepset-ai/haystack",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 13171
+    },
+    {
+      "name": "deepset-ai__haystack-00000-of-00001.jsonl.gz",
+      "repo": "deepset-ai/haystack",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 13171
+    },
+    {
+      "name": "deepspeedai__DeepSpeed-00000-of-00001.parquet",
+      "repo": "deepspeedai/DeepSpeed",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 4639
+    },
+    {
+      "name": "deepspeedai__DeepSpeed-00000-of-00001.jsonl.gz",
+      "repo": "deepspeedai/DeepSpeed",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 4639
+    },
+    {
+      "name": "django__django-00000-of-00001.parquet",
+      "repo": "django/django",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 24103
+    },
+    {
+      "name": "django__django-00000-of-00001.jsonl.gz",
+      "repo": "django/django",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 24103
+    },
+    {
+      "name": "docling-project__docling-00000-of-00001.parquet",
+      "repo": "docling-project/docling",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 1595
+    },
+    {
+      "name": "docling-project__docling-00000-of-00001.jsonl.gz",
+      "repo": "docling-project/docling",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 1595
+    },
+    {
+      "name": "encode__httpx-00000-of-00001.parquet",
+      "repo": "encode/httpx",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 1786
+    },
+    {
+      "name": "encode__httpx-00000-of-00001.jsonl.gz",
+      "repo": "encode/httpx",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 1786
+    },
+    {
+      "name": "eosphoros-ai__DB-GPT-00000-of-00001.parquet",
+      "repo": "eosphoros-ai/DB-GPT",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 4396
+    },
+    {
+      "name": "eosphoros-ai__DB-GPT-00000-of-00001.jsonl.gz",
+      "repo": "eosphoros-ai/DB-GPT",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 4396
+    },
+    {
+      "name": "exo-explore__exo-00000-of-00001.parquet",
+      "repo": "exo-explore/exo",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 10691
+    },
+    {
+      "name": "exo-explore__exo-00000-of-00001.jsonl.gz",
+      "repo": "exo-explore/exo",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 10691
+    },
+    {
+      "name": "getzep__graphiti-00000-of-00001.parquet",
+      "repo": "getzep/graphiti",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 1168
+    },
+    {
+      "name": "getzep__graphiti-00000-of-00001.jsonl.gz",
+      "repo": "getzep/graphiti",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 1168
+    },
+    {
+      "name": "home-assistant__core-00000-of-00001.parquet",
+      "repo": "home-assistant/core",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 126092
+    },
+    {
+      "name": "home-assistant__core-00000-of-00001.jsonl.gz",
+      "repo": "home-assistant/core",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 126092
+    },
+    {
+      "name": "hpcaitech__ColossalAI-00000-of-00001.parquet",
+      "repo": "hpcaitech/ColossalAI",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 14441
+    },
+    {
+      "name": "hpcaitech__ColossalAI-00000-of-00001.jsonl.gz",
+      "repo": "hpcaitech/ColossalAI",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 14441
+    },
+    {
+      "name": "huggingface__datasets-00000-of-00001.parquet",
+      "repo": "huggingface/datasets",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 9423
+    },
+    {
+      "name": "huggingface__datasets-00000-of-00001.jsonl.gz",
+      "repo": "huggingface/datasets",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 9423
+    },
+    {
+      "name": "huggingface__diffusers-00000-of-00001.parquet",
+      "repo": "huggingface/diffusers",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 15274
+    },
+    {
+      "name": "huggingface__diffusers-00000-of-00001.jsonl.gz",
+      "repo": "huggingface/diffusers",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 15274
+    },
+    {
+      "name": "huggingface__lerobot-00000-of-00001.parquet",
+      "repo": "huggingface/lerobot",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 5771
+    },
+    {
+      "name": "huggingface__lerobot-00000-of-00001.jsonl.gz",
+      "repo": "huggingface/lerobot",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 5771
+    },
+    {
+      "name": "huggingface__peft-00000-of-00001.parquet",
+      "repo": "huggingface/peft",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 1888
+    },
+    {
+      "name": "huggingface__peft-00000-of-00001.jsonl.gz",
+      "repo": "huggingface/peft",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 1888
+    },
+    {
+      "name": "huggingface__smolagents-00000-of-00001.parquet",
+      "repo": "huggingface/smolagents",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 938
+    },
+    {
+      "name": "huggingface__smolagents-00000-of-00001.jsonl.gz",
+      "repo": "huggingface/smolagents",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 938
+    },
+    {
+      "name": "huggingface__transformers-00000-of-00001.parquet",
+      "repo": "huggingface/transformers",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 77948
+    },
+    {
+      "name": "huggingface__transformers-00000-of-00001.jsonl.gz",
+      "repo": "huggingface/transformers",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 77948
+    },
+    {
+      "name": "huggingface__trl-00000-of-00001.parquet",
+      "repo": "huggingface/trl",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 4995
+    },
+    {
+      "name": "huggingface__trl-00000-of-00001.jsonl.gz",
+      "repo": "huggingface/trl",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 4995
+    },
+    {
+      "name": "hummingbot__hummingbot-00000-of-00001.parquet",
+      "repo": "hummingbot/hummingbot",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 34528
+    },
+    {
+      "name": "hummingbot__hummingbot-00000-of-00001.jsonl.gz",
+      "repo": "hummingbot/hummingbot",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 34528
+    },
+    {
+      "name": "jax-ml__jax-00000-of-00001.parquet",
+      "repo": "jax-ml/jax",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 40671
+    },
+    {
+      "name": "jax-ml__jax-00000-of-00001.jsonl.gz",
+      "repo": "jax-ml/jax",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 40671
+    },
+    {
+      "name": "keras-team__keras-00000-of-00001.parquet",
+      "repo": "keras-team/keras",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 35316
+    },
+    {
+      "name": "keras-team__keras-00000-of-00001.jsonl.gz",
+      "repo": "keras-team/keras",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 35316
+    },
+    {
+      "name": "kivy__kivy-00000-of-00001.parquet",
+      "repo": "kivy/kivy",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 1859
+    },
+    {
+      "name": "kivy__kivy-00000-of-00001.jsonl.gz",
+      "repo": "kivy/kivy",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 1859
+    },
+    {
+      "name": "kvcache-ai__ktransformers-00000-of-00001.parquet",
+      "repo": "kvcache-ai/ktransformers",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 655
+    },
+    {
+      "name": "kvcache-ai__ktransformers-00000-of-00001.jsonl.gz",
+      "repo": "kvcache-ai/ktransformers",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 655
+    },
+    {
+      "name": "langchain-ai__langchain-00000-of-00001.parquet",
+      "repo": "langchain-ai/langchain",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 28281
+    },
+    {
+      "name": "langchain-ai__langchain-00000-of-00001.jsonl.gz",
+      "repo": "langchain-ai/langchain",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 28281
+    },
+    {
+      "name": "langchain-ai__langgraph-00000-of-00001.parquet",
+      "repo": "langchain-ai/langgraph",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 5361
+    },
+    {
+      "name": "langchain-ai__langgraph-00000-of-00001.jsonl.gz",
+      "repo": "langchain-ai/langgraph",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 5361
+    },
+    {
+      "name": "langflow-ai__langflow-00000-of-00001.parquet",
+      "repo": "langflow-ai/langflow",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 11736
+    },
+    {
+      "name": "langflow-ai__langflow-00000-of-00001.jsonl.gz",
+      "repo": "langflow-ai/langflow",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 11736
+    },
+    {
+      "name": "locustio__locust-00000-of-00001.parquet",
+      "repo": "locustio/locust",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 1606
+    },
+    {
+      "name": "locustio__locust-00000-of-00001.jsonl.gz",
+      "repo": "locustio/locust",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 1606
+    },
+    {
+      "name": "marimo-team__marimo-00000-of-00001.parquet",
+      "repo": "marimo-team/marimo",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 7320
+    },
+    {
+      "name": "marimo-team__marimo-00000-of-00001.jsonl.gz",
+      "repo": "marimo-team/marimo",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 7320
+    },
+    {
+      "name": "mem0ai__mem0-00000-of-00001.parquet",
+      "repo": "mem0ai/mem0",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 3702
+    },
+    {
+      "name": "mem0ai__mem0-00000-of-00001.jsonl.gz",
+      "repo": "mem0ai/mem0",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 3702
+    },
+    {
+      "name": "microsoft__qlib-00000-of-00001.parquet",
+      "repo": "microsoft/qlib",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 2778
+    },
+    {
+      "name": "microsoft__qlib-00000-of-00001.jsonl.gz",
+      "repo": "microsoft/qlib",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 2778
+    },
+    {
+      "name": "mitmproxy__mitmproxy-00000-of-00001.parquet",
+      "repo": "mitmproxy/mitmproxy",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 10709
+    },
+    {
+      "name": "mitmproxy__mitmproxy-00000-of-00001.jsonl.gz",
+      "repo": "mitmproxy/mitmproxy",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 10709
+    },
+    {
+      "name": "mkdocs__mkdocs-00000-of-00001.parquet",
+      "repo": "mkdocs/mkdocs",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 948
+    },
+    {
+      "name": "mkdocs__mkdocs-00000-of-00001.jsonl.gz",
+      "repo": "mkdocs/mkdocs",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 948
+    },
+    {
+      "name": "mlc-ai__mlc-llm-00000-of-00001.parquet",
+      "repo": "mlc-ai/mlc-llm",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 3984
+    },
+    {
+      "name": "mlc-ai__mlc-llm-00000-of-00001.jsonl.gz",
+      "repo": "mlc-ai/mlc-llm",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 3984
+    },
+    {
+      "name": "mlflow__mlflow-00000-of-00001.parquet",
+      "repo": "mlflow/mlflow",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 16271
+    },
+    {
+      "name": "mlflow__mlflow-00000-of-00001.jsonl.gz",
+      "repo": "mlflow/mlflow",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 16271
+    },
+    {
+      "name": "modelcontextprotocol__python-sdk-00000-of-00001.parquet",
+      "repo": "modelcontextprotocol/python-sdk",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 3695
+    },
+    {
+      "name": "modelcontextprotocol__python-sdk-00000-of-00001.jsonl.gz",
+      "repo": "modelcontextprotocol/python-sdk",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 3695
+    },
+    {
+      "name": "modelscope__FunASR-00000-of-00001.parquet",
+      "repo": "modelscope/FunASR",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 8143
+    },
+    {
+      "name": "modelscope__FunASR-00000-of-00001.jsonl.gz",
+      "repo": "modelscope/FunASR",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 8143
+    },
+    {
+      "name": "netbox-community__netbox-00000-of-00001.parquet",
+      "repo": "netbox-community/netbox",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 6853
+    },
+    {
+      "name": "netbox-community__netbox-00000-of-00001.jsonl.gz",
+      "repo": "netbox-community/netbox",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 6853
+    },
+    {
+      "name": "nginx-proxy__nginx-proxy-00000-of-00001.parquet",
+      "repo": "nginx-proxy/nginx-proxy",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 81
+    },
+    {
+      "name": "nginx-proxy__nginx-proxy-00000-of-00001.jsonl.gz",
+      "repo": "nginx-proxy/nginx-proxy",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 81
+    },
+    {
+      "name": "onnx__onnx-00000-of-00001.parquet",
+      "repo": "onnx/onnx",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 1963
+    },
+    {
+      "name": "onnx__onnx-00000-of-00001.jsonl.gz",
+      "repo": "onnx/onnx",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 1963
+    },
+    {
+      "name": "openai__openai-agents-python-00000-of-00001.parquet",
+      "repo": "openai/openai-agents-python",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 3269
+    },
+    {
+      "name": "openai__openai-agents-python-00000-of-00001.jsonl.gz",
+      "repo": "openai/openai-agents-python",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 3269
+    },
+    {
+      "name": "pallets__click-00000-of-00001.parquet",
+      "repo": "pallets/click",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 1005
+    },
+    {
+      "name": "pallets__click-00000-of-00001.jsonl.gz",
+      "repo": "pallets/click",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 1005
+    },
+    {
+      "name": "pandas-dev__pandas-00000-of-00001.parquet",
+      "repo": "pandas-dev/pandas",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 59194
+    },
+    {
+      "name": "pandas-dev__pandas-00000-of-00001.jsonl.gz",
+      "repo": "pandas-dev/pandas",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 59194
+    },
+    {
+      "name": "plotly__dash-00000-of-00001.parquet",
+      "repo": "plotly/dash",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 4114
+    },
+    {
+      "name": "plotly__dash-00000-of-00001.jsonl.gz",
+      "repo": "plotly/dash",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 4114
+    },
+    {
+      "name": "plotly__plotly.py-00000-of-00001.parquet",
+      "repo": "plotly/plotly.py",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 74010
+    },
+    {
+      "name": "plotly__plotly.py-00000-of-00001.jsonl.gz",
+      "repo": "plotly/plotly.py",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 74010
+    },
+    {
+      "name": "psf__black-00000-of-00001.parquet",
+      "repo": "psf/black",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 1047
+    },
+    {
+      "name": "psf__black-00000-of-00001.jsonl.gz",
+      "repo": "psf/black",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 1047
+    },
+    {
+      "name": "psf__requests-00000-of-00001.parquet",
+      "repo": "psf/requests",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 2841
+    },
+    {
+      "name": "psf__requests-00000-of-00001.jsonl.gz",
+      "repo": "psf/requests",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 2841
+    },
+    {
+      "name": "pydantic__pydantic-00000-of-00001.parquet",
+      "repo": "pydantic/pydantic",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 5946
+    },
+    {
+      "name": "pydantic__pydantic-00000-of-00001.jsonl.gz",
+      "repo": "pydantic/pydantic",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 5946
+    },
+    {
+      "name": "pydantic__pydantic-ai-00000-of-00001.parquet",
+      "repo": "pydantic/pydantic-ai",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 11115
+    },
+    {
+      "name": "pydantic__pydantic-ai-00000-of-00001.jsonl.gz",
+      "repo": "pydantic/pydantic-ai",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 11115
+    },
+    {
+      "name": "pypa__pipenv-00000-of-00001.parquet",
+      "repo": "pypa/pipenv",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 6717
+    },
+    {
+      "name": "pypa__pipenv-00000-of-00001.jsonl.gz",
+      "repo": "pypa/pipenv",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 6717
+    },
+    {
+      "name": "pyscript__pyscript-00000-of-00001.parquet",
+      "repo": "pyscript/pyscript",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 1490
+    },
+    {
+      "name": "pyscript__pyscript-00000-of-00001.jsonl.gz",
+      "repo": "pyscript/pyscript",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 1490
+    },
+    {
+      "name": "python-poetry__poetry-00000-of-00001.parquet",
+      "repo": "python-poetry/poetry",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 5559
+    },
+    {
+      "name": "python-poetry__poetry-00000-of-00001.jsonl.gz",
+      "repo": "python-poetry/poetry",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 5559
+    },
+    {
+      "name": "pytorch__vision-00000-of-00001.parquet",
+      "repo": "pytorch/vision",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 5923
+    },
+    {
+      "name": "pytorch__vision-00000-of-00001.jsonl.gz",
+      "repo": "pytorch/vision",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 5923
+    },
+    {
+      "name": "ray-project__ray-00000-of-00001.parquet",
+      "repo": "ray-project/ray",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 66944
+    },
+    {
+      "name": "ray-project__ray-00000-of-00001.jsonl.gz",
+      "repo": "ray-project/ray",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 66944
+    },
+    {
+      "name": "recommenders-team__recommenders-00000-of-00001.parquet",
+      "repo": "recommenders-team/recommenders",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 4614
+    },
+    {
+      "name": "recommenders-team__recommenders-00000-of-00001.jsonl.gz",
+      "repo": "recommenders-team/recommenders",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 4614
+    },
+    {
+      "name": "reflex-dev__reflex-00000-of-00001.parquet",
+      "repo": "reflex-dev/reflex",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 6298
+    },
+    {
+      "name": "reflex-dev__reflex-00000-of-00001.jsonl.gz",
+      "repo": "reflex-dev/reflex",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 6298
+    },
+    {
+      "name": "roboflow__supervision-00000-of-00001.parquet",
+      "repo": "roboflow/supervision",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 2702
+    },
+    {
+      "name": "roboflow__supervision-00000-of-00001.jsonl.gz",
+      "repo": "roboflow/supervision",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 2702
+    },
+    {
+      "name": "run-llama__llama_index-00000-of-00001.parquet",
+      "repo": "run-llama/llama_index",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 16516
+    },
+    {
+      "name": "run-llama__llama_index-00000-of-00001.jsonl.gz",
+      "repo": "run-llama/llama_index",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 16516
+    },
+    {
+      "name": "saleor__saleor-00000-of-00001.parquet",
+      "repo": "saleor/saleor",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 21120
+    },
+    {
+      "name": "saleor__saleor-00000-of-00001.jsonl.gz",
+      "repo": "saleor/saleor",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 21120
+    },
+    {
+      "name": "sanic-org__sanic-00000-of-00001.parquet",
+      "repo": "sanic-org/sanic",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 2290
+    },
+    {
+      "name": "sanic-org__sanic-00000-of-00001.jsonl.gz",
+      "repo": "sanic-org/sanic",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 2290
+    },
+    {
+      "name": "scikit-learn__scikit-learn-00000-of-00001.parquet",
+      "repo": "scikit-learn/scikit-learn",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 23276
+    },
+    {
+      "name": "scikit-learn__scikit-learn-00000-of-00001.jsonl.gz",
+      "repo": "scikit-learn/scikit-learn",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 23276
+    },
+    {
+      "name": "scrapy__scrapy-00000-of-00001.parquet",
+      "repo": "scrapy/scrapy",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 5714
+    },
+    {
+      "name": "scrapy__scrapy-00000-of-00001.jsonl.gz",
+      "repo": "scrapy/scrapy",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 5714
+    },
+    {
+      "name": "sgl-project__sglang-00000-of-00001.parquet",
+      "repo": "sgl-project/sglang",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 40991
+    },
+    {
+      "name": "sgl-project__sglang-00000-of-00001.jsonl.gz",
+      "repo": "sgl-project/sglang",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 40991
+    },
+    {
+      "name": "sherlock-project__sherlock-00000-of-00001.parquet",
+      "repo": "sherlock-project/sherlock",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 174
+    },
+    {
+      "name": "sherlock-project__sherlock-00000-of-00001.jsonl.gz",
+      "repo": "sherlock-project/sherlock",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 174
+    },
+    {
+      "name": "soxoj__maigret-00000-of-00001.parquet",
+      "repo": "soxoj/maigret",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 340
+    },
+    {
+      "name": "soxoj__maigret-00000-of-00001.jsonl.gz",
+      "repo": "soxoj/maigret",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 340
+    },
+    {
+      "name": "spotDL__spotify-downloader-00000-of-00001.parquet",
+      "repo": "spotDL/spotify-downloader",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 1948
+    },
+    {
+      "name": "spotDL__spotify-downloader-00000-of-00001.jsonl.gz",
+      "repo": "spotDL/spotify-downloader",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 1948
+    },
+    {
+      "name": "spotify__luigi-00000-of-00001.parquet",
+      "repo": "spotify/luigi",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 1687
+    },
+    {
+      "name": "spotify__luigi-00000-of-00001.jsonl.gz",
+      "repo": "spotify/luigi",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 1687
+    },
+    {
+      "name": "stanfordnlp__dspy-00000-of-00001.parquet",
+      "repo": "stanfordnlp/dspy",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 3795
+    },
+    {
+      "name": "stanfordnlp__dspy-00000-of-00001.jsonl.gz",
+      "repo": "stanfordnlp/dspy",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 3795
+    },
+    {
+      "name": "streamlit__streamlit-00000-of-00001.parquet",
+      "repo": "streamlit/streamlit",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 9830
+    },
+    {
+      "name": "streamlit__streamlit-00000-of-00001.jsonl.gz",
+      "repo": "streamlit/streamlit",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 9830
+    },
+    {
+      "name": "topoteretes__cognee-00000-of-00001.parquet",
+      "repo": "topoteretes/cognee",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 14708
+    },
+    {
+      "name": "topoteretes__cognee-00000-of-00001.jsonl.gz",
+      "repo": "topoteretes/cognee",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 14708
+    },
+    {
+      "name": "tornadoweb__tornado-00000-of-00001.parquet",
+      "repo": "tornadoweb/tornado",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 1853
+    },
+    {
+      "name": "tornadoweb__tornado-00000-of-00001.jsonl.gz",
+      "repo": "tornadoweb/tornado",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 1853
+    },
+    {
+      "name": "unclecode__crawl4ai-00000-of-00001.parquet",
+      "repo": "unclecode/crawl4ai",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 1988
+    },
+    {
+      "name": "unclecode__crawl4ai-00000-of-00001.jsonl.gz",
+      "repo": "unclecode/crawl4ai",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 1988
+    },
+    {
+      "name": "unslothai__unsloth-00000-of-00001.parquet",
+      "repo": "unslothai/unsloth",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 18954
+    },
+    {
+      "name": "unslothai__unsloth-00000-of-00001.jsonl.gz",
+      "repo": "unslothai/unsloth",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 18954
+    },
+    {
+      "name": "verl-project__verl-00000-of-00001.parquet",
+      "repo": "verl-project/verl",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 6487
+    },
+    {
+      "name": "verl-project__verl-00000-of-00001.jsonl.gz",
+      "repo": "verl-project/verl",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 6487
+    },
+    {
+      "name": "vllm-project__vllm-00000-of-00001.parquet",
+      "repo": "vllm-project/vllm",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 44162
+    },
+    {
+      "name": "vllm-project__vllm-00000-of-00001.jsonl.gz",
+      "repo": "vllm-project/vllm",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 44162
+    },
+    {
+      "name": "zulip__zulip-00000-of-00001.parquet",
+      "repo": "zulip/zulip",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 16329
+    },
+    {
+      "name": "zulip__zulip-00000-of-00001.jsonl.gz",
+      "repo": "zulip/zulip",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 16329
+    },
+    {
+      "name": "main500-v0.9.parquet",
+      "repo": "main500",
+      "format": "parquet",
+      "shard": 0,
+      "shards": 1,
+      "records": 500
+    },
+    {
+      "name": "main500-v0.9.jsonl.gz",
+      "repo": "main500",
+      "format": "jsonl.gz",
+      "shard": 0,
+      "shards": 1,
+      "records": 500
+    }
+  ]
+}

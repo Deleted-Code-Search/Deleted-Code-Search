@@ -12,7 +12,7 @@
 - **채굴 파이프라인** — 저장소 20개 실행 완료 (#82, 2026-10-01). 병렬화·실패 복구·조립까지 들어갔다. 100개 확장은 #128
 - **의미 있는 삭제 필터** — 이동(ADR-014)·PARTIAL 5줄(ADR-015)·포맷 사후 필터(#152)·생성·벤더 경로 사후 필터(#184), 규칙 버전 `v0.9`. **정밀도 76.0%(v0.8)로 목표 90% 미달** (#89 2차). v0.9는 새 표본 재측정 전 (2차 표본 재채점은 76.0% 그대로)
 - **이유 분류** — `r1+m2+c3` 학습·평가 완료 (#86, #87). **게이트 2 미달** (test 60.0%, ① 미충족 · ② 충족, #92)
-- **데이터셋** — 미착수 (#83)
+- **데이터셋** — dataset-v0.9 내보내기 구현·로컬 생성 (#83, PR 전). Release 업로드 전 (PR merge 후). 34,391행 `LINK_ONLY`. DB 적재는 #8 때 별도 이슈
 
 - 역할: §6.1 배정 유지 (성제 = 프로덕트·평가·조장 / 재헌 = 파이프라인 / 희수 = 분류·검색)
 - 문서·규칙 버전: CHARTER **v1.19** / 가이드 `GUIDE_VERSION` **v3** / 필터 `FILTER_RULE_VERSION` **v0.9**
@@ -51,6 +51,8 @@
 - **[저장소 선정] #171 저장소 100개 선정 — 완료 (PR #172 머지).** 성제. 기존 20 + 신규 80, 기준 v2 그대로. 목록·제외 사유·예상 규모·3분할 초안은 `docs/repo_final100.md`. 신규 80개 클론 합계 약 34.5GB(어림)로 §7 추정(10~20GB)보다 크다. `ccxt/ccxt`는 생성 코드 위주라 팀 결정으로 뺐다. 실행은 담당별 CSV(`docs/repo_final100_{sj,jh,hs}.csv`)로 하고 기존 20개는 다시 돌리지 않는다. 기준(§4.3) 변경 제안은 적용하지 않았다
 
 - **[파이프라인] #184 사후 필터 `NOISE_GENERATED` — 규칙 `v0.9` (PR 진행 중).** 재헌. `site-packages`·`dist-packages`, venv 뿌리(`.venv`, `venv/bin|lib|…`, `lib/pythonX.Y`), 벤더 디렉터리(`vendor`·`vendored`·`_vendor`·`_vendored`), `*_pb2.py` 경로의 KEPT 행을 `NOISE_GENERATED`로 (`docs/filter_rules.md`). **추출은 다시 돌리지 않는다** — v0.9 = v0.7 추출 + 사후 필터(`NOISE_GENERATED` → `NOISE_FORMAT` 순서)이고, v0.8 조립 결과에 `pipeline/postfilter.py`를 적용한다. 100개 v0.8 파일 4개에 적용: KEPT 1,504,913 → **1,354,052** (`NOISE_GENERATED` 150,861 — site-packages 103,713 · vendor 46,580 · protobuf 528 · venv 40). **확정 500건은 고정** — 500건 모두 v0.9에서도 KEPT이고 라벨·split은 바꾸지 않는다. 정밀도 재측정 전 — 리뷰 후속(2026-10-29)으로 #89 2차 표본 200건 재채점(바뀐 표본 0건, 76.0% 그대로, 규칙을 고른 표본이라 낙관적)과 `NOISE_GENERATED` 무작위 50건 경로 확인(시드 20261029)만 했다 (`docs/reports/noise_generated_v0.9.md`)
+
+- **[데이터셋] #83 dataset-v0.9 내보내기 (PR 준비 중, 2026-10-29).** 재헌. `pipeline/export.py` — v0.9 KEPT 행에 분류 결과를 `record_id` 로 붙여 저장소별 Parquet + jsonl.gz 로 쓴다(shard 1.5e9B, 파일 ≤ 2e9B). 확정 500건은 사람 라벨·split 그대로(`classification.source = HUMAN`), 신규 80개 모델만 라벨은 `reason = null` "이유 미구분"(`UNDISTINGUISHED`), 학습 저장소 20개는 `classification.training_repo` 와 `training_repos.txt` 로 낸다(§4.4 스키마는 바꾸지 않음). Git 에는 `datasets/dataset-v0.9/`(확정 500건·목록·요약·문서), 전체는 Release `dataset-v0.9` 로 (아직 올리지 않음). #28(celery `docs/`)은 결정대로 포함하고 한계에 적었다. **라이선스(2026-10-29 원문 확인, `docs/repo_final100.md` §3.1):** 저장소 루트 라이선스는 100개 모두 permissive 다(`repos.csv` `code_policy` 는 100개 모두 `CODE_INCLUDED`). 그러나 행 단위로는 저장소 9개·34,391행이 이력상·하위 경로상 copyleft·독점 등 다른 라이선스 아래일 수 있다(unsloth `studio/` AGPL 12,677행, 확정 500건 중 19건 포함) — **조장 결정: 34,391행 전부 `LINK_ONLY`**(규칙 `docs/license_overrides.csv`). 행 단위 결과: `CODE_INCLUDED` 1,319,661행 / `LINK_ONLY` 34,391행. 행은 빼지 않고 코드 칸만 비운다. 확정 500건 중 19건도 `LINK_ONLY` 이며 라벨·split 은 그대로. DB 적재는 이번 범위에서 빼고 검색 UI(#8) 때 별도 이슈로 한다 (조장 확인)
 
 ```
 #86 분류기 학습·평가 (희수) — 완료

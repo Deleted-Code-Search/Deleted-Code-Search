@@ -23,7 +23,7 @@ ADR-020(저장소 목표 500 → 100)의 100개 목록 초안이다. 확정 20�
 ## 0. 요약
 
 - **100개 = 기존 20 + 신규 80.** 신규 80은 PR 게이트를 통과한 후보에서 선례·팀 결정에 따른 수동 제외(§1.4, 30개)를 한 뒤의 `score_v2` 상위 80개다. 게이트 통과 후보 전체의 상위 80개가 아니다 — 수동 제외 30개 중 26개는 점수로는 80개 안이었다
-- 라이선스: Apache-2.0 51 / MIT 39 / BSD-3-Clause 9 / BSD-2-Clause 1. 수동 확인은 celery 하나뿐이다 (기존 그대로)
+- 라이선스: Apache-2.0 51 / MIT 39 / BSD-3-Clause 9 / BSD-2-Clause 1. 2026-10-29 에 100개 전부의 현재 루트 라이선스 원문, 현재 기본 브랜치 트리의 하위 라이선스 파일, 현재 루트 라이선스 파일 경로의 변경 이력을 확인했다 (과거에 다른 이름·경로였던 라이선스 파일의 이력, 지금은 지워진 하위 라이선스, 파일별 라이선스 헤더는 범위 밖 — §3.1). 저장소 루트는 100개 모두 permissive 이고, 행 단위로 34,391건을 `LINK_ONLY` 로 낸다 (§3.1). `celery/celery` 만 선정 당시 GitHub 값이 `NOASSERTION` 이라 CSV 에 수동 확인 값 BSD-3-Clause 를 넣었고, 2026-10-29 원문 재확인 결과도 BSD-3-Clause 였다 (§3)
 - `recent_only`(최초 커밋 2015년 이전, 채굴 구간을 2015년부터로 좁힘) 19개, 2015년 이후 시작 81개, 그중 2020년 이후 시작 52개
 - 신규 80개의 예상 규모 (**어림**, §5): 클론 합계 약 34.5GB, 순회 커밋 약 608,203개, 추출 시간 32시간~111시간 (노트북 1대 직렬 환산, 중간값 63시간)
 - 신규 80개의 맥락 결합 API 호출 (**어림**, §6): 46,268~182,183회, 중간값 108,443회. 토큰 하나(5,000회/시간)로 21.7시간, 셋으로 나누면 한 사람당 7.2시간 안팎이다
@@ -230,11 +230,160 @@ python -m tools.repo_scale --input docs/repo_final100.csv --out docs/repo_final1
 ## 3. 라이선스 확인 방법
 
 - **자동 (99개).** GitHub REST `GET /repos/{owner}/{name}`의 `license.spdx_id`를 읽어 `select_repos.PERMISSIVE_SPDX`(MIT, MIT-0, Apache-2.0, BSD-2-Clause, BSD-3-Clause, BSD-3-Clause-Clear, BSD-4-Clause, 0BSD)에 있을 때만 통과시켰다. GitHub의 라이선스 탐지기(licensee)가 저장소 루트의 라이선스 파일을 보고 낸 값이다. CSV `license` 열이 이 값이다
-- **수동 (1개).** `celery/celery`는 GitHub가 `NOASSERTION`을 준다. `repo_final20.md` §3.1에서 사람이 `LICENSE`를 읽어 BSD-3-Clause로 확인한 값을 `--license-override`로 넣었다 (CSV `license_manual=true`). 이번에 새로 수동 확인한 저장소는 없다
-- **확인하지 않은 것.**
-  - 자동 99개의 `LICENSE` 파일을 사람이 읽지 않았다. 탐지기가 맞다고 가정했다. 데이터셋 내보내기(#83) 전에 100개 전부 한 번은 사람이 봐야 한다 (#26~#28)
-  - 하위 디렉터리에 다른 라이선스가 섞인 경우(celery `docs/`의 CC BY-SA처럼)는 이 방법으로 보이지 않는다
+- **수동 (1개).** `celery/celery`는 저장소 선정 당시 GitHub `license.spdx_id`가 `NOASSERTION`이었다. 그래서 `repo_final20.md` §3.1에서 사람이 `LICENSE`를 읽어 BSD-3-Clause로 확인한 값을 `--license-override`로 CSV에 덮어썼다 (CSV `license_manual=true`). 선정 시점에 수동으로 넣은 값은 이 하나다. 2026-10-29 #83 재확인에서는 현재 `LICENSE` 원문을 다시 읽어 BSD-3-Clause임을 확인했다 (§3.1). 그래서 지금 CSV 값과 원문 판정은 일치하지만, GitHub 값과 CSV 값이 원래부터 같았던 것은 아니다 — CSV 값은 수동 override 다
+- **선정 방법의 한계와 그 뒤 확인.**
+  - 위 자동 판정은 GitHub 탐지기 값만 본다. 그래서 2026-10-29(#83, #26~#28)에 100개 전부의 현재 루트 라이선스 원문, 현재 기본 브랜치 트리의 하위 라이선스 파일, 현재 루트 라이선스 파일 경로의 변경 이력을 모아 1차 판정을 하고, 필요한 항목은 원문을 수동 검토했다 (§3.1, 확인 범위와 그 밖은 §3.1 "확인하지 못한 것"). 현재 루트 라이선스 원문은 100개 모두 CSV 값과 같았다 (celery 의 CSV 값은 위 수동 override 값이다)
+  - 하위 디렉터리나 이력상 다른 라이선스가 섞인 경우(celery `docs/`의 CC BY-SA처럼)는 위 자동 판정으로는 보이지 않는다. §3.1 확인 범위 안에서 찾았고, 그 결과로 34,391건을 `LINK_ONLY` 로 낸다
   - `NOASSERTION` 72개와 라이선스 정보가 없는 31개는 그대로 제외했다. celery처럼 사람이 확인하면 되살아날 저장소가 있을 수 있다 (§4.1)
+
+### 3.1 라이선스 원문 확인 (2026-10-29, #83)
+
+데이터셋 내보내기 전에 100개 전부에 대해 세 가지를 다시 봤다 — ① 현재 루트의 LICENSE·COPYING·NOTICE 류 원문, ② 현재 기본 브랜치 트리에 있는 하위 LICENSE·COPYING·NOTICE·COPYRIGHT 류 파일, ③ 현재 루트 라이선스 파일 경로의 변경 이력과 그 경로의 가장 오래된 판. 과거에 다른 이름·경로였다가 바뀌었거나 지워진 라이선스 파일의 이력, 지금은 지워진 하위 디렉터리의 라이선스 파일, 소스 파일마다의 라이선스 헤더는 보지 않았다 (아래 "확인하지 못한 것"). **결론: 현재 루트 라이선스 원문은 100개 모두 CSV 값과 같고 permissive다 (Apache-2.0 51 / MIT 39 / BSD-3-Clause 9 / BSD-2-Clause 1, 루트 이중 라이선스 0). 99개의 CSV 값은 선정 당시 GitHub 값이고, `celery/celery` 는 선정 당시 GitHub 값이 `NOASSERTION` 이라 CSV 에 넣은 수동 확인 값(BSD-3-Clause, §3)이 이번 원문 판정과 일치했다. 저장소 단위로 permissive 여부가 바뀐 곳은 없다.** 다만 저장소 9개는 내보낸 행 일부가 **(현재 루트 라이선스 파일 경로의) 이력상 다른 라이선스였던 시기**나 **다른 라이선스의 하위 경로**에서 나왔다 — 아래 "확인 필요"·"불확실". **조장 결정(2026-10-29): 이 행 34,391건은 ADR-011 대로 전부 `LINK_ONLY` 로 낸다.** 불확실(NeMo)도 보수적으로 같게 하고, celery `docs/` 같은 예외 포함은 하지 않는다. 행은 빼지 않고(통계·평가 집합 유지) 코드 칸만 비운다. 규칙은 `docs/license_overrides.csv`, 적용은 `pipeline/export.py` 다.
+
+**확인 방법.** 저장소마다 GitHub API로 모았다 — 현재 루트 라이선스 파일 원문(`GET /repos/{repo}/license`), 현재 루트의 LICENSE·COPYING·NOTICE 류 파일, 현재 기본 브랜치 전체 트리에서 이름이 LICENSE·LICENCE·COPYING·NOTICE·COPYRIGHT 로 시작하는 하위 파일(1,087개, 원문까지), 현재 루트 라이선스 파일 경로를 바꾼 커밋 목록과 그 경로의 가장 오래된 판의 원문. 원문 문구(예: "Permission is hereby granted", "Apache License Version 2.0", "GNU AFFERO")로 종류를 가렸고, 종류가 바뀌었거나 permissive 가 아닌 문구·알 수 없는 파일은 원문을 읽어 판정했다. 자동 수집과 1차 판정 뒤, "확인 필요"·"불확실" 항목은 원문을 다시 읽어 수동 검토했고, 그 결과에 따른 조장 결정(34,391건 `LINK_ONLY`)을 내보내기에 반영했다. "내보낸 행 영향" 은 dataset-v0.9 출력(`data/export/dataset-v0.9/`)에서 경로 접두사 또는 `author_date` 로 센 값이다.
+
+판정:
+- **permissive** — 루트 원문이 permissive 이고, 내보낸 행에 다른 라이선스 코드가 섞인 근거가 없다. 이력에서 MIT ↔ Apache-2.0 처럼 permissive 끼리 바뀐 경우도 여기다
+- **permissive (목록 밖 포함)** — PSF·ISC 처럼 permissive 지만 §4.3 허용 목록(MIT/Apache/BSD) 밖 라이선스의 행이 있다. 허용 목록에 넣을지는 #26 결정 대상이다
+- **permissive (#28 결정)** — celery `docs/` (CC BY-SA 4.0). #28 결정대로 포함하고 한계에 적는다
+- **확인 필요** — 내보낸 행 일부가 copyleft(GPL·AGPL·MPL)·독점·사용 제한 라이선스 아래에 있었다. 저장소 전체는 permissive 지만 **해당 행은 `LINK_ONLY`** 다 (`docs/license_overrides.csv`)
+- **불확실** — 그 시기의 라이선스를 원문으로 정할 수 없었다. 보수적으로 **해당 행은 `LINK_ONLY`** 다
+
+| 판정 | 저장소 수 |
+|---|---:|
+| permissive | 87 |
+| permissive (목록 밖 포함) | 3 (`home-assistant/core`, `psf/black`, `psf/requests`) |
+| permissive (#28 결정) | 1 (`celery/celery`) |
+| 확인 필요 | 8 (`unslothai/unsloth`, `exo-explore/exo`, `agno-agi/agno`, `PrefectHQ/prefect`, `hpcaitech/ColossalAI`, `blakeblackshear/frigate`, `zulip/zulip`, `run-llama/llama_index`) |
+| 불확실 | 1 (`NVIDIA-NeMo/Speech`) |
+
+"확인 필요"·"불확실" 9개의 영향 행 — **모두 `LINK_ONLY`** (내보낸 1,354,052행 중 34,391행. 저장소·경로·기간이 겹치지 않아 그대로 더했다. 규칙별 건수는 `datasets/dataset-v0.9/summary.json` `totals.link_only_by_rule`):
+
+| 저장소 | 무엇 | 영향 행 | 확정 500건 |
+|---|---|---:|---:|
+| `unslothai/unsloth` | `studio/` AGPL-3.0 (2026-03 추가), `unsloth/kernels/moe/` AGPL-3.0 | 12,677 + 218 | **19** (`studio/`) |
+| `exo-explore/exo` | 2025-12-18 전 GPL-3.0 (2024-07-16 전은 라이선스 파일 없음) | 9,759 | 0 |
+| `NVIDIA-NeMo/Speech` | 2020-09-25 전 루트 LICENSE 가 "Please refer to per-package licenses" 한 줄 | 5,561 | 0 |
+| `agno-agi/agno` | 2025-02-10 전 MPL-2.0 (Phidata) | 2,830 | 0 |
+| `PrefectHQ/prefect` | 2021-10-05~2022-03-08 Prefect Community License 1.0, 그 전은 루트 LICENSE 없음 | 1,193 + 1,303 | 0 |
+| `hpcaitech/ColossalAI` | `examples/images/diffusion/` CreativeML Open RAIL-M | 353 | 0 |
+| `blakeblackshear/frigate` | 2020-07-26 전 AGPL-3.0 | 256 | 0 |
+| `zulip/zulip` | 2015-09-25 전 Zulip Enterprise License Agreement (독점) | 217 | 0 |
+| `run-llama/llama_index` | 통합 패키지 `readers-web` GPL-3.0, `llms-upstage`·`callbacks-uptrain` AGPL-3.0, `readers-markitdown` 빈 LICENSE | 24 | 0 |
+
+- 이력 판정은 `author_date` 의 날짜(작성자 시간대)로 갈랐다 — `before_date` 전이면 `LINK_ONLY`. 저작권자가 나중에 permissive 로 바꿨어도, 그 전에 지워진 코드는 permissive 판으로 배포된 적이 없을 수 있어서다. 커밋 날짜·병합 시점에 따라 경계 몇 건은 달라질 수 있다
+- llama_index 는 지금 내보낸 행이 없는 GPL/AGPL 패키지 9개도 규칙에 넣었다 (0행)
+- 내보낸 행이 0인 다른 라이선스 경로: `mitmproxy` GPL-3.0 시절(2013-03-17 전), `ray` 벤더링 `pathspec`(MPL-2.0), `pipenv` 벤더링 certifi(MPL-2.0)·distlib(PSF) (v0.9 `NOISE_GENERATED`), `reflex` `docs/enterprise/`(독점 EULA), `llama_index` GPL/AGPL 패키지 9개
+- 소스가 아닌 고지: `scikit-learn` `build_tools/wheels/LICENSE_*.txt`, `jax` `jaxlib/tools/LICENSE.txt` (휠에 묶는 바이너리의 서드파티 고지)
+
+**확인하지 못한 것.**
+- 이력은 **현재 루트 라이선스 파일 경로** 의 커밋만 봤다. 파일 이름·경로가 바뀐 적이 있으면(예: `LICENSE.txt` → `LICENSE`) 그 전 이력은 보이지 않고, 과거에 있다가 지워진 다른 이름의 라이선스 파일도 보지 않았다. prefect·NeMo 의 이른 시기가 그런 경우일 수 있다
+- 하위 라이선스 파일은 **현재 기본 브랜치 트리** 에서만 찾았다. 지금은 지워진 하위 디렉터리의 라이선스(예: 예전 벤더링 디렉터리)는 보지 않았다
+- 파일 머리의 라이선스 주석(SPDX 헤더 등)은 보지 않았다. 파일 단위 예외는 이 표에 없다
+- 트리 응답이 잘린(`truncated`) 저장소는 없었다
+
+| # | 저장소 | 라이선스 파일 | 원문 | CSV·GitHub와 | 이중 | 이력 (현재 루트 파일 경로 변경 커밋) | 하위 라이선스 파일 | 판정 | 근거·내보낸 행 영향 |
+|---:|---|---|---|---|:---:|---|---:|---|---|
+| 1 | `sgl-project/sglang` | `LICENSE` | Apache-2.0 | 같음 | - | 2회 | 5 | permissive |  |
+| 2 | `netbox-community/netbox` | `LICENSE.txt` | Apache-2.0 | 같음 | - | 1회 | 0 | permissive |  |
+| 3 | `pandas-dev/pandas` | `LICENSE` | BSD-3-Clause | 같음 | - | 18회 | 0 | permissive |  |
+| 4 | `mlflow/mlflow` | `LICENSE.txt` | Apache-2.0 | 같음 | - | 2회 | 2 | permissive |  |
+| 5 | `ray-project/ray` | `LICENSE` | Apache-2.0 | 같음 | - | 20회, MIT → Apache-2.0 | 5 | permissive | 루트 LICENSE에 서드파티 고지(MIT·BSD) 포함. 이력 MIT → Apache-2.0. 벤더링 `_private/thirdparty/pathspec` MPL-2.0 0행 |
+| 6 | `vllm-project/vllm` | `LICENSE` | Apache-2.0 | 같음 | - | 1회 | 1 | permissive |  |
+| 7 | `plotly/dash` | `LICENSE` | MIT | 같음 | - | 9회 | 6 | permissive |  |
+| 8 | `PrefectHQ/fastmcp` | `LICENSE` | Apache-2.0 | 같음 | - | 3회 | 0 | permissive |  |
+| 9 | `hummingbot/hummingbot` | `LICENSE` | Apache-2.0 | 같음 | - | 4회 | 0 | permissive |  |
+| 10 | `pydantic/pydantic-ai` | `LICENSE` | MIT | 같음 | - | 2회 | 7 | permissive |  |
+| 11 | `huggingface/transformers` | `LICENSE` | Apache-2.0 | 같음 | - | 4회 | 0 | permissive |  |
+| 12 | `apache/superset` | `LICENSE.txt` | Apache-2.0 | 같음 | - | 7회 | 3 | permissive |  |
+| 13 | `Lightning-AI/pytorch-lightning` | `LICENSE` | Apache-2.0 | 같음 | - | 5회, MIT → Apache-2.0 | 0 | permissive | 이력의 두 라이선스 모두 permissive |
+| 14 | `langchain-ai/langgraph` | `LICENSE` | MIT | 같음 | - | 4회 | 8 | permissive |  |
+| 15 | `scikit-learn/scikit-learn` | `COPYING` | BSD-3-Clause | 같음 | - | 17회 | 6 | permissive | `build_tools/wheels/LICENSE_*.txt`는 휠에 묶는 바이너리 고지(GPL 런타임 예외) — 소스 아님 |
+| 16 | `assafelovic/gpt-researcher` | `LICENSE` | Apache-2.0 | 같음 | - | 7회, MIT → Apache-2.0 | 4 | permissive | 이력 MIT → Apache-2.0. `frontend/vendor/` JS 라이브러리 고지(DOMPurify MPL/Apache 이중) — Python 아님 |
+| 17 | `topoteretes/cognee` | `LICENSE` | Apache-2.0 | 같음 | - | 3회, MIT → Apache-2.0 | 0 | permissive | 이력의 두 라이선스 모두 permissive |
+| 18 | `comet-ml/opik` | `LICENSE` | Apache-2.0 | 같음 | - | 1회 | 4 | permissive |  |
+| 19 | `home-assistant/core` | `LICENSE.md` | Apache-2.0 | 같음 | - | 3회, MIT → Apache-2.0 | 4 | permissive (목록 밖 포함) | `homeassistant/backports/` PSF 8행 (#26). 이력 MIT → Apache-2.0 (둘 다 permissive) |
+| 20 | `saleor/saleor` | `LICENSE` | BSD-3-Clause | 같음 | - | 9회 | 0 | permissive |  |
+| 21 | `mkdocs/mkdocs` | `LICENSE` | BSD-2-Clause | 같음 | - | 2회 | 1 | permissive |  |
+| 22 | `pypa/pipenv` | `LICENSE` | MIT | 같음 | - | 4회 | 38 | permissive | 벤더링 certifi(MPL-2.0)·distlib(PSF) 등 38개 — 내보낸 행 0 (v0.9 `NOISE_GENERATED`) |
+| 23 | `django/django` | `LICENSE` | BSD-3-Clause | 같음 | - | 5회 | 7 | permissive | 루트 `LICENSE.python`(PSF, Python에서 가져온 코드). 하위 MIT·BSD |
+| 24 | `pydantic/pydantic` | `LICENSE` | MIT | 같음 | - | 7회 | 1 | permissive |  |
+| 25 | `openai/openai-agents-python` | `LICENSE` | MIT | 같음 | - | 1회 | 0 | permissive |  |
+| 26 | `docling-project/docling` | `LICENSE` | MIT | 같음 | - | 3회 | 2 | permissive |  |
+| 27 | `onnx/onnx` | `LICENSE` | Apache-2.0 | 같음 | - | 4회, MIT → Apache-2.0 | 0 | permissive | 이력의 두 라이선스 모두 permissive |
+| 28 | `huggingface/lerobot` | `LICENSE` | Apache-2.0 | 같음 | - | 5회 | 0 | permissive | 루트 LICENSE에 Diffusion Policy MIT 고지 포함 |
+| 29 | `apache/airflow` | `LICENSE` | Apache-2.0 | 같음 | - | 29회 | 265 | permissive |  |
+| 30 | `mem0ai/mem0` | `LICENSE` | Apache-2.0 | 같음 | - | 3회 | 15 | permissive |  |
+| 31 | `huggingface/trl` | `LICENSE` | Apache-2.0 | 같음 | - | 3회 | 0 | permissive |  |
+| 32 | `huggingface/peft` | `LICENSE` | Apache-2.0 | 같음 | - | 1회 | 0 | permissive |  |
+| 33 | `mitmproxy/mitmproxy` | `LICENSE` | MIT | 같음 | 하위 1곳 (MIT 또는 CC0) | 4회 | 4 | permissive | 이력: GPL-3.0 → MIT(2013-03-17). 그 전 행 0. `contrib/kaitaistruct` MIT 또는 CC0 |
+| 34 | `pytorch/vision` | `LICENSE` | BSD-3-Clause | 같음 | - | 1회 | 0 | permissive |  |
+| 35 | `reflex-dev/reflex` | `LICENSE` | Apache-2.0 | 같음 | - | 4회 | 3 | permissive | `docs/enterprise/LICENSE` 독점 EULA — 내보낸 행 0 |
+| 36 | `langchain-ai/langchain` | `LICENSE` | MIT | 같음 | - | 2회 | 22 | permissive |  |
+| 37 | `modelcontextprotocol/python-sdk` | `LICENSE` | MIT | 같음 | - | 2회 | 0 | permissive |  |
+| 38 | `run-llama/llama_index` | `LICENSE` | MIT | 같음 | - | 2회 | 581 | **확인 필요** | 하위 통합 패키지 12개가 GPL/AGPL(readers-web GPL-3.0 14행, llms-upstage AGPL-3.0 8행, callbacks-uptrain AGPL-3.0 1행, 나머지 9개 0행), markitdown LICENSE 빈 파일 1행, openGauss Mulan PSL v2(permissive) 0행 |
+| 39 | `PrefectHQ/prefect` | `LICENSE` | Apache-2.0 | 같음 | - | 2회 | 19 | **확인 필요** | 이력: 루트 LICENSE 없음(2021-07-12 시작) → Prefect Community License 1.0(2021-10-05) → Apache-2.0(2022-03-08). 2021-10-05~2022-03-08 행 1,193, 그 전(라이선스 파일 없음) 1,303 |
+| 40 | `kivy/kivy` | `LICENSE` | MIT | 같음 | - | 14회 | 1 | permissive |  |
+| 41 | `zulip/zulip` | `LICENSE` | Apache-2.0 | 같음 | - | 8회 | 2 | **확인 필요** | 이력: Zulip Enterprise License Agreement(독점) → Apache-2.0(2015-09-25 공개). 그 전 행 217 |
+| 42 | `deepspeedai/DeepSpeed` | `LICENSE` | Apache-2.0 | 같음 | - | 4회, MIT → Apache-2.0 | 1 | permissive | 이력의 두 라이선스 모두 permissive |
+| 43 | `NVIDIA-NeMo/Speech` | `LICENSE` | Apache-2.0 | 같음 | - | 7회 | 1 | **불확실** | 이력: 2019년 LICENSE 원문이 "Please refer to per-package licenses" 한 줄 → Apache-2.0(2020-09-25). 그 전 행 5,561. 당시 하위 패키지 라이선스는 확인하지 못함 |
+| 44 | `huggingface/diffusers` | `LICENSE` | Apache-2.0 | 같음 | - | 2회 | 0 | permissive |  |
+| 45 | `langflow-ai/langflow` | `LICENSE` | MIT | 같음 | - | 3회 | 1 | permissive |  |
+| 46 | `psf/black` | `LICENSE` | MIT | 같음 | - | 1회 | 3 | permissive (목록 밖 포함) | `src/blib2to3/` PSF-2.0 53행 — permissive지만 §4.3 허용 목록(MIT/Apache/BSD) 밖 (#26) |
+| 47 | `streamlit/streamlit` | `LICENSE` | Apache-2.0 | 같음 | - | 3회, MIT → Apache-2.0 | 2 | permissive | 이력의 두 라이선스 모두 permissive |
+| 48 | `stanfordnlp/dspy` | `LICENSE` | MIT | 같음 | - | 1회 | 1 | permissive |  |
+| 49 | `huggingface/datasets` | `LICENSE` | Apache-2.0 | 같음 | - | 1회 | 0 | permissive |  |
+| 50 | `roboflow/supervision` | `LICENSE.md` | MIT | 같음 | - | 2회 | 1 | permissive |  |
+| 51 | `marimo-team/marimo` | `LICENSE` | Apache-2.0 | 같음 | - | 1회 | 0 | permissive |  |
+| 52 | `sanic-org/sanic` | `LICENSE` | MIT | 같음 | - | 3회 | 2 | permissive |  |
+| 53 | `python-poetry/poetry` | `LICENSE` | MIT | 같음 | - | 2회 | 3 | permissive |  |
+| 54 | `scrapy/scrapy` | `LICENSE` | BSD-3-Clause | 같음 | - | 3회 | 0 | permissive |  |
+| 55 | `keras-team/keras` | `LICENSE` | Apache-2.0 | 같음 | - | 11회, MIT → Apache-2.0 | 0 | permissive | 이력의 두 라이선스 모두 permissive |
+| 56 | `pallets/click` | `LICENSE.txt` | BSD-3-Clause | 같음 | - | 1회 | 1 | permissive |  |
+| 57 | `exo-explore/exo` | `LICENSE` | Apache-2.0 | 같음 | - | 4회 | 0 | **확인 필요** | 이력: GPL-3.0(2024-07-16 추가) → Apache-2.0(2025-12-18). 그 전 행 9,759 / 10,691 |
+| 58 | `celery/celery` | `LICENSE` | BSD-3-Clause (+docs CC BY-SA) | CSV와 같음 (선정 당시 GitHub `NOASSERTION`) | 경로별 (BSD-3 / docs CC BY-SA) | 18회 | 3 | permissive (#28 결정) | 루트 LICENSE에 `docs/` CC BY-SA 4.0 명시 — 32행, #28 결정대로 포함·한계 표기. `celery/utils/dispatch/` PSF 38행(permissive, 허용 목록 밖). 선정 당시 GitHub 값 NOASSERTION → CSV 는 `repo_final20.md` §3.1 수동 확인 값 BSD-3-Clause (`license_manual=true`). 2026-10-29 재확인 원문도 BSD-3-Clause |
+| 59 | `blakeblackshear/frigate` | `LICENSE` | MIT | 같음 | - | 4회 | 6 | **확인 필요** | 이력: AGPL-3.0 → MIT(2020-07-26 "switch to MIT license"). 그 전 행 256 |
+| 60 | `modelscope/FunASR` | `LICENSE` | MIT | 같음 | - | 7회 | 4 | permissive |  |
+| 61 | `deepset-ai/haystack` | `LICENSE` | Apache-2.0 | 같음 | - | 2회 | 1 | permissive |  |
+| 62 | `agno-agi/agno` | `LICENSE` | Apache-2.0 | 같음 | - | 6회 | 3 | **확인 필요** | 이력: Phidata 시절 MPL-2.0 → Apache-2.0(2025-02-10). 그 전 행 2,830 |
+| 63 | `mlc-ai/mlc-llm` | `LICENSE` | Apache-2.0 | 같음 | - | 2회 | 0 | permissive |  |
+| 64 | `HKUDS/LightRAG` | `LICENSE` | MIT | 같음 | - | 4회 | 1 | permissive |  |
+| 65 | `RasaHQ/rasa` | `LICENSE.txt` | Apache-2.0 | 같음 | - | 9회 | 0 | permissive |  |
+| 66 | `spotDL/spotify-downloader` | `LICENSE` | MIT | 같음 | - | 7회 | 0 | permissive |  |
+| 67 | `Genesis-Embodied-AI/genesis-world` | `LICENSE` | Apache-2.0 | 같음 | - | 1회 | 3 | permissive |  |
+| 68 | `kvcache-ai/ktransformers` | `LICENSE` | Apache-2.0 | 같음 | - | 3회 | 2 | permissive |  |
+| 69 | `locustio/locust` | `LICENSE` | MIT | 같음 | - | 6회 | 1 | permissive |  |
+| 70 | `spotify/luigi` | `LICENSE` | Apache-2.0 | 같음 | - | 6회 | 0 | permissive |  |
+| 71 | `arc53/DocsGPT` | `LICENSE` | MIT | 같음 | - | 1회 | 0 | permissive |  |
+| 72 | `ScrapeGraphAI/Scrapegraph-ai` | `LICENSE` | MIT | 같음 | - | 6회, Apache-2.0 → MIT | 0 | permissive | 이력의 두 라이선스 모두 permissive |
+| 73 | `sherlock-project/sherlock` | `LICENSE` | MIT | 같음 | - | 2회 | 0 | permissive |  |
+| 74 | `verl-project/verl` | `LICENSE` | Apache-2.0 | 같음 | - | 1회 | 0 | permissive |  |
+| 75 | `psf/requests` | `LICENSE` | Apache-2.0 | 같음 | - | 12회 | 2 | permissive (목록 밖 포함) | 이력: ISC(2011) → Apache-2.0(2012-11-27). ISC 시절 author_date 행 926 — ISC는 permissive지만 허용 목록 밖 (#26) |
+| 76 | `FoundationAgents/MetaGPT` | `LICENSE` | MIT | 같음 | - | 3회 | 1 | permissive |  |
+| 77 | `hpcaitech/ColossalAI` | `LICENSE` | Apache-2.0 | 같음 | - | 14회 | 3 | **확인 필요** | 하위 `examples/images/diffusion/` CreativeML Open RAIL-M(사용 제한 조항) 353행 |
+| 78 | `recommenders-team/recommenders` | `LICENSE` | MIT | 같음 | - | 3회 | 0 | permissive |  |
+| 79 | `eosphoros-ai/DB-GPT` | `LICENSE` | MIT | 같음 | - | 1회 | 1 | permissive |  |
+| 80 | `unclecode/crawl4ai` | `LICENSE` | Apache-2.0 | 같음 | - | 2회 | 0 | permissive |  |
+| 81 | `PaddlePaddle/PaddleOCR` | `LICENSE` | Apache-2.0 | 같음 | - | 3회 | 4 | permissive |  |
+| 82 | `soxoj/maigret` | `LICENSE` | MIT | 같음 | - | 3회 | 0 | permissive |  |
+| 83 | `jax-ml/jax` | `LICENSE` | Apache-2.0 | 같음 | - | 1회 | 3 | permissive | `jaxlib/tools/LICENSE.txt`는 휠 번들 서드파티 고지 — 소스 아님 |
+| 84 | `getzep/graphiti` | `LICENSE` | Apache-2.0 | 같음 | - | 1회 | 0 | permissive |  |
+| 85 | `plotly/plotly.py` | `LICENSE.txt` | MIT | 같음 | - | 6회 | 0 | permissive |  |
+| 86 | `pyscript/pyscript` | `LICENSE` | Apache-2.0 | 같음 | - | 2회 | 1 | permissive |  |
+| 87 | `microsoft/qlib` | `LICENSE` | MIT | 같음 | - | 1회 | 0 | permissive |  |
+| 88 | `browser-use/browser-use` | `LICENSE` | MIT | 같음 | - | 1회 | 0 | permissive |  |
+| 89 | `ManimCommunity/manim` | `LICENSE` | MIT | 같음 | - | 7회 | 0 | permissive |  |
+| 90 | `crewAIInc/crewAI` | `LICENSE` | MIT | 같음 | - | 2회 | 0 | permissive |  |
+| 91 | `Huanshere/VideoLingo` | `LICENSE` | Apache-2.0 | 같음 | - | 2회, MIT → Apache-2.0 | 0 | permissive | 이력의 두 라이선스 모두 permissive |
+| 92 | `Textualize/textual` | `LICENSE` | MIT | 같음 | - | 1회 | 0 | permissive |  |
+| 93 | `3b1b/manim` | `LICENSE.md` | MIT | 같음 | - | 5회 | 0 | permissive |  |
+| 94 | `tornadoweb/tornado` | `LICENSE` | Apache-2.0 | 같음 | - | 1회 | 0 | permissive |  |
+| 95 | `nginx-proxy/nginx-proxy` | `LICENSE` | MIT | 같음 | - | 2회 | 0 | permissive |  |
+| 96 | `huggingface/smolagents` | `LICENSE` | Apache-2.0 | 같음 | - | 1회 | 0 | permissive |  |
+| 97 | `encode/httpx` | `LICENSE.md` | BSD-3-Clause | 같음 | - | 2회 | 0 | permissive |  |
+| 98 | `confident-ai/deepeval` | `LICENSE.md` | Apache-2.0 | 같음 | - | 2회 | 6 | permissive |  |
+| 99 | `unslothai/unsloth` | `LICENSE` | Apache-2.0 | 같음 | 경로별 (Apache-2.0 / AGPL-3.0) | 6회 | 10 | **확인 필요** | 하위 `studio/` AGPL-3.0(2026-03 추가) 12,677행(확정 500건 중 19건 포함), `unsloth/kernels/moe/` AGPL-3.0 218행. 코어는 Apache-2.0 — 경로별 혼합 라이선스 |
+| 100 | `commaai/openpilot` | `LICENSE` | MIT | 같음 | - | 3회 | 0 | permissive |  |
 
 ## 4. 제외된 후보와 사유
 
