@@ -61,7 +61,13 @@
 나눠 돌리기:
     입력 파일 4개를 프로세스 하나씩(`--workers`)으로 돌린다. 한 저장소는 한 입력 파일에만
     있어야 하고, 파일 안에서 이어져 있어야 한다 (`assemble.py` 는 저장소 이름순으로 쓴다).
-    아니면 거부한다.
+    아니면 거부한다. 이와 따로, 내보내는 행의 `record_id` 는 입력 파일 전체에서 하나뿐이어야
+    한다 — 워커가 id 요약값(blake2b 16B)을 정렬해 넘기고 메인이 합쳐 보며, 겹치면 거부한다.
+
+LLM 표본 대상 범위:
+    LLM 표본 행은 모델만 결과에도 있어야 한다 (`classify.apply` 계약). 모델만 결과에 없는 LLM 행
+    중 v0.9 에서 NOISE_* 가 되어 내보내지 않은 행은 의도한 제외로 따로 세고, 나머지(KEPT 이거나
+    입력에 없는 행)는 누락으로 센다. 누락이 1건이라도 있으면 검증 실패다.
 
 출력 (`--out`, gitignore 된 `data/` 아래):
     <저장소>-*.parquet, <저장소>-*.jsonl.gz   저장소 100개
@@ -94,6 +100,7 @@ import argparse
 import csv
 import gzip
 import hashlib
+import heapq
 import io
 import json
 import os
@@ -137,6 +144,10 @@ SOURCE_NOT_CLASSIFIED = "NOT_CLASSIFIED"
 # 분류 대상 (`classify.sampling.is_eligible` 과 같은 범위).
 CLASSIFIED_KIND = "FULL_FUNCTION"
 KEPT = "KEPT"
+NOISE_PREFIX = "NOISE_"
+
+# 입력 파일 사이 record_id 중복 확인용 요약값 크기. 135만 건이면 워커 넷이 합쳐 약 22MB.
+ID_DIGEST_BYTES = 16
 
 DEFAULT_LICENSES = Path("docs") / "repo_final100.csv"
 DEFAULT_LICENSE_OVERRIDES = Path("docs") / "license_overrides.csv"
@@ -149,6 +160,8 @@ DEFAULT_COMMIT_DIR = Path("datasets") / DATASET_VERSION
 # JSON 을 풀지 않는다 (KEPT 가 아닌 행이 전체의 3/4 이다).
 _STATUS_RE = re.compile(rb'"filter_status": "([A-Z_]+)"')
 _REPO_RE = re.compile(rb'^\{"repo": "([^"\\]+)"')
+# NOISE 행에서 분류 결과에 있는 id 후보를 찾는다. 맞으면 그 행만 풀어 확인한다.
+_ID_RE = re.compile(rb'"id": "([^"\\]+)"')
 
 
 class ExportError(ValueError):
@@ -744,6 +757,8 @@ class InputResult:
     # 분류 결과에는 있는데 v0.9 에서 KEPT 가 아닌 행: {record_id: filter_status}
     classified_not_kept: dict[str, str] = field(default_factory=dict)
     exported_ids: int = 0
+    # 내보낸 record_id 의 요약값(`ID_DIGEST_BYTES` 씩)을 정렬해 이어 붙인 것
+    id_digests: bytes = b""
     seconds: float = 0.0
 
 
@@ -754,6 +769,10 @@ def _scan_status(line: bytes) -> tuple[str, str] | None:
     if repo is None or len(statuses) != 1:
         return None
     return repo.group(1).decode("utf-8"), statuses[0].decode("ascii")
+
+
+def _id_digest(record_id: str) -> bytes:
+    return hashlib.blake2b(record_id.encode("utf-8"), digest_size=ID_DIGEST_BYTES).digest()
 
 
 def export_input(
@@ -786,6 +805,11 @@ def export_input(
             if scanned is not None and scanned[1] not in (KEPT, "NOISE_GENERATED"):
                 repo, status = scanned
                 record = None
+                # 분류 결과에 있는 id 가 보이면 그 행만 풀어 v0.9 상태를 남긴다 (LLM 표본 범위).
+                if any(
+                    rid.decode("utf-8", "replace") in classified_ids for rid in _ID_RE.findall(raw)
+                ):
+                    record = json.loads(raw)
             else:
                 record = json.loads(raw)
                 repo, status = str(record["repo"]), str(record["filter_status"])
@@ -824,6 +848,7 @@ def export_input(
     if writer is not None:
         result.repos.append(writer.close())
     result.exported_ids = len(ids)
+    result.id_digests = b"".join(sorted(_id_digest(record_id) for record_id in ids))
     for repo_result in result.repos:
         for entry in repo_result.files:
             entry.sha256 = _sha256(out_dir / entry.name)
@@ -881,6 +906,42 @@ def write_small_file(path: Path, rows: Iterable[dict[str, Any]], fmt: str) -> in
 # --------------------------------------------------------------------------------------
 # 검증
 # --------------------------------------------------------------------------------------
+
+
+def cross_input_duplicates(results: Sequence[InputResult]) -> tuple[int, dict[bytes, list[str]]]:
+    """입력 파일들의 정렬된 id 요약값을 병합한다. `(서로 다른 id 수, {요약값: [입력 파일]})`.
+
+    한 입력 파일 안의 중복은 `export_input` 이 이미 거부하므로, 같은 요약값은 서로 다른 입력
+    파일에서 온 것이다. id 문자열을 메인에 모으지 않는다.
+    """
+
+    def digests(index: int, blob: bytes) -> Iterator[tuple[bytes, int]]:
+        for start in range(0, len(blob), ID_DIGEST_BYTES):
+            yield blob[start : start + ID_DIGEST_BYTES], index
+
+    unique = 0
+    duplicates: dict[bytes, list[str]] = {}
+    previous: bytes | None = None
+    first = 0
+    merged = heapq.merge(*(digests(i, r.id_digests) for i, r in enumerate(results)))
+    for digest, index in merged:
+        if digest == previous:
+            duplicates.setdefault(digest, [results[first].path]).append(results[index].path)
+            continue
+        unique += 1
+        previous, first = digest, index
+    return unique, duplicates
+
+
+def _ids_with_digests(out_dir: Path, entries: Sequence[FileEntry], wanted: set[bytes]) -> list[str]:
+    """쓴 Parquet 의 id 를 다시 읽어 요약값이 `wanted` 인 id 를 찾는다 (거부 메시지용)."""
+    found: set[str] = set()
+    for entry in entries:
+        if entry.format != "parquet":
+            continue
+        ids = pq.read_table(out_dir / entry.name, columns=["id"]).column("id").to_pylist()
+        found.update(record_id for record_id in ids if _id_digest(record_id) in wanted)
+    return sorted(found)
 
 
 def verify_files(out_dir: Path, entries: Sequence[FileEntry]) -> dict[str, Any]:
@@ -1080,6 +1141,16 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             repo_results[repo_result.repo] = repo_result
     entries = [entry for repo in sorted(repo_results) for entry in repo_results[repo].files]
 
+    # 저장소 중복(위)과 따로, 내보낸 record_id 가 입력 파일 전체에서 하나뿐인지 본다.
+    unique_ids, cross_duplicates = cross_input_duplicates(results)
+    if cross_duplicates:
+        duplicate_ids = _ids_with_digests(out_dir, entries, set(cross_duplicates))
+        inputs = sorted({path for paths in cross_duplicates.values() for path in paths})
+        raise ExportError(
+            f"서로 다른 입력 파일에 같은 record_id 가 {len(cross_duplicates)}개: "
+            f"{duplicate_ids[:5]} ({inputs})"
+        )
+
     # 확정 500건 - Release 용 두 형식 + Git 용 jsonl. labeled_500 순서대로.
     order = {record_id: index for index, record_id in enumerate(human)}
     human_rows = sorted(
@@ -1098,6 +1169,14 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     not_kept: dict[str, str] = {}
     for result in results:
         not_kept.update(result.classified_not_kept)
+    # 모델만 결과에 없는 LLM 행: v0.9 에서 NOISE_* 라 내보내지 않은 행은 의도한 제외,
+    # 나머지(KEPT 이거나 입력에 없음)는 대상 범위 누락이다.
+    llm_noise_excluded = Counter(
+        not_kept[rid] for rid in llm_not_in_model if not_kept.get(rid, "").startswith(NOISE_PREFIX)
+    )
+    llm_coverage_missing = [
+        rid for rid in llm_not_in_model if not not_kept.get(rid, "").startswith(NOISE_PREFIX)
+    ]
     unmatched_model = set(model_only) - matched_model
     unmatched_llm = set(llm) - matched_llm
     eligible = sum(r.by_kind[CLASSIFIED_KIND] for r in repo_results.values())
@@ -1132,7 +1211,8 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "repos_unexpected": sorted(set(repo_results) - set(expected_repos)),
         "training_repos_count": len(training_repos),
         "training_repos_missing_from_export": sorted(set(training_repos) - set(repo_results)),
-        "duplicate_record_ids": exported_total - sum(r.exported_ids for r in results),
+        # 입력 파일 전체 기준 (파일 사이 중복은 위에서 거부한다)
+        "duplicate_record_ids": exported_total - unique_ids,
         "join": {
             "classifier_target_rows": eligible,
             "classifier_target_joined": eligible_joined,
@@ -1150,6 +1230,9 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
                 Counter(not_kept.get(rid, "ABSENT_OR_OTHER") for rid in unmatched_llm)
             ),
             "llm_not_in_model_only": len(llm_not_in_model),
+            "llm_not_in_model_only_intentional_noise": dict(llm_noise_excluded),
+            "llm_not_in_model_only_missing": len(llm_coverage_missing),
+            "llm_not_in_model_only_missing_ids": llm_coverage_missing[:20],
             "duplicate_record_ids_in_classified": 0,  # load_classified 가 거부한다
         },
         "human": human_check,
@@ -1185,6 +1268,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         and file_check["new_repo_model_only"] == 0
         and checks["duplicate_record_ids"] == 0
         and not_classified_full == 0
+        and not llm_coverage_missing
         and not human_check["missing"]
         and not human_check["changed"]
         and not file_check["problems"]

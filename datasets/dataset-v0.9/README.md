@@ -85,7 +85,7 @@ vllm-project/vllm
   - `LINK_ONLY` — 저장소 루트 라이선스가 permissive 가 아니거나, 그 행이 `docs/license_overrides.csv` 규칙(하위 경로 또는 `author_date` 기준)에 걸린다. `deleted_body`·`function_signature`·`replacement.code`·`reason.evidence_text` 를 null 로 두고 `source_url`·경로·함수 이름·맥락 같은 메타데이터만 남긴다
   - **dataset-v0.9 의 행 단위 값: `CODE_INCLUDED` 1,319,661행 / `LINK_ONLY` 34,391행** (합계 1,354,052행). `LINK_ONLY` 는 전부 `docs/license_overrides.csv` 규칙으로 적용된 행이다 (아래)
 - **저장소 단위 — `repos.csv` 의 `code_policy` 열.** 저장소 루트 라이선스만 보고 정한 값이다. 루트 라이선스는 100개 모두 permissive 라 이 열은 100개 모두 `CODE_INCLUDED` 다. **이 값은 그 저장소의 모든 행에 코드가 들어 있다는 뜻이 아니다** — 행마다의 값은 레코드의 `code_policy` 를 본다
-- 라이선스 값은 `docs/repo_final100.csv` 의 `license` 열이다. 2026-10-29 에 100개의 라이선스 원문·하위 라이선스 파일·라이선스 파일 이력을 다시 봤다 (`docs/repo_final100.md` §3.1). 루트 라이선스는 100개 모두 CSV 값과 같고 permissive 이며, 루트 이중 라이선스는 없다. 다만 행 단위로는 아래 34,391행이 `LINK_ONLY` 다
+- 라이선스 값은 `docs/repo_final100.csv` 의 `license` 열이다. 2026-10-29 에 100개 전부의 현재 루트 라이선스 원문, 현재 기본 브랜치 트리에 있는 하위 라이선스 파일, 현재 루트 라이선스 파일 경로의 변경 이력(과 그 경로의 가장 오래된 판)을 다시 봤다 (`docs/repo_final100.md` §3.1). 과거에 다른 이름·경로였다가 바뀌었거나 지워진 라이선스 파일의 이력, 지금은 지워진 하위 디렉터리의 라이선스 파일, 소스 파일마다의 라이선스 헤더는 보지 않았다. 현재 루트 라이선스 원문은 100개 모두 CSV 값과 같고 permissive 이며, 루트 이중 라이선스는 없다. 다만 행 단위로는 아래 34,391행이 `LINK_ONLY` 다
 
 ### 라이선스 때문에 링크만 내는 행 — 34,391행
 

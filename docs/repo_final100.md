@@ -23,7 +23,7 @@ ADR-020(저장소 목표 500 → 100)의 100개 목록 초안이다. 확정 20�
 ## 0. 요약
 
 - **100개 = 기존 20 + 신규 80.** 신규 80은 PR 게이트를 통과한 후보에서 선례·팀 결정에 따른 수동 제외(§1.4, 30개)를 한 뒤의 `score_v2` 상위 80개다. 게이트 통과 후보 전체의 상위 80개가 아니다 — 수동 제외 30개 중 26개는 점수로는 80개 안이었다
-- 라이선스: Apache-2.0 51 / MIT 39 / BSD-3-Clause 9 / BSD-2-Clause 1. 2026-10-29 에 100개 전부의 라이선스 원문·하위 라이선스·이력을 확인했다 — 저장소 루트는 100개 모두 permissive 이고, 행 단위로 34,391건을 `LINK_ONLY` 로 낸다 (§3.1)
+- 라이선스: Apache-2.0 51 / MIT 39 / BSD-3-Clause 9 / BSD-2-Clause 1. 2026-10-29 에 100개 전부의 현재 루트 라이선스 원문, 현재 기본 브랜치 트리의 하위 라이선스 파일, 현재 루트 라이선스 파일 경로의 변경 이력을 확인했다 (과거에 다른 이름·경로였던 라이선스 파일의 이력, 지금은 지워진 하위 라이선스, 파일별 라이선스 헤더는 범위 밖 — §3.1). 저장소 루트는 100개 모두 permissive 이고, 행 단위로 34,391건을 `LINK_ONLY` 로 낸다 (§3.1). `celery/celery` 만 선정 당시 GitHub 값이 `NOASSERTION` 이라 CSV 에 수동 확인 값 BSD-3-Clause 를 넣었고, 2026-10-29 원문 재확인 결과도 BSD-3-Clause 였다 (§3)
 - `recent_only`(최초 커밋 2015년 이전, 채굴 구간을 2015년부터로 좁힘) 19개, 2015년 이후 시작 81개, 그중 2020년 이후 시작 52개
 - 신규 80개의 예상 규모 (**어림**, §5): 클론 합계 약 34.5GB, 순회 커밋 약 608,203개, 추출 시간 32시간~111시간 (노트북 1대 직렬 환산, 중간값 63시간)
 - 신규 80개의 맥락 결합 API 호출 (**어림**, §6): 46,268~182,183회, 중간값 108,443회. 토큰 하나(5,000회/시간)로 21.7시간, 셋으로 나누면 한 사람당 7.2시간 안팎이다
@@ -230,17 +230,17 @@ python -m tools.repo_scale --input docs/repo_final100.csv --out docs/repo_final1
 ## 3. 라이선스 확인 방법
 
 - **자동 (99개).** GitHub REST `GET /repos/{owner}/{name}`의 `license.spdx_id`를 읽어 `select_repos.PERMISSIVE_SPDX`(MIT, MIT-0, Apache-2.0, BSD-2-Clause, BSD-3-Clause, BSD-3-Clause-Clear, BSD-4-Clause, 0BSD)에 있을 때만 통과시켰다. GitHub의 라이선스 탐지기(licensee)가 저장소 루트의 라이선스 파일을 보고 낸 값이다. CSV `license` 열이 이 값이다
-- **수동 (1개).** `celery/celery`는 GitHub가 `NOASSERTION`을 준다. `repo_final20.md` §3.1에서 사람이 `LICENSE`를 읽어 BSD-3-Clause로 확인한 값을 `--license-override`로 넣었다 (CSV `license_manual=true`). 선정 시점에 수동으로 넣은 값은 이 하나다. 이후 2026-10-29 에 100개 전부를 원문으로 다시 확인했다 (§3.1)
+- **수동 (1개).** `celery/celery`는 저장소 선정 당시 GitHub `license.spdx_id`가 `NOASSERTION`이었다. 그래서 `repo_final20.md` §3.1에서 사람이 `LICENSE`를 읽어 BSD-3-Clause로 확인한 값을 `--license-override`로 CSV에 덮어썼다 (CSV `license_manual=true`). 선정 시점에 수동으로 넣은 값은 이 하나다. 2026-10-29 #83 재확인에서는 현재 `LICENSE` 원문을 다시 읽어 BSD-3-Clause임을 확인했다 (§3.1). 그래서 지금 CSV 값과 원문 판정은 일치하지만, GitHub 값과 CSV 값이 원래부터 같았던 것은 아니다 — CSV 값은 수동 override 다
 - **선정 방법의 한계와 그 뒤 확인.**
-  - 위 자동 판정은 GitHub 탐지기 값만 본다. 그래서 2026-10-29(#83, #26~#28)에 100개 전부의 루트 라이선스 원문·하위 라이선스 파일·라이선스 파일 이력을 모아 1차 판정을 하고, 필요한 항목은 원문을 수동 검토했다 (§3.1). 루트 라이선스는 100개 모두 CSV 값과 같았다
-  - 하위 디렉터리나 이력상 다른 라이선스가 섞인 경우(celery `docs/`의 CC BY-SA처럼)는 위 자동 판정으로는 보이지 않는다. §3.1 확인에서 찾았고, 그 결과로 34,391건을 `LINK_ONLY` 로 낸다
+  - 위 자동 판정은 GitHub 탐지기 값만 본다. 그래서 2026-10-29(#83, #26~#28)에 100개 전부의 현재 루트 라이선스 원문, 현재 기본 브랜치 트리의 하위 라이선스 파일, 현재 루트 라이선스 파일 경로의 변경 이력을 모아 1차 판정을 하고, 필요한 항목은 원문을 수동 검토했다 (§3.1, 확인 범위와 그 밖은 §3.1 "확인하지 못한 것"). 현재 루트 라이선스 원문은 100개 모두 CSV 값과 같았다 (celery 의 CSV 값은 위 수동 override 값이다)
+  - 하위 디렉터리나 이력상 다른 라이선스가 섞인 경우(celery `docs/`의 CC BY-SA처럼)는 위 자동 판정으로는 보이지 않는다. §3.1 확인 범위 안에서 찾았고, 그 결과로 34,391건을 `LINK_ONLY` 로 낸다
   - `NOASSERTION` 72개와 라이선스 정보가 없는 31개는 그대로 제외했다. celery처럼 사람이 확인하면 되살아날 저장소가 있을 수 있다 (§4.1)
 
 ### 3.1 라이선스 원문 확인 (2026-10-29, #83)
 
-데이터셋 내보내기 전에 100개 전부의 라이선스 원문·하위 라이선스 파일·라이선스 파일 이력을 다시 봤다. **결론: 루트 라이선스는 100개 모두 CSV·GitHub 값과 같고 permissive다 (Apache-2.0 51 / MIT 39 / BSD-3-Clause 9 / BSD-2-Clause 1, 루트 이중 라이선스 0). 저장소 단위로 permissive 여부가 바뀐 곳은 없다.** 다만 저장소 9개는 내보낸 행 일부가 **이력상 다른 라이선스였던 시기**나 **다른 라이선스의 하위 경로**에서 나왔다 — 아래 "확인 필요"·"불확실". **조장 결정(2026-10-29): 이 행 34,391건은 ADR-011 대로 전부 `LINK_ONLY` 로 낸다.** 불확실(NeMo)도 보수적으로 같게 하고, celery `docs/` 같은 예외 포함은 하지 않는다. 행은 빼지 않고(통계·평가 집합 유지) 코드 칸만 비운다. 규칙은 `docs/license_overrides.csv`, 적용은 `pipeline/export.py` 다.
+데이터셋 내보내기 전에 100개 전부에 대해 세 가지를 다시 봤다 — ① 현재 루트의 LICENSE·COPYING·NOTICE 류 원문, ② 현재 기본 브랜치 트리에 있는 하위 LICENSE·COPYING·NOTICE·COPYRIGHT 류 파일, ③ 현재 루트 라이선스 파일 경로의 변경 이력과 그 경로의 가장 오래된 판. 과거에 다른 이름·경로였다가 바뀌었거나 지워진 라이선스 파일의 이력, 지금은 지워진 하위 디렉터리의 라이선스 파일, 소스 파일마다의 라이선스 헤더는 보지 않았다 (아래 "확인하지 못한 것"). **결론: 현재 루트 라이선스 원문은 100개 모두 CSV 값과 같고 permissive다 (Apache-2.0 51 / MIT 39 / BSD-3-Clause 9 / BSD-2-Clause 1, 루트 이중 라이선스 0). 99개의 CSV 값은 선정 당시 GitHub 값이고, `celery/celery` 는 선정 당시 GitHub 값이 `NOASSERTION` 이라 CSV 에 넣은 수동 확인 값(BSD-3-Clause, §3)이 이번 원문 판정과 일치했다. 저장소 단위로 permissive 여부가 바뀐 곳은 없다.** 다만 저장소 9개는 내보낸 행 일부가 **(현재 루트 라이선스 파일 경로의) 이력상 다른 라이선스였던 시기**나 **다른 라이선스의 하위 경로**에서 나왔다 — 아래 "확인 필요"·"불확실". **조장 결정(2026-10-29): 이 행 34,391건은 ADR-011 대로 전부 `LINK_ONLY` 로 낸다.** 불확실(NeMo)도 보수적으로 같게 하고, celery `docs/` 같은 예외 포함은 하지 않는다. 행은 빼지 않고(통계·평가 집합 유지) 코드 칸만 비운다. 규칙은 `docs/license_overrides.csv`, 적용은 `pipeline/export.py` 다.
 
-**확인 방법.** 저장소마다 GitHub API로 모았다 — 루트 라이선스 파일 원문(`GET /repos/{repo}/license`), 루트의 LICENSE·COPYING·NOTICE 류 파일, 기본 브랜치 전체 트리에서 이름이 LICENSE·LICENCE·COPYING·NOTICE·COPYRIGHT 로 시작하는 하위 파일(1,087개, 원문까지), 루트 라이선스 파일을 바꾼 커밋 목록과 가장 오래된 판의 원문. 원문 문구(예: "Permission is hereby granted", "Apache License Version 2.0", "GNU AFFERO")로 종류를 가렸고, 종류가 바뀌었거나 permissive 가 아닌 문구·알 수 없는 파일은 원문을 읽어 판정했다. 자동 수집과 1차 판정 뒤, "확인 필요"·"불확실" 항목은 원문을 다시 읽어 수동 검토했고, 그 결과에 따른 조장 결정(34,391건 `LINK_ONLY`)을 내보내기에 반영했다. "내보낸 행 영향" 은 dataset-v0.9 출력(`data/export/dataset-v0.9/`)에서 경로 접두사 또는 `author_date` 로 센 값이다.
+**확인 방법.** 저장소마다 GitHub API로 모았다 — 현재 루트 라이선스 파일 원문(`GET /repos/{repo}/license`), 현재 루트의 LICENSE·COPYING·NOTICE 류 파일, 현재 기본 브랜치 전체 트리에서 이름이 LICENSE·LICENCE·COPYING·NOTICE·COPYRIGHT 로 시작하는 하위 파일(1,087개, 원문까지), 현재 루트 라이선스 파일 경로를 바꾼 커밋 목록과 그 경로의 가장 오래된 판의 원문. 원문 문구(예: "Permission is hereby granted", "Apache License Version 2.0", "GNU AFFERO")로 종류를 가렸고, 종류가 바뀌었거나 permissive 가 아닌 문구·알 수 없는 파일은 원문을 읽어 판정했다. 자동 수집과 1차 판정 뒤, "확인 필요"·"불확실" 항목은 원문을 다시 읽어 수동 검토했고, 그 결과에 따른 조장 결정(34,391건 `LINK_ONLY`)을 내보내기에 반영했다. "내보낸 행 영향" 은 dataset-v0.9 출력(`data/export/dataset-v0.9/`)에서 경로 접두사 또는 `author_date` 로 센 값이다.
 
 판정:
 - **permissive** — 루트 원문이 permissive 이고, 내보낸 행에 다른 라이선스 코드가 섞인 근거가 없다. 이력에서 MIT ↔ Apache-2.0 처럼 permissive 끼리 바뀐 경우도 여기다
@@ -277,12 +277,12 @@ python -m tools.repo_scale --input docs/repo_final100.csv --out docs/repo_final1
 - 소스가 아닌 고지: `scikit-learn` `build_tools/wheels/LICENSE_*.txt`, `jax` `jaxlib/tools/LICENSE.txt` (휠에 묶는 바이너리의 서드파티 고지)
 
 **확인하지 못한 것.**
-- 이력은 **현재 루트 라이선스 파일 경로** 의 커밋만 봤다. 파일 이름이 바뀐 적이 있으면(예: `LICENSE.txt` → `LICENSE`) 그 전 이력은 보이지 않는다. prefect·NeMo 의 이른 시기가 그런 경우일 수 있다
+- 이력은 **현재 루트 라이선스 파일 경로** 의 커밋만 봤다. 파일 이름·경로가 바뀐 적이 있으면(예: `LICENSE.txt` → `LICENSE`) 그 전 이력은 보이지 않고, 과거에 있다가 지워진 다른 이름의 라이선스 파일도 보지 않았다. prefect·NeMo 의 이른 시기가 그런 경우일 수 있다
 - 하위 라이선스 파일은 **현재 기본 브랜치 트리** 에서만 찾았다. 지금은 지워진 하위 디렉터리의 라이선스(예: 예전 벤더링 디렉터리)는 보지 않았다
 - 파일 머리의 라이선스 주석(SPDX 헤더 등)은 보지 않았다. 파일 단위 예외는 이 표에 없다
 - 트리 응답이 잘린(`truncated`) 저장소는 없었다
 
-| # | 저장소 | 라이선스 파일 | 원문 | CSV·GitHub와 | 이중 | 이력 (파일 변경 커밋) | 하위 라이선스 파일 | 판정 | 근거·내보낸 행 영향 |
+| # | 저장소 | 라이선스 파일 | 원문 | CSV·GitHub와 | 이중 | 이력 (현재 루트 파일 경로 변경 커밋) | 하위 라이선스 파일 | 판정 | 근거·내보낸 행 영향 |
 |---:|---|---|---|---|:---:|---|---:|---|---|
 | 1 | `sgl-project/sglang` | `LICENSE` | Apache-2.0 | 같음 | - | 2회 | 5 | permissive |  |
 | 2 | `netbox-community/netbox` | `LICENSE.txt` | Apache-2.0 | 같음 | - | 1회 | 0 | permissive |  |
@@ -341,7 +341,7 @@ python -m tools.repo_scale --input docs/repo_final100.csv --out docs/repo_final1
 | 55 | `keras-team/keras` | `LICENSE` | Apache-2.0 | 같음 | - | 11회, MIT → Apache-2.0 | 0 | permissive | 이력의 두 라이선스 모두 permissive |
 | 56 | `pallets/click` | `LICENSE.txt` | BSD-3-Clause | 같음 | - | 1회 | 1 | permissive |  |
 | 57 | `exo-explore/exo` | `LICENSE` | Apache-2.0 | 같음 | - | 4회 | 0 | **확인 필요** | 이력: GPL-3.0(2024-07-16 추가) → Apache-2.0(2025-12-18). 그 전 행 9,759 / 10,691 |
-| 58 | `celery/celery` | `LICENSE` | BSD-3-Clause (+docs CC BY-SA) | 같음 | 경로별 (BSD-3 / docs CC BY-SA) | 18회 | 3 | permissive (#28 결정) | 루트 LICENSE에 `docs/` CC BY-SA 4.0 명시 — 32행, #28 결정대로 포함·한계 표기. `celery/utils/dispatch/` PSF 38행(permissive, 허용 목록 밖). GitHub 값 NOASSERTION, 원문 BSD-3-Clause (기존 수동 확인과 같다) |
+| 58 | `celery/celery` | `LICENSE` | BSD-3-Clause (+docs CC BY-SA) | CSV와 같음 (선정 당시 GitHub `NOASSERTION`) | 경로별 (BSD-3 / docs CC BY-SA) | 18회 | 3 | permissive (#28 결정) | 루트 LICENSE에 `docs/` CC BY-SA 4.0 명시 — 32행, #28 결정대로 포함·한계 표기. `celery/utils/dispatch/` PSF 38행(permissive, 허용 목록 밖). 선정 당시 GitHub 값 NOASSERTION → CSV 는 `repo_final20.md` §3.1 수동 확인 값 BSD-3-Clause (`license_manual=true`). 2026-10-29 재확인 원문도 BSD-3-Clause |
 | 59 | `blakeblackshear/frigate` | `LICENSE` | MIT | 같음 | - | 4회 | 6 | **확인 필요** | 이력: AGPL-3.0 → MIT(2020-07-26 "switch to MIT license"). 그 전 행 256 |
 | 60 | `modelscope/FunASR` | `LICENSE` | MIT | 같음 | - | 7회 | 4 | permissive |  |
 | 61 | `deepset-ai/haystack` | `LICENSE` | Apache-2.0 | 같음 | - | 2회 | 1 | permissive |  |

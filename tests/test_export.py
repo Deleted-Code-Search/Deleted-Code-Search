@@ -266,6 +266,8 @@ def test_end_to_end(env):
     join = manifest["checks"]["join"]
     assert join["classifier_target_missing"] == 0
     assert join["model_only_unmatched_by_v09_status"] == {"NOISE_GENERATED": 1}
+    assert join["llm_not_in_model_only_missing"] == 0
+    assert manifest["checks"]["duplicate_record_ids"] == 0
     assert manifest["checks"]["human"]["missing"] == []
     assert manifest["checks"]["human"]["changed"] == []
     assert manifest["checks"]["human"]["link_only"] == ["h1"]
@@ -359,6 +361,69 @@ def test_rejects_repo_in_two_inputs(env, tmp_path):
     write_jsonl(tmp_path / "a.jsonl", [record(OLD, "h1"), record(NEW, "u9")])
     with pytest.raises(ExportError, match="두 곳"):
         run(build_parser().parse_args(argv))
+
+
+def test_rejects_duplicate_record_id_across_inputs(env, tmp_path):
+    # 저장소는 겹치지 않고(acme/old 는 a, acme/gpl 은 b) id 만 두 입력 파일에 걸쳐 겹친다.
+    _, argv = env
+    write_jsonl(tmp_path / "a.jsonl", [record(OLD, "h1"), record(OLD, "dup")])
+    write_jsonl(tmp_path / "b.jsonl", [record(NEW, "u1"), record(GPL, "dup")])
+    with pytest.raises(ExportError, match="서로 다른 입력 파일에 같은 record_id .*'dup'"):
+        run(build_parser().parse_args(argv))
+
+
+def test_cross_input_duplicates_counts_unique_ids():
+    first = export.InputResult("a")
+    second = export.InputResult("b")
+    first.id_digests = b"".join(sorted(export._id_digest(i) for i in ("x", "y")))
+    second.id_digests = b"".join(sorted(export._id_digest(i) for i in ("y", "z")))
+    unique, duplicates = export.cross_input_duplicates([first, second])
+    assert unique == 3
+    assert duplicates == {export._id_digest("y"): ["a", "b"]}
+    assert export.cross_input_duplicates([first]) == (2, {})
+
+
+def _rewrite_b_with_kept_k9(tmp_path):
+    write_jsonl(
+        tmp_path / "b.jsonl",
+        [
+            record(NEW, "u1"),
+            record(NEW, "l1"),
+            record(NEW, "k9"),  # KEPT 인데 모델만 결과에 없다
+            record(NEW, "g1", status="NOISE_GENERATED"),
+            record(NEW, "n2", status="NOISE_MOVE"),
+            record(GPL, "x1"),
+        ],
+    )
+
+
+def test_llm_row_missing_from_model_only_fails_unless_noise(env, tmp_path):
+    _, argv = env
+    _rewrite_b_with_kept_k9(tmp_path)
+    with (tmp_path / "llm.jsonl").open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(classified("k9", NEW, version="r1+m2+c3+llm:x")) + "\n")
+        handle.write(json.dumps(classified("zz", NEW, version="r1+m2+c3+llm:x")) + "\n")
+    manifest = run(build_parser().parse_args(argv))
+    assert not manifest["ok"]
+    join = manifest["checks"]["join"]
+    assert join["llm_not_in_model_only"] == 2
+    assert join["llm_not_in_model_only_intentional_noise"] == {}
+    assert join["llm_not_in_model_only_missing"] == 2
+    assert join["llm_not_in_model_only_missing_ids"] == ["k9", "zz"]
+
+
+def test_llm_row_missing_from_model_only_is_ok_when_noise(env, tmp_path):
+    # n2 는 v0.9 NOISE_MOVE (JSON 을 풀지 않는 빠른 경로) - 의도한 제외라 실패가 아니다.
+    _, argv = env
+    with (tmp_path / "llm.jsonl").open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(classified("n2", NEW, version="r1+m2+c3+llm:x")) + "\n")
+    manifest = run(build_parser().parse_args(argv))
+    assert manifest["ok"], manifest["checks"]
+    join = manifest["checks"]["join"]
+    assert join["llm_not_in_model_only"] == 1
+    assert join["llm_not_in_model_only_intentional_noise"] == {"NOISE_MOVE": 1}
+    assert join["llm_not_in_model_only_missing"] == 0
+    assert join["llm_unmatched_by_v09_status"] == {"NOISE_MOVE": 1}
 
 
 def test_rejects_duplicate_classified_id(env, tmp_path):
