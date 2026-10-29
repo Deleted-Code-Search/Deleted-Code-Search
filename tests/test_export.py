@@ -369,6 +369,14 @@ def test_rejects_duplicate_classified_id(env, tmp_path):
         run(build_parser().parse_args(argv))
 
 
+def test_main_rejects_missing_training_records(env, tmp_path, capsys):
+    _, argv = env
+    (tmp_path / "training.jsonl").unlink()
+    assert export.main(argv) == 2
+    assert "training.jsonl" in capsys.readouterr().err
+    assert not (tmp_path / "out").exists()
+
+
 def test_refuses_non_empty_output_without_force(env, tmp_path):
     _, argv = env
     (tmp_path / "out").mkdir()

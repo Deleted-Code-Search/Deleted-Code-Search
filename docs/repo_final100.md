@@ -23,7 +23,7 @@ ADR-020(저장소 목표 500 → 100)의 100개 목록 초안이다. 확정 20�
 ## 0. 요약
 
 - **100개 = 기존 20 + 신규 80.** 신규 80은 PR 게이트를 통과한 후보에서 선례·팀 결정에 따른 수동 제외(§1.4, 30개)를 한 뒤의 `score_v2` 상위 80개다. 게이트 통과 후보 전체의 상위 80개가 아니다 — 수동 제외 30개 중 26개는 점수로는 80개 안이었다
-- 라이선스: Apache-2.0 51 / MIT 39 / BSD-3-Clause 9 / BSD-2-Clause 1. 수동 확인은 celery 하나뿐이다 (기존 그대로)
+- 라이선스: Apache-2.0 51 / MIT 39 / BSD-3-Clause 9 / BSD-2-Clause 1. 2026-10-29 에 100개 전부의 라이선스 원문·하위 라이선스·이력을 확인했다 — 저장소 루트는 100개 모두 permissive 이고, 행 단위로 34,391건을 `LINK_ONLY` 로 낸다 (§3.1)
 - `recent_only`(최초 커밋 2015년 이전, 채굴 구간을 2015년부터로 좁힘) 19개, 2015년 이후 시작 81개, 그중 2020년 이후 시작 52개
 - 신규 80개의 예상 규모 (**어림**, §5): 클론 합계 약 34.5GB, 순회 커밋 약 608,203개, 추출 시간 32시간~111시간 (노트북 1대 직렬 환산, 중간값 63시간)
 - 신규 80개의 맥락 결합 API 호출 (**어림**, §6): 46,268~182,183회, 중간값 108,443회. 토큰 하나(5,000회/시간)로 21.7시간, 셋으로 나누면 한 사람당 7.2시간 안팎이다
@@ -230,17 +230,17 @@ python -m tools.repo_scale --input docs/repo_final100.csv --out docs/repo_final1
 ## 3. 라이선스 확인 방법
 
 - **자동 (99개).** GitHub REST `GET /repos/{owner}/{name}`의 `license.spdx_id`를 읽어 `select_repos.PERMISSIVE_SPDX`(MIT, MIT-0, Apache-2.0, BSD-2-Clause, BSD-3-Clause, BSD-3-Clause-Clear, BSD-4-Clause, 0BSD)에 있을 때만 통과시켰다. GitHub의 라이선스 탐지기(licensee)가 저장소 루트의 라이선스 파일을 보고 낸 값이다. CSV `license` 열이 이 값이다
-- **수동 (1개).** `celery/celery`는 GitHub가 `NOASSERTION`을 준다. `repo_final20.md` §3.1에서 사람이 `LICENSE`를 읽어 BSD-3-Clause로 확인한 값을 `--license-override`로 넣었다 (CSV `license_manual=true`). 이번에 새로 수동 확인한 저장소는 없다
-- **확인하지 않은 것.**
-  - 자동 99개의 `LICENSE` 파일을 사람이 읽지 않았다. 탐지기가 맞다고 가정했다. 데이터셋 내보내기(#83) 전에 100개 전부 한 번은 사람이 봐야 한다 (#26~#28) → **2026-10-29 확인, §3.1**
-  - 하위 디렉터리에 다른 라이선스가 섞인 경우(celery `docs/`의 CC BY-SA처럼)는 이 방법으로 보이지 않는다 → **2026-10-29 확인, §3.1**
+- **수동 (1개).** `celery/celery`는 GitHub가 `NOASSERTION`을 준다. `repo_final20.md` §3.1에서 사람이 `LICENSE`를 읽어 BSD-3-Clause로 확인한 값을 `--license-override`로 넣었다 (CSV `license_manual=true`). 선정 시점에 수동으로 넣은 값은 이 하나다. 이후 2026-10-29 에 100개 전부를 원문으로 다시 확인했다 (§3.1)
+- **선정 방법의 한계와 그 뒤 확인.**
+  - 위 자동 판정은 GitHub 탐지기 값만 본다. 그래서 2026-10-29(#83, #26~#28)에 100개 전부의 루트 라이선스 원문·하위 라이선스 파일·라이선스 파일 이력을 모아 1차 판정을 하고, 필요한 항목은 원문을 수동 검토했다 (§3.1). 루트 라이선스는 100개 모두 CSV 값과 같았다
+  - 하위 디렉터리나 이력상 다른 라이선스가 섞인 경우(celery `docs/`의 CC BY-SA처럼)는 위 자동 판정으로는 보이지 않는다. §3.1 확인에서 찾았고, 그 결과로 34,391건을 `LINK_ONLY` 로 낸다
   - `NOASSERTION` 72개와 라이선스 정보가 없는 31개는 그대로 제외했다. celery처럼 사람이 확인하면 되살아날 저장소가 있을 수 있다 (§4.1)
 
 ### 3.1 라이선스 원문 확인 (2026-10-29, #83)
 
 데이터셋 내보내기 전에 100개 전부의 라이선스 원문·하위 라이선스 파일·라이선스 파일 이력을 다시 봤다. **결론: 루트 라이선스는 100개 모두 CSV·GitHub 값과 같고 permissive다 (Apache-2.0 51 / MIT 39 / BSD-3-Clause 9 / BSD-2-Clause 1, 루트 이중 라이선스 0). 저장소 단위로 permissive 여부가 바뀐 곳은 없다.** 다만 저장소 9개는 내보낸 행 일부가 **이력상 다른 라이선스였던 시기**나 **다른 라이선스의 하위 경로**에서 나왔다 — 아래 "확인 필요"·"불확실". **조장 결정(2026-10-29): 이 행 34,391건은 ADR-011 대로 전부 `LINK_ONLY` 로 낸다.** 불확실(NeMo)도 보수적으로 같게 하고, celery `docs/` 같은 예외 포함은 하지 않는다. 행은 빼지 않고(통계·평가 집합 유지) 코드 칸만 비운다. 규칙은 `docs/license_overrides.csv`, 적용은 `pipeline/export.py` 다.
 
-**확인 방법.** 저장소마다 GitHub API로 모았다 — 루트 라이선스 파일 원문(`GET /repos/{repo}/license`), 루트의 LICENSE·COPYING·NOTICE 류 파일, 기본 브랜치 전체 트리에서 이름이 LICENSE·LICENCE·COPYING·NOTICE·COPYRIGHT 로 시작하는 하위 파일(1,087개, 원문까지), 루트 라이선스 파일을 바꾼 커밋 목록과 가장 오래된 판의 원문. 원문 문구(예: "Permission is hereby granted", "Apache License Version 2.0", "GNU AFFERO")로 종류를 가렸고, 종류가 바뀌었거나 permissive 가 아닌 문구·알 수 없는 파일은 원문을 읽어 판정했다. 자동 수집과 1차 판정을 했고, "확인 필요"·"불확실" 항목은 원문을 다시 읽는 수동 검토 대상으로 남겼다. "내보낸 행 영향" 은 dataset-v0.9 출력(`data/export/dataset-v0.9/`)에서 경로 접두사 또는 `author_date` 로 센 값이다.
+**확인 방법.** 저장소마다 GitHub API로 모았다 — 루트 라이선스 파일 원문(`GET /repos/{repo}/license`), 루트의 LICENSE·COPYING·NOTICE 류 파일, 기본 브랜치 전체 트리에서 이름이 LICENSE·LICENCE·COPYING·NOTICE·COPYRIGHT 로 시작하는 하위 파일(1,087개, 원문까지), 루트 라이선스 파일을 바꾼 커밋 목록과 가장 오래된 판의 원문. 원문 문구(예: "Permission is hereby granted", "Apache License Version 2.0", "GNU AFFERO")로 종류를 가렸고, 종류가 바뀌었거나 permissive 가 아닌 문구·알 수 없는 파일은 원문을 읽어 판정했다. 자동 수집과 1차 판정 뒤, "확인 필요"·"불확실" 항목은 원문을 다시 읽어 수동 검토했고, 그 결과에 따른 조장 결정(34,391건 `LINK_ONLY`)을 내보내기에 반영했다. "내보낸 행 영향" 은 dataset-v0.9 출력(`data/export/dataset-v0.9/`)에서 경로 접두사 또는 `author_date` 로 센 값이다.
 
 판정:
 - **permissive** — 루트 원문이 permissive 이고, 내보낸 행에 다른 라이선스 코드가 섞인 근거가 없다. 이력에서 MIT ↔ Apache-2.0 처럼 permissive 끼리 바뀐 경우도 여기다

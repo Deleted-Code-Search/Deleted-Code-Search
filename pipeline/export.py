@@ -1333,6 +1333,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             *args.llm_sample,
             args.labels,
             args.licenses,
+            args.training_records,
             args.license_overrides,
         ]
         if not p.is_file()

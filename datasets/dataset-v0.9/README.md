@@ -78,10 +78,14 @@ vllm-project/vllm
 
 ## 4. 라이선스와 코드 포함 (ADR-007·011, CHARTER §4.2 ④)
 
-- `code_policy = CODE_INCLUDED` — `repo_license` 가 permissive(MIT·Apache-2.0·BSD 계열, `pipeline.select_repos.PERMISSIVE_SPDX`)인 저장소. 코드 본문을 넣는다
-- `code_policy = LINK_ONLY` — 그 밖(GPL 계열 등). `deleted_body`·`function_signature`·`replacement.code`·`reason.evidence_text` 를 null 로 두고 `source_url`·경로·함수 이름·맥락 같은 메타데이터만 남긴다
-- **dataset-v0.9 는 100개 모두 `CODE_INCLUDED` 다.** 선정 단계(§4.3 ②)에서 이미 permissive 만 골랐기 때문이다. `LINK_ONLY` 는 코드와 테스트로만 확인했다
-- 라이선스 값은 `docs/repo_final100.csv` 의 `license` 열이다. 2026-10-29 에 100개의 라이선스 원문·하위 라이선스 파일·라이선스 파일 이력을 다시 봤다 (`docs/repo_final100.md` §3.1). 루트 라이선스는 100개 모두 CSV 값과 같고 permissive 이며, 루트 이중 라이선스는 없다
+`code_policy` 는 두 곳에 있고 기준이 다르다. 섞어 읽지 않는다.
+
+- **행 단위 — 레코드의 `code_policy`** (데이터셋 본체). 행마다 정한다
+  - `CODE_INCLUDED` — 저장소 루트 라이선스가 permissive(MIT·Apache-2.0·BSD 계열, `pipeline.select_repos.PERMISSIVE_SPDX`)이고, 그 행이 `docs/license_overrides.csv` 의 어떤 규칙에도 걸리지 않는다. 코드 본문을 넣는다
+  - `LINK_ONLY` — 저장소 루트 라이선스가 permissive 가 아니거나, 그 행이 `docs/license_overrides.csv` 규칙(하위 경로 또는 `author_date` 기준)에 걸린다. `deleted_body`·`function_signature`·`replacement.code`·`reason.evidence_text` 를 null 로 두고 `source_url`·경로·함수 이름·맥락 같은 메타데이터만 남긴다
+  - **dataset-v0.9 의 행 단위 값: `CODE_INCLUDED` 1,319,661행 / `LINK_ONLY` 34,391행** (합계 1,354,052행). `LINK_ONLY` 는 전부 `docs/license_overrides.csv` 규칙으로 적용된 행이다 (아래)
+- **저장소 단위 — `repos.csv` 의 `code_policy` 열.** 저장소 루트 라이선스만 보고 정한 값이다. 루트 라이선스는 100개 모두 permissive 라 이 열은 100개 모두 `CODE_INCLUDED` 다. **이 값은 그 저장소의 모든 행에 코드가 들어 있다는 뜻이 아니다** — 행마다의 값은 레코드의 `code_policy` 를 본다
+- 라이선스 값은 `docs/repo_final100.csv` 의 `license` 열이다. 2026-10-29 에 100개의 라이선스 원문·하위 라이선스 파일·라이선스 파일 이력을 다시 봤다 (`docs/repo_final100.md` §3.1). 루트 라이선스는 100개 모두 CSV 값과 같고 permissive 이며, 루트 이중 라이선스는 없다. 다만 행 단위로는 아래 34,391행이 `LINK_ONLY` 다
 
 ### 라이선스 때문에 링크만 내는 행 — 34,391행
 
@@ -102,7 +106,7 @@ vllm-project/vllm
 - **그 안에 확정 500건 중 19건이 있다** (모두 unsloth `studio/`). **이 19건도 라벨·split 은 그대로이고 코드 본문만 지웠다.** `main500.jsonl`·`main500-v0.9.*` 에도 같은 정책이 적용돼 있다
 - **이 행들은 통계와 평가 집합에서 빠지지 않는다.** 행 수(1,354,052)·이유 출처별 건수·확정 500건 집합과 그 평가 숫자는 그대로다
 - 비우는 칸: `deleted_body`, `function_signature`, `replacement.code`, `reason.evidence_text` (근거 문장은 코드를 인용할 수 있어서). 남기는 칸: `id`, `repo`, `repo_license`(저장소 루트 라이선스), `commit_sha`, `file_path`, `start_line`·`end_line`, `function_name`, `source_url`, `context`, `replacement.match_method`·`confidence`, `reason.label`·`evidence_grade`·`confidence`·`classifier_version`, `classification` 전체
-- `repos.csv` 의 `code_policy` 열은 **저장소 루트 라이선스 기준** 이라 100개 모두 `CODE_INCLUDED` 다. 행마다의 값은 레코드의 `code_policy` 를 본다
+- `repos.csv` 의 `code_policy` 열(저장소 루트 기준, 100개 모두 `CODE_INCLUDED`)과 레코드의 `code_policy`(행 기준) 차이는 위 §4 첫머리를 본다
 - PSF(`psf/black` `src/blib2to3/`, celery `celery/utils/dispatch/`, home-assistant `homeassistant/backports/`)·ISC(requests 2012 이전) 행은 permissive 라 코드를 넣었다. 허용 목록(MIT/Apache/BSD) 밖이라는 점은 #26 에서 다룬다. celery `docs/`(CC BY-SA 4.0, 32행)는 #28 결정대로 포함했다
 
 ## 5. 파일
@@ -114,7 +118,7 @@ GitHub Release `dataset-v0.9` 자산 (디렉터리 없이 평평하다):
 | `<owner>__<name>-<k>-of-<n>.parquet` | 저장소 하나의 k번째 shard (zstd) |
 | `<owner>__<name>-<k>-of-<n>.jsonl.gz` | 같은 행, 같은 순서의 gzip JSONL |
 | `main500-v0.9.parquet`, `main500-v0.9.jsonl.gz` | 확정 500건만 (저장소 파일에도 같은 행이 있다) |
-| `repos.csv` | 저장소별 라이선스·`code_policy`·`training_repo`·출처별 건수·shard 수 |
+| `repos.csv` | 저장소별 라이선스·`code_policy`(저장소 루트 기준)·`training_repo`·출처별 건수·shard 수 |
 | `training_repos.txt` | 학습 저장소 20개 |
 | `manifest.json` | 파일별 행 수·바이트·sha256, 입력, 검증 결과 |
 | `SHA256SUMS` | `sha256sum -c SHA256SUMS` 로 확인 |
