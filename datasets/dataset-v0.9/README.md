@@ -165,7 +165,7 @@ Git 저장소 안(`datasets/dataset-v0.9/`)에는 작은 파일만 있다: `main
 ### 7.1 GitHub Release 에서 받기
 
 - 저장소 100개 전체는 이 저장소(`Deleted-Code-Search/Deleted-Code-Search`)의 GitHub **Releases** 에 tag **`dataset-v0.9`** 로 올린다. Git 에는 확정 500건과 목록만 있다 (§5)
-- **현재 상태: 아직 올리지 않았다.** 이 문서가 들어가는 PR 이 merge 된 뒤 올린다. 올리면 이 절에 Release 주소를 적는다
+- **현재 상태: GitHub Release `dataset-v0.9`로 배포했다.** Release: https://github.com/Deleted-Code-Search/Deleted-Code-Search/releases/tag/dataset-v0.9
 - Release 페이지에서 tag `dataset-v0.9` 의 Assets 를 연다. 파일 이름이 `<owner>__<name>-<k>-of-<n>.<형식>` 이라 저장소 이름으로 골라 받을 수 있다 (예: `psf/requests` → `psf__requests-00000-of-00001.parquet`). 어느 저장소가 몇 shard 인지는 `repos.csv` 의 `shards` 열, 파일별 행 수·sha256 은 `manifest.json` 에 있다
 - 형식은 하나만 받으면 된다 — Parquet(열 단위, 분석용)과 jsonl.gz(한 줄 한 레코드)는 같은 행이다
 
@@ -225,7 +225,7 @@ gh release create dataset-v0.9 data/export/dataset-v0.9/* --title "dataset-v0.9"
 - **사람 라벨 kappa 가 낮다.** 사전 등록 최종 평균 `reason` 0.499 / `grade` 0.404. 제3자 판정 150건은 판정 이유가 기록되지 않았다 (`docs/reports/labels_main500.md`)
 - **분류 결과는 v0.8 입력으로 냈다.** v0.9 에서 `NOISE_GENERATED` 가 된 행의 분류 결과는 쓰지 않았다 (`manifest.json` `checks.join`). v0.9 KEPT 의 분류 대상은 모두 분류 결과가 있다
 - **PARTIAL 은 맥락 결합·분류를 하지 않았다** (#142). `context` 목록 칸·`replacement`·`reason` 이 null 이다
-- **라이선스 때문에 34,391행은 코드 없이 링크만 있다** (확정 500건 중 19건 포함, 라벨·split 은 그대로, §4). 판정 근거는 `docs/repo_final100.md` §3.1 — 자동 수집한 원문으로 1차 판정했고 "확인 필요"·"불확실" 항목은 수동 검토 대상이다. 현재 루트 라이선스 파일 경로의 이력과 현재 트리의 하위 라이선스 파일만 봤다 — 파일 머리 라이선스 주석·지워진 디렉터리의 라이선스는 보지 않았다. 이력 경계는 `author_date` 날짜로 갈라 몇 건은 어긋날 수 있다. 벤더링 경로는 v0.9 `NOISE_GENERATED` 가 경로로 명백한 것만 뺐다
+- **라이선스 때문에 34,391행은 코드 없이 링크만 있다** (확정 500건 중 19건 포함, 라벨·split 은 그대로, §4). 판정 근거는 `docs/repo_final100.md` §3.1 — 자동 수집한 원문으로 1차 판정했고 "확인 필요"·"불확실" 항목은 원문을 수동 검토했다. 현재 루트 라이선스 파일 경로의 이력과 현재 트리의 하위 라이선스 파일만 봤다 — 파일 머리 라이선스 주석·지워진 디렉터리의 라이선스는 보지 않았다. 이력 경계는 `author_date` 날짜로 갈라 몇 건은 어긋날 수 있다. 벤더링 경로는 v0.9 `NOISE_GENERATED` 가 경로로 명백한 것만 뺐다
 - **PostgreSQL 적재는 이번 범위가 아니다.** #83 본문에는 DB 적재가 있지만 이번 PR 은 파일 내보내기까지만 한다. DB 적재는 검색 UI(#8) 때 별도 이슈로 한다
 - 리뷰 코멘트·PR·이슈 본문은 GitHub 사용자가 쓴 글이다. 코드 라이선스와 별개다
 - `recent_only` 저장소 5개(django·scikit-learn·pandas·celery·requests)는 2015년 이후만 채굴했다 (`docs/repo_final100.md`)
