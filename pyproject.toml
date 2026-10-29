@@ -16,6 +16,8 @@ dependencies = [
   "tree-sitter-python>=0.23,<0.24",
   # 분류기 (CHARTER §7 "규칙 + scikit-learn + LLM API", #84). GPU 없이 도는 소형 모델만 쓴다.
   "scikit-learn>=1.5,<2",
+  # 데이터셋 Parquet 내보내기 (CHARTER §4.2 ④, #83)
+  "pyarrow>=17,<22",
 ]
 
 [project.optional-dependencies]

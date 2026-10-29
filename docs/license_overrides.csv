@@ -1,0 +1,23 @@
+repo,path_prefix,before_date,license,note
+unslothai/unsloth,studio/,,AGPL-3.0,studio/LICENSE.AGPL-3.0
+unslothai/unsloth,unsloth/kernels/moe/,,AGPL-3.0,unsloth/kernels/moe/LICENSE
+exo-explore/exo,,2025-12-18,GPL-3.0,root LICENSE GPL-3.0 until Apache-2.0 on 2025-12-18 (none before 2024-07-16)
+NVIDIA-NeMo/Speech,,2020-09-25,UNCERTAIN,root LICENSE said only 'Please refer to per-package licenses' until 2020-09-25
+agno-agi/agno,,2025-02-10,MPL-2.0,Phidata MPL-2.0 until Apache-2.0 on 2025-02-10
+PrefectHQ/prefect,,2022-03-08,Prefect-Community-License-1.0,no root LICENSE until 2021-10-05; Prefect Community License 1.0 until Apache-2.0 on 2022-03-08
+hpcaitech/ColossalAI,examples/images/diffusion/,,CreativeML-OpenRAIL-M,examples/images/diffusion/LICENSE
+blakeblackshear/frigate,,2020-07-26,AGPL-3.0,root LICENSE AGPL-3.0 until MIT on 2020-07-26
+zulip/zulip,,2015-09-25,LicenseRef-Zulip-Enterprise,Zulip Enterprise License Agreement until Apache-2.0 on 2015-09-25
+run-llama/llama_index,llama-index-integrations/callbacks/llama-index-callbacks-uptrain/,,AGPL-3.0,package LICENSE
+run-llama/llama_index,llama-index-integrations/llms/llama-index-llms-upstage/,,AGPL-3.0,package LICENSE
+run-llama/llama_index,llama-index-integrations/readers/llama-index-readers-boarddocs/,,GPL-3.0,package LICENSE
+run-llama/llama_index,llama-index-integrations/readers/llama-index-readers-imdb-review/,,GPL-2.0,package LICENSE
+run-llama/llama_index,llama-index-integrations/readers/llama-index-readers-kaltura/,,AGPL-3.0,package LICENSE
+run-llama/llama_index,llama-index-integrations/readers/llama-index-readers-markitdown/,,UNCERTAIN,package LICENSE file is empty
+run-llama/llama_index,llama-index-integrations/readers/llama-index-readers-nougat-ocr/,,GPL-2.0,package LICENSE
+run-llama/llama_index,llama-index-integrations/readers/llama-index-readers-pdf-marker/,,GPL-3.0,package LICENSE
+run-llama/llama_index,llama-index-integrations/readers/llama-index-readers-pdf-table/,,GPL-3.0,package LICENSE
+run-llama/llama_index,llama-index-integrations/readers/llama-index-readers-service-now/,,GPL-3.0,package LICENSE
+run-llama/llama_index,llama-index-integrations/readers/llama-index-readers-stripe-docs/,,GPL-3.0,package LICENSE
+run-llama/llama_index,llama-index-integrations/readers/llama-index-readers-upstage/,,AGPL-3.0,package LICENSE
+run-llama/llama_index,llama-index-integrations/readers/llama-index-readers-web/,,GPL-3.0,package LICENSE
