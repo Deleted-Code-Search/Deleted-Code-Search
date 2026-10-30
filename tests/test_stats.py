@@ -311,3 +311,44 @@ def test_api_stats(env, tmp_path, monkeypatch):
 
     monkeypatch.setenv(api.STATS_ENV, str(tmp_path / "missing.json"))
     assert client.get("/api/stats").status_code == 503
+
+
+def test_runs_median_even_count_and_null_elapsed(tmp_path):
+    folder = tmp_path / "runs"
+    folder.mkdir()
+    for i, elapsed in enumerate([10.0, 40.0, 20.0, 30.0, None]):
+        meta = {"repo": f"o/r{i}", "status": "SUCCESS", "elapsed_seconds": elapsed}
+        (folder / f"o__r{i}_run.json").write_text(json.dumps(meta), "utf-8")
+    system = stats.read_runs([folder])
+    # 짝수 개(4)는 가운데 두 값의 평균 - 처리 시간이 없는 실행은 중앙값에서 뺀다
+    assert system["summary"]["median_elapsed_seconds"] == 25.0
+    assert system["summary"]["max_elapsed_seconds"] == 40.0
+    # 표에는 남는다
+    assert [r["elapsed_seconds"] for r in system["runs"]][-1] is None
+    assert system["n"] == 5
+
+
+def test_runs_median_odd_and_no_elapsed(tmp_path):
+    folder = tmp_path / "runs"
+    folder.mkdir()
+    for i, elapsed in enumerate([5.0, 1.0, 3.0]):
+        meta = {"repo": f"o/r{i}", "status": "SUCCESS", "elapsed_seconds": elapsed}
+        (folder / f"o__r{i}_run.json").write_text(json.dumps(meta), "utf-8")
+    assert stats.read_runs([folder])["summary"]["median_elapsed_seconds"] == 3.0
+
+    empty = tmp_path / "no_elapsed"
+    empty.mkdir()
+    (empty / "o__x_run.json").write_text(
+        json.dumps({"repo": "o/x", "status": "FAILED", "elapsed_seconds": None}), "utf-8"
+    )
+    summary = stats.read_runs([empty])["summary"]
+    assert summary["median_elapsed_seconds"] is None
+    assert summary["max_elapsed_seconds"] is None
+
+
+def test_write_json_replaces_without_leftover(tmp_path):
+    out = tmp_path / "reports" / "dashboard_stats.json"
+    stats.write_json(out, {"a": 1})
+    stats.write_json(out, {"a": 2})
+    assert json.loads(out.read_text(encoding="utf-8")) == {"a": 2}
+    assert [p.name for p in out.parent.iterdir()] == ["dashboard_stats.json"]

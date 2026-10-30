@@ -31,6 +31,7 @@ import gzip
 import json
 import math
 import os
+import statistics
 import sys
 from collections import Counter
 from collections.abc import Iterable, Sequence
@@ -344,9 +345,7 @@ def read_runs(run_dirs: Sequence[Path]) -> dict[str, Any]:
             "failure_rate": round(failed / len(runs), 4),
             "retried": retried,
             "total_elapsed_seconds": round(sum(elapsed), 1),
-            "median_elapsed_seconds": round(sorted(elapsed)[len(elapsed) // 2], 1)
-            if elapsed
-            else None,
+            "median_elapsed_seconds": round(statistics.median(elapsed), 1) if elapsed else None,
             "max_elapsed_seconds": round(max(elapsed), 1) if elapsed else None,
         },
     }
@@ -519,6 +518,14 @@ def _checks(
     return {"ok": not mismatches, "against": "summary.json, repos.csv", "mismatches": mismatches}
 
 
+def write_json(path: Path, data: dict[str, Any]) -> None:
+    """임시 파일에 다 쓴 뒤 교체한다 - 중간에 끊겨도 API 가 반쯤 쓴 파일을 읽지 않는다."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(path.name + ".tmp")
+    tmp.write_text(json.dumps(data, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+    os.replace(tmp, path)
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--data", type=Path, default=DEFAULT_DATA)
@@ -536,8 +543,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     except StatsError as error:
         print(f"오류: {error}", file=sys.stderr)
         return 1
-    args.out.parent.mkdir(parents=True, exist_ok=True)
-    args.out.write_text(json.dumps(stats, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+    write_json(args.out, stats)
     head = stats["headline"]
     print(
         f"{args.out}: 저장소 {head['repos']} / 필터 전 {head['deleted_before_filter']:,} / "

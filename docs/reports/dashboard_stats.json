@@ -2625,7 +2625,7 @@
    "failure_rate": 0.0,
    "retried": 0,
    "total_elapsed_seconds": 550844.7,
-   "median_elapsed_seconds": 2578.8,
+   "median_elapsed_seconds": 2537.3,
    "max_elapsed_seconds": 55000.3
   },
   "expected_repos": 100

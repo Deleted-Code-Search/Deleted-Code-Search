@@ -13,6 +13,32 @@ const API_BASE = import.meta.env.VITE_API_BASE ?? "http://localhost:8000";
 
 type Tab = "dashboard" | "search";
 
+// search.stats SCHEMA_VERSION 과 같아야 한다.
+const SCHEMA = "dashboard_stats/1";
+const REQUIRED: (keyof DashboardStats)[] = [
+  "headline",
+  "label_sources",
+  "reason_distribution",
+  "grade_distribution",
+  "repos",
+  "yearly",
+  "performance",
+  "system",
+  "checks",
+];
+
+// 모양만 본다 - schema 값과 패널이 쓰는 최상위 필드가 있는지.
+function validate(body: unknown): DashboardStats {
+  if (typeof body !== "object" || body === null) throw new Error("응답이 객체가 아니다");
+  const data = body as Record<string, unknown>;
+  if (data.schema !== SCHEMA) {
+    throw new Error(`schema 가 ${String(data.schema)} 이다 (기대: ${SCHEMA})`);
+  }
+  const missing = REQUIRED.filter((key) => typeof data[key] !== "object" || data[key] === null);
+  if (missing.length) throw new Error(`필수 필드가 없다: ${missing.join(", ")}`);
+  return body as DashboardStats;
+}
+
 export function App() {
   const [tab, setTab] = useState<Tab>("dashboard");
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -25,7 +51,7 @@ export function App() {
           const body = await res.json().catch(() => null);
           throw new Error(body?.detail ?? `HTTP ${res.status}`);
         }
-        return res.json() as Promise<DashboardStats>;
+        return validate(await res.json());
       })
       .then(setStats)
       .catch((err: Error) => setError(err.message));
