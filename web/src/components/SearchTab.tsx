@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getJson } from "../api";
 import { KIND_LABEL, REASON_LABEL, SOURCE_BADGE, num } from "../format";
 import type { SearchMeta, SearchResponse } from "../types";
@@ -50,7 +50,9 @@ function toParams({ q, filters, offset }: Request): URLSearchParams {
   return params;
 }
 
-// 주소의 #search?q=…&repo=…&id=… 로 검색 상태를 되살린다 - 시연·스크린샷·링크 공유용.
+// 주소의 #search?q=…&repo=…&id=… 로 검색 상태를 되살린다 - 시연·스크린샷·링크 공유, 뒤로/앞으로 가기.
+// 사용자가 검색·결과 선택·페이지를 바꾸면 기록을 하나 쌓고(pushState), 주소가 바뀌면(hashchange: 뒤로/앞으로,
+// 주소창 수정) 다시 읽는다. 주소에서 읽은 상태는 기록을 쌓지 않고 주소 모양만 맞춘다(replaceState).
 function fromHash(): { request: Request | null; id: string | null } {
   const hash = window.location.hash;
   if (!hash.startsWith("#search?")) return { request: null, id: null };
@@ -73,6 +75,27 @@ export function SearchTab() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<string | null>(initial.id);
+  // 사용자가 바꾼 상태인가. 그러면 다음 주소 맞추기가 기록을 하나 쌓는다. 처음 열 때·주소에서 읽은 상태는 아니다.
+  const byUser = useRef(false);
+
+  useEffect(() => {
+    const onHashChange = () => {
+      // #dashboard 로 가면 검색 상태는 그대로 둔다 (탭만 바뀐다, App)
+      if (!window.location.hash.startsWith("#search")) return;
+      const next = fromHash();
+      byUser.current = false;
+      setInput(next.request?.q ?? "");
+      setFilters(next.request?.filters ?? NO_FILTERS);
+      setRequest(next.request);
+      setSelected(next.id);
+      if (!next.request) {
+        setResult(null);
+        setError(null);
+      }
+    };
+    window.addEventListener("hashchange", onHashChange);
+    return () => window.removeEventListener("hashchange", onHashChange);
+  }, []);
 
   useEffect(() => {
     getJson<SearchMeta>("/api/search/meta")
@@ -101,13 +124,24 @@ export function SearchTab() {
   }, [request]);
 
   useEffect(() => {
+    const push = byUser.current;
+    byUser.current = false;
     if (!request || !window.location.hash.startsWith("#search")) return;
     const params = toParams(request);
     if (selected) params.set("id", selected);
-    window.history.replaceState(null, "", `#search?${params}`);
+    const hash = `#search?${params}`;
+    if (hash === window.location.hash) return;
+    if (push) window.history.pushState(null, "", hash);
+    else window.history.replaceState(null, "", hash);
   }, [request, selected]);
 
+  const select = (id: string | null) => {
+    byUser.current = true;
+    setSelected(id);
+  };
+
   const run = (q: string, next: Filters, offset = 0) => {
+    byUser.current = true;
     setRequest({ q, filters: next, offset });
     if (offset === 0) setSelected(null);
   };
@@ -273,7 +307,7 @@ export function SearchTab() {
                   <button
                     type="button"
                     className={hit.id === selected ? "hit active" : "hit"}
-                    onClick={() => setSelected(hit.id)}
+                    onClick={() => select(hit.id)}
                   >
                     <span className="hit-title">
                       <code>{hit.function_name ?? "(이름 없음)"}</code>
@@ -328,7 +362,7 @@ export function SearchTab() {
               </div>
             )}
           </div>
-          {selected && <RecordDetail id={selected} onClose={() => setSelected(null)} />}
+          {selected && <RecordDetail id={selected} onClose={() => select(null)} />}
         </div>
       )}
     </div>

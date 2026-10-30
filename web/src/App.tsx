@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { DashboardStats } from "./types";
 import { Headline } from "./components/Headline";
 import { LabelSources } from "./components/LabelSources";
@@ -11,6 +11,8 @@ import { SearchTab } from "./components/SearchTab";
 import { API_BASE, getJson } from "./api";
 
 type Tab = "dashboard" | "search";
+
+const tabOf = (hash: string): Tab => (hash.startsWith("#search") ? "search" : "dashboard");
 
 // search.stats SCHEMA_VERSION 과 같아야 한다.
 const SCHEMA = "dashboard_stats/1";
@@ -39,11 +41,18 @@ function validate(body: unknown): DashboardStats {
 }
 
 export function App() {
-  const [tab, setTab] = useState<Tab>(() =>
-    window.location.hash.startsWith("#search") ? "search" : "dashboard",
-  );
+  const [tab, setTab] = useState<Tab>(() => tabOf(window.location.hash));
+  // 검색 탭으로 돌아올 때 마지막 검색 주소로 간다 - 맨 "#search" 로 가면 SearchTab 이 상태를 비운다.
+  const lastSearch = useRef("#search");
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // 탭은 주소를 따른다 (뒤로/앞으로 가기, 주소창 수정). 탭 단추는 주소만 바꾼다.
+  useEffect(() => {
+    const onHashChange = () => setTab(tabOf(window.location.hash));
+    window.addEventListener("hashchange", onHashChange);
+    return () => window.removeEventListener("hashchange", onHashChange);
+  }, []);
 
   useEffect(() => {
     getJson<unknown>("/api/stats")
@@ -65,8 +74,9 @@ export function App() {
             aria-selected={tab === "dashboard"}
             className={tab === "dashboard" ? "tab active" : "tab"}
             onClick={() => {
-              setTab("dashboard");
-              window.history.replaceState(null, "", "#dashboard");
+              if (tab === "dashboard") return;
+              lastSearch.current = window.location.hash;
+              window.location.hash = "#dashboard";
             }}
           >
             대시보드
@@ -76,10 +86,7 @@ export function App() {
             aria-selected={tab === "search"}
             className={tab === "search" ? "tab active" : "tab"}
             onClick={() => {
-              setTab("search");
-              if (!window.location.hash.startsWith("#search")) {
-                window.history.replaceState(null, "", "#search");
-              }
+              if (tab !== "search") window.location.hash = lastSearch.current;
             }}
           >
             검색
