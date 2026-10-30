@@ -110,6 +110,37 @@ def test_interrupted_part_is_redone(data, tmp_path):
     assert again.calls == 2
 
 
+def test_truncated_zip_part_is_redone(data, tmp_path):
+    out = tmp_path / "semantic"
+    _build(data, out)
+    part = embed.part_path(out, data / "o__a-00000-of-00001.jsonl.gz")
+    raw = part.read_bytes()
+    for cut in (len(raw) // 2, len(raw) - 10, 30):  # 압축 중간·끝·머리에서 끊김
+        part.write_bytes(raw[:cut])
+        assert embed.read_part_info(part) is None
+    _, again = _build(data, out)
+    assert again.calls == 2
+
+
+def test_layout_change_redoes_parts_and_merge_refuses_old(data, tmp_path, monkeypatch):
+    out = tmp_path / "semantic"
+    manifest, _ = _build(data, out)
+    assert manifest["doc_format"] == embed.DOC_FORMAT
+    assert manifest["max_chars"] == embed.MAX_CHARS
+    monkeypatch.setattr(embed, "MAX_CHARS", embed.MAX_CHARS // 2)
+    # 합치기만 하면 옛 조각을 거부한다
+    shards = index.shard_files(data)
+    shas = {s.name: embed.file_sha256(s) for s in shards}
+    with pytest.raises(embed.EmbedError, match="레이아웃"):
+        embed.merge(out, shards, shas, FakeEncoder())
+    # build 는 조각을 다시 만든다
+    _, again = _build(data, out)
+    assert again.calls == 4
+    monkeypatch.setattr(embed, "META_COLUMNS", tuple(reversed(embed.META_COLUMNS)))
+    _, reordered = _build(data, out)
+    assert reordered.calls == 4
+
+
 def test_build_selected_repos_and_unknown_repo(data, tmp_path):
     manifest, _ = _build(data, tmp_path / "s", repos=["o/b"])
     assert manifest["count"] == 2 and manifest["repos"] == ["o/b"]

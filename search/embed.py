@@ -12,8 +12,10 @@
     수만 줄짜리 함수를 통째로 토크나이저에 넣지 않게.
 
 이어 하기: 입력 jsonl.gz 파일 하나 = 조각 하나 (`parts/<파일 이름>.npz`). 조각에 입력 파일
-sha256·모델·토큰 상한을 적어 두고, 다시 돌리면 같은 값의 조각은 건너뛴다. 조각은 임시 파일에
-쓰고 바꿔 끼운다 - 중간에 끊겨도 반쯤 된 조각이 남지 않는다. 마지막에 조각을 합친다 (`merge`).
+sha256·모델·토큰 상한·레이아웃 지문(`layout()`: 문서 텍스트 형식·MAX_CHARS·메타 칸과 선택지 순서)을
+적어 두고, 다시 돌리면 같은 값의 조각은 건너뛴다. 코드를 고쳐 레이아웃이 바뀌면 다시 만든다.
+조각은 임시 파일에 쓰고 바꿔 끼운다 - 중간에 끊겨도 반쯤 된 조각이 남지 않는다.
+마지막에 조각을 합친다 (`merge`).
 
 출력 (`data/search/semantic/`, gitignore):
     vectors.npy    float16 (N, dim), L2 정규화 - 내적 = 코사인
@@ -35,6 +37,7 @@ import json
 import os
 import sys
 import time
+import zipfile
 from collections.abc import Callable, Iterable, Sequence
 from datetime import UTC, datetime
 from pathlib import Path
@@ -61,6 +64,21 @@ MAX_CHARS = 4000
 # meta.npy 칸 순서. 값은 manifest 의 선택지 목록 위치(없음 = -1), 연도는 그대로(없음 = -1).
 META_COLUMNS = ("repo", "year", "reason", "grade", "source", "code_policy", "text_kind")
 BATCH = 32
+# doc_text 의 텍스트 모양. 모양을 바꾸면 올린다 - 옛 조각을 건너뛰지 않게.
+DOC_FORMAT = "name|path|body-or-commit-first-line/1"
+
+
+def layout() -> dict[str, Any]:
+    """조각 레이아웃 지문. 조각과 manifest 에 적고, 다르면 이어 하기·합치기에서 쓰지 않는다."""
+    return {
+        "doc_format": DOC_FORMAT,
+        "max_chars": MAX_CHARS,
+        "meta_columns": list(META_COLUMNS),
+        "reasons": list(REASON_LABELS),
+        "grades": list(EVIDENCE_GRADES),
+        "sources": list(SOURCES),
+        "code_policies": list(CODE_POLICIES),
+    }
 
 
 class EmbedError(RuntimeError):
@@ -161,8 +179,8 @@ def read_part_info(path: Path) -> dict[str, Any] | None:
     try:
         with np.load(path) as part:
             return json.loads(str(part["info"]))
-    except (OSError, ValueError, KeyError):
-        return None  # 깨진 조각은 다시 만든다
+    except (OSError, ValueError, KeyError, EOFError, zipfile.BadZipFile):
+        return None  # 깨진(끊긴) 조각은 다시 만든다
 
 
 def encode_sorted(encoder: Encoder, texts: Sequence[str]) -> np.ndarray:
@@ -201,6 +219,7 @@ def embed_shard(shard: Path, encoder: Encoder, sha: str, out: Path) -> dict[str,
         "dim": encoder.dim,
         "repo": next(iter(repos), None),
         "count": len(ids),
+        "layout": layout(),
     }
     path = part_path(out, shard)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -257,11 +276,7 @@ def build(
     for number, shard in enumerate(shards, 1):
         sha = shas[shard.name] = file_sha256(shard)
         info = read_part_info(part_path(out, shard))
-        fresh = info is not None and (info["sha256"], info["model"], info["max_tokens"]) == (
-            sha,
-            encoder.name,
-            encoder.max_tokens,
-        )
+        fresh = info is not None and _same_part(info, sha, encoder)
         if fresh:
             done += info["count"]
             log(f"[{number}/{len(shards)}] {shard.name} 건너뜀 ({info['count']:,}건, 이미 있음)")
@@ -276,6 +291,15 @@ def build(
     manifest = merge(out, shards, shas, encoder)
     manifest["elapsed_seconds"] = round(time.perf_counter() - started, 1)
     return manifest
+
+
+def _same_part(info: dict[str, Any], sha: str, encoder: Encoder) -> bool:
+    return (info["sha256"], info["model"], info["max_tokens"], info.get("layout")) == (
+        sha,
+        encoder.name,
+        encoder.max_tokens,
+        layout(),
+    )
 
 
 def _progress(
@@ -304,7 +328,7 @@ def _duration(seconds: float) -> str:
 
 
 def merge(out: Path, shards: Sequence[Path], shas: dict[str, str], encoder: Encoder) -> dict:
-    """조각을 shards 순서로 합친다. 다른 모델·상한의 조각이 섞여 있으면 멈춘다."""
+    """조각을 shards 순서로 합친다. 다른 모델·상한·레이아웃의 조각이 섞여 있으면 멈춘다."""
     parts = []
     for shard in shards:
         path = part_path(out, shard)
@@ -313,6 +337,8 @@ def merge(out: Path, shards: Sequence[Path], shas: dict[str, str], encoder: Enco
             raise EmbedError(f"{path} 가 없거나 입력과 다르다 - 다시 돌린다")
         if (info["model"], info["max_tokens"]) != (encoder.name, encoder.max_tokens):
             raise EmbedError(f"{path} 의 모델·상한이 다르다: {info['model']} {info['max_tokens']}")
+        if info.get("layout") != layout():
+            raise EmbedError(f"{path} 의 레이아웃(텍스트 형식·글자 상한·메타 순서)이 다르다")
         parts.append((path, info))
     repos = sorted({info["repo"] for _, info in parts if info["repo"]})
     total = sum(info["count"] for _, info in parts)
@@ -352,6 +378,8 @@ def merge(out: Path, shards: Sequence[Path], shas: dict[str, str], encoder: Enco
         "created_at": datetime.now(UTC).isoformat(timespec="seconds"),
         "input_sha256": input_sha,
         "input_files": len(shas),
+        "doc_format": DOC_FORMAT,
+        "max_chars": MAX_CHARS,
         "meta_columns": list(META_COLUMNS),
         "repos": repos,
         "reasons": list(REASON_LABELS),
