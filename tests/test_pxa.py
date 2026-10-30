@@ -92,6 +92,24 @@ def test_compute_counts_and_cases():
     assert result["case1"]["product"] == pytest.approx(0.5)
 
 
+def test_precision_full_gives_same_scope_product():
+    rows, predictions = _fixture()
+    result = pxa.compute(rows, predictions, (3, 4), precision_full=(1, 2), example=True)
+    assert (result["P_filter_full"]["x"], result["P_filter_full"]["n"]) == (1, 2)
+    assert result["case1_full"]["product"] == pytest.approx(0.5 * 2 / 3)
+    assert "case1_full" not in pxa.compute(rows, predictions, (3, 4), example=True)
+
+
+def test_third_party_without_chosen_labeler_is_rejected():
+    rows, predictions = _fixture()
+    # r4 의 확정 라벨을 어느 라벨과도 맞지 않게 바꾼다 (제3자가 새 라벨을 만든 꼴)
+    rows[3]["final"]["reason_label"] = "BUG"
+    with pytest.raises(ValueError, match="r4"):
+        pxa.not_meaningful(rows[3])
+    with pytest.raises(ValueError, match="r4"):
+        pxa.compute(rows, predictions, (3, 4), example=True)
+
+
 def test_gate_mode_requires_100_test_records():
     rows, predictions = _fixture()
     with pytest.raises(ValueError, match="정확히 100건"):

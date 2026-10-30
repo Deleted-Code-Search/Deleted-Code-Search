@@ -6,9 +6,12 @@
     목표량 = P(M ∧ C | K). P = P(M | K) (#89 필터 정밀도).
 
 A 는 둘 중 무엇으로 쟀느냐에 따라 곱의 뜻이 다르다 (`docs/reports/pxa_argument.md`):
-    경우 1  A = P(C | M, K) → P(M ∧ C | K) = P × A (연쇄 법칙, 독립 가정 없음)
+    경우 1  A = P(C | M, K) → P(M ∧ C | K) = P × A (연쇄 법칙, 독립 가정은 필요 없다.
+                              다만 P 와 A 를 다른 표본에서 재면 두 M 이 같은 사건이고 두 값이
+                              같은 모집단·가중치라는 가정 아래의 근사다)
     경우 2  A = P(C | K)    → 곱은 독립 가정이 있어야 하고, 가정 없이 말할 수 있는 것은
                               Fréchet 범위 max(0, P + A − 1) ≤ P(M ∧ C | K) ≤ min(P, A)
+                              (P·A 점추정에 넣은 범위다 - 표본 오차는 반영하지 않는다)
 
 게이트 2 test 100건은 KEPT 에서 뽑았고 의미 없는 삭제도 표본에 남겨 `UNK` + `filter-miss` 로
 라벨했다 (가이드 §6.3.1-3, §6.3.3). 그래서 게이트 2 정확도 60.0% 는 경우 2 의 P(C | K) 다.
@@ -25,7 +28,12 @@ M 이 아닌 레코드 (확정 라벨이 `filter-miss` 를 단 라벨인가):
 로 저장소별 비율을 모집단 크기로 가중한 값을 함께 낸다. 판정에 쓰지 않는다.
 
 읽지 않는 것: 필터 정밀도 표본의 개별 판정(`data/`, 커밋하지 않는다). P 는
-`docs/reports/filter_precision_v2.json` 의 KEPT 층 다수결 혼동표에서 읽는다.
+`docs/reports/filter_precision_v2.json` 의 KEPT 층 다수결 혼동표에서 읽는다. 그 P 는
+FULL_FUNCTION + PARTIAL 이고 A' 는 FULL_FUNCTION 만이라 범위가 다르다. 같은 범위의
+P(FULL) 은 판정 파일에서만 셀 수 있어 `--precision-full YES N` 으로 넘긴다 (2차: 36 48).
+
+실행 (보고서 숫자):
+    python -m eval.pxa --precision-full 36 48 --json-out docs/reports/pxa.json
 
 실행:
     python -m eval.pxa
@@ -60,6 +68,12 @@ def not_meaningful(row: Mapping[str, Any]) -> bool:
     labels = row.get("labels") or []
     if final.get("method") == THIRD_PARTY:
         chosen = chosen_labeler(row, final)
+        if chosen is None:
+            # 누구의 라벨을 골랐는지 모르면 M 여부를 정할 수 없다. M 으로 쳐서 넘기지 않는다.
+            raise ValueError(
+                "THIRD_PARTY 확정 라벨이 labels[] 중 딱 한 라벨과 같지 않다: "
+                f"{row.get('record_id')}"
+            )
         return any(has_filter_miss(label) for label in labels if label.get("labeler") == chosen)
     return bool(labels) and all(has_filter_miss(label) for label in labels)
 
@@ -133,6 +147,7 @@ def compute(
     *,
     repo_of: Mapping[str, str] | None = None,
     repo_sizes: Mapping[str, int] | None = None,
+    precision_full: tuple[int, int] | None = None,
     example: bool = False,
 ) -> dict[str, Any]:
     rows = [row for row in merged if row.get("split") == TEST_SPLIT]
@@ -191,6 +206,14 @@ def compute(
             "product_ci95": product_interval(p_yes, p_n, mc, len(m_rows)),
         },
     }
+    if precision_full is not None:
+        # A' 는 FULL_FUNCTION 만이다. 같은 범위의 P(FULL) 로 낸 곱을 나란히 둔다.
+        f_yes, f_n = precision_full
+        result["P_filter_full"] = _rate(f_yes, f_n)
+        result["case1_full"] = {
+            "product": f_yes / f_n * a_m if a_m is not None else None,
+            "product_ci95": product_interval(f_yes, f_n, mc, len(m_rows)),
+        }
     if repo_of is not None and repo_sizes is not None:
         result["repo_weighted"] = {
             "A_given_K": _weighted(rows, repo_of, repo_sizes, correct),
@@ -233,9 +256,17 @@ def format_report(result: Mapping[str, Any]) -> list[str]:
         _line("직접 P(M ∧ C | K)", result["MC_direct"]),
         _line("  그중 정답이 UNK 아닌 것", result["MC_reason_direct"]),
         f"경우 2  P × A  = {_pct(case2['product'])} (95% {_ci(case2['product_ci95'])}, 독립 가정), "
-        f"Frechet {_pct(case2['frechet'][0])} ~ {_pct(case2['frechet'][1])}",
-        f"경우 1  P × A' = {_pct(case1['product'])} (95% {_ci(case1['product_ci95'])}, 연쇄 법칙)",
+        f"점추정 기반 Frechet {_pct(case2['frechet'][0])} ~ {_pct(case2['frechet'][1])}",
+        f"경우 1  P × A' = {_pct(case1['product'])} (95% {_ci(case1['product_ci95'])}, "
+        "연쇄 법칙 - 독립 가정 없음, M 동일·모집단 동일 가정의 근사)",
     ]
+    full = result.get("case1_full")
+    if full:
+        lines.insert(2, _line("P_F = P(M | K, FULL)", result["P_filter_full"]))
+        lines.append(
+            f"경우 1  P_F × A' = {_pct(full['product'])} (95% {_ci(full['product_ci95'])}, "
+            "A' 와 같은 FULL_FUNCTION 범위)"
+        )
     weighted = result.get("repo_weighted")
     if weighted:
         lines.append(
@@ -262,6 +293,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         "--assignment", type=Path, default=Path("datasets/labels/main500_assignment.jsonl")
     )
     parser.add_argument("--repo-sizes", type=Path, default=Path("docs/reports/apply100.json"))
+    parser.add_argument(
+        "--precision-full",
+        type=int,
+        nargs=2,
+        metavar=("YES", "N"),
+        help="KEPT 표본 중 FULL_FUNCTION 의 다수결 예·표본 수. 판정 파일이 커밋되지 않아 "
+        "손으로 넘긴다 (2차: 36 48)",
+    )
     parser.add_argument("--json-out", type=Path)
     parser.add_argument("--example", action="store_true", help="test 100건 검증을 끈다")
     args = parser.parse_args(argv)
@@ -277,6 +316,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             filter_precision_counts(precision),
             repo_of=repo_of,
             repo_sizes=sizes,
+            precision_full=tuple(args.precision_full) if args.precision_full else None,
             example=args.example,
         )
     except (ValueError, KeyError) as error:
