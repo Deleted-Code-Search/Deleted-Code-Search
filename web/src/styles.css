@@ -340,6 +340,57 @@ main[hidden] {
   display: flex;
   gap: 8px;
 }
+.search-bar.semantic {
+  align-items: flex-end;
+}
+.search-bar textarea {
+  flex: 1;
+  min-width: 0;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 13px;
+  line-height: 1.45;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-1);
+  color: inherit;
+  resize: vertical;
+}
+.search-bar textarea:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
+.mode-switch {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+  font-size: 13px;
+}
+.mode-switch button {
+  font: inherit;
+  padding: 4px 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface-1);
+  color: inherit;
+  cursor: pointer;
+}
+.mode-switch button.active {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+.mode-switch .muted {
+  margin-left: 6px;
+}
+.score {
+  margin-left: 8px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+}
 .search-bar input {
   flex: 1;
   min-width: 0;

@@ -1,6 +1,11 @@
-"""검색 응답 시간 측정 (#191, CHARTER §10.5 "검색 응답 ≤ 1초"). 담당: 성제
+"""검색 응답 시간 측정 (#191, #193, CHARTER §10.5 "검색 응답 ≤ 1초"). 담당: 성제
 
-질의 20개(키워드만 / 키워드+필터 / 필터만)를 `GET /api/search` 로 보내 응답 시간 p50·p95 를 낸다.
+`--mode keyword` (기본): 질의 20개(키워드만 / 키워드+필터 / 필터만).
+`--mode semantic`: 의미 검색 질의 12개(자연어 / 코드 조각 / 필터 붙임, `mode=semantic`) →
+    기본 출력 `search_latency_semantic.json`. 모델·벡터를 처음 읽는 첫 요청(서버 시작 때 한 번)은
+    `cold_start_ms` 로 따로 적고 p50·p95 에 넣지 않는다 (TestClient 는 lifespan 을 돌리지 않아
+    첫 의미 검색 요청이 읽는다. `--base-url` 이면 이미 읽힌 서버라 cold_start 가 없다).
+`GET /api/search` 로 보내 응답 시간 p50·p95 를 낸다.
 질의마다 한 번 먼저 보내고(첫 호출, 따로 적는다) 그 뒤 `--repeat` 번을 잰다.
 
 기본은 같은 프로세스의 FastAPI TestClient 로 부른다 - API 처리 + SQLite 시간이고 네트워크는 없다.
@@ -9,6 +14,7 @@
 실행:
     python -m eval.search_latency
     python -m eval.search_latency --base-url http://localhost:8000 --repeat 10
+    python -m eval.search_latency --mode semantic
 """
 
 from __future__ import annotations
@@ -25,9 +31,10 @@ from collections.abc import Callable, Sequence
 from pathlib import Path
 from typing import Any
 
-SCHEMA_VERSION = "search_latency/1"
+SCHEMA_VERSION = "search_latency/2"
 TARGET_MS = 1000.0
 DEFAULT_OUT = Path("docs") / "reports" / "search_latency.json"
+DEFAULT_OUT_SEMANTIC = Path("docs") / "reports" / "search_latency_semantic.json"
 
 # (유형, 파라미터). 유형: keyword / keyword+filter / filter
 QUERIES: list[tuple[str, dict[str, Any]]] = [
@@ -54,6 +61,26 @@ QUERIES: list[tuple[str, dict[str, Any]]] = [
     ("filter", {"repo": "apache/airflow", "kind": "PARTIAL"}),
     ("filter", {"year_from": 2025, "grade": "EXPLICIT"}),
     ("filter", {"source": "UNDISTINGUISHED", "year_to": 2015, "offset": 200}),
+]
+
+_CODE = "def load_config(path):\n    with open(path) as f:\n        return yaml.safe_load(f)"
+# (유형, 파라미터). 유형: semantic(자연어) / semantic-code / semantic+filter. mode 는 main 이 붙임
+SEMANTIC_QUERIES: list[tuple[str, dict[str, Any]]] = [
+    ("semantic", {"q": "wait longer between retries after a failed request"}),
+    ("semantic", {"q": "cache downloaded files on disk and reuse them"}),
+    ("semantic", {"q": "parse command line arguments"}),
+    ("semantic", {"q": "compatibility shim for python 2"}),
+    ("semantic", {"q": "close database connection when done"}),
+    ("semantic-code", {"q": _CODE}),
+    ("semantic-code", {"q": "for i in range(len(xs)):\n    total += xs[i]"}),
+    (
+        "semantic-code",
+        {"q": "async def fetch(session, url):\n    async with session.get(url) as r:"},
+    ),
+    ("semantic+filter", {"q": "remove deprecated api", "source": "HUMAN"}),
+    ("semantic+filter", {"q": "thread safety lock", "repo": "django/django"}),
+    ("semantic+filter", {"q": "timeout handling", "year_from": 2022, "grade": "EXPLICIT"}),
+    ("semantic+filter", {"q": "security fix", "reason": "SEC", "offset": 20}),
 ]
 
 
@@ -92,9 +119,15 @@ def make_caller(base_url: str | None) -> Callable[[dict[str, Any]], dict[str, An
     return call_local
 
 
-def measure(call: Callable[[dict[str, Any]], dict[str, Any]], repeat: int) -> list[dict[str, Any]]:
+def measure(
+    call: Callable[[dict[str, Any]], dict[str, Any]],
+    repeat: int,
+    queries: Sequence[tuple[str, dict[str, Any]]] = QUERIES,
+    extra: dict[str, Any] | None = None,
+) -> list[dict[str, Any]]:
     rows = []
-    for kind, params in QUERIES:
+    for kind, base in queries:
+        params = {**base, **(extra or {})}
         started = time.perf_counter()
         body = call(params)
         first_ms = (time.perf_counter() - started) * 1000
@@ -106,7 +139,7 @@ def measure(call: Callable[[dict[str, Any]], dict[str, Any]], repeat: int) -> li
         rows.append(
             {
                 "type": kind,
-                "params": params,
+                "params": base,
                 "total": body["total"],
                 "total_capped": body["total_capped"],
                 "first_ms": round(first_ms, 1),
@@ -144,20 +177,37 @@ def summarize(rows: list[dict[str, Any]]) -> dict[str, Any]:
 
 def write_markdown(path: Path, report: dict[str, Any]) -> None:
     s = report["summary"]
+    semantic = report.get("search_mode") == "semantic"
+    command = "python -m eval.search_latency" + (" --mode semantic" if semantic else "")
     lines = [
-        "# 검색 응답 시간 (#191)",
+        "# 의미 검색 응답 시간 (#193)" if semantic else "# 검색 응답 시간 (#191)",
         "",
-        f"CHARTER §10.5 목표 **≤ {TARGET_MS:.0f}ms**. `python -m eval.search_latency` 출력이다.",
+        f"CHARTER §10.5 목표 **≤ {TARGET_MS:.0f}ms**. `{command}` 출력이다.",
         "",
         f"- 색인: `{report['index']}` ({report['index_bytes'] / 1e9:.2f} GB)",
         f"- 호출: {report['mode']} · 질의 {len(report['queries'])}개 × {report['repeat']}회"
         " (질의마다 첫 호출 1회는 따로)",
         f"- 환경: {report['environment']}",
+    ]
+    if semantic:
+        m = report["semantic"]
+        lines += [
+            f"- 임베딩: `{m['folder']}` - {m['model']} {m['dim']}차원 {m['count']:,}건 "
+            f"({m['bytes'] / 1e9:.2f} GB)",
+            "- 서버 시작 때 모델·벡터 읽기(첫 요청): "
+            + (
+                f"**{report['cold_start_ms'] / 1000:.1f}초** - p50·p95 에 넣지 않았다"
+                if report.get("cold_start_ms") is not None
+                else "이미 떠 있는 서버라 재지 않았다"
+            ),
+        ]
+    lines += [
         "",
         "| 유형 | n | p50 | p95 | 최대 | ≤ 1초 |",
         "|---|---:|---:|---:|---:|:---:|",
     ]
-    for name in ("keyword", "keyword+filter", "filter", "all", "first_call"):
+    names = ("keyword", "keyword+filter", "filter", "semantic", "semantic-code", "semantic+filter")
+    for name in (*names, "all", "first_call"):
         if name not in s:
             continue
         g = s[name]
@@ -169,7 +219,7 @@ def write_markdown(path: Path, report: dict[str, Any]) -> None:
     lines += ["", "## 질의별", "", "| 유형 | 파라미터 | 건수 | 첫 호출 | 중앙값 | 최대 |"]
     lines.append("|---|---|---:|---:|---:|---:|")
     for row in report["queries"]:
-        params = ", ".join(f"{k}={v}" for k, v in row["params"].items())
+        params = ", ".join(f"{k}={v}" for k, v in row["params"].items()).replace("\n", "⏎")
         total = f"{row['total']:,}{'+' if row['total_capped'] else ''}"
         lines.append(
             f"| {row['type']} | `{params}` | {total} | {row['first_ms']:.0f}ms "
@@ -180,10 +230,11 @@ def write_markdown(path: Path, report: dict[str, Any]) -> None:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="검색 응답 시간 p50·p95 (#191)")
+    parser = argparse.ArgumentParser(description="검색 응답 시간 p50·p95 (#191, #193)")
     parser.add_argument("--base-url", help="떠 있는 API 주소. 없으면 TestClient")
+    parser.add_argument("--mode", choices=("keyword", "semantic"), default="keyword")
     parser.add_argument("--repeat", type=int, default=5)
-    parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
+    parser.add_argument("--out", type=Path, default=None)
     parser.add_argument("--notes", help="md 의 해석 칸에 넣을 문장")
     args = parser.parse_args(argv)
 
@@ -193,9 +244,35 @@ def main(argv: Sequence[str] | None = None) -> int:
     if not index.is_file():
         print(f"오류: 색인 {index} 가 없다. python -m search.index 먼저", file=sys.stderr)
         return 1
-    rows = measure(make_caller(args.base_url), args.repeat)
+    semantic = args.mode == "semantic"
+    out = args.out or (DEFAULT_OUT_SEMANTIC if semantic else DEFAULT_OUT)
+    call = make_caller(args.base_url)
+    extra: dict[str, Any] = {}
+    cold_ms = None
+    semantic_info = None
+    if semantic:
+        manifest = api.semantic_manifest()
+        if manifest is None:
+            print(
+                f"오류: {api.semantic_path()} 가 없다. python -m search.embed 먼저", file=sys.stderr
+            )
+            return 1
+        folder = api.semantic_path()
+        semantic_info = {
+            "folder": folder.as_posix(),
+            **{k: manifest[k] for k in ("model", "dim", "count", "max_tokens", "bytes")},
+        }
+        extra = {"mode": "semantic"}
+        if not args.base_url:
+            started = time.perf_counter()
+            call({"q": "warm up", **extra})
+            cold_ms = round((time.perf_counter() - started) * 1000, 1)
+    rows = measure(call, args.repeat, SEMANTIC_QUERIES if semantic else QUERIES, extra)
     report = {
         "schema": SCHEMA_VERSION,
+        "search_mode": args.mode,
+        "semantic": semantic_info,
+        "cold_start_ms": cold_ms,
         "target_ms": TARGET_MS,
         "index": index.as_posix(),
         "index_bytes": index.stat().st_size,
@@ -208,11 +285,13 @@ def main(argv: Sequence[str] | None = None) -> int:
         "queries": rows,
         "notes": args.notes,
     }
-    args.out.parent.mkdir(parents=True, exist_ok=True)
-    args.out.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    write_markdown(args.out.with_suffix(".md"), report)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    write_markdown(out.with_suffix(".md"), report)
     s = report["summary"]["all"]
-    print(f"전체 p50 {s['p50_ms']:.0f}ms · p95 {s['p95_ms']:.0f}ms → {args.out}")
+    if cold_ms is not None:
+        print(f"첫 요청(모델·벡터 읽기) {cold_ms / 1000:.1f}초")
+    print(f"전체 p50 {s['p50_ms']:.0f}ms · p95 {s['p95_ms']:.0f}ms → {out}")
     for row in report["over_target"]:
         print(f"  1초 초과: {row['type']} {row['params']} 중앙값 {row['median_ms']:.0f}ms")
     return 0

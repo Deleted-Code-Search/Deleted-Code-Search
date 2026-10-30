@@ -1,0 +1,2013 @@
+{
+  "seed": 20261030,
+  "sample": [
+    {
+      "id": "f2da8584-4be8-5876-8e6d-1b46086cec53",
+      "repo": "apache/superset",
+      "function_name": "test_url_param_query",
+      "file_path": "tests/integration_tests/jinja_context_tests.py"
+    },
+    {
+      "id": "b4ec11b4-1af3-503d-90cc-b91eaac581fe",
+      "repo": "apache/superset",
+      "function_name": "get_json_data",
+      "file_path": "dashed/viz.py"
+    },
+    {
+      "id": "acdb0743-d36e-5467-80c5-25a9a0d95d96",
+      "repo": "arc53/DocsGPT",
+      "function_name": "test_unauthorized_source",
+      "file_path": "tests/api/test_connector_routes.py"
+    },
+    {
+      "id": "4a5ac82d-5bc1-5fe8-9365-c9041d6347a6",
+      "repo": "arc53/DocsGPT",
+      "function_name": "test_callback_success_non_google_provider",
+      "file_path": "tests/api/test_connector_routes.py"
+    },
+    {
+      "id": "2004c89f-5590-5c79-a7b7-f25ea605c84c",
+      "repo": "commaai/openpilot",
+      "function_name": "setUp",
+      "file_path": "jsonrpc/tests/test_jsonrpc_errors.py"
+    },
+    {
+      "id": "b115917a-47c7-57d4-8a4b-017c2bbdaac7",
+      "repo": "commaai/openpilot",
+      "function_name": "kill_defaultd",
+      "file_path": "selfdrive/controls/lib/drive_helpers.py"
+    },
+    {
+      "id": "e7cad1b2-33dc-5cdd-8a40-b1a089ca49c4",
+      "repo": "django/django",
+      "function_name": "__getitem__",
+      "file_path": "django/contrib/gis/geos/geometries.py"
+    },
+    {
+      "id": "bd96082d-a926-549a-a274-0c93d5fbc216",
+      "repo": "django/django",
+      "function_name": "get_date_extract_sql",
+      "file_path": "django/db/backends/oracle/base.py"
+    },
+    {
+      "id": "098d6c04-cf2e-513a-a717-41db11b37c66",
+      "repo": "eosphoros-ai/DB-GPT",
+      "function_name": "cache_package",
+      "file_path": "setup.py"
+    },
+    {
+      "id": "b6817902-b9ea-5d1a-b5ea-edf10dc505d7",
+      "repo": "eosphoros-ai/DB-GPT",
+      "function_name": "__query",
+      "file_path": "pilot/common/sql_database.py"
+    },
+    {
+      "id": "4cb85d48-746e-5bea-afee-ffb3a329eeae",
+      "repo": "FoundationAgents/MetaGPT",
+      "function_name": "solution_handler",
+      "file_path": "metagpt/roles/assistant.py"
+    },
+    {
+      "id": "74ba0fa9-afc3-546f-a88b-282e9d6e5886",
+      "repo": "FoundationAgents/MetaGPT",
+      "function_name": "_mbpp_eval",
+      "file_path": "examples/aflow/scripts/evaluator.py"
+    },
+    {
+      "id": "0c7d2208-f1e1-5bf1-b05d-08d4c3c5f71f",
+      "repo": "huggingface/diffusers",
+      "function_name": "_set_gradient_checkpointing",
+      "file_path": "src/diffusers/pipelines/old/glide/modeling_glide.py"
+    },
+    {
+      "id": "1890e4d9-8341-5485-9def-ad4d90daa836",
+      "repo": "huggingface/diffusers",
+      "function_name": "callback_inputs_change_tensor",
+      "file_path": "tests/pipelines/cosmos/test_cosmos2_text2image.py"
+    },
+    {
+      "id": "ea041026-ad94-5a38-8a73-df74f157fc0d",
+      "repo": "huggingface/trl",
+      "function_name": "train",
+      "file_path": "trl/trainer/sft_trainer.py"
+    },
+    {
+      "id": "79699348-2974-5024-944e-b1abdc780c84",
+      "repo": "huggingface/trl",
+      "function_name": "formatting_func",
+      "file_path": "trl/trainer/sft_trainer.py"
+    },
+    {
+      "id": "fd8b49da-f29a-57b0-81eb-e3e1df33ba45",
+      "repo": "hummingbot/hummingbot",
+      "function_name": "collect_testing_data",
+      "file_path": "test/hummingbot/connector/gateway/amm/debug_gateway_evm_amm_lp.py"
+    },
+    {
+      "id": "69bb59b7-40e7-5c6b-8f70-86828db3cb33",
+      "repo": "hummingbot/hummingbot",
+      "function_name": "test_get_last_traded_prices",
+      "file_path": "test/hummingbot/connector/exchange/probit/test_probit_api_order_book_data_source.py"
+    },
+    {
+      "id": "283c641a-0578-5efa-a5b8-a8d727735f89",
+      "repo": "keras-team/keras",
+      "function_name": "test_only_line_separator_is_stripped",
+      "file_path": "keras/layers/preprocessing/table_utils_test.py"
+    },
+    {
+      "id": "9b0be723-1a7c-5297-9bc9-0f1d9091a669",
+      "repo": "keras-team/keras",
+      "function_name": "get_initial_state",
+      "file_path": "keras/layers/rnn/legacy_cells.py"
+    },
+    {
+      "id": "0e33fbfc-ad1f-5343-8cab-1e25fa31c55a",
+      "repo": "Lightning-AI/pytorch-lightning",
+      "function_name": "test_step_end",
+      "file_path": "tests/tests_pytorch/strategies/test_dp.py"
+    },
+    {
+      "id": "e1c72d61-f5d0-585d-8c67-0c5d71dda520",
+      "repo": "Lightning-AI/pytorch-lightning",
+      "function_name": "__init__",
+      "file_path": "src/lightning_fabric/strategies/fairscale.py"
+    },
+    {
+      "id": "701b9b21-b3ae-5d2b-b8ce-0629d4fbb4bc",
+      "repo": "locustio/locust",
+      "function_name": "load_requests_csv",
+      "file_path": "locust/stats.py"
+    },
+    {
+      "id": "01f411da-9792-5ed3-acd7-9c5113bdc294",
+      "repo": "locustio/locust",
+      "function_name": "filter_tasks_by_tags",
+      "file_path": "locust/env.py"
+    },
+    {
+      "id": "1acfdab1-0d9d-5e0c-aa92-1f270765dbf4",
+      "repo": "ManimCommunity/manim",
+      "function_name": "interpolate",
+      "file_path": "manim/utils/bezier.py"
+    },
+    {
+      "id": "e5948642-a34a-5642-ae07-503ee37a76e0",
+      "repo": "ManimCommunity/manim",
+      "function_name": "rect",
+      "file_path": "logo/logo.py"
+    },
+    {
+      "id": "dee56c3e-be4e-5ea7-acc9-bd96252f847f",
+      "repo": "modelcontextprotocol/python-sdk",
+      "function_name": "callback_handler",
+      "file_path": "tests/client/test_auth.py"
+    },
+    {
+      "id": "13af159e-2af9-5458-9ced-3abea1e61601",
+      "repo": "modelcontextprotocol/python-sdk",
+      "function_name": "test_get_resource",
+      "file_path": "tests/server/mcpserver/resources/test_resource_manager.py"
+    },
+    {
+      "id": "6a140be2-640d-53fd-84b1-6a12ee997b63",
+      "repo": "NVIDIA-NeMo/Speech",
+      "function_name": "mapping_openclip_state_dict",
+      "file_path": "examples/multimodal/vision_language_foundation/clip/convert_external_clip_to_nemo.py"
+    },
+    {
+      "id": "1c998fe3-f2ab-5582-941a-7d1e5c1ade1e",
+      "repo": "NVIDIA-NeMo/Speech",
+      "function_name": "model",
+      "file_path": "tests/collections/llm/bert/model/test_embedding.py"
+    },
+    {
+      "id": "46884e56-affb-5915-95b6-f9b7f9f65437",
+      "repo": "psf/black",
+      "function_name": "normalize_prefix",
+      "file_path": "src/black/linegen.py"
+    },
+    {
+      "id": "fdcc1a4e-dd5c-5d50-b2a5-80e463942cbe",
+      "repo": "psf/black",
+      "function_name": "test_trailing_comma_optional_parens_stability3_pass2",
+      "file_path": "tests/test_black.py"
+    },
+    {
+      "id": "3f56415b-e8be-5989-abfb-0498c2a4c2eb",
+      "repo": "pydantic/pydantic-ai",
+      "function_name": "refresh",
+      "file_path": "tests/providers/test_google_vertex.py"
+    },
+    {
+      "id": "2b95b9da-4b7f-5cad-a314-ea15368f949e",
+      "repo": "pydantic/pydantic-ai",
+      "function_name": "prompt_api_key",
+      "file_path": "tests/clai2/test_github_plugin.py"
+    },
+    {
+      "id": "1787ba04-10c5-54d5-bc54-d5cce567ca75",
+      "repo": "pyscript/pyscript",
+      "function_name": "expected_missing_file_errors",
+      "file_path": "pyscript.core/tests/integration/test_pyweb.py"
+    },
+    {
+      "id": "dfdddc11-9272-506e-8970-ac96509570d6",
+      "repo": "pyscript/pyscript",
+      "function_name": "_style",
+      "file_path": "pyscript.core/src/stdlib/pyweb/pydom.py"
+    },
+    {
+      "id": "75ba09e0-2824-599f-815a-c9d77022643f",
+      "repo": "ray-project/ray",
+      "function_name": "__init__",
+      "file_path": "python/ray/rllib/a3c/runner.py"
+    },
+    {
+      "id": "b957d773-6c5b-5ced-b8a8-e16c8560fb73",
+      "repo": "ray-project/ray",
+      "function_name": "tearDownClass",
+      "file_path": "rllib_contrib/ddpg/tests/test_ddpg.py"
+    },
+    {
+      "id": "b802dea6-9340-5875-aa34-f8cf1136cace",
+      "repo": "sanic-org/sanic",
+      "function_name": "execute_request_handler",
+      "file_path": "sanic/server.py"
+    },
+    {
+      "id": "6469427e-a195-5723-894d-4ddf26de6526",
+      "repo": "sanic-org/sanic",
+      "function_name": "options",
+      "file_path": "sanic/blueprints.py"
+    },
+    {
+      "id": "7d0ff5fd-88fc-5963-809e-39e7e7571111",
+      "repo": "scikit-learn/scikit-learn",
+      "function_name": "dict_learning",
+      "file_path": "scikits/learn/decomposition/sparse_pca.py"
+    },
+    {
+      "id": "f91fe3dc-3b03-5124-806f-d54f86bb5c12",
+      "repo": "scikit-learn/scikit-learn",
+      "function_name": "test_equal_class_weight",
+      "file_path": "sklearn/linear_model/tests/test_sgd.py"
+    },
+    {
+      "id": "ea0482fe-60c0-5488-ada6-24a15923ae75",
+      "repo": "ScrapeGraphAI/Scrapegraph-ai",
+      "function_name": "__init__",
+      "file_path": "scrapegraphai/models/openai.py"
+    },
+    {
+      "id": "e9cacc85-049d-589f-8e88-e98437579c42",
+      "repo": "ScrapeGraphAI/Scrapegraph-ai",
+      "function_name": "_generate_nodes_description",
+      "file_path": "scrapegraphai/builders/graph_builder.py"
+    },
+    {
+      "id": "1f3f0c38-1ae8-578e-8a24-fa6887f88bed",
+      "repo": "sgl-project/sglang",
+      "function_name": "_script_multiturn_full_hit_no_reuse_branch",
+      "file_path": "test/manual/chunked_prefill/test_scripted_regression.py"
+    },
+    {
+      "id": "b902ee85-1018-5bc0-b16d-573bd06256d7",
+      "repo": "sgl-project/sglang",
+      "function_name": "_forward_silu_gating",
+      "file_path": "python/sglang/multimodal_gen/runtime/models/dits/zimage.py"
+    },
+    {
+      "id": "85ca0836-8508-53dd-a519-83fd022e8364",
+      "repo": "topoteretes/cognee",
+      "function_name": "test_postgresql_without_env_var",
+      "file_path": "cognee/tests/unit/infrastructure/databases/relational/sqlalchemy/test_SqlAlchemyAdapter.py"
+    },
+    {
+      "id": "7275e8f9-f15c-5a48-8306-f546094af6a8",
+      "repo": "topoteretes/cognee",
+      "function_name": "_client",
+      "file_path": "cognee/tests/unit/infrastructure/llm/test_legacy_image_transcribe_model.py"
+    },
+    {
+      "id": "5e36720b-292a-563a-9b95-44681d87038c",
+      "repo": "unclecode/crawl4ai",
+      "function_name": "validate_proxy_destination",
+      "file_path": "deploy/docker/utils.py"
+    },
+    {
+      "id": "c1e996b4-28a8-52ce-ab2f-b91fdc7024fc",
+      "repo": "unclecode/crawl4ai",
+      "function_name": "close",
+      "file_path": "crawl4ai/browser/strategies/playwright.py"
+    }
+  ],
+  "full_total": 723087,
+  "throughput_sample": 1000,
+  "results": [
+    {
+      "model": "jinaai/jina-embeddings-v2-base-code",
+      "dim": 768,
+      "max_tokens": 128,
+      "bytes": 644084544,
+      "load_seconds": 1.14,
+      "seconds_per_function": 0.04906,
+      "estimated_hours_full": 9.85,
+      "target_mrr": 0.95,
+      "target_top1": 9,
+      "target_top5": 10,
+      "queries": [
+        {
+          "query": "send a signal to stop a background daemon using the pid stored in a file",
+          "target": "b115917a-47c7-57d4-8a4b-017c2bbdaac7",
+          "target_rank": 1,
+          "top5": [
+            {
+              "id": "b115917a-47c7-57d4-8a4b-017c2bbdaac7",
+              "score": 0.5442
+            },
+            {
+              "id": "b957d773-6c5b-5ced-b8a8-e16c8560fb73",
+              "score": 0.2504
+            },
+            {
+              "id": "c1e996b4-28a8-52ce-ab2f-b91fdc7024fc",
+              "score": 0.1824
+            },
+            {
+              "id": "b802dea6-9340-5875-aa34-f8cf1136cace",
+              "score": 0.1143
+            },
+            {
+              "id": "4cb85d48-746e-5bea-afee-ffb3a329eeae",
+              "score": 0.0903
+            }
+          ]
+        },
+        {
+          "query": "reject a proxy host that points to a private or internal network address",
+          "target": "5e36720b-292a-563a-9b95-44681d87038c",
+          "target_rank": 1,
+          "top5": [
+            {
+              "id": "5e36720b-292a-563a-9b95-44681d87038c",
+              "score": 0.634
+            },
+            {
+              "id": "acdb0743-d36e-5467-80c5-25a9a0d95d96",
+              "score": 0.3491
+            },
+            {
+              "id": "4a5ac82d-5bc1-5fe8-9365-c9041d6347a6",
+              "score": 0.2231
+            },
+            {
+              "id": "b115917a-47c7-57d4-8a4b-017c2bbdaac7",
+              "score": 0.2011
+            },
+            {
+              "id": "1787ba04-10c5-54d5-bc54-d5cce567ca75",
+              "score": 0.1984
+            }
+          ]
+        },
+        {
+          "query": "linear blend between two points by a fraction",
+          "target": "1acfdab1-0d9d-5e0c-aa92-1f270765dbf4",
+          "target_rank": 1,
+          "top5": [
+            {
+              "id": "1acfdab1-0d9d-5e0c-aa92-1f270765dbf4",
+              "score": 0.6029
+            },
+            {
+              "id": "e5948642-a34a-5642-ae07-503ee37a76e0",
+              "score": 0.3743
+            },
+            {
+              "id": "b902ee85-1018-5bc0-b16d-573bd06256d7",
+              "score": 0.3681
+            },
+            {
+              "id": "e7cad1b2-33dc-5cdd-8a40-b1a089ca49c4",
+              "score": 0.2596
+            },
+            {
+              "id": "0c7d2208-f1e1-5bf1-b05d-08d4c3c5f71f",
+              "score": 0.2221
+            }
+          ]
+        },
+        {
+          "query": "read the request history csv file and return its text",
+          "target": "701b9b21-b3ae-5d2b-b8ce-0629d4fbb4bc",
+          "target_rank": 1,
+          "top5": [
+            {
+              "id": "701b9b21-b3ae-5d2b-b8ce-0629d4fbb4bc",
+              "score": 0.6065
+            },
+            {
+              "id": "79699348-2974-5024-944e-b1abdc780c84",
+              "score": 0.2809
+            },
+            {
+              "id": "283c641a-0578-5efa-a5b8-a8d727735f89",
+              "score": 0.2349
+            },
+            {
+              "id": "69bb59b7-40e7-5c6b-8f70-86828db3cb33",
+              "score": 0.1947
+            },
+            {
+              "id": "fd8b49da-f29a-57b0-81eb-e3e1df33ba45",
+              "score": 0.1584
+            }
+          ]
+        },
+        {
+          "query": "keep only the tasks that match the include labels and drop excluded ones",
+          "target": "01f411da-9792-5ed3-acd7-9c5113bdc294",
+          "target_rank": 1,
+          "top5": [
+            {
+              "id": "01f411da-9792-5ed3-acd7-9c5113bdc294",
+              "score": 0.5805
+            },
+            {
+              "id": "1f3f0c38-1ae8-578e-8a24-fa6887f88bed",
+              "score": 0.2572
+            },
+            {
+              "id": "f91fe3dc-3b03-5124-806f-d54f86bb5c12",
+              "score": 0.2013
+            },
+            {
+              "id": "283c641a-0578-5efa-a5b8-a8d727735f89",
+              "score": 0.1808
+            },
+            {
+              "id": "74ba0fa9-afc3-546f-a88b-282e9d6e5886",
+              "score": 0.172
+            }
+          ]
+        },
+        {
+          "query": "rename pretrained checkpoint weight keys to our model's parameter names",
+          "target": "6a140be2-640d-53fd-84b1-6a12ee997b63",
+          "target_rank": 1,
+          "top5": [
+            {
+              "id": "6a140be2-640d-53fd-84b1-6a12ee997b63",
+              "score": 0.4858
+            },
+            {
+              "id": "ea041026-ad94-5a38-8a73-df74f157fc0d",
+              "score": 0.3789
+            },
+            {
+              "id": "0c7d2208-f1e1-5bf1-b05d-08d4c3c5f71f",
+              "score": 0.3617
+            },
+            {
+              "id": "ea0482fe-60c0-5488-ada6-24a15923ae75",
+              "score": 0.3089
+            },
+            {
+              "id": "7d0ff5fd-88fc-5963-809e-39e7e7571111",
+              "score": 0.3008
+            }
+          ]
+        },
+        {
+          "query": "build SQL that pulls the year or month out of a date column",
+          "target": "bd96082d-a926-549a-a274-0c93d5fbc216",
+          "target_rank": 1,
+          "top5": [
+            {
+              "id": "bd96082d-a926-549a-a274-0c93d5fbc216",
+              "score": 0.5121
+            },
+            {
+              "id": "b6817902-b9ea-5d1a-b5ea-edf10dc505d7",
+              "score": 0.1651
+            },
+            {
+              "id": "701b9b21-b3ae-5d2b-b8ce-0629d4fbb4bc",
+              "score": 0.1371
+            },
+            {
+              "id": "79699348-2974-5024-944e-b1abdc780c84",
+              "score": 0.1294
+            },
+            {
+              "id": "dfdddc11-9272-506e-8970-ac96509570d6",
+              "score": 0.1285
+            }
+          ]
+        },
+        {
+          "query": "turn on activation recomputation for the encoder to save memory",
+          "target": "0c7d2208-f1e1-5bf1-b05d-08d4c3c5f71f",
+          "target_rank": 2,
+          "top5": [
+            {
+              "id": "ea041026-ad94-5a38-8a73-df74f157fc0d",
+              "score": 0.4858
+            },
+            {
+              "id": "0c7d2208-f1e1-5bf1-b05d-08d4c3c5f71f",
+              "score": 0.4491
+            },
+            {
+              "id": "7d0ff5fd-88fc-5963-809e-39e7e7571111",
+              "score": 0.3746
+            },
+            {
+              "id": "b902ee85-1018-5bc0-b16d-573bd06256d7",
+              "score": 0.3214
+            },
+            {
+              "id": "f91fe3dc-3b03-5124-806f-d54f86bb5c12",
+              "score": 0.3083
+            }
+          ]
+        },
+        {
+          "query": "learn a dictionary of atoms for sparse coding from data in mini batches",
+          "target": "7d0ff5fd-88fc-5963-809e-39e7e7571111",
+          "target_rank": 1,
+          "top5": [
+            {
+              "id": "7d0ff5fd-88fc-5963-809e-39e7e7571111",
+              "score": 0.7221
+            },
+            {
+              "id": "6a140be2-640d-53fd-84b1-6a12ee997b63",
+              "score": 0.4294
+            },
+            {
+              "id": "f91fe3dc-3b03-5124-806f-d54f86bb5c12",
+              "score": 0.3333
+            },
+            {
+              "id": "e1c72d61-f5d0-585d-8c67-0c5d71dda520",
+              "score": 0.2831
+            },
+            {
+              "id": "ea0482fe-60c0-5488-ada6-24a15923ae75",
+              "score": 0.2755
+            }
+          ]
+        },
+        {
+          "query": "download a package archive once and reuse a locally cached copy during install",
+          "target": "098d6c04-cf2e-513a-a717-41db11b37c66",
+          "target_rank": 1,
+          "top5": [
+            {
+              "id": "098d6c04-cf2e-513a-a717-41db11b37c66",
+              "score": 0.6914
+            },
+            {
+              "id": "13af159e-2af9-5458-9ced-3abea1e61601",
+              "score": 0.2627
+            },
+            {
+              "id": "701b9b21-b3ae-5d2b-b8ce-0629d4fbb4bc",
+              "score": 0.2599
+            },
+            {
+              "id": "1f3f0c38-1ae8-578e-8a24-fa6887f88bed",
+              "score": 0.2437
+            },
+            {
+              "id": "2b95b9da-4b7f-5cad-a314-ea15368f949e",
+              "score": 0.2239
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "model": "jinaai/jina-embeddings-v2-base-code",
+      "dim": 768,
+      "max_tokens": 256,
+      "bytes": 644084544,
+      "load_seconds": 0.71,
+      "seconds_per_function": 0.07923,
+      "estimated_hours_full": 15.91,
+      "target_mrr": 0.95,
+      "target_top1": 9,
+      "target_top5": 10,
+      "queries": [
+        {
+          "query": "send a signal to stop a background daemon using the pid stored in a file",
+          "target": "b115917a-47c7-57d4-8a4b-017c2bbdaac7",
+          "target_rank": 1,
+          "top5": [
+            {
+              "id": "b115917a-47c7-57d4-8a4b-017c2bbdaac7",
+              "score": 0.5442
+            },
+            {
+              "id": "b957d773-6c5b-5ced-b8a8-e16c8560fb73",
+              "score": 0.2504
+            },
+            {
+              "id": "c1e996b4-28a8-52ce-ab2f-b91fdc7024fc",
+              "score": 0.1824
+            },
+            {
+              "id": "b802dea6-9340-5875-aa34-f8cf1136cace",
+              "score": 0.0933
+            },
+            {
+              "id": "4cb85d48-746e-5bea-afee-ffb3a329eeae",
+              "score": 0.0903
+            }
+          ]
+        },
+        {
+          "query": "reject a proxy host that points to a private or internal network address",
+          "target": "5e36720b-292a-563a-9b95-44681d87038c",
+          "target_rank": 1,
+          "top5": [
+            {
+              "id": "5e36720b-292a-563a-9b95-44681d87038c",
+              "score": 0.6225
+            },
+            {
+              "id": "acdb0743-d36e-5467-80c5-25a9a0d95d96",
+              "score": 0.3491
+            },
+            {
+              "id": "4a5ac82d-5bc1-5fe8-9365-c9041d6347a6",
+              "score": 0.2362
+            },
+            {
+              "id": "098d6c04-cf2e-513a-a717-41db11b37c66",
+              "score": 0.2128
+            },
+            {
+              "id": "b115917a-47c7-57d4-8a4b-017c2bbdaac7",
+              "score": 0.2011
+            }
+          ]
+        },
+        {
+          "query": "linear blend between two points by a fraction",
+          "target": "1acfdab1-0d9d-5e0c-aa92-1f270765dbf4",
+          "target_rank": 1,
+          "top5": [
+            {
+              "id": "1acfdab1-0d9d-5e0c-aa92-1f270765dbf4",
+              "score": 0.6029
+            },
+            {
+              "id": "e5948642-a34a-5642-ae07-503ee37a76e0",
+              "score": 0.3743
+            },
+            {
+              "id": "b902ee85-1018-5bc0-b16d-573bd06256d7",
+              "score": 0.3681
+            },
+            {
+              "id": "e7cad1b2-33dc-5cdd-8a40-b1a089ca49c4",
+              "score": 0.248
+            },
+            {
+              "id": "0c7d2208-f1e1-5bf1-b05d-08d4c3c5f71f",
+              "score": 0.2221
+            }
+          ]
+        },
+        {
+          "query": "read the request history csv file and return its text",
+          "target": "701b9b21-b3ae-5d2b-b8ce-0629d4fbb4bc",
+          "target_rank": 1,
+          "top5": [
+            {
+              "id": "701b9b21-b3ae-5d2b-b8ce-0629d4fbb4bc",
+              "score": 0.6065
+            },
+            {
+              "id": "79699348-2974-5024-944e-b1abdc780c84",
+              "score": 0.2809
+            },
+            {
+              "id": "283c641a-0578-5efa-a5b8-a8d727735f89",
+              "score": 0.2199
+            },
+            {
+              "id": "69bb59b7-40e7-5c6b-8f70-86828db3cb33",
+              "score": 0.158
+            },
+            {
+              "id": "fdcc1a4e-dd5c-5d50-b2a5-80e463942cbe",
+              "score": 0.1535
+            }
+          ]
+        },
+        {
+          "query": "keep only the tasks that match the include labels and drop excluded ones",
+          "target": "01f411da-9792-5ed3-acd7-9c5113bdc294",
+          "target_rank": 1,
+          "top5": [
+            {
+              "id": "01f411da-9792-5ed3-acd7-9c5113bdc294",
+              "score": 0.5696
+            },
+            {
+              "id": "1f3f0c38-1ae8-578e-8a24-fa6887f88bed",
+              "score": 0.2486
+            },
+            {
+              "id": "74ba0fa9-afc3-546f-a88b-282e9d6e5886",
+              "score": 0.2415
+            },
+            {
+              "id": "283c641a-0578-5efa-a5b8-a8d727735f89",
+              "score": 0.1829
+            },
+            {
+              "id": "f91fe3dc-3b03-5124-806f-d54f86bb5c12",
+              "score": 0.1722
+            }
+          ]
+        },
+        {
+          "query": "rename pretrained checkpoint weight keys to our model's parameter names",
+          "target": "6a140be2-640d-53fd-84b1-6a12ee997b63",
+          "target_rank": 1,
+          "top5": [
+            {
+              "id": "6a140be2-640d-53fd-84b1-6a12ee997b63",
+              "score": 0.4864
+            },
+            {
+              "id": "ea041026-ad94-5a38-8a73-df74f157fc0d",
+              "score": 0.3816
+            },
+            {
+              "id": "0c7d2208-f1e1-5bf1-b05d-08d4c3c5f71f",
+              "score": 0.3617
+            },
+            {
+              "id": "ea0482fe-60c0-5488-ada6-24a15923ae75",
+              "score": 0.3089
+            },
+            {
+              "id": "7d0ff5fd-88fc-5963-809e-39e7e7571111",
+              "score": 0.299
+            }
+          ]
+        },
+        {
+          "query": "build SQL that pulls the year or month out of a date column",
+          "target": "bd96082d-a926-549a-a274-0c93d5fbc216",
+          "target_rank": 1,
+          "top5": [
+            {
+              "id": "bd96082d-a926-549a-a274-0c93d5fbc216",
+              "score": 0.5121
+            },
+            {
+              "id": "b6817902-b9ea-5d1a-b5ea-edf10dc505d7",
+              "score": 0.1834
+            },
+            {
+              "id": "701b9b21-b3ae-5d2b-b8ce-0629d4fbb4bc",
+              "score": 0.1371
+            },
+            {
+              "id": "79699348-2974-5024-944e-b1abdc780c84",
+              "score": 0.1294
+            },
+            {
+              "id": "dfdddc11-9272-506e-8970-ac96509570d6",
+              "score": 0.1285
+            }
+          ]
+        },
+        {
+          "query": "turn on activation recomputation for the encoder to save memory",
+          "target": "0c7d2208-f1e1-5bf1-b05d-08d4c3c5f71f",
+          "target_rank": 2,
+          "top5": [
+            {
+              "id": "ea041026-ad94-5a38-8a73-df74f157fc0d",
+              "score": 0.4529
+            },
+            {
+              "id": "0c7d2208-f1e1-5bf1-b05d-08d4c3c5f71f",
+              "score": 0.4491
+            },
+            {
+              "id": "6a140be2-640d-53fd-84b1-6a12ee997b63",
+              "score": 0.3706
+            },
+            {
+              "id": "7d0ff5fd-88fc-5963-809e-39e7e7571111",
+              "score": 0.354
+            },
+            {
+              "id": "b902ee85-1018-5bc0-b16d-573bd06256d7",
+              "score": 0.3214
+            }
+          ]
+        },
+        {
+          "query": "learn a dictionary of atoms for sparse coding from data in mini batches",
+          "target": "7d0ff5fd-88fc-5963-809e-39e7e7571111",
+          "target_rank": 1,
+          "top5": [
+            {
+              "id": "7d0ff5fd-88fc-5963-809e-39e7e7571111",
+              "score": 0.6857
+            },
+            {
+              "id": "6a140be2-640d-53fd-84b1-6a12ee997b63",
+              "score": 0.4202
+            },
+            {
+              "id": "f91fe3dc-3b03-5124-806f-d54f86bb5c12",
+              "score": 0.2958
+            },
+            {
+              "id": "ea0482fe-60c0-5488-ada6-24a15923ae75",
+              "score": 0.2755
+            },
+            {
+              "id": "e1c72d61-f5d0-585d-8c67-0c5d71dda520",
+              "score": 0.2664
+            }
+          ]
+        },
+        {
+          "query": "download a package archive once and reuse a locally cached copy during install",
+          "target": "098d6c04-cf2e-513a-a717-41db11b37c66",
+          "target_rank": 1,
+          "top5": [
+            {
+              "id": "098d6c04-cf2e-513a-a717-41db11b37c66",
+              "score": 0.7237
+            },
+            {
+              "id": "13af159e-2af9-5458-9ced-3abea1e61601",
+              "score": 0.2627
+            },
+            {
+              "id": "701b9b21-b3ae-5d2b-b8ce-0629d4fbb4bc",
+              "score": 0.2599
+            },
+            {
+              "id": "1f3f0c38-1ae8-578e-8a24-fa6887f88bed",
+              "score": 0.2427
+            },
+            {
+              "id": "7d0ff5fd-88fc-5963-809e-39e7e7571111",
+              "score": 0.2278
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "model": "ibm-granite/granite-embedding-small-english-r2",
+      "dim": 384,
+      "max_tokens": 128,
+      "bytes": 197183061,
+      "load_seconds": 0.25,
+      "seconds_per_function": 0.01516,
+      "estimated_hours_full": 3.04,
+      "target_mrr": 0.819,
+      "target_top1": 8,
+      "target_top5": 8,
+      "queries": [
+        {
+          "query": "send a signal to stop a background daemon using the pid stored in a file",
+          "target": "b115917a-47c7-57d4-8a4b-017c2bbdaac7",
+          "target_rank": 1,
+          "top5": [
+            {
+              "id": "b115917a-47c7-57d4-8a4b-017c2bbdaac7",
+              "score": 0.8564
+            },
+            {
+              "id": "b802dea6-9340-5875-aa34-f8cf1136cace",
+              "score": 0.7994
+            },
+            {
+              "id": "c1e996b4-28a8-52ce-ab2f-b91fdc7024fc",
+              "score": 0.7767
+            },
+            {
+              "id": "13af159e-2af9-5458-9ced-3abea1e61601",
+              "score": 0.7764
+            },
+            {
+              "id": "1f3f0c38-1ae8-578e-8a24-fa6887f88bed",
+              "score": 0.7719
+            }
+          ]
+        },
+        {
+          "query": "reject a proxy host that points to a private or internal network address",
+          "target": "5e36720b-292a-563a-9b95-44681d87038c",
+          "target_rank": 1,
+          "top5": [
+            {
+              "id": "5e36720b-292a-563a-9b95-44681d87038c",
+              "score": 0.8672
+            },
+            {
+              "id": "3f56415b-e8be-5989-abfb-0498c2a4c2eb",
+              "score": 0.7751
+            },
+            {
+              "id": "6469427e-a195-5723-894d-4ddf26de6526",
+              "score": 0.7736
+            },
+            {
+              "id": "dee56c3e-be4e-5ea7-acc9-bd96252f847f",
+              "score": 0.7716
+            },
+            {
+              "id": "acdb0743-d36e-5467-80c5-25a9a0d95d96",
+              "score": 0.768
+            }
+          ]
+        },
+        {
+          "query": "linear blend between two points by a fraction",
+          "target": "1acfdab1-0d9d-5e0c-aa92-1f270765dbf4",
+          "target_rank": 1,
+          "top5": [
+            {
+              "id": "1acfdab1-0d9d-5e0c-aa92-1f270765dbf4",
+              "score": 0.8329
+            },
+            {
+              "id": "e5948642-a34a-5642-ae07-503ee37a76e0",
+              "score": 0.8007
+            },
+            {
+              "id": "0c7d2208-f1e1-5bf1-b05d-08d4c3c5f71f",
+              "score": 0.7699
+            },
+            {
+              "id": "f91fe3dc-3b03-5124-806f-d54f86bb5c12",
+              "score": 0.7596
+            },
+            {
+              "id": "1890e4d9-8341-5485-9def-ad4d90daa836",
+              "score": 0.7579
+            }
+          ]
+        },
+        {
+          "query": "read the request history csv file and return its text",
+          "target": "701b9b21-b3ae-5d2b-b8ce-0629d4fbb4bc",
+          "target_rank": 1,
+          "top5": [
+            {
+              "id": "701b9b21-b3ae-5d2b-b8ce-0629d4fbb4bc",
+              "score": 0.9082
+            },
+            {
+              "id": "69bb59b7-40e7-5c6b-8f70-86828db3cb33",
+              "score": 0.8253
+            },
+            {
+              "id": "b802dea6-9340-5875-aa34-f8cf1136cace",
+              "score": 0.8162
+            },
+            {
+              "id": "1f3f0c38-1ae8-578e-8a24-fa6887f88bed",
+              "score": 0.8133
+            },
+            {
+              "id": "13af159e-2af9-5458-9ced-3abea1e61601",
+              "score": 0.81
+            }
+          ]
+        },
+        {
+          "query": "keep only the tasks that match the include labels and drop excluded ones",
+          "target": "01f411da-9792-5ed3-acd7-9c5113bdc294",
+          "target_rank": 1,
+          "top5": [
+            {
+              "id": "01f411da-9792-5ed3-acd7-9c5113bdc294",
+              "score": 0.8663
+            },
+            {
+              "id": "283c641a-0578-5efa-a5b8-a8d727735f89",
+              "score": 0.7971
+            },
+            {
+              "id": "0c7d2208-f1e1-5bf1-b05d-08d4c3c5f71f",
+              "score": 0.7856
+            },
+            {
+              "id": "1f3f0c38-1ae8-578e-8a24-fa6887f88bed",
+              "score": 0.782
+            },
+            {
+              "id": "46884e56-affb-5915-95b6-f9b7f9f65437",
+              "score": 0.7718
+            }
+          ]
+        },
+        {
+          "query": "rename pretrained checkpoint weight keys to our model's parameter names",
+          "target": "6a140be2-640d-53fd-84b1-6a12ee997b63",
+          "target_rank": 12,
+          "top5": [
+            {
+              "id": "0c7d2208-f1e1-5bf1-b05d-08d4c3c5f71f",
+              "score": 0.8158
+            },
+            {
+              "id": "79699348-2974-5024-944e-b1abdc780c84",
+              "score": 0.8042
+            },
+            {
+              "id": "ea041026-ad94-5a38-8a73-df74f157fc0d",
+              "score": 0.8028
+            },
+            {
+              "id": "f91fe3dc-3b03-5124-806f-d54f86bb5c12",
+              "score": 0.8017
+            },
+            {
+              "id": "1890e4d9-8341-5485-9def-ad4d90daa836",
+              "score": 0.8009
+            }
+          ]
+        },
+        {
+          "query": "build SQL that pulls the year or month out of a date column",
+          "target": "bd96082d-a926-549a-a274-0c93d5fbc216",
+          "target_rank": 1,
+          "top5": [
+            {
+              "id": "bd96082d-a926-549a-a274-0c93d5fbc216",
+              "score": 0.8597
+            },
+            {
+              "id": "b6817902-b9ea-5d1a-b5ea-edf10dc505d7",
+              "score": 0.8056
+            },
+            {
+              "id": "79699348-2974-5024-944e-b1abdc780c84",
+              "score": 0.7604
+            },
+            {
+              "id": "85ca0836-8508-53dd-a519-83fd022e8364",
+              "score": 0.7581
+            },
+            {
+              "id": "701b9b21-b3ae-5d2b-b8ce-0629d4fbb4bc",
+              "score": 0.7478
+            }
+          ]
+        },
+        {
+          "query": "turn on activation recomputation for the encoder to save memory",
+          "target": "0c7d2208-f1e1-5bf1-b05d-08d4c3c5f71f",
+          "target_rank": 9,
+          "top5": [
+            {
+              "id": "ea041026-ad94-5a38-8a73-df74f157fc0d",
+              "score": 0.8283
+            },
+            {
+              "id": "9b0be723-1a7c-5297-9bc9-0f1d9091a669",
+              "score": 0.803
+            },
+            {
+              "id": "b902ee85-1018-5bc0-b16d-573bd06256d7",
+              "score": 0.8017
+            },
+            {
+              "id": "6a140be2-640d-53fd-84b1-6a12ee997b63",
+              "score": 0.7997
+            },
+            {
+              "id": "1f3f0c38-1ae8-578e-8a24-fa6887f88bed",
+              "score": 0.7984
+            }
+          ]
+        },
+        {
+          "query": "learn a dictionary of atoms for sparse coding from data in mini batches",
+          "target": "7d0ff5fd-88fc-5963-809e-39e7e7571111",
+          "target_rank": 1,
+          "top5": [
+            {
+              "id": "7d0ff5fd-88fc-5963-809e-39e7e7571111",
+              "score": 0.8973
+            },
+            {
+              "id": "6a140be2-640d-53fd-84b1-6a12ee997b63",
+              "score": 0.8029
+            },
+            {
+              "id": "ea0482fe-60c0-5488-ada6-24a15923ae75",
+              "score": 0.7942
+            },
+            {
+              "id": "ea041026-ad94-5a38-8a73-df74f157fc0d",
+              "score": 0.7896
+            },
+            {
+              "id": "f91fe3dc-3b03-5124-806f-d54f86bb5c12",
+              "score": 0.784
+            }
+          ]
+        },
+        {
+          "query": "download a package archive once and reuse a locally cached copy during install",
+          "target": "098d6c04-cf2e-513a-a717-41db11b37c66",
+          "target_rank": 1,
+          "top5": [
+            {
+              "id": "098d6c04-cf2e-513a-a717-41db11b37c66",
+              "score": 0.8763
+            },
+            {
+              "id": "7275e8f9-f15c-5a48-8306-f546094af6a8",
+              "score": 0.7801
+            },
+            {
+              "id": "f2da8584-4be8-5876-8e6d-1b46086cec53",
+              "score": 0.7798
+            },
+            {
+              "id": "5e36720b-292a-563a-9b95-44681d87038c",
+              "score": 0.7793
+            },
+            {
+              "id": "1f3f0c38-1ae8-578e-8a24-fa6887f88bed",
+              "score": 0.7737
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "model": "ibm-granite/granite-embedding-small-english-r2",
+      "dim": 384,
+      "max_tokens": 256,
+      "bytes": 197183061,
+      "load_seconds": 0.25,
+      "seconds_per_function": 0.0261,
+      "estimated_hours_full": 5.24,
+      "target_mrr": 0.82,
+      "target_top1": 8,
+      "target_top5": 8,
+      "queries": [
+        {
+          "query": "send a signal to stop a background daemon using the pid stored in a file",
+          "target": "b115917a-47c7-57d4-8a4b-017c2bbdaac7",
+          "target_rank": 1,
+          "top5": [
+            {
+              "id": "b115917a-47c7-57d4-8a4b-017c2bbdaac7",
+              "score": 0.8564
+            },
+            {
+              "id": "b802dea6-9340-5875-aa34-f8cf1136cace",
+              "score": 0.7998
+            },
+            {
+              "id": "c1e996b4-28a8-52ce-ab2f-b91fdc7024fc",
+              "score": 0.7767
+            },
+            {
+              "id": "75ba09e0-2824-599f-815a-c9d77022643f",
+              "score": 0.7711
+            },
+            {
+              "id": "13af159e-2af9-5458-9ced-3abea1e61601",
+              "score": 0.7702
+            }
+          ]
+        },
+        {
+          "query": "reject a proxy host that points to a private or internal network address",
+          "target": "5e36720b-292a-563a-9b95-44681d87038c",
+          "target_rank": 1,
+          "top5": [
+            {
+              "id": "5e36720b-292a-563a-9b95-44681d87038c",
+              "score": 0.8679
+            },
+            {
+              "id": "4a5ac82d-5bc1-5fe8-9365-c9041d6347a6",
+              "score": 0.7775
+            },
+            {
+              "id": "3f56415b-e8be-5989-abfb-0498c2a4c2eb",
+              "score": 0.7751
+            },
+            {
+              "id": "6469427e-a195-5723-894d-4ddf26de6526",
+              "score": 0.7736
+            },
+            {
+              "id": "dee56c3e-be4e-5ea7-acc9-bd96252f847f",
+              "score": 0.7716
+            }
+          ]
+        },
+        {
+          "query": "linear blend between two points by a fraction",
+          "target": "1acfdab1-0d9d-5e0c-aa92-1f270765dbf4",
+          "target_rank": 1,
+          "top5": [
+            {
+              "id": "1acfdab1-0d9d-5e0c-aa92-1f270765dbf4",
+              "score": 0.8329
+            },
+            {
+              "id": "e5948642-a34a-5642-ae07-503ee37a76e0",
+              "score": 0.8007
+            },
+            {
+              "id": "0c7d2208-f1e1-5bf1-b05d-08d4c3c5f71f",
+              "score": 0.7699
+            },
+            {
+              "id": "1890e4d9-8341-5485-9def-ad4d90daa836",
+              "score": 0.7579
+            },
+            {
+              "id": "b902ee85-1018-5bc0-b16d-573bd06256d7",
+              "score": 0.753
+            }
+          ]
+        },
+        {
+          "query": "read the request history csv file and return its text",
+          "target": "701b9b21-b3ae-5d2b-b8ce-0629d4fbb4bc",
+          "target_rank": 1,
+          "top5": [
+            {
+              "id": "701b9b21-b3ae-5d2b-b8ce-0629d4fbb4bc",
+              "score": 0.9082
+            },
+            {
+              "id": "69bb59b7-40e7-5c6b-8f70-86828db3cb33",
+              "score": 0.8273
+            },
+            {
+              "id": "b802dea6-9340-5875-aa34-f8cf1136cace",
+              "score": 0.8164
+            },
+            {
+              "id": "13af159e-2af9-5458-9ced-3abea1e61601",
+              "score": 0.8092
+            },
+            {
+              "id": "b4ec11b4-1af3-503d-90cc-b91eaac581fe",
+              "score": 0.8091
+            }
+          ]
+        },
+        {
+          "query": "keep only the tasks that match the include labels and drop excluded ones",
+          "target": "01f411da-9792-5ed3-acd7-9c5113bdc294",
+          "target_rank": 1,
+          "top5": [
+            {
+              "id": "01f411da-9792-5ed3-acd7-9c5113bdc294",
+              "score": 0.8646
+            },
+            {
+              "id": "283c641a-0578-5efa-a5b8-a8d727735f89",
+              "score": 0.8005
+            },
+            {
+              "id": "0c7d2208-f1e1-5bf1-b05d-08d4c3c5f71f",
+              "score": 0.7856
+            },
+            {
+              "id": "1f3f0c38-1ae8-578e-8a24-fa6887f88bed",
+              "score": 0.7803
+            },
+            {
+              "id": "b6817902-b9ea-5d1a-b5ea-edf10dc505d7",
+              "score": 0.7766
+            }
+          ]
+        },
+        {
+          "query": "rename pretrained checkpoint weight keys to our model's parameter names",
+          "target": "6a140be2-640d-53fd-84b1-6a12ee997b63",
+          "target_rank": 10,
+          "top5": [
+            {
+              "id": "0c7d2208-f1e1-5bf1-b05d-08d4c3c5f71f",
+              "score": 0.8158
+            },
+            {
+              "id": "79699348-2974-5024-944e-b1abdc780c84",
+              "score": 0.8042
+            },
+            {
+              "id": "1890e4d9-8341-5485-9def-ad4d90daa836",
+              "score": 0.8009
+            },
+            {
+              "id": "f91fe3dc-3b03-5124-806f-d54f86bb5c12",
+              "score": 0.7965
+            },
+            {
+              "id": "0e33fbfc-ad1f-5343-8cab-1e25fa31c55a",
+              "score": 0.7958
+            }
+          ]
+        },
+        {
+          "query": "build SQL that pulls the year or month out of a date column",
+          "target": "bd96082d-a926-549a-a274-0c93d5fbc216",
+          "target_rank": 1,
+          "top5": [
+            {
+              "id": "bd96082d-a926-549a-a274-0c93d5fbc216",
+              "score": 0.8597
+            },
+            {
+              "id": "b6817902-b9ea-5d1a-b5ea-edf10dc505d7",
+              "score": 0.8102
+            },
+            {
+              "id": "79699348-2974-5024-944e-b1abdc780c84",
+              "score": 0.7604
+            },
+            {
+              "id": "85ca0836-8508-53dd-a519-83fd022e8364",
+              "score": 0.7589
+            },
+            {
+              "id": "701b9b21-b3ae-5d2b-b8ce-0629d4fbb4bc",
+              "score": 0.7478
+            }
+          ]
+        },
+        {
+          "query": "turn on activation recomputation for the encoder to save memory",
+          "target": "0c7d2208-f1e1-5bf1-b05d-08d4c3c5f71f",
+          "target_rank": 10,
+          "top5": [
+            {
+              "id": "ea041026-ad94-5a38-8a73-df74f157fc0d",
+              "score": 0.8212
+            },
+            {
+              "id": "6a140be2-640d-53fd-84b1-6a12ee997b63",
+              "score": 0.8019
+            },
+            {
+              "id": "b902ee85-1018-5bc0-b16d-573bd06256d7",
+              "score": 0.8017
+            },
+            {
+              "id": "1f3f0c38-1ae8-578e-8a24-fa6887f88bed",
+              "score": 0.8005
+            },
+            {
+              "id": "7275e8f9-f15c-5a48-8306-f546094af6a8",
+              "score": 0.7988
+            }
+          ]
+        },
+        {
+          "query": "learn a dictionary of atoms for sparse coding from data in mini batches",
+          "target": "7d0ff5fd-88fc-5963-809e-39e7e7571111",
+          "target_rank": 1,
+          "top5": [
+            {
+              "id": "7d0ff5fd-88fc-5963-809e-39e7e7571111",
+              "score": 0.8914
+            },
+            {
+              "id": "6a140be2-640d-53fd-84b1-6a12ee997b63",
+              "score": 0.8035
+            },
+            {
+              "id": "ea0482fe-60c0-5488-ada6-24a15923ae75",
+              "score": 0.7942
+            },
+            {
+              "id": "f91fe3dc-3b03-5124-806f-d54f86bb5c12",
+              "score": 0.7869
+            },
+            {
+              "id": "ea041026-ad94-5a38-8a73-df74f157fc0d",
+              "score": 0.7856
+            }
+          ]
+        },
+        {
+          "query": "download a package archive once and reuse a locally cached copy during install",
+          "target": "098d6c04-cf2e-513a-a717-41db11b37c66",
+          "target_rank": 1,
+          "top5": [
+            {
+              "id": "098d6c04-cf2e-513a-a717-41db11b37c66",
+              "score": 0.8981
+            },
+            {
+              "id": "7275e8f9-f15c-5a48-8306-f546094af6a8",
+              "score": 0.7873
+            },
+            {
+              "id": "1f3f0c38-1ae8-578e-8a24-fa6887f88bed",
+              "score": 0.7826
+            },
+            {
+              "id": "f2da8584-4be8-5876-8e6d-1b46086cec53",
+              "score": 0.7798
+            },
+            {
+              "id": "5e36720b-292a-563a-9b95-44681d87038c",
+              "score": 0.7752
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "model": "BAAI/bge-small-en-v1.5",
+      "dim": 384,
+      "max_tokens": 128,
+      "bytes": 67181135,
+      "load_seconds": 0.17,
+      "seconds_per_function": 0.01542,
+      "estimated_hours_full": 3.1,
+      "target_mrr": 0.933,
+      "target_top1": 9,
+      "target_top5": 10,
+      "queries": [
+        {
+          "query": "send a signal to stop a background daemon using the pid stored in a file",
+          "target": "b115917a-47c7-57d4-8a4b-017c2bbdaac7",
+          "target_rank": 1,
+          "top5": [
+            {
+              "id": "b115917a-47c7-57d4-8a4b-017c2bbdaac7",
+              "score": 0.6984
+            },
+            {
+              "id": "fdcc1a4e-dd5c-5d50-b2a5-80e463942cbe",
+              "score": 0.6435
+            },
+            {
+              "id": "2b95b9da-4b7f-5cad-a314-ea15368f949e",
+              "score": 0.6257
+            },
+            {
+              "id": "b957d773-6c5b-5ced-b8a8-e16c8560fb73",
+              "score": 0.6239
+            },
+            {
+              "id": "e1c72d61-f5d0-585d-8c67-0c5d71dda520",
+              "score": 0.6109
+            }
+          ]
+        },
+        {
+          "query": "reject a proxy host that points to a private or internal network address",
+          "target": "5e36720b-292a-563a-9b95-44681d87038c",
+          "target_rank": 1,
+          "top5": [
+            {
+              "id": "5e36720b-292a-563a-9b95-44681d87038c",
+              "score": 0.7571
+            },
+            {
+              "id": "acdb0743-d36e-5467-80c5-25a9a0d95d96",
+              "score": 0.6289
+            },
+            {
+              "id": "f2da8584-4be8-5876-8e6d-1b46086cec53",
+              "score": 0.6073
+            },
+            {
+              "id": "6469427e-a195-5723-894d-4ddf26de6526",
+              "score": 0.6064
+            },
+            {
+              "id": "4a5ac82d-5bc1-5fe8-9365-c9041d6347a6",
+              "score": 0.593
+            }
+          ]
+        },
+        {
+          "query": "linear blend between two points by a fraction",
+          "target": "1acfdab1-0d9d-5e0c-aa92-1f270765dbf4",
+          "target_rank": 1,
+          "top5": [
+            {
+              "id": "1acfdab1-0d9d-5e0c-aa92-1f270765dbf4",
+              "score": 0.688
+            },
+            {
+              "id": "b902ee85-1018-5bc0-b16d-573bd06256d7",
+              "score": 0.6176
+            },
+            {
+              "id": "f91fe3dc-3b03-5124-806f-d54f86bb5c12",
+              "score": 0.5931
+            },
+            {
+              "id": "e5948642-a34a-5642-ae07-503ee37a76e0",
+              "score": 0.5924
+            },
+            {
+              "id": "1890e4d9-8341-5485-9def-ad4d90daa836",
+              "score": 0.5916
+            }
+          ]
+        },
+        {
+          "query": "read the request history csv file and return its text",
+          "target": "701b9b21-b3ae-5d2b-b8ce-0629d4fbb4bc",
+          "target_rank": 1,
+          "top5": [
+            {
+              "id": "701b9b21-b3ae-5d2b-b8ce-0629d4fbb4bc",
+              "score": 0.8206
+            },
+            {
+              "id": "fdcc1a4e-dd5c-5d50-b2a5-80e463942cbe",
+              "score": 0.6496
+            },
+            {
+              "id": "13af159e-2af9-5458-9ced-3abea1e61601",
+              "score": 0.6384
+            },
+            {
+              "id": "b4ec11b4-1af3-503d-90cc-b91eaac581fe",
+              "score": 0.6272
+            },
+            {
+              "id": "2b95b9da-4b7f-5cad-a314-ea15368f949e",
+              "score": 0.6138
+            }
+          ]
+        },
+        {
+          "query": "keep only the tasks that match the include labels and drop excluded ones",
+          "target": "01f411da-9792-5ed3-acd7-9c5113bdc294",
+          "target_rank": 1,
+          "top5": [
+            {
+              "id": "01f411da-9792-5ed3-acd7-9c5113bdc294",
+              "score": 0.7012
+            },
+            {
+              "id": "2b95b9da-4b7f-5cad-a314-ea15368f949e",
+              "score": 0.6187
+            },
+            {
+              "id": "4cb85d48-746e-5bea-afee-ffb3a329eeae",
+              "score": 0.5828
+            },
+            {
+              "id": "74ba0fa9-afc3-546f-a88b-282e9d6e5886",
+              "score": 0.5789
+            },
+            {
+              "id": "0c7d2208-f1e1-5bf1-b05d-08d4c3c5f71f",
+              "score": 0.5706
+            }
+          ]
+        },
+        {
+          "query": "rename pretrained checkpoint weight keys to our model's parameter names",
+          "target": "6a140be2-640d-53fd-84b1-6a12ee997b63",
+          "target_rank": 3,
+          "top5": [
+            {
+              "id": "0c7d2208-f1e1-5bf1-b05d-08d4c3c5f71f",
+              "score": 0.6916
+            },
+            {
+              "id": "2b95b9da-4b7f-5cad-a314-ea15368f949e",
+              "score": 0.6902
+            },
+            {
+              "id": "6a140be2-640d-53fd-84b1-6a12ee997b63",
+              "score": 0.6804
+            },
+            {
+              "id": "1890e4d9-8341-5485-9def-ad4d90daa836",
+              "score": 0.6789
+            },
+            {
+              "id": "9b0be723-1a7c-5297-9bc9-0f1d9091a669",
+              "score": 0.6749
+            }
+          ]
+        },
+        {
+          "query": "build SQL that pulls the year or month out of a date column",
+          "target": "bd96082d-a926-549a-a274-0c93d5fbc216",
+          "target_rank": 1,
+          "top5": [
+            {
+              "id": "bd96082d-a926-549a-a274-0c93d5fbc216",
+              "score": 0.7359
+            },
+            {
+              "id": "b6817902-b9ea-5d1a-b5ea-edf10dc505d7",
+              "score": 0.6
+            },
+            {
+              "id": "283c641a-0578-5efa-a5b8-a8d727735f89",
+              "score": 0.5556
+            },
+            {
+              "id": "701b9b21-b3ae-5d2b-b8ce-0629d4fbb4bc",
+              "score": 0.5521
+            },
+            {
+              "id": "79699348-2974-5024-944e-b1abdc780c84",
+              "score": 0.541
+            }
+          ]
+        },
+        {
+          "query": "turn on activation recomputation for the encoder to save memory",
+          "target": "0c7d2208-f1e1-5bf1-b05d-08d4c3c5f71f",
+          "target_rank": 1,
+          "top5": [
+            {
+              "id": "0c7d2208-f1e1-5bf1-b05d-08d4c3c5f71f",
+              "score": 0.6587
+            },
+            {
+              "id": "9b0be723-1a7c-5297-9bc9-0f1d9091a669",
+              "score": 0.6473
+            },
+            {
+              "id": "1890e4d9-8341-5485-9def-ad4d90daa836",
+              "score": 0.6212
+            },
+            {
+              "id": "b902ee85-1018-5bc0-b16d-573bd06256d7",
+              "score": 0.6195
+            },
+            {
+              "id": "6a140be2-640d-53fd-84b1-6a12ee997b63",
+              "score": 0.6192
+            }
+          ]
+        },
+        {
+          "query": "learn a dictionary of atoms for sparse coding from data in mini batches",
+          "target": "7d0ff5fd-88fc-5963-809e-39e7e7571111",
+          "target_rank": 1,
+          "top5": [
+            {
+              "id": "7d0ff5fd-88fc-5963-809e-39e7e7571111",
+              "score": 0.8342
+            },
+            {
+              "id": "9b0be723-1a7c-5297-9bc9-0f1d9091a669",
+              "score": 0.6123
+            },
+            {
+              "id": "6a140be2-640d-53fd-84b1-6a12ee997b63",
+              "score": 0.5982
+            },
+            {
+              "id": "74ba0fa9-afc3-546f-a88b-282e9d6e5886",
+              "score": 0.5805
+            },
+            {
+              "id": "1890e4d9-8341-5485-9def-ad4d90daa836",
+              "score": 0.5637
+            }
+          ]
+        },
+        {
+          "query": "download a package archive once and reuse a locally cached copy during install",
+          "target": "098d6c04-cf2e-513a-a717-41db11b37c66",
+          "target_rank": 1,
+          "top5": [
+            {
+              "id": "098d6c04-cf2e-513a-a717-41db11b37c66",
+              "score": 0.7325
+            },
+            {
+              "id": "7275e8f9-f15c-5a48-8306-f546094af6a8",
+              "score": 0.5912
+            },
+            {
+              "id": "fdcc1a4e-dd5c-5d50-b2a5-80e463942cbe",
+              "score": 0.5755
+            },
+            {
+              "id": "3f56415b-e8be-5989-abfb-0498c2a4c2eb",
+              "score": 0.5697
+            },
+            {
+              "id": "13af159e-2af9-5458-9ced-3abea1e61601",
+              "score": 0.5684
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "model": "BAAI/bge-small-en-v1.5",
+      "dim": 384,
+      "max_tokens": 256,
+      "bytes": 67181135,
+      "load_seconds": 0.19,
+      "seconds_per_function": 0.02651,
+      "estimated_hours_full": 5.32,
+      "target_mrr": 1.0,
+      "target_top1": 10,
+      "target_top5": 10,
+      "queries": [
+        {
+          "query": "send a signal to stop a background daemon using the pid stored in a file",
+          "target": "b115917a-47c7-57d4-8a4b-017c2bbdaac7",
+          "target_rank": 1,
+          "top5": [
+            {
+              "id": "b115917a-47c7-57d4-8a4b-017c2bbdaac7",
+              "score": 0.6979
+            },
+            {
+              "id": "fdcc1a4e-dd5c-5d50-b2a5-80e463942cbe",
+              "score": 0.6451
+            },
+            {
+              "id": "2b95b9da-4b7f-5cad-a314-ea15368f949e",
+              "score": 0.6257
+            },
+            {
+              "id": "b957d773-6c5b-5ced-b8a8-e16c8560fb73",
+              "score": 0.6239
+            },
+            {
+              "id": "75ba09e0-2824-599f-815a-c9d77022643f",
+              "score": 0.619
+            }
+          ]
+        },
+        {
+          "query": "reject a proxy host that points to a private or internal network address",
+          "target": "5e36720b-292a-563a-9b95-44681d87038c",
+          "target_rank": 1,
+          "top5": [
+            {
+              "id": "5e36720b-292a-563a-9b95-44681d87038c",
+              "score": 0.7495
+            },
+            {
+              "id": "acdb0743-d36e-5467-80c5-25a9a0d95d96",
+              "score": 0.6306
+            },
+            {
+              "id": "f2da8584-4be8-5876-8e6d-1b46086cec53",
+              "score": 0.6073
+            },
+            {
+              "id": "6469427e-a195-5723-894d-4ddf26de6526",
+              "score": 0.6064
+            },
+            {
+              "id": "4a5ac82d-5bc1-5fe8-9365-c9041d6347a6",
+              "score": 0.5975
+            }
+          ]
+        },
+        {
+          "query": "linear blend between two points by a fraction",
+          "target": "1acfdab1-0d9d-5e0c-aa92-1f270765dbf4",
+          "target_rank": 1,
+          "top5": [
+            {
+              "id": "1acfdab1-0d9d-5e0c-aa92-1f270765dbf4",
+              "score": 0.688
+            },
+            {
+              "id": "b902ee85-1018-5bc0-b16d-573bd06256d7",
+              "score": 0.6176
+            },
+            {
+              "id": "e5948642-a34a-5642-ae07-503ee37a76e0",
+              "score": 0.5924
+            },
+            {
+              "id": "1890e4d9-8341-5485-9def-ad4d90daa836",
+              "score": 0.5916
+            },
+            {
+              "id": "f91fe3dc-3b03-5124-806f-d54f86bb5c12",
+              "score": 0.5813
+            }
+          ]
+        },
+        {
+          "query": "read the request history csv file and return its text",
+          "target": "701b9b21-b3ae-5d2b-b8ce-0629d4fbb4bc",
+          "target_rank": 1,
+          "top5": [
+            {
+              "id": "701b9b21-b3ae-5d2b-b8ce-0629d4fbb4bc",
+              "score": 0.8206
+            },
+            {
+              "id": "fdcc1a4e-dd5c-5d50-b2a5-80e463942cbe",
+              "score": 0.6482
+            },
+            {
+              "id": "13af159e-2af9-5458-9ced-3abea1e61601",
+              "score": 0.636
+            },
+            {
+              "id": "b4ec11b4-1af3-503d-90cc-b91eaac581fe",
+              "score": 0.6272
+            },
+            {
+              "id": "2b95b9da-4b7f-5cad-a314-ea15368f949e",
+              "score": 0.6138
+            }
+          ]
+        },
+        {
+          "query": "keep only the tasks that match the include labels and drop excluded ones",
+          "target": "01f411da-9792-5ed3-acd7-9c5113bdc294",
+          "target_rank": 1,
+          "top5": [
+            {
+              "id": "01f411da-9792-5ed3-acd7-9c5113bdc294",
+              "score": 0.7023
+            },
+            {
+              "id": "2b95b9da-4b7f-5cad-a314-ea15368f949e",
+              "score": 0.6187
+            },
+            {
+              "id": "4cb85d48-746e-5bea-afee-ffb3a329eeae",
+              "score": 0.5828
+            },
+            {
+              "id": "0c7d2208-f1e1-5bf1-b05d-08d4c3c5f71f",
+              "score": 0.5706
+            },
+            {
+              "id": "75ba09e0-2824-599f-815a-c9d77022643f",
+              "score": 0.5672
+            }
+          ]
+        },
+        {
+          "query": "rename pretrained checkpoint weight keys to our model's parameter names",
+          "target": "6a140be2-640d-53fd-84b1-6a12ee997b63",
+          "target_rank": 1,
+          "top5": [
+            {
+              "id": "6a140be2-640d-53fd-84b1-6a12ee997b63",
+              "score": 0.7023
+            },
+            {
+              "id": "0c7d2208-f1e1-5bf1-b05d-08d4c3c5f71f",
+              "score": 0.6916
+            },
+            {
+              "id": "2b95b9da-4b7f-5cad-a314-ea15368f949e",
+              "score": 0.6902
+            },
+            {
+              "id": "9b0be723-1a7c-5297-9bc9-0f1d9091a669",
+              "score": 0.6858
+            },
+            {
+              "id": "1890e4d9-8341-5485-9def-ad4d90daa836",
+              "score": 0.6789
+            }
+          ]
+        },
+        {
+          "query": "build SQL that pulls the year or month out of a date column",
+          "target": "bd96082d-a926-549a-a274-0c93d5fbc216",
+          "target_rank": 1,
+          "top5": [
+            {
+              "id": "bd96082d-a926-549a-a274-0c93d5fbc216",
+              "score": 0.7359
+            },
+            {
+              "id": "b6817902-b9ea-5d1a-b5ea-edf10dc505d7",
+              "score": 0.6129
+            },
+            {
+              "id": "701b9b21-b3ae-5d2b-b8ce-0629d4fbb4bc",
+              "score": 0.5521
+            },
+            {
+              "id": "283c641a-0578-5efa-a5b8-a8d727735f89",
+              "score": 0.5516
+            },
+            {
+              "id": "79699348-2974-5024-944e-b1abdc780c84",
+              "score": 0.541
+            }
+          ]
+        },
+        {
+          "query": "turn on activation recomputation for the encoder to save memory",
+          "target": "0c7d2208-f1e1-5bf1-b05d-08d4c3c5f71f",
+          "target_rank": 1,
+          "top5": [
+            {
+              "id": "0c7d2208-f1e1-5bf1-b05d-08d4c3c5f71f",
+              "score": 0.6587
+            },
+            {
+              "id": "9b0be723-1a7c-5297-9bc9-0f1d9091a669",
+              "score": 0.6555
+            },
+            {
+              "id": "75ba09e0-2824-599f-815a-c9d77022643f",
+              "score": 0.6297
+            },
+            {
+              "id": "1f3f0c38-1ae8-578e-8a24-fa6887f88bed",
+              "score": 0.6226
+            },
+            {
+              "id": "1890e4d9-8341-5485-9def-ad4d90daa836",
+              "score": 0.6212
+            }
+          ]
+        },
+        {
+          "query": "learn a dictionary of atoms for sparse coding from data in mini batches",
+          "target": "7d0ff5fd-88fc-5963-809e-39e7e7571111",
+          "target_rank": 1,
+          "top5": [
+            {
+              "id": "7d0ff5fd-88fc-5963-809e-39e7e7571111",
+              "score": 0.8155
+            },
+            {
+              "id": "9b0be723-1a7c-5297-9bc9-0f1d9091a669",
+              "score": 0.6111
+            },
+            {
+              "id": "6a140be2-640d-53fd-84b1-6a12ee997b63",
+              "score": 0.5899
+            },
+            {
+              "id": "74ba0fa9-afc3-546f-a88b-282e9d6e5886",
+              "score": 0.5722
+            },
+            {
+              "id": "1890e4d9-8341-5485-9def-ad4d90daa836",
+              "score": 0.5637
+            }
+          ]
+        },
+        {
+          "query": "download a package archive once and reuse a locally cached copy during install",
+          "target": "098d6c04-cf2e-513a-a717-41db11b37c66",
+          "target_rank": 1,
+          "top5": [
+            {
+              "id": "098d6c04-cf2e-513a-a717-41db11b37c66",
+              "score": 0.761
+            },
+            {
+              "id": "7275e8f9-f15c-5a48-8306-f546094af6a8",
+              "score": 0.6286
+            },
+            {
+              "id": "fdcc1a4e-dd5c-5d50-b2a5-80e463942cbe",
+              "score": 0.5788
+            },
+            {
+              "id": "13af159e-2af9-5458-9ced-3abea1e61601",
+              "score": 0.5726
+            },
+            {
+              "id": "75ba09e0-2824-599f-815a-c9d77022643f",
+              "score": 0.5725
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -101,7 +101,18 @@ export interface DashboardStats {
   checks: { ok: boolean; against: string; mismatches: unknown[] };
 }
 
-// 검색 1단계 (#191). search/api.py 의 /api/search, /api/search/meta, /api/records/{id}.
+// 검색 1단계 (#191)·2단계 (#193). search/api.py 의 /api/search, /api/search/meta, /api/records/{id}.
+
+export type SearchMode = "keyword" | "semantic";
+
+// 의미 검색 임베딩 정보 (search.embed manifest). 임베딩 파일이 없으면 null.
+export interface SemanticMeta {
+  model: string;
+  dim: number;
+  count: number;
+  created_at: string;
+  repos: string[];
+}
 
 export interface SearchMeta {
   dataset_version: string;
@@ -114,6 +125,7 @@ export interface SearchMeta {
   year_min: number | null;
   year_max: number | null;
   fts_columns: string[];
+  semantic: SemanticMeta | null;
 }
 
 export interface SearchHit {
@@ -131,10 +143,13 @@ export interface SearchHit {
   commit_first_line: string | null;
   // 강조 구간은 \u0002 … \u0003 로 감싸 온다 (키워드 검색일 때만)
   snippet: string | null;
+  // 의미 검색일 때만 - 질의와의 코사인 유사도
+  score?: number;
 }
 
 export interface SearchResponse {
   q: string;
+  mode: SearchMode;
   match: string | null;
   total: number;
   total_capped: boolean;

@@ -1,0 +1,277 @@
+{
+  "schema": "search_latency/2",
+  "search_mode": "semantic",
+  "semantic": {
+    "folder": "data/search/semantic-sample",
+    "model": "BAAI/bge-small-en-v1.5",
+    "dim": 384,
+    "count": 6719,
+    "max_tokens": 256,
+    "bytes": 6974706
+  },
+  "cold_start_ms": 548.4,
+  "target_ms": 1000.0,
+  "index": "data/search/dataset-v0.9.sqlite",
+  "index_bytes": 7002320896,
+  "mode": "TestClient (같은 프로세스)",
+  "repeat": 5,
+  "environment": "Windows 11, Python 3.12.10, SQLite 3.49.1",
+  "summary": {
+    "semantic": {
+      "n": 25,
+      "p50_ms": 11.1,
+      "p95_ms": 11.6,
+      "max_ms": 11.8
+    },
+    "all": {
+      "n": 60,
+      "p50_ms": 11.1,
+      "p95_ms": 12.5,
+      "max_ms": 13.0
+    },
+    "semantic-code": {
+      "n": 15,
+      "p50_ms": 12.2,
+      "p95_ms": 12.7,
+      "max_ms": 13.0
+    },
+    "semantic+filter": {
+      "n": 20,
+      "p50_ms": 9.7,
+      "p95_ms": 11.2,
+      "max_ms": 11.3
+    },
+    "first_call": {
+      "n": 12,
+      "p50_ms": 16.6,
+      "p95_ms": 18.3,
+      "max_ms": 19.0
+    }
+  },
+  "over_target": [],
+  "queries": [
+    {
+      "type": "semantic",
+      "params": {
+        "q": "wait longer between retries after a failed request"
+      },
+      "total": 6719,
+      "total_capped": false,
+      "first_ms": 12.0,
+      "median_ms": 10.9,
+      "max_ms": 11.7,
+      "samples_ms": [
+        10.8,
+        10.9,
+        11.7,
+        11.2,
+        10.4
+      ]
+    },
+    {
+      "type": "semantic",
+      "params": {
+        "q": "cache downloaded files on disk and reuse them"
+      },
+      "total": 6719,
+      "total_capped": false,
+      "first_ms": 16.3,
+      "median_ms": 11.0,
+      "max_ms": 11.8,
+      "samples_ms": [
+        10.8,
+        10.9,
+        11.0,
+        11.3,
+        11.8
+      ]
+    },
+    {
+      "type": "semantic",
+      "params": {
+        "q": "parse command line arguments"
+      },
+      "total": 6719,
+      "total_capped": false,
+      "first_ms": 19.0,
+      "median_ms": 11.1,
+      "max_ms": 11.3,
+      "samples_ms": [
+        11.1,
+        11.2,
+        10.7,
+        11.3,
+        10.9
+      ]
+    },
+    {
+      "type": "semantic",
+      "params": {
+        "q": "compatibility shim for python 2"
+      },
+      "total": 6719,
+      "total_capped": false,
+      "first_ms": 16.9,
+      "median_ms": 10.9,
+      "max_ms": 11.3,
+      "samples_ms": [
+        11.3,
+        11.2,
+        10.7,
+        10.0,
+        10.9
+      ]
+    },
+    {
+      "type": "semantic",
+      "params": {
+        "q": "close database connection when done"
+      },
+      "total": 6719,
+      "total_capped": false,
+      "first_ms": 17.0,
+      "median_ms": 11.1,
+      "max_ms": 11.4,
+      "samples_ms": [
+        11.1,
+        11.3,
+        11.4,
+        11.1,
+        10.6
+      ]
+    },
+    {
+      "type": "semantic-code",
+      "params": {
+        "q": "def load_config(path):\n    with open(path) as f:\n        return yaml.safe_load(f)"
+      },
+      "total": 6719,
+      "total_capped": false,
+      "first_ms": 13.0,
+      "median_ms": 12.2,
+      "max_ms": 13.0,
+      "samples_ms": [
+        12.5,
+        12.2,
+        13.0,
+        12.0,
+        12.1
+      ]
+    },
+    {
+      "type": "semantic-code",
+      "params": {
+        "q": "for i in range(len(xs)):\n    total += xs[i]"
+      },
+      "total": 6719,
+      "total_capped": false,
+      "first_ms": 17.2,
+      "median_ms": 12.2,
+      "max_ms": 12.6,
+      "samples_ms": [
+        12.2,
+        12.6,
+        12.2,
+        12.0,
+        11.7
+      ]
+    },
+    {
+      "type": "semantic-code",
+      "params": {
+        "q": "async def fetch(session, url):\n    async with session.get(url) as r:"
+      },
+      "total": 6719,
+      "total_capped": false,
+      "first_ms": 17.7,
+      "median_ms": 12.4,
+      "max_ms": 12.5,
+      "samples_ms": [
+        12.5,
+        12.4,
+        12.5,
+        12.1,
+        11.7
+      ]
+    },
+    {
+      "type": "semantic+filter",
+      "params": {
+        "q": "remove deprecated api",
+        "source": "HUMAN"
+      },
+      "total": 50,
+      "total_capped": false,
+      "first_ms": 17.0,
+      "median_ms": 11.2,
+      "max_ms": 11.3,
+      "samples_ms": [
+        11.2,
+        11.2,
+        11.3,
+        10.8,
+        11.2
+      ]
+    },
+    {
+      "type": "semantic+filter",
+      "params": {
+        "q": "thread safety lock",
+        "repo": "django/django"
+      },
+      "total": 0,
+      "total_capped": false,
+      "first_ms": 10.5,
+      "median_ms": 9.7,
+      "max_ms": 10.0,
+      "samples_ms": [
+        10.0,
+        9.7,
+        9.7,
+        9.5,
+        9.8
+      ]
+    },
+    {
+      "type": "semantic+filter",
+      "params": {
+        "q": "timeout handling",
+        "year_from": 2022,
+        "grade": "EXPLICIT"
+      },
+      "total": 6,
+      "total_capped": false,
+      "first_ms": 12.4,
+      "median_ms": 9.6,
+      "max_ms": 9.9,
+      "samples_ms": [
+        9.6,
+        9.9,
+        9.6,
+        9.9,
+        9.5
+      ]
+    },
+    {
+      "type": "semantic+filter",
+      "params": {
+        "q": "security fix",
+        "reason": "SEC",
+        "offset": 20
+      },
+      "total": 1,
+      "total_capped": false,
+      "first_ms": 9.3,
+      "median_ms": 9.6,
+      "max_ms": 9.7,
+      "samples_ms": [
+        9.4,
+        9.6,
+        9.7,
+        9.6,
+        9.5
+      ]
+    }
+  ],
+  "notes": "표본 임베딩(저장소 3개, 6,719건)으로 잰 값이다. 전체 723,087건에서는 내적이 108배 커진다 - 합성 벡터 723,087 × 384 float32 메모리 내적+상위 K 는 약 0.04초, float16 메모리맵 청크 변환은 약 0.45초였다. 실데이터 측정은 전체 임베딩 후 갱신."
+}
