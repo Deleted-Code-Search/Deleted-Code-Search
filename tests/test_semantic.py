@@ -188,6 +188,22 @@ def test_top_k_matches_brute_force_in_small_chunks(engine):
     assert engine.top_k(query, 0) == []
 
 
+@pytest.mark.parametrize("chunk", [7, 100, 5000])
+def test_top_k_ties_are_stable_across_pages(chunk):
+    # 같은 텍스트 = 같은 벡터 = 같은 점수 (#194 희수 리뷰: 벡터 50개 × 40번 복제를 섞은 2,000행)
+    rng = np.random.default_rng(0)
+    base = embed.normalize(rng.normal(size=(50, DIM)).astype(np.float32))
+    vectors = base[rng.permutation(np.repeat(np.arange(50), 40))]
+    engine = SemanticIndex({}, vectors, np.arange(len(vectors)).astype("U8"), None, None)
+    query = base[3]
+    scores = vectors @ query
+    expected = sorted(range(len(scores)), key=lambda i: (-scores[i], i))[:20]
+    first = engine.top_k(query, 10, chunk=chunk)
+    second = engine.top_k(query, 20, chunk=chunk)[10:]
+    assert [row for row, _ in first + second] == expected
+    assert not {row for row, _ in first} & {row for row, _ in second}
+
+
 def test_load_errors(tmp_path, data):
     with pytest.raises(SemanticUnavailable):
         SemanticIndex.load(tmp_path / "nothing")

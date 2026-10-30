@@ -44,6 +44,18 @@ def default_encoder(manifest: dict[str, Any]) -> Encoder:
     return FastEmbedEncoder(manifest["model"], manifest["max_tokens"], DEFAULT_MODEL_DIR)
 
 
+def _keep_top(rows: np.ndarray, scores: np.ndarray, k: int) -> tuple[np.ndarray, np.ndarray]:
+    """상위 k 개를 (유사도 내림차순, 행 번호 오름차순)으로. 같은 텍스트는 벡터가 같아 동점이
+    흔하다 - k 번째 점수와 같은 동점을 다 남긴 뒤 정렬해 자른다. argpartition 만 쓰면 동점 중
+    아무거나 남아 쪽(k = offset + limit)마다 골라지는 행이 달라진다 (#194 희수 리뷰)."""
+    if len(scores) > k:
+        kth = np.partition(scores, len(scores) - k)[len(scores) - k]  # k 번째로 큰 점수
+        keep = scores >= kth
+        rows, scores = rows[keep], scores[keep]
+    order = np.lexsort((rows, -scores))[:k]
+    return rows[order], scores[order]
+
+
 @dataclass
 class SemanticIndex:
     manifest: dict[str, Any]
@@ -125,16 +137,11 @@ class SemanticIndex:
             if mask is not None:
                 keep = mask[start:stop]
                 scores, rows = scores[keep], rows[keep]
-            if len(scores) > k:
-                part = np.argpartition(-scores, k - 1)[:k]
-                scores, rows = scores[part], rows[part]
-            best_rows = np.concatenate([best_rows, rows])
-            best_scores = np.concatenate([best_scores, scores])
-            if len(best_scores) > k:
-                part = np.argpartition(-best_scores, k - 1)[:k]
-                best_rows, best_scores = best_rows[part], best_scores[part]
-        order = np.lexsort((best_rows, -best_scores))
-        return [(int(best_rows[i]), float(best_scores[i])) for i in order]
+            rows, scores = _keep_top(rows, scores, k)
+            best_rows, best_scores = _keep_top(
+                np.concatenate([best_rows, rows]), np.concatenate([best_scores, scores]), k
+            )
+        return [(int(r), float(s)) for r, s in zip(best_rows, best_scores, strict=True)]
 
     def search(
         self, text: str, k: int, params: dict[str, Any]
