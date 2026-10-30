@@ -193,11 +193,12 @@ export function SearchTab() {
     run(ex.q, next);
   };
 
-  // 모드를 바꾸면 같은 검색어로 다시 찾는다. 검색어가 없으면 모드만 바꾼다
+  // 모드를 바꾸면 같은 검색어·필터로 다시 찾는다. 이미 요청이 있으면(필터만 검색 포함) 검색어가
+  // 비어도 다시 보낸다 - 화면·요청·주소의 모드가 어긋나지 않게 (CodeRabbit #194)
   const switchMode = (next: SearchMode) => {
     if (next === mode) return;
     setMode(next);
-    if (input.trim()) run(input, filters, 0, next);
+    if (input.trim() || request) run(input, filters, 0, next);
   };
 
   const years: number[] = [];
@@ -211,13 +212,13 @@ export function SearchTab() {
 
   return (
     <div className="search">
-      <div className="mode-switch" role="radiogroup" aria-label="검색 방식">
+      {/* 토글 버튼 묶음 - radio 역할은 화살표 키 이동까지 요구해 aria-pressed 로 (CodeRabbit #194) */}
+      <div className="mode-switch" role="group" aria-label="검색 방식">
         {(["keyword", "semantic"] as const).map((value) => (
           <button
             key={value}
             type="button"
-            role="radio"
-            aria-checked={mode === value}
+            aria-pressed={mode === value}
             className={mode === value ? "active" : ""}
             onClick={() => switchMode(value)}
           >

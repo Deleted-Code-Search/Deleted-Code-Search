@@ -56,8 +56,10 @@ cd web; npm install; npm run dev
   `$env:SEARCH_SEMANTIC_MMAP = "1"`. 임베딩이 없으면 의미 검색만 503, 키워드는 그대로
 - 응답 시간: `python -m eval.search_latency` → `docs/reports/search_latency.md` (CHARTER §10.5 ≤ 1초),
   `--mode semantic` → `docs/reports/search_latency_semantic.md`
-- 관련성: `python -m eval.search_relevance export` → `docs/reports/search_relevance_sheet.csv` (사람이
-  `relevant` 칸을 채운다), `python -m eval.search_relevance score` → P@10·MRR
+- 관련성: `python -m eval.search_relevance export` → 블라인드 시트 `docs/reports/search_relevance_sheet.csv`
+  (모드·순위 숨김, 판정자 성제·희수가 `relevant_sj`·`relevant_hs` 를 채운다) + 키
+  `search_relevance_key.json`, `python -m eval.search_relevance score` → 판정자별 P@10·MRR·일치도.
+  절차는 `docs/reports/search_relevance.md`
 - `search.stats` 는 집계값을 `summary.json`·`repos.csv` 와 맞춰 보고 다르면 종료 코드 2로 끝난다 (`checks`)
 - Docker 없이: `pip install -e ".[web]"` 뒤 `uvicorn search.api:app --reload`. 스마트 앱 컨트롤이 켜진
   노트북은 `pydantic_core` DLL 이 막힐 수 있다 (그래서 Docker 가 기본이다)
