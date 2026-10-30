@@ -54,6 +54,8 @@ FTS_COLUMNS = (
     "issue_titles",
     "deleted_body",
 )
+# pipeline.export.LINK_ONLY 와 같은 값. 그 모듈은 pyarrow 를 불러오므로 가져오지 않는다 (ADR-022).
+LINK_ONLY = "LINK_ONLY"
 FACET_COLUMN = "facets"
 # facets 토큰을 만드는 필터 (search.api 의 파라미터 이름 → records 칼럼). 연도는 따로 year{YYYY}.
 FACET_FIELDS = ("repo", "reason", "grade", "source", "kind")
@@ -124,6 +126,13 @@ def to_rows(record: dict[str, Any]) -> tuple[tuple[Any, ...], tuple[Any, ...]]:
         raise SearchIndexError(
             f"알 수 없는 classification.source {source!r} (행 {record.get('id')})"
         )
+    # LINK_ONLY 는 코드 칸이 비어 있어야 한다 - 남아 있으면 색인·상세로 코드가 새어 나간다
+    if record.get("code_policy") == LINK_ONLY:
+        leaked = [k for k in ("deleted_body", "function_signature") if record.get(k) is not None]
+        if leaked:
+            raise SearchIndexError(
+                f"LINK_ONLY 행 {record.get('id')} 에 코드 칸이 있다: {', '.join(leaked)}"
+            )
     context = record.get("context") or {}
     reason = record.get("reason") or {}
     year = (record.get("author_date") or "")[:4]
@@ -167,55 +176,61 @@ def build(data_dir: Path, out: Path, log: Callable[[str], None] = print) -> dict
         tmp.unlink()
     started = time.perf_counter()
     conn = sqlite3.connect(tmp)
-    conn.executescript(
-        "PRAGMA journal_mode = OFF; PRAGMA synchronous = OFF; PRAGMA cache_size = -400000;"
-    )
-    conn.executescript(SCHEMA)
+    try:
+        conn.executescript(
+            "PRAGMA journal_mode = OFF; PRAGMA synchronous = OFF; PRAGMA cache_size = -400000;"
+        )
+        conn.executescript(SCHEMA)
 
-    rowid = 0
-    years: set[int] = set()
-    repos: set[str] = set()
-    for number, path in enumerate(files, 1):
-        metas: list[tuple[Any, ...]] = []
-        texts: list[tuple[Any, ...]] = []
-        for record in iter_records(path):
-            rowid += 1
-            meta, text = to_rows(record)
-            metas.append((rowid, *meta))
-            texts.append((rowid, *text))
-            repos.add(meta[1])
-            if meta[2] is not None:
-                years.add(meta[2])
-            if len(metas) >= BATCH:
-                _flush(conn, metas, texts)
-        _flush(conn, metas, texts)
+        rowid = 0
+        years: set[int] = set()
+        repos: set[str] = set()
+        for number, path in enumerate(files, 1):
+            metas: list[tuple[Any, ...]] = []
+            texts: list[tuple[Any, ...]] = []
+            for record in iter_records(path):
+                rowid += 1
+                meta, text = to_rows(record)
+                metas.append((rowid, *meta))
+                texts.append((rowid, *text))
+                repos.add(meta[1])
+                if meta[2] is not None:
+                    years.add(meta[2])
+                if len(metas) >= BATCH:
+                    _flush(conn, metas, texts)
+            _flush(conn, metas, texts)
+            conn.commit()
+            elapsed = time.perf_counter() - started
+            log(f"[{number}/{len(files)}] {path.name} 누적 {rowid:,}행 {elapsed:.0f}초")
+
+        log("FTS 정리(optimize)…")
+        conn.execute("INSERT INTO fts(fts) VALUES ('optimize')")
+        info = {
+            "schema": SCHEMA_VERSION,
+            "dataset_version": DATASET_VERSION,
+            "records": rowid,
+            "files": len(files),
+            "fts_columns": list(FTS_COLUMNS),
+            "facet_column": FACET_COLUMN,
+            "repos": sorted(repos),
+            "reasons": list(REASON_LABELS),
+            "grades": list(EVIDENCE_GRADES),
+            "sources": list(SOURCES),
+            "kinds": list(KINDS),
+            "year_min": min(years) if years else None,
+            "year_max": max(years) if years else None,
+        }
+        conn.executemany(
+            "INSERT INTO info VALUES (?, ?)",
+            [(key, json.dumps(value, ensure_ascii=False)) for key, value in info.items()],
+        )
         conn.commit()
-        elapsed = time.perf_counter() - started
-        log(f"[{number}/{len(files)}] {path.name} 누적 {rowid:,}행 {elapsed:.0f}초")
-
-    log("FTS 정리(optimize)…")
-    conn.execute("INSERT INTO fts(fts) VALUES ('optimize')")
-    info = {
-        "schema": SCHEMA_VERSION,
-        "dataset_version": DATASET_VERSION,
-        "records": rowid,
-        "files": len(files),
-        "fts_columns": list(FTS_COLUMNS),
-        "facet_column": FACET_COLUMN,
-        "repos": sorted(repos),
-        "reasons": list(REASON_LABELS),
-        "grades": list(EVIDENCE_GRADES),
-        "sources": list(SOURCES),
-        "kinds": list(KINDS),
-        "year_min": min(years) if years else None,
-        "year_max": max(years) if years else None,
-    }
-    conn.executemany(
-        "INSERT INTO info VALUES (?, ?)",
-        [(key, json.dumps(value, ensure_ascii=False)) for key, value in info.items()],
-    )
-    conn.commit()
-    conn.execute("ANALYZE")
+        conn.execute("ANALYZE")
+    except BaseException:
+        # 반쯤 된 임시 파일을 남기지 않는다 (LINK_ONLY 코드 칸 등으로 멈춘 경우)
+        conn.close()
+        tmp.unlink(missing_ok=True)
+        raise
     conn.close()
     os.replace(tmp, out)
     info["elapsed_seconds"] = round(time.perf_counter() - started, 1)

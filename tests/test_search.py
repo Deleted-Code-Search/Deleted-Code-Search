@@ -235,3 +235,17 @@ def test_keyword_does_not_hit_facet_tokens(client):
     body = client.get("/api/search", params={"q": "retry", "source": "HUMAN"}).json()
     assert [r["id"] for r in body["results"]] == ["a1"]
     assert index.FACET_COLUMN not in body["results"][0]["snippet"]
+
+
+@pytest.mark.parametrize("field", ["deleted_body", "function_signature"])
+def test_link_only_with_code_is_error(tmp_path, field):
+    # LINK_ONLY 인데 코드 칸이 남아 있으면 색인을 만들지 않는다 - 코드가 검색·상세로 새어 나간다
+    record = _record("leak1", "o/a", policy="LINK_ONLY")
+    record[field] = "def secret(): pass"
+    data = tmp_path / "export"
+    data.mkdir()
+    _write_gz(data / "o__a-00000-of-00001.jsonl.gz", [record])
+    with pytest.raises(index.SearchIndexError, match=rf"leak1.*{field}"):
+        index.build(data, tmp_path / "out.sqlite", log=lambda _: None)
+    assert not (tmp_path / "out.sqlite").exists()
+    assert not (tmp_path / "out.sqlite.tmp").exists()
