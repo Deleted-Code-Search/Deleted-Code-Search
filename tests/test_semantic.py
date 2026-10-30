@@ -333,6 +333,17 @@ def _fake_relevance_search(params):
     }  # fmt: skip
 
 
+def _fake_detail(record_id):
+    # -s1 은 LINK_ONLY (본문 없음), 나머지는 짧은 본문
+    link_only = record_id.endswith("-s1")
+    return {
+        "id": record_id,
+        "code_policy": "LINK_ONLY" if link_only else "CODE_INCLUDED",
+        "deleted_body": None if link_only else f"def f():\n    return '{record_id}'\n",
+        "source_url": f"https://github.com/o/a/commit/{record_id}",
+    }
+
+
 def _fill(rows, judge, good):
     for row in rows:
         row[f"relevant_{judge}"] = "1" if good(row["record_id"]) else "0"
@@ -341,7 +352,7 @@ def _fill(rows, judge, good):
 def test_relevance_export_is_blind_and_deduplicated(tmp_path):
     from eval import search_relevance as rel
 
-    rows, key = rel.export(_fake_relevance_search)
+    rows, key = rel.export(_fake_relevance_search, _fake_detail)
     # 질의마다 키워드 3 + 의미 10 - 겹치는 2 = 11 행, 모드·순위 칸 없음, 판정 칸은 비움
     assert len(rows) == len(rel.QUERIES) * 11
     assert "mode" not in rel.COLUMNS and "rank" not in rel.COLUMNS
@@ -350,7 +361,7 @@ def test_relevance_export_is_blind_and_deduplicated(tmp_path):
     # 섞였다 - 의미 1위가 늘 첫 행이 아니다, 같은 시드면 같은 순서
     q01 = [r["record_id"] for r in rows if r["query_id"] == "q01"]
     assert q01 != key["queries"][0]["ranked"]["semantic"][: len(q01)]
-    assert [r["record_id"] for r in rel.export(_fake_relevance_search)[0]] == [
+    assert [r["record_id"] for r in rel.export(_fake_relevance_search, _fake_detail)[0]] == [
         r["record_id"] for r in rows
     ]
     # 키에는 모드별 순위
@@ -365,7 +376,7 @@ def test_relevance_sheet_neutralizes_formulas(tmp_path):
 
     from eval import search_relevance as rel
 
-    rows, _ = rel.export(_fake_relevance_search)
+    rows, _ = rel.export(_fake_relevance_search, _fake_detail)
     sheet = tmp_path / "sheet.csv"
     rel.write_sheet(sheet, rows)
     with sheet.open(encoding="utf-8-sig", newline="") as handle:
@@ -378,7 +389,7 @@ def test_relevance_sheet_neutralizes_formulas(tmp_path):
 def test_relevance_score_two_judges_and_agreement(tmp_path):
     from eval import search_relevance as rel
 
-    rows, key = rel.export(_fake_relevance_search)
+    rows, key = rel.export(_fake_relevance_search, _fake_detail)
     sheet, key_path = tmp_path / "sheet.csv", tmp_path / "key.json"
     rel.write_key(key_path, key)
     rel.write_sheet(sheet, rows)
@@ -414,7 +425,7 @@ def test_relevance_score_two_judges_and_agreement(tmp_path):
 def test_relevance_score_refuses_missing_query(tmp_path):
     from eval import search_relevance as rel
 
-    rows, key = rel.export(_fake_relevance_search)
+    rows, key = rel.export(_fake_relevance_search, _fake_detail)
     _fill(rows, "sj", lambda rid: False)
     sheet, key_path = tmp_path / "sheet.csv", tmp_path / "key.json"
     rel.write_sheet(sheet, rows)
@@ -422,10 +433,71 @@ def test_relevance_score_refuses_missing_query(tmp_path):
     rel.write_key(key_path, key)
     with pytest.raises(rel.RelevanceError, match="q10"):
         rel.score(sheet, key_path)
-    rel.write_key(key_path, rel.export(_fake_relevance_search)[1])
+    rel.write_key(key_path, rel.export(_fake_relevance_search, _fake_detail)[1])
     rel.write_sheet(sheet, [r for r in rows if r["query_id"] != "q03"])  # 시트에서 질의가 빠짐
     with pytest.raises(rel.RelevanceError, match="시트에 키의 레코드"):
         rel.score(sheet, key_path)
+
+
+def test_relevance_score_refuses_changed_keyword(tmp_path):
+    from eval import search_relevance as rel
+
+    rows, key = rel.export(_fake_relevance_search, _fake_detail)
+    _fill(rows, "sj", lambda rid: False)
+    sheet, key_path = tmp_path / "sheet.csv", tmp_path / "key.json"
+    rel.write_sheet(sheet, rows)
+    key["queries"][1]["keyword"] = "python2"  # 문장은 같고 키워드 낱말만 바뀜
+    rel.write_key(key_path, key)
+    with pytest.raises(rel.RelevanceError, match="q02"):
+        rel.score(sheet, key_path)
+
+
+def test_relevance_sheet_shows_code_or_link_only_notice(tmp_path):
+    from eval import search_relevance as rel
+
+    rows, _ = rel.export(_fake_relevance_search, _fake_detail)
+    by_id = {r["record_id"]: r for r in rows if r["query_id"] == "q01"}
+    body = by_id["retry backoff-k0"]
+    assert body["code"] == "def f():\n    return 'retry backoff-k0'\n"
+    assert body["source_url"].endswith("/retry backoff-k0")
+    link = by_id["retry backoff-s1"]
+    assert link["code"] == rel.NO_CODE and link["source_url"]
+    # 긴 함수는 앞 CODE_LINES 줄 + 전체 줄 수
+    long_body = "\n".join(f"x{i} = {i}" for i in range(100))
+    cell = rel.code_cell({"code_policy": "CODE_INCLUDED", "deleted_body": long_body})
+    assert cell.splitlines()[: rel.CODE_LINES] == long_body.splitlines()[: rel.CODE_LINES]
+    assert cell.endswith("(앞부분만, 전체 100줄)")
+    wide = rel.code_cell({"code_policy": "CODE_INCLUDED", "deleted_body": "y" * 10_000})
+    assert len(wide) < rel.CODE_CHARS + 40 and "전체 1줄" in wide
+    # 본문이 있어도 LINK_ONLY 면 내보내지 않는다
+    assert rel.code_cell({"code_policy": "LINK_ONLY", "deleted_body": "secret"}) == rel.NO_CODE
+
+
+def test_latency_remote_mode_skips_local_index(tmp_path, monkeypatch):
+    from eval import search_latency as lat
+
+    semantic = {"model": "m", "dim": 8, "count": 5, "created_at": "t", "repos": []}
+    meta = {"dataset_version": "dataset-v0.9", "records": 1234, "semantic": semantic}
+    monkeypatch.setattr(lat, "remote_meta", lambda base_url: meta)
+    monkeypatch.setattr(
+        lat, "make_caller",
+        lambda base_url: lambda params: {"total": 3, "total_capped": False, "results": [{}]},
+    )  # fmt: skip
+    # 로컬 색인이 없어도 원격 측정은 돈다
+    monkeypatch.setenv(api.INDEX_ENV, str(tmp_path / "없음.sqlite"))
+    out = tmp_path / "lat.json"
+    code = lat.main(["--base-url", "http://remote:8000", "--mode", "semantic", "--repeat", "1",
+                     "--out", str(out)])  # fmt: skip
+    assert code == 0
+    report = json.loads(out.read_text(encoding="utf-8"))
+    assert report["index"].startswith("http://remote:8000 (원격, dataset-v0.9, 1,234건)")
+    assert report["index_bytes"] is None and "원격" in report["environment"]
+    assert report["semantic"]["model"] == "m" and report["cold_start_ms"] is None
+    assert all(q["params"]["mode"] == "semantic" for q in report["queries"])
+    # 원격 서버에 임베딩이 없으면 멈춘다
+    monkeypatch.setattr(lat, "remote_meta", lambda base_url: {**meta, "semantic": None})
+    assert lat.main(["--base-url", "http://remote:8000", "--mode", "semantic",
+                     "--out", str(out)]) == 1  # fmt: skip
 
 
 def test_agreement_kappa():

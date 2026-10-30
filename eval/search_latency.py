@@ -97,14 +97,34 @@ def percentile(values: Sequence[float], p: float) -> float:
     return ordered[low] + (ordered[high] - ordered[low]) * (rank - low)
 
 
-def remote_semantic_info(base_url: str) -> dict[str, Any] | None:
-    """원격 서버가 쓰는 임베딩 - /api/search/meta 의 semantic 칸. 로컬 manifest 로 채우지 않는다."""
+def remote_meta(base_url: str) -> dict[str, Any]:
+    """원격 서버의 /api/search/meta. 원격 측정은 로컬 색인·manifest 를 안 본다 (CodeRabbit #194)."""
     url = f"{base_url.rstrip('/')}/api/search/meta"
     with urllib.request.urlopen(url, timeout=30) as response:  # noqa: S310 - 사용자가 준 주소
-        info = json.loads(response.read()).get("semantic")
-    if info is None:
+        return json.loads(response.read())
+
+
+def local_target(api: Any) -> dict[str, Any] | None:
+    """같은 프로세스 측정 대상 - 로컬 색인 경로·크기·환경. 색인이 없으면 None."""
+    index = api.index_path()
+    if not index.is_file():
         return None
-    return {"folder": f"{base_url.rstrip('/')} (원격)", **info}
+    return {
+        "index": index.as_posix(),
+        "index_bytes": index.stat().st_size,
+        "environment": f"{platform.system()} {platform.release()}, Python "
+        f"{platform.python_version()}, SQLite {api.sqlite3.sqlite_version}",
+    }
+
+
+def remote_target(base_url: str, meta: dict[str, Any]) -> dict[str, Any]:
+    """원격 측정 대상 - 서버가 알려 주는 것만. 크기·서버 환경은 모르므로 비운다."""
+    return {
+        "index": f"{base_url.rstrip('/')} (원격, {meta.get('dataset_version')}, "
+        f"{meta.get('records', 0):,}건)",
+        "index_bytes": None,
+        "environment": "원격 서버 (서버 환경은 측정 도구가 모른다)",
+    }
 
 
 def make_caller(base_url: str | None) -> Callable[[dict[str, Any]], dict[str, Any]]:
@@ -197,7 +217,8 @@ def write_markdown(path: Path, report: dict[str, Any]) -> None:
         "",
         f"CHARTER §10.5 목표 **≤ {TARGET_MS:.0f}ms**. `{command}` 출력이다.",
         "",
-        f"- 색인: `{report['index']}` ({report['index_bytes'] / 1e9:.2f} GB)",
+        f"- 색인: `{report['index']}`"
+        + (f" ({report['index_bytes'] / 1e9:.2f} GB)" if report["index_bytes"] else ""),
         f"- 호출: {report['mode']} · 질의 {len(report['queries'])}개 × {report['repeat']}회"
         " (질의마다 첫 호출 1회는 따로)",
         f"- 환경: {report['environment']}",
@@ -252,12 +273,19 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--notes", help="md 의 해석 칸에 넣을 문장")
     args = parser.parse_args(argv)
 
-    from search import api
+    meta = remote_meta(args.base_url) if args.base_url else None
+    if meta is not None:
+        target = remote_target(args.base_url, meta)
+    else:
+        from search import api
 
-    index = api.index_path()
-    if not index.is_file():
-        print(f"오류: 색인 {index} 가 없다. python -m search.index 먼저", file=sys.stderr)
-        return 1
+        target = local_target(api)
+        if target is None:
+            print(
+                f"오류: 색인 {api.index_path()} 가 없다. python -m search.index 먼저",
+                file=sys.stderr,
+            )
+            return 1
     semantic = args.mode == "semantic"
     out = args.out or (DEFAULT_OUT_SEMANTIC if semantic else DEFAULT_OUT)
     call = make_caller(args.base_url)
@@ -265,8 +293,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     cold_ms = None
     semantic_info = None
     if semantic:
-        if args.base_url:
-            semantic_info = remote_semantic_info(args.base_url)
+        if meta is not None:
+            info = meta.get("semantic")
+            semantic_info = info and {"folder": f"{args.base_url.rstrip('/')} (원격)", **info}
             where = f"{args.base_url} 서버에 임베딩이"
         else:
             manifest = api.semantic_manifest()
@@ -290,12 +319,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         "semantic": semantic_info,
         "cold_start_ms": cold_ms,
         "target_ms": TARGET_MS,
-        "index": index.as_posix(),
-        "index_bytes": index.stat().st_size,
+        **target,
         "mode": f"HTTP {args.base_url}" if args.base_url else "TestClient (같은 프로세스)",
         "repeat": args.repeat,
-        "environment": f"{platform.system()} {platform.release()}, Python "
-        f"{platform.python_version()}, SQLite {api.sqlite3.sqlite_version}",
         "summary": summarize(rows),
         "over_target": [r for r in rows if r["median_ms"] > TARGET_MS],
         "queries": rows,

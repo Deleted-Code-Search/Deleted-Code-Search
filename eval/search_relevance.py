@@ -6,6 +6,8 @@
    - 시트(`search_relevance_sheet.csv`): 모드·순위 칸이 없다. 질의마다 두 모드 결과를 합쳐 같은
      레코드는 한 번만 넣고, 고정 시드로 섞은 순서로 둔다. 판정자 칸(`relevant_sj`, `relevant_hs`)은
      비워 둔다 - **판정은 사람이 한다** (ADR-005 정신: 모델·도구가 정답을 채우지 않는다).
+     `code` 칸은 지워진 함수 본문(길면 앞 CODE_LINES 줄 + 전체 줄 수), LINK_ONLY 는 코드 대신
+     "라이선스로 코드 미제공" 안내 - `source_url` 에서 본다.
    - 키(`search_relevance_key.json`): 질의·모드별 순위대로의 record_id.
      판정이 끝날 때까지 열지 않는다.
 2) `score`: 채운 시트 + 키 → 판정자별·모드별 P@10(질의별 평균)과 MRR(첫 관련 순위 역수 평균).
@@ -53,8 +55,15 @@ COLUMNS = (
     "file_path",
     "function_name",
     "commit_first_line",
+    "code",
+    "source_url",
     *JUDGE_COLUMNS,
 )
+# 판정용 코드 칸 상한 - 넘으면 앞부분 + "… (전체 N줄)". 판정자가 함수가 뭘 하는지 볼 만큼
+CODE_LINES = 40
+CODE_CHARS = 3000
+LINK_ONLY = "LINK_ONLY"
+NO_CODE = "(라이선스로 코드 미제공 - source_url 에서 확인)"
 TRUE = {"1", "y", "yes", "o", "true"}
 FALSE = {"0", "n", "no", "x", "false"}
 # 스프레드시트가 수식으로 읽는 첫 글자 (CSV 따옴표로는 막히지 않는다)
@@ -98,10 +107,24 @@ def safe_cell(value: Any) -> Any:
     return value
 
 
+def code_cell(record: dict[str, Any]) -> str:
+    """판정용 코드 칸 (CodeRabbit #194 2차). LINK_ONLY·본문 없음은 코드 대신 안내 문구."""
+    body = record.get("deleted_body")
+    if record.get("code_policy") == LINK_ONLY or not body:
+        return NO_CODE
+    lines = body.splitlines()
+    head = "\n".join(lines[:CODE_LINES])[:CODE_CHARS]
+    if head == body.rstrip("\n"):
+        return body
+    return f"{head}\n… (앞부분만, 전체 {len(lines)}줄)"
+
+
 def export(
-    search: Callable[[dict[str, Any]], dict[str, Any]], seed: int = SEED
+    search: Callable[[dict[str, Any]], dict[str, Any]],
+    detail: Callable[[str], dict[str, Any]],
+    seed: int = SEED,
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
-    """search(params) → /api/search 응답. (시트 행, 키) 를 돌려준다."""
+    """search(params) → /api/search 응답, detail(id) → 레코드 원문. (시트 행, 키) 를 돌려준다."""
     rng = random.Random(seed)
     rows: list[dict[str, Any]] = []
     key: dict[str, Any] = {"k": K, "seed": seed, "modes": list(MODES), "queries": []}
@@ -120,6 +143,7 @@ def export(
         rng.shuffle(order)
         for rid in order:
             hit = hits[rid]
+            record = detail(rid)
             rows.append(
                 {
                     "query_id": qid,
@@ -129,6 +153,8 @@ def export(
                     "file_path": hit.get("file_path") or "",
                     "function_name": hit.get("function_name") or "",
                     "commit_first_line": hit.get("commit_first_line") or "",
+                    "code": code_cell(record),
+                    "source_url": record.get("source_url") or "",
                     **dict.fromkeys(JUDGE_COLUMNS, ""),
                 }
             )
@@ -191,11 +217,14 @@ def _check_key(key: dict[str, Any]) -> dict[str, dict[str, list[str]]]:
     """키가 지금의 QUERIES·MODES 와 같은지 - 빠진 질의·모드가 있으면 거부 (CodeRabbit #194)."""
     by_id = {entry["id"]: entry for entry in key.get("queries", [])}
     ranked = {}
-    for number, (query, _) in enumerate(QUERIES, 1):
+    for number, (query, keyword) in enumerate(QUERIES, 1):
         qid = query_id(number)
         entry = by_id.get(qid)
-        if entry is None or entry["query"] != query:
-            raise RelevanceError(f"키에 질의 {qid} 가 없거나 질의가 바뀌었다 - export 를 다시")
+        if entry is None:
+            raise RelevanceError(f"키에 질의 {qid} 가 없다 - export 를 다시")
+        # 키워드 낱말만 바뀌어도 keyword 쪽 결과가 달라진다 - 문장과 낱말 둘 다 본다
+        if (entry["query"], entry.get("keyword")) != (query, keyword):
+            raise RelevanceError(f"키의 {qid} 질의·키워드 낱말이 지금과 다르다 - export 를 다시")
         absent = [mode for mode in MODES if mode not in entry["ranked"]]
         if absent:
             raise RelevanceError(f"키의 {qid} 에 모드가 없다: {absent}")
@@ -286,7 +315,8 @@ def score(sheet: Path, key_path: Path, k: int = K) -> dict[str, Any]:
     return result
 
 
-def _api_search() -> Callable[[dict[str, Any]], dict[str, Any]]:
+def _api() -> tuple[Callable[[dict[str, Any]], dict[str, Any]], Callable[[str], dict[str, Any]]]:
+    """(검색, 레코드 원문) - 같은 프로세스 TestClient 로 /api/search, /api/records/{id}."""
     from fastapi.testclient import TestClient
 
     from search import api
@@ -299,7 +329,13 @@ def _api_search() -> Callable[[dict[str, Any]], dict[str, Any]]:
             raise RelevanceError(f"{params['mode']} 검색 실패: {response.json().get('detail')}")
         return response.json()
 
-    return call
+    def detail(record_id: str) -> dict[str, Any]:
+        response = client.get(f"/api/records/{record_id}")
+        if response.status_code != 200:
+            raise RelevanceError(f"레코드 {record_id} 원문 실패: {response.json().get('detail')}")
+        return response.json()["record"]
+
+    return call, detail
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -319,7 +355,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             if existing and not args.force:
                 # 사람이 채우던 판정을 덮어쓰지 않게
                 raise RelevanceError(f"{existing[0]} 가 이미 있다 (덮어쓰려면 --force)")
-            rows, key = export(_api_search())
+            rows, key = export(*_api())
             write_sheet(args.out, rows)
             write_key(args.key, key)
             print(
