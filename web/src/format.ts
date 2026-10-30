@@ -39,3 +39,29 @@ export const GRADE_LABEL: Record<string, string> = {
   INFERRED: "INFERRED 추론",
   UNKNOWN: "UNKNOWN 판단 불가",
 };
+
+// 검색 결과의 출처 배지 (#191). 대시보드와 같은 원칙 - 출처를 항상 단다.
+export const SOURCE_BADGE: Record<string, string> = {
+  HUMAN: "사람 확정",
+  MODEL_LLM: "LLM 표본",
+  MODEL_ONLY: "모델만 (val 52%)",
+  UNDISTINGUISHED: "이유 미구분",
+  NOT_CLASSIFIED: "분류 대상 아님(PARTIAL)",
+};
+
+export const SOURCE_NOTE: Record<string, string> = {
+  HUMAN: "확정 라벨 500건 - 사람 2인 라벨 + 제3자 판정",
+  MODEL_LLM: "LLM 포함 분류기 표본 - 사람이 확인하지 않은 모델 출력",
+  MODEL_ONLY: "모델만 분류기(m2) 출력. 검증 정확도 52% - 이유 분포로 쓰지 않는다",
+  UNDISTINGUISHED: "신규 80개 저장소 - 이유를 구분하지 않았다 (reason = null)",
+  NOT_CLASSIFIED: "PARTIAL 은 이유 분류 대상이 아니다",
+};
+
+export const KIND_LABEL: Record<string, string> = {
+  FULL_FUNCTION: "FULL 함수 전체",
+  PARTIAL: "PARTIAL 일부",
+};
+
+// snippet 강조 구분자 (search/api.py MARK_OPEN·MARK_CLOSE)
+export const MARK_OPEN = "\u0002";
+export const MARK_CLOSE = "\u0003";

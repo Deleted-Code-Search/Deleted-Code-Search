@@ -1,6 +1,6 @@
 # STATUS (갱신: 2026-10-29, 7주차)
 
-> 주차는 CHARTER §9 표 기준이다 (5주차 = 10/12~). `docs/weekly/`의 파일 번호는 킥오프 주(W1 = 9/09~9/13)부터 세어 한 칸 앞서 있다 — 이번 주 로그는 `docs/weekly/W8.md`다 (아직 쓰지 않았다). 2026-10-28·10-29 갱신은 #184(필터 `v0.9`, `NOISE_GENERATED` 사후 필터) 항목만이다. 2026-10-30 갱신은 #93(통계 대시보드) 항목만이다. 2026-10-15 갱신은 게이트 2 판정(#92)과 머지 완료 항목 정리다. 2026-10-13 갱신은 #171 항목만이다. 나머지 내용은 2026-10-10 기준 그대로다.
+> 주차는 CHARTER §9 표 기준이다 (5주차 = 10/12~). `docs/weekly/`의 파일 번호는 킥오프 주(W1 = 9/09~9/13)부터 세어 한 칸 앞서 있다 — 이번 주 로그는 `docs/weekly/W8.md`다 (아직 쓰지 않았다). 2026-10-28·10-29 갱신은 #184(필터 `v0.9`, `NOISE_GENERATED` 사후 필터) 항목만이다. 2026-10-30 갱신은 #93(통계 대시보드)·#191(검색 1단계) 항목만이다. 2026-10-15 갱신은 게이트 2 판정(#92)과 머지 완료 항목 정리다. 2026-10-13 갱신은 #171 항목만이다. 나머지 내용은 2026-10-10 기준 그대로다.
 
 ## 지금 단계
 **게이트 2 판정: 미달** (2026-10-15, #92, `docs/meetings/gate-2.md`). 테스트 100건에서 우리 방식 60.0% — 기준 ① min(80%, H 80.8%) = 80.0% 미충족, 기준 ② max(A 33.0%, B 38.0%) + 10%p = 48.0% 충족. ADR-016 결정 3(둘 다 충족해야 통과)에 따라 미달이다. 사전 등록한 미달 시 대응(`docs/evaluation.md`)과 CHARTER §9 버퍼 규정을 따른다.
@@ -15,7 +15,7 @@
 - **데이터셋** — dataset-v0.9 내보내기 구현·로컬 생성 (#83, PR 전). Release 업로드 전 (PR merge 후). 34,391행 `LINK_ONLY`. DB 적재는 #8 때 별도 이슈
 
 - 역할: §6.1 배정 유지 (성제 = 프로덕트·평가·조장 / 재헌 = 파이프라인 / 희수 = 분류·검색)
-- 문서·규칙 버전: CHARTER **v1.19** / 가이드 `GUIDE_VERSION` **v3** / 필터 `FILTER_RULE_VERSION` **v0.9**
+- 문서·규칙 버전: CHARTER **v1.21** / 가이드 `GUIDE_VERSION` **v3** / 필터 `FILTER_RULE_VERSION` **v0.9**
 
 ## 완료된 것
 
@@ -55,6 +55,8 @@
 - **[데이터셋] #83 dataset-v0.9 내보내기 (PR 준비 중, 2026-10-29).** 재헌. `pipeline/export.py` — v0.9 KEPT 행에 분류 결과를 `record_id` 로 붙여 저장소별 Parquet + jsonl.gz 로 쓴다(shard 1.5e9B, 파일 ≤ 2e9B). 확정 500건은 사람 라벨·split 그대로(`classification.source = HUMAN`), 신규 80개 모델만 라벨은 `reason = null` "이유 미구분"(`UNDISTINGUISHED`), 학습 저장소 20개는 `classification.training_repo` 와 `training_repos.txt` 로 낸다(§4.4 스키마는 바꾸지 않음). Git 에는 `datasets/dataset-v0.9/`(확정 500건·목록·요약·문서), 전체는 Release `dataset-v0.9` 로 (아직 올리지 않음). #28(celery `docs/`)은 결정대로 포함하고 한계에 적었다. **라이선스(2026-10-29 원문 확인, `docs/repo_final100.md` §3.1):** 저장소 루트 라이선스는 100개 모두 permissive 다(`repos.csv` `code_policy` 는 100개 모두 `CODE_INCLUDED`). 그러나 행 단위로는 저장소 9개·34,391행이 이력상·하위 경로상 copyleft·독점 등 다른 라이선스 아래일 수 있다(unsloth `studio/` AGPL 12,677행, 확정 500건 중 19건 포함) — **조장 결정: 34,391행 전부 `LINK_ONLY`**(규칙 `docs/license_overrides.csv`). 행 단위 결과: `CODE_INCLUDED` 1,319,661행 / `LINK_ONLY` 34,391행. 행은 빼지 않고 코드 칸만 비운다. 확정 500건 중 19건도 `LINK_ONLY` 이며 라벨·split 은 그대로. DB 적재는 이번 범위에서 빼고 검색 UI(#8) 때 별도 이슈로 한다 (조장 확인)
 
 - **[대시보드] #93 통계 대시보드 (PR 진행 중, 2026-10-30).** 성제. `search/stats.py`(Release `dataset-v0.9` jsonl.gz 를 표준 라이브러리로 한 줄씩 집계 → `docs/reports/dashboard_stats.json`, 집계값만) + `search/api.py`(FastAPI `GET /api/stats`·`/api/health`) + `web/`(React·Vite·recharts, 대시보드 탭만. 검색 탭은 "준비 중", #8). 패널 8개 — 헤드라인 숫자·라벨 출처·이유 분포·근거 등급 분포(확정 500건 / LLM 표본 2,891건 나란히, **MODEL_ONLY 는 이유 분포에 넣지 않는다**)·저장소별 표·연도별 추이·모델·필터 성능(docs/reports json 에서 읽음)·시스템 평가(실행 기록 100/100). 헤드라인 숫자는 summary.json·repos.csv 와 일치(`checks.ok`). API 는 `docker compose up api` 가 기본이다(노트북 스마트 앱 컨트롤이 pydantic_core DLL 을 막을 수 있음) — **compose `api` 서비스는 이 노트북에 Docker 가 없어 실행 검증 전**이고, API 는 로컬 uvicorn·TestClient 로 확인했다
+
+- **[검색] #191 검색 1단계 — SQLite FTS5 키워드 검색 + 검색 탭 (PR 진행 중, 2026-10-30).** 성제. CHARTER §4.2 ⑤ 의 1단계, ADR-022. `search/index.py`(Release `dataset-v0.9` jsonl.gz 100개를 표준 라이브러리로 한 줄씩 → `data/search/dataset-v0.9.sqlite`, gitignore) + `search/api.py`(`GET /api/search`·`/api/search/meta`·`/api/records/{id}`, 기존 `/api/stats` 유지) + `web/` 검색 탭(검색창·필터 6종·결과 강조·상세 패널·예시 검색어). FTS 대상은 함수 이름·경로·커밋 메시지·PR 제목·이슈 제목·지워진 코드(`LINK_ONLY` 는 본문 없음). 필터는 FTS 의 `facets` 토큰으로 푼다. 색인 4.0분 · 7.00 GB, 응답 시간 p50 28ms · p95 388ms (질의 20개, `docs/reports/search_latency.md`, §10.5 ≤ 1초). **임베딩·pgvector(ADR-009)·Precision@10 은 #8 이후 2단계** — ADR-009 는 그대로 둔다. CHARTER v1.21 §5 표에 ADR-022 반영 (PR 승인으로 팀 확인 갈음), §4.2 ⑤ 본문은 #8 때
 
 ```
 #86 분류기 학습·평가 (희수) — 완료

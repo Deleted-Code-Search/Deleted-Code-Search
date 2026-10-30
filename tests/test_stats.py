@@ -304,7 +304,9 @@ def test_api_stats(env, tmp_path, monkeypatch):
     out.write_text(json.dumps(_build(env), ensure_ascii=False), encoding="utf-8")
     monkeypatch.setenv(api.STATS_ENV, str(out))
     client = TestClient(api.app)
-    assert client.get("/api/health").json() == {"status": "ok", "stats_file": True}
+    health = client.get("/api/health").json()
+    assert health["status"] == "ok"
+    assert health["stats_file"] is True
     response = client.get("/api/stats")
     assert response.status_code == 200
     assert response.json()["headline"]["kept"] == 9

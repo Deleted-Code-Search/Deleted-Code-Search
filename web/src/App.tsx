@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { DashboardStats } from "./types";
 import { Headline } from "./components/Headline";
 import { LabelSources } from "./components/LabelSources";
@@ -7,11 +7,12 @@ import { RepoTable } from "./components/RepoTable";
 import { Yearly } from "./components/Yearly";
 import { Performance } from "./components/Performance";
 import { SystemEval } from "./components/SystemEval";
-
-// API 는 docker compose 의 api 서비스 (localhost:8000). CORS 로 5173 에서 부른다.
-const API_BASE = import.meta.env.VITE_API_BASE ?? "http://localhost:8000";
+import { SearchTab } from "./components/SearchTab";
+import { API_BASE, getJson } from "./api";
 
 type Tab = "dashboard" | "search";
+
+const tabOf = (hash: string): Tab => (hash.startsWith("#search") ? "search" : "dashboard");
 
 // search.stats SCHEMA_VERSION 과 같아야 한다.
 const SCHEMA = "dashboard_stats/1";
@@ -40,19 +41,22 @@ function validate(body: unknown): DashboardStats {
 }
 
 export function App() {
-  const [tab, setTab] = useState<Tab>("dashboard");
+  const [tab, setTab] = useState<Tab>(() => tabOf(window.location.hash));
+  // 검색 탭으로 돌아올 때 마지막 검색 주소로 간다 - 맨 "#search" 로 가면 SearchTab 이 상태를 비운다.
+  const lastSearch = useRef("#search");
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // 탭은 주소를 따른다 (뒤로/앞으로 가기, 주소창 수정). 탭 단추는 주소만 바꾼다.
   useEffect(() => {
-    fetch(`${API_BASE}/api/stats`)
-      .then(async (res) => {
-        if (!res.ok) {
-          const body = await res.json().catch(() => null);
-          throw new Error(body?.detail ?? `HTTP ${res.status}`);
-        }
-        return validate(await res.json());
-      })
+    const onHashChange = () => setTab(tabOf(window.location.hash));
+    window.addEventListener("hashchange", onHashChange);
+    return () => window.removeEventListener("hashchange", onHashChange);
+  }, []);
+
+  useEffect(() => {
+    getJson<unknown>("/api/stats")
+      .then(validate)
       .then(setStats)
       .catch((err: Error) => setError(err.message));
   }, []);
@@ -69,17 +73,32 @@ export function App() {
             role="tab"
             aria-selected={tab === "dashboard"}
             className={tab === "dashboard" ? "tab active" : "tab"}
-            onClick={() => setTab("dashboard")}
+            onClick={() => {
+              if (tab === "dashboard") return;
+              lastSearch.current = window.location.hash;
+              window.location.hash = "#dashboard";
+            }}
           >
             대시보드
           </button>
-          <button role="tab" aria-selected={false} className="tab" disabled title="준비 중 (#8)">
-            검색 <span className="soon">준비 중</span>
+          <button
+            role="tab"
+            aria-selected={tab === "search"}
+            className={tab === "search" ? "tab active" : "tab"}
+            onClick={() => {
+              if (tab !== "search") window.location.hash = lastSearch.current;
+            }}
+          >
+            검색
           </button>
         </nav>
       </header>
 
-      <main>
+      {/* 탭을 오가도 검색 상태가 남게 숨기기만 한다 */}
+      <main hidden={tab !== "search"}>
+        <SearchTab />
+      </main>
+      <main hidden={tab !== "dashboard"}>
         {error && (
           <div className="error">
             통계를 불러오지 못했다: {error}
