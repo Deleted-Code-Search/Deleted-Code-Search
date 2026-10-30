@@ -1,0 +1,320 @@
+{
+  "k": 10,
+  "seed": 20261031,
+  "modes": [
+    "keyword",
+    "semantic"
+  ],
+  "queries": [
+    {
+      "id": "q01",
+      "query": "retry a failed call with exponential backoff",
+      "keyword": "retry backoff",
+      "ranked": {
+        "keyword": [
+          "d7fd7ee6-1943-5a01-ac06-bf277982bc73",
+          "6e559022-3b17-560d-af44-72f4f7c9304a",
+          "dd6ae943-2b1e-5b5d-ac9d-cc9a55a5ee64",
+          "33c213c9-d227-591e-8a31-e989e12ee43c",
+          "5410f878-6a2c-5502-b650-d5ad9d2cf52e",
+          "5ab40361-f27f-5512-b64c-2f713ab80c90",
+          "2227dd35-e670-5b8a-b5ed-544b0f6139af",
+          "14a118dc-5aa3-55d2-8ad8-12b9df99f36f",
+          "adf8e2fb-b2e3-5b98-9536-08a690bd1b81",
+          "0e4e10a7-71c3-5927-b6d7-026e6a9436e2"
+        ],
+        "semantic": [
+          "9d136a13-4572-5306-a628-7273f7a86f51",
+          "cbeb5745-f920-5cb8-b418-d735c2913ddb",
+          "2227dd35-e670-5b8a-b5ed-544b0f6139af",
+          "7c179e8b-e3ec-5d40-82b3-2e935d8ed1a7",
+          "cdb7a7ac-bbc8-5995-a77c-a20f83ad485c",
+          "14a118dc-5aa3-55d2-8ad8-12b9df99f36f",
+          "516ddfb6-199e-5814-a1b0-acc2aa79eec1",
+          "74cf446a-5120-571c-8f2d-07cecab7405b",
+          "c721781d-7d82-5791-bea0-5862590d4fe5",
+          "41f763f8-aff1-5dc0-8dcb-082788b67036"
+        ]
+      }
+    },
+    {
+      "id": "q02",
+      "query": "compatibility shim for python 2",
+      "keyword": "py2",
+      "ranked": {
+        "keyword": [
+          "7285ac52-5ab5-54e1-9814-4c0c300c5077",
+          "61e77e89-fe6c-50cf-ab17-e7c5aaecf5de",
+          "86d313bd-3529-5ea3-9072-4affd724d8a5",
+          "38320ea0-d8f4-5df7-b3c4-cfa86653d3b5",
+          "bf9cad96-b74d-58d1-a3e4-288b24917405",
+          "21f65ad1-b282-51d1-b190-3ace4864c704",
+          "fdf7814c-9549-593f-9230-e80415b8f313",
+          "9a1197f6-e747-5976-b689-7a1909aa11d0",
+          "bf79c782-9a0d-5cba-99da-c9ae6e7354f2",
+          "3a4a06df-2f3d-5d3a-9c7c-5b74ed375aa9"
+        ],
+        "semantic": [
+          "41948c3d-c6f5-5e43-843c-e0b0b51792fc",
+          "342fa06b-0790-5f3d-bfde-95f6d5fb1fbe",
+          "8b7bd30c-5929-5cf0-a827-afcaceb5959a",
+          "67c447b9-d1e9-5a6b-ac9c-d2bf7f3d8a8c",
+          "c6ac3bba-f1d2-59cf-b111-e4266b50f7a1",
+          "d8e07084-e700-5528-b7e1-e8e1399f6e12",
+          "d547f0b5-96f5-5ab0-8b0d-66491f749a5a",
+          "efee2ed9-72b6-58aa-907e-a195672f1dc6",
+          "09d838d8-902b-5366-9990-7c52827e7aff",
+          "693132ad-7214-554f-80b8-fb7332833c14"
+        ]
+      }
+    },
+    {
+      "id": "q03",
+      "query": "remove a deprecated function kept for backward compatibility",
+      "keyword": "deprecated",
+      "ranked": {
+        "keyword": [
+          "1ba7682b-f098-51f0-a0d8-5fa20eb6536e",
+          "4fe49f94-ab2f-5839-a6b3-c550b7c320ec",
+          "272ea0b2-565e-5b43-9cad-0f90dc423e92",
+          "182702f9-dfb6-5909-b8da-925af7538974",
+          "44330c58-49b5-5e45-b301-3c1e3c2b410a",
+          "282203ad-6a70-5b42-9a1e-837f2fe2a545",
+          "7e91d15d-9049-5113-89aa-e0f9a1cc25a8",
+          "239a5b8a-9da5-55f8-aaf7-ab08395ba2ce",
+          "d4e37697-f4cc-5e44-9993-fb6bafb0c9dc",
+          "214f4395-ccde-53b7-a700-e9e4938ae778"
+        ],
+        "semantic": [
+          "50c5beab-4f32-5adb-80d0-4c16578b3771",
+          "8815cfc0-30cc-5db7-806a-77bae3c4bfad",
+          "0986c626-8415-5195-bfb7-0cdce5bba9ce",
+          "0d95d521-8480-5cda-8c84-1791cacd1726",
+          "4d21d37e-e14e-5439-a9d1-1c8d146c7499",
+          "b694ebc9-36cc-55be-8274-0791277f70ae",
+          "43b4ba9f-f10d-5350-8c60-bbdc1373bd57",
+          "22588535-4c24-5810-8953-d694910c86a1",
+          "7090d4dc-b775-5b5b-b81e-275c1115e3ce",
+          "f33be537-7859-54a4-9027-ca389de7c7e5"
+        ]
+      }
+    },
+    {
+      "id": "q04",
+      "query": "parse command line arguments",
+      "keyword": "argparse",
+      "ranked": {
+        "keyword": [
+          "b36fdd46-d52e-5f9a-9071-e90b81475d90",
+          "3aa2070b-d5eb-5607-b79e-9679b5f9babf",
+          "6846e524-b8a7-5c05-b1f1-a027a21edd54",
+          "372c3c62-ea84-5b8f-8f24-a881fe1bd01c",
+          "84e68606-62d1-52d3-a34e-5380e2751378",
+          "5f7643a1-52ad-5187-b753-340844cdbfe0",
+          "e23e2c8a-ae9d-56de-b22e-0d67a51eda07",
+          "0dcb51f6-c8f4-54bb-a448-10d3df1e4bdb",
+          "ffdedae3-f370-52a7-9ed1-14274dc8028a",
+          "d22ea415-7ce4-57e2-b7a2-0f3516892592"
+        ],
+        "semantic": [
+          "e9078c6f-e52d-5094-860e-2642abbe621d",
+          "6fe8b6ac-1453-55b3-b81b-b88615b0054c",
+          "46181dd4-e305-59a8-bb36-e84873301773",
+          "b22d542c-5a50-5c93-8069-cb4dc32aa76f",
+          "37c95c83-3f9f-5e58-921c-b992666b3ff2",
+          "720a9a39-6e9d-582d-8712-6c2d365595b3",
+          "359c6ecb-6302-5837-a4d3-5255be8119e0",
+          "c18e3398-874a-59d7-878a-0acfbec6d4c8",
+          "f5846e33-a77c-5554-a19a-1e399938811a",
+          "6966aae6-bc32-5ece-8e27-0ef995a33dc9"
+        ]
+      }
+    },
+    {
+      "id": "q05",
+      "query": "cache results in memory to avoid recomputing them",
+      "keyword": "cache",
+      "ranked": {
+        "keyword": [
+          "07ff9dc9-c2b5-5e14-ba57-045ef4de846d",
+          "ff2975a5-1ccc-5d86-9e9d-818f959bd6af",
+          "5603d31c-a7a0-54ff-b0f9-063b01ddbe18",
+          "fb6793e8-67e1-5d76-9454-c085a897a5a7",
+          "eccdfef0-0945-5ac9-90c9-354d6fff206f",
+          "1c0b4aec-f508-52aa-953a-6fe989a72f1d",
+          "ead404c1-52ca-5f8d-ab3c-c1f4dca712bb",
+          "0053b2b8-d853-5b09-9eaf-4f3dbbb3fddb",
+          "2c0c329d-ba1c-5b2a-8e6d-762ba2509267",
+          "51e70dcf-7db9-5884-89ab-bb0aacde4b81"
+        ],
+        "semantic": [
+          "3b979dd1-282b-53f8-9b9c-ede7e6854ba2",
+          "a53a60b1-8d53-566c-bb73-2519e91f201f",
+          "5df1320b-cb23-5f23-b5ab-7709ff7b2e48",
+          "097f1e93-7de2-5d35-a795-189c4cccef4f",
+          "fdf145bf-63af-5245-ad27-b532835bc920",
+          "ad3cdd59-b160-5392-a1a1-095c896d6a5d",
+          "069e1e36-9ea2-5046-9516-49002920e8a3",
+          "8c97d845-3218-5bd7-9888-3ee4d23dc0db",
+          "f44c36b6-50ab-53b1-b641-f955dfedc274",
+          "96cd3b1e-37ba-5627-a36e-39b2337ed91e"
+        ]
+      }
+    },
+    {
+      "id": "q06",
+      "query": "validate user input and raise an error when it is invalid",
+      "keyword": "validate",
+      "ranked": {
+        "keyword": [
+          "fac678a4-b9d8-5c48-b74e-75c4c431fe47",
+          "0d6586ae-71c4-591a-9a16-d8f467311b5d",
+          "b90ee26f-3e84-5866-a45f-69e6d10afcd9",
+          "4744597c-c33e-55c6-85a3-ddb5edb63c69",
+          "ee529146-eef1-590f-8eae-8a41467b8357",
+          "bb950d56-deb1-5efd-b6a7-f2dbf216500e",
+          "0db6fa4c-5346-52dd-8c96-9b78031ce035",
+          "9d48c8d7-fe70-5770-b49f-be58c9781e0a",
+          "b2bf01b9-6a21-5997-a279-740c3b3dcb77",
+          "1d683809-73ea-56ac-a0dd-90bcb487b8c3"
+        ],
+        "semantic": [
+          "927f196e-2938-5794-b63d-d482fee3913a",
+          "5acdf062-f1e0-5a7a-9186-d29db46bea04",
+          "d5296c42-c13a-5041-afec-e87807f2e335",
+          "843db225-1276-559d-b5fa-55cb097a6a22",
+          "0c1a8702-f224-5a0e-8495-a53bb37b1ff3",
+          "a8916ffc-2712-59a7-8394-a519fac48dcd",
+          "9d3a172a-970e-5802-8046-e9a2d0b2f47c",
+          "8e5cc09a-a602-573c-a123-b30cd7eda2db",
+          "e97db99c-4bf4-5772-9675-579150cebbfa",
+          "21c4bb88-d200-5b68-9ec3-04777c853533"
+        ]
+      }
+    },
+    {
+      "id": "q07",
+      "query": "convert a timestamp to a timezone aware datetime",
+      "keyword": "timezone",
+      "ranked": {
+        "keyword": [
+          "1e7f2fd3-de8e-5cba-adb5-09b982fbd65d",
+          "6e503dff-0f7f-5477-bdfa-ae9a7fd4c9b6",
+          "824ae383-d680-5b30-86bd-b634e4d92f64",
+          "19fae6a3-a46d-59ca-9f05-e076dc8606bb",
+          "35800f33-6fc3-5c8d-8006-86aea51f66b2",
+          "dec1852f-f759-5258-89a5-8d5d0a18a89c",
+          "e865d81b-c2e7-5144-9797-8fee3a10fadb",
+          "34b1ef1a-c316-57ad-94d5-5a1d96a7d29f",
+          "0c53f0bd-67eb-558a-a66d-ade354abedad",
+          "a8ea3438-b84f-5192-a963-a7586ec3ab36"
+        ],
+        "semantic": [
+          "26f250cd-0681-5ff3-960f-e9ed53ad0342",
+          "b1206161-8aa4-5c78-b747-4fcb04dc70d8",
+          "a5898a91-fd33-520e-9978-cc2454db0e3e",
+          "a9e0de51-bdb7-5fc9-a28c-58735986ff09",
+          "f5ccc54d-e5a0-5b0d-936f-660c57ebea70",
+          "e3ad3f1d-113f-5543-a5eb-c0c4e7d133cc",
+          "606aba8c-0d60-5c9a-93ca-278d57565326",
+          "61b69a5d-3d8c-53a0-964b-b61bbaf252d1",
+          "1baa372d-20cc-55f0-8efc-745d8ca1f1c4",
+          "1ee1b77c-2c80-5699-ae52-bedf0a941bc4"
+        ]
+      }
+    },
+    {
+      "id": "q08",
+      "query": "close the database connection when finished",
+      "keyword": "close connection",
+      "ranked": {
+        "keyword": [
+          "17514d3f-fd15-5f27-9ddd-bfaebf6b842b",
+          "9b85eb38-5a44-5671-ae51-8b0e574a7228",
+          "75d266a0-1195-510c-a901-dbe954dd1438",
+          "ec0fdf58-f127-518d-9ebe-a4ce45b1289a",
+          "13c0bfad-855b-5a72-9da7-09c5f8ec72a4",
+          "fa21c3b5-5f7f-587b-ba2c-46f4248ca351",
+          "79981602-5f02-50b0-8ead-a14d09941714",
+          "21653434-25ac-52e0-aa34-59f8f3ded9e5",
+          "d2efb388-148d-5c05-a62b-68192cd7c1b4",
+          "7f639b9f-60ae-5815-b7e0-a4e54864fd8f"
+        ],
+        "semantic": [
+          "12910114-5514-55eb-895b-b70698030503",
+          "5dae25f7-72b0-5e3a-a250-ce527294f451",
+          "7212eb72-a1df-5be9-b1ed-d54ddea099e2",
+          "6b6dca34-9ff9-5fd1-b5da-1d34e4154f66",
+          "a4119e96-6adb-52b8-b84a-bd1dee487372",
+          "eb98f95b-79e5-5dae-a269-c32de149ba2a",
+          "c3aa36b2-1a13-54c6-a01d-7bcfe29f21af",
+          "b4c69f71-1109-5c12-8173-58f9a006656d",
+          "cdd7dbc0-6480-501b-8545-c33042d7d99f",
+          "4411050c-b3ee-5480-9d94-d385292110f5"
+        ]
+      }
+    },
+    {
+      "id": "q09",
+      "query": "def chunks(items, size):\n    for i in range(0, len(items), size):\n        yield items[i:i + size]",
+      "keyword": "chunks",
+      "ranked": {
+        "keyword": [
+          "7c8bada2-f93a-5172-acbe-042910c00281",
+          "effcbe54-0114-5cb5-8008-903ae2a95d5e",
+          "65e0ad67-de66-5fb8-9c8f-aa113af4fb45",
+          "d738b03b-bad0-55cb-b271-4a4dc4d97da7",
+          "aaada538-51f8-5d3f-a499-f5f469222643",
+          "f11d70a3-35b6-5c58-a34b-b270e71bfadf",
+          "db7a2a38-41ec-5d3d-833e-c125d6bb0a39",
+          "0d5bd159-1c57-50f9-8ba6-26668d6cce43",
+          "81197454-2f5d-5bdb-b032-0d6aa355bf9e",
+          "2ca1a4cc-cc23-58eb-89f9-3a1989af8a2e"
+        ],
+        "semantic": [
+          "f147f241-a486-5ccf-a376-459a017ace1a",
+          "bf02f097-cfa7-50b3-98c9-1c85a7d46b7b",
+          "544aa7bf-fe77-5a84-b199-d3eb50452924",
+          "d22c37c0-59e4-5648-aaf8-226ed3506c4d",
+          "fd2172db-05cd-55d1-9df7-041df0f943a4",
+          "d7229893-85bc-538f-97db-ecab4a8a6051",
+          "0f11b4ab-58fc-5f9b-932a-ffd7004db434",
+          "6afc9fb9-9828-5dec-ac7b-bc9964d8712c",
+          "bd9ebfd2-ded1-58d2-a1a5-9ae50520cf49",
+          "3ee84253-3ded-5d39-8119-e06625a4d971"
+        ]
+      }
+    },
+    {
+      "id": "q10",
+      "query": "async def fetch(session, url):\n    async with session.get(url) as r:\n        return await r.json()",
+      "keyword": "fetch session",
+      "ranked": {
+        "keyword": [
+          "de6945fa-606b-5335-89ff-055503a05ee3",
+          "0b2afd54-43b1-58ad-bcad-a40eb33c7ebb",
+          "cdd96d82-13c4-5533-a1bf-9982135919a9",
+          "f6ecfd35-e043-51e2-872c-af1129d9a60f",
+          "c73f1622-3a2e-5768-8953-856f6c240bdf",
+          "fa7b9d80-438d-5d01-b012-f0d179c3f22a",
+          "165c5fae-4844-5190-b250-72ae7f231b6e",
+          "984e52d5-b136-54cf-ab6a-ba33f0c7eacb",
+          "4544a639-d282-5bf1-aa24-19bb64843ec1",
+          "b7dc420a-cfb5-5da1-8e2d-6e7152a74235"
+        ],
+        "semantic": [
+          "c1ff9d14-8fcf-5e12-afe2-3a4736c7adf7",
+          "094516aa-709b-5d85-b99f-8c8b331280e8",
+          "fe5fd603-a6fd-5a83-8f1f-3ed83fd2e456",
+          "a7d54f2b-391e-52af-857f-e3dc74d9d703",
+          "980d8d0c-7064-5d31-9755-e809a45385c0",
+          "1e23ced1-d620-59d3-82b3-4250b06f8c82",
+          "cae529cf-27b5-5955-aea7-b9150ab08cb2",
+          "fbf26cd8-4f3f-5714-8423-e223bc5eff76",
+          "6dd42568-dd1c-5f0e-8eed-e033c64dd031",
+          "dfdea5c9-20f6-54d1-96f2-90801ff43a08"
+        ]
+      }
+    }
+  ]
+}

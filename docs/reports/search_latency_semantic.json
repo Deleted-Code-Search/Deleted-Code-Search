@@ -2,50 +2,50 @@
   "schema": "search_latency/2",
   "search_mode": "semantic",
   "semantic": {
-    "folder": "data/search/semantic-sample",
+    "folder": "data/search/semantic",
     "model": "BAAI/bge-small-en-v1.5",
     "dim": 384,
-    "count": 6719,
+    "count": 723087,
     "max_tokens": 256,
-    "bytes": 6974706
+    "bytes": 750564690
   },
-  "cold_start_ms": 831.6,
+  "cold_start_ms": 1256.0,
   "target_ms": 1000.0,
   "index": "data/search/dataset-v0.9.sqlite",
   "index_bytes": 7002320896,
+  "environment": "Windows 11, Python 3.12.10, SQLite 3.49.1",
   "mode": "TestClient (같은 프로세스)",
   "repeat": 5,
-  "environment": "Windows 11, Python 3.12.10, SQLite 3.49.1",
   "summary": {
     "semantic": {
       "n": 25,
-      "p50_ms": 14.5,
-      "p95_ms": 17.6,
-      "max_ms": 18.0
+      "p50_ms": 46.0,
+      "p95_ms": 49.3,
+      "max_ms": 50.2
     },
     "all": {
       "n": 60,
-      "p50_ms": 15.6,
-      "p95_ms": 18.5,
-      "max_ms": 20.2
+      "p50_ms": 45.5,
+      "p95_ms": 49.5,
+      "max_ms": 51.8
     },
     "semantic-code": {
       "n": 15,
-      "p50_ms": 15.9,
-      "p95_ms": 18.4,
-      "max_ms": 18.5
+      "p50_ms": 47.9,
+      "p95_ms": 51.1,
+      "max_ms": 51.8
     },
     "semantic+filter": {
       "n": 20,
-      "p50_ms": 16.1,
-      "p95_ms": 19.9,
-      "max_ms": 20.2
+      "p50_ms": 43.1,
+      "p95_ms": 44.6,
+      "max_ms": 44.9
     },
     "first_call": {
       "n": 12,
-      "p50_ms": 16.9,
-      "p95_ms": 22.6,
-      "max_ms": 24.4
+      "p50_ms": 46.0,
+      "p95_ms": 48.9,
+      "max_ms": 49.7
     }
   },
   "over_target": [],
@@ -56,18 +56,18 @@
         "q": "wait longer between retries after a failed request",
         "mode": "semantic"
       },
-      "total": 6719,
+      "total": 723087,
       "returned": 20,
       "total_capped": false,
-      "first_ms": 16.9,
-      "median_ms": 15.9,
-      "max_ms": 17.4,
+      "first_ms": 46.2,
+      "median_ms": 46.1,
+      "max_ms": 50.2,
       "samples_ms": [
-        16.0,
-        14.2,
-        15.0,
-        15.9,
-        17.4
+        46.1,
+        46.2,
+        45.6,
+        46.1,
+        50.2
       ]
     },
     {
@@ -76,18 +76,18 @@
         "q": "cache downloaded files on disk and reuse them",
         "mode": "semantic"
       },
-      "total": 6719,
+      "total": 723087,
       "returned": 20,
       "total_capped": false,
-      "first_ms": 17.0,
-      "median_ms": 14.0,
-      "max_ms": 18.0,
+      "first_ms": 48.3,
+      "median_ms": 46.5,
+      "max_ms": 49.5,
       "samples_ms": [
-        12.7,
-        14.5,
-        18.0,
-        14.0,
-        12.7
+        46.5,
+        46.8,
+        49.5,
+        45.5,
+        43.9
       ]
     },
     {
@@ -96,18 +96,18 @@
         "q": "parse command line arguments",
         "mode": "semantic"
       },
-      "total": 6719,
+      "total": 723087,
       "returned": 20,
       "total_capped": false,
-      "first_ms": 14.0,
-      "median_ms": 15.9,
-      "max_ms": 17.7,
+      "first_ms": 46.7,
+      "median_ms": 47.1,
+      "max_ms": 47.6,
       "samples_ms": [
-        16.0,
-        14.1,
-        17.7,
-        15.9,
-        14.3
+        45.6,
+        47.2,
+        47.6,
+        47.1,
+        46.0
       ]
     },
     {
@@ -116,18 +116,18 @@
         "q": "compatibility shim for python 2",
         "mode": "semantic"
       },
-      "total": 6719,
+      "total": 723087,
       "returned": 20,
       "total_capped": false,
-      "first_ms": 15.8,
-      "median_ms": 15.6,
-      "max_ms": 16.4,
+      "first_ms": 45.9,
+      "median_ms": 44.7,
+      "max_ms": 45.7,
       "samples_ms": [
-        16.1,
-        16.4,
-        15.6,
-        15.0,
-        13.4
+        45.7,
+        44.7,
+        43.9,
+        43.9,
+        45.1
       ]
     },
     {
@@ -136,18 +136,18 @@
         "q": "close database connection when done",
         "mode": "semantic"
       },
-      "total": 6719,
+      "total": 723087,
       "returned": 20,
       "total_capped": false,
-      "first_ms": 16.4,
-      "median_ms": 13.8,
-      "max_ms": 13.9,
+      "first_ms": 44.5,
+      "median_ms": 45.4,
+      "max_ms": 48.6,
       "samples_ms": [
-        13.9,
-        13.2,
-        13.9,
-        13.8,
-        13.7
+        43.6,
+        45.3,
+        46.2,
+        45.4,
+        48.6
       ]
     },
     {
@@ -156,18 +156,18 @@
         "q": "def load_config(path):\n    with open(path) as f:\n        return yaml.safe_load(f)",
         "mode": "semantic"
       },
-      "total": 6719,
+      "total": 723087,
       "returned": 20,
       "total_capped": false,
-      "first_ms": 24.4,
-      "median_ms": 17.0,
-      "max_ms": 18.5,
+      "first_ms": 49.7,
+      "median_ms": 49.3,
+      "max_ms": 50.8,
       "samples_ms": [
-        17.8,
-        17.0,
-        15.6,
-        14.9,
-        18.5
+        49.4,
+        48.6,
+        49.3,
+        50.8,
+        47.4
       ]
     },
     {
@@ -176,18 +176,18 @@
         "q": "for i in range(len(xs)):\n    total += xs[i]",
         "mode": "semantic"
       },
-      "total": 6719,
+      "total": 723087,
       "returned": 20,
       "total_capped": false,
-      "first_ms": 21.2,
-      "median_ms": 14.7,
-      "max_ms": 16.5,
+      "first_ms": 47.5,
+      "median_ms": 46.1,
+      "max_ms": 51.8,
       "samples_ms": [
-        14.7,
-        16.5,
-        15.9,
-        13.3,
-        14.2
+        51.8,
+        46.1,
+        47.2,
+        45.1,
+        45.2
       ]
     },
     {
@@ -196,18 +196,18 @@
         "q": "async def fetch(session, url):\n    async with session.get(url) as r:",
         "mode": "semantic"
       },
-      "total": 6719,
+      "total": 723087,
       "returned": 20,
       "total_capped": false,
-      "first_ms": 17.2,
-      "median_ms": 16.0,
-      "max_ms": 18.4,
+      "first_ms": 45.9,
+      "median_ms": 47.9,
+      "max_ms": 48.1,
       "samples_ms": [
-        16.0,
-        18.4,
-        15.5,
-        17.3,
-        15.9
+        46.8,
+        47.8,
+        48.0,
+        48.1,
+        47.9
       ]
     },
     {
@@ -217,18 +217,18 @@
         "source": "HUMAN",
         "mode": "semantic"
       },
-      "total": 50,
+      "total": 500,
       "returned": 20,
       "total_capped": false,
-      "first_ms": 17.0,
-      "median_ms": 16.0,
-      "max_ms": 19.3,
+      "first_ms": 44.4,
+      "median_ms": 43.6,
+      "max_ms": 44.6,
       "samples_ms": [
-        13.3,
-        16.1,
-        19.3,
-        15.3,
-        16.0
+        43.6,
+        43.3,
+        43.6,
+        44.6,
+        41.6
       ]
     },
     {
@@ -241,15 +241,15 @@
       "total": 2085,
       "returned": 20,
       "total_capped": false,
-      "first_ms": 14.7,
-      "median_ms": 17.2,
-      "max_ms": 20.2,
+      "first_ms": 43.1,
+      "median_ms": 42.6,
+      "max_ms": 43.3,
       "samples_ms": [
-        20.2,
-        17.3,
-        14.7,
-        17.2,
-        14.9
+        43.3,
+        42.6,
+        41.7,
+        40.9,
+        43.0
       ]
     },
     {
@@ -260,18 +260,18 @@
         "grade": "INFERRED",
         "mode": "semantic"
       },
-      "total": 2072,
+      "total": 96410,
       "returned": 20,
       "total_capped": false,
-      "first_ms": 16.3,
-      "median_ms": 14.6,
-      "max_ms": 19.9,
+      "first_ms": 46.1,
+      "median_ms": 43.2,
+      "max_ms": 44.9,
       "samples_ms": [
-        16.5,
-        19.9,
-        13.9,
-        13.4,
-        14.6
+        42.8,
+        42.5,
+        44.9,
+        43.2,
+        43.7
       ]
     },
     {
@@ -282,20 +282,20 @@
         "offset": 20,
         "mode": "semantic"
       },
-      "total": 268,
+      "total": 8155,
       "returned": 20,
       "total_capped": false,
-      "first_ms": 19.3,
-      "median_ms": 16.1,
-      "max_ms": 16.8,
+      "first_ms": 42.2,
+      "median_ms": 43.0,
+      "max_ms": 43.6,
       "samples_ms": [
-        14.8,
-        16.1,
-        16.8,
-        15.6,
-        16.5
+        43.6,
+        43.0,
+        42.1,
+        41.9,
+        43.4
       ]
     }
   ],
-  "notes": "표본 임베딩(저장소 3개, 6,719건)으로 잰 값이다. 전체 723,087건에서는 내적이 108배 커진다 - 합성 벡터 723,087 × 384 float32 메모리 내적+상위 K 는 약 0.04초, float16 메모리맵 청크 변환은 약 0.45초였다. 필터 질의 4개는 표본·전체 모두 결과가 나오는 값이다(받은 행 칸). 실데이터 측정은 전체 임베딩 후 갱신."
+  "notes": "전체 임베딩(dataset-v0.9 FULL_FUNCTION 723,087건, bge-small-en-v1.5 384차원, 0.75 GB, 생성 324.6분)으로 잰 값이다. 서버 시작 때 모델·벡터를 한 번 읽어 float32 로 메모리에 둔다(첫 요청 칸, p50·p95 에 넣지 않음). 그 뒤 요청은 질의 임베딩 + 723,087 × 384 전수 내적 + 상위 K + 키워드 색인에서 목록 칸 조회다. 필터는 마스크만 바꿔 전수 내적 비용은 그대로라 필터 유무로 차이가 거의 없다. 표본(6,719건) p50 16ms → 전체 약 46ms. CHARTER §10.5 ≤ 1초 충족."
 }
