@@ -20,5 +20,26 @@ services:
       timeout: 5s
       retries: 10
 
+  # 통계 대시보드 API (#93). 저장소를 그대로 마운트해 docs/reports/dashboard_stats.json 을 읽는다.
+  # 사용: docker compose up api  /  전체 테스트: docker compose run --rm api pytest
+  # 검색(#8)에서 db 와 같이 쓴다.
+  api:
+    image: python:3.12-slim
+    container_name: deleted-code-search-api
+    working_dir: /app
+    # 설치 뒤 command 를 실행한다 - `docker compose run --rm api pytest` 도 설치부터 한다
+    entrypoint: ["sh", "-c", "pip install -q -e '.[dev,web]' && exec \"$$@\"", "--"]
+    command: ["uvicorn", "search.api:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    ports:
+      - "${API_PORT:-8000}:8000"
+    volumes:
+      - .:/app
+      - pip-cache:/root/.cache/pip
+      # 호스트(Windows)의 .venv·egg-info 가 컨테이너 설치와 섞이지 않게 가린다
+      - /app/.venv
+    environment:
+      PYTHONDONTWRITEBYTECODE: "1"
+
 volumes:
+  pip-cache:
   pgdata:
