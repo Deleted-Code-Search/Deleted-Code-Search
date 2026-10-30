@@ -100,3 +100,87 @@ export interface DashboardStats {
   };
   checks: { ok: boolean; against: string; mismatches: unknown[] };
 }
+
+// 검색 1단계 (#191). search/api.py 의 /api/search, /api/search/meta, /api/records/{id}.
+
+export interface SearchMeta {
+  dataset_version: string;
+  records: number;
+  repos: string[];
+  reasons: string[];
+  grades: string[];
+  sources: string[];
+  kinds: string[];
+  year_min: number | null;
+  year_max: number | null;
+  fts_columns: string[];
+}
+
+export interface SearchHit {
+  id: string;
+  repo: string;
+  function_name: string | null;
+  file_path: string;
+  year: number | null;
+  deletion_kind: string;
+  reason_label: string | null;
+  evidence_grade: string | null;
+  source: string;
+  code_policy: string;
+  is_test_code: boolean;
+  commit_first_line: string | null;
+  // 강조 구간은 \u0002 … \u0003 로 감싸 온다 (키워드 검색일 때만)
+  snippet: string | null;
+}
+
+export interface SearchResponse {
+  q: string;
+  match: string | null;
+  total: number;
+  total_capped: boolean;
+  limit: number;
+  offset: number;
+  results: SearchHit[];
+  elapsed_ms: number;
+}
+
+// Release jsonl 한 줄 (CHARTER §4.4 DeletionRecord + code_policy·classification). 화면이 쓰는 칸만.
+export interface DeletionRecord {
+  id: string;
+  repo: string;
+  commit_sha: string;
+  author_date: string | null;
+  file_path: string;
+  start_line: number | null;
+  end_line: number | null;
+  function_name: string | null;
+  function_signature: string | null;
+  deleted_body: string | null;
+  deletion_kind: string;
+  is_test_code: boolean;
+  context: {
+    commit_message: string | null;
+    pr_number: number | null;
+    pr_title: string | null;
+    pr_body: string | null;
+    pr_labels: string[] | null;
+    issue_numbers: number[] | null;
+    issue_titles: string[] | null;
+  } | null;
+  replacement: { code: string | null; match_method: string | null; confidence: number | null } | null;
+  reason: {
+    label: string;
+    evidence_grade: string;
+    evidence_text: string | null;
+    confidence: number | null;
+    classifier_version: string | null;
+  } | null;
+  source_url: string;
+  code_policy: string;
+  classification: { source: string; classifier_version: string | null } | null;
+}
+
+export interface RecordDetailResponse {
+  record: DeletionRecord;
+  review_comment_count: number | null;
+}

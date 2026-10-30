@@ -7,9 +7,8 @@ import { RepoTable } from "./components/RepoTable";
 import { Yearly } from "./components/Yearly";
 import { Performance } from "./components/Performance";
 import { SystemEval } from "./components/SystemEval";
-
-// API 는 docker compose 의 api 서비스 (localhost:8000). CORS 로 5173 에서 부른다.
-const API_BASE = import.meta.env.VITE_API_BASE ?? "http://localhost:8000";
+import { SearchTab } from "./components/SearchTab";
+import { API_BASE, getJson } from "./api";
 
 type Tab = "dashboard" | "search";
 
@@ -40,19 +39,15 @@ function validate(body: unknown): DashboardStats {
 }
 
 export function App() {
-  const [tab, setTab] = useState<Tab>("dashboard");
+  const [tab, setTab] = useState<Tab>(() =>
+    window.location.hash.startsWith("#search") ? "search" : "dashboard",
+  );
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/stats`)
-      .then(async (res) => {
-        if (!res.ok) {
-          const body = await res.json().catch(() => null);
-          throw new Error(body?.detail ?? `HTTP ${res.status}`);
-        }
-        return validate(await res.json());
-      })
+    getJson<unknown>("/api/stats")
+      .then(validate)
       .then(setStats)
       .catch((err: Error) => setError(err.message));
   }, []);
@@ -69,17 +64,34 @@ export function App() {
             role="tab"
             aria-selected={tab === "dashboard"}
             className={tab === "dashboard" ? "tab active" : "tab"}
-            onClick={() => setTab("dashboard")}
+            onClick={() => {
+              setTab("dashboard");
+              window.history.replaceState(null, "", "#dashboard");
+            }}
           >
             대시보드
           </button>
-          <button role="tab" aria-selected={false} className="tab" disabled title="준비 중 (#8)">
-            검색 <span className="soon">준비 중</span>
+          <button
+            role="tab"
+            aria-selected={tab === "search"}
+            className={tab === "search" ? "tab active" : "tab"}
+            onClick={() => {
+              setTab("search");
+              if (!window.location.hash.startsWith("#search")) {
+                window.history.replaceState(null, "", "#search");
+              }
+            }}
+          >
+            검색
           </button>
         </nav>
       </header>
 
-      <main>
+      {/* 탭을 오가도 검색 상태가 남게 숨기기만 한다 */}
+      <main hidden={tab !== "search"}>
+        <SearchTab />
+      </main>
+      <main hidden={tab !== "dashboard"}>
         {error && (
           <div className="error">
             통계를 불러오지 못했다: {error}
