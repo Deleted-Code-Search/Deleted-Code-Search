@@ -77,10 +77,12 @@ SEMANTIC_QUERIES: list[tuple[str, dict[str, Any]]] = [
         "semantic-code",
         {"q": "async def fetch(session, url):\n    async with session.get(url) as r:"},
     ),
+    # 필터는 표본 임베딩(click·requests·unsloth)과 전체 양쪽에서 결과가 나오는 값으로 골랐다 -
+    # 결과가 0건이면 키워드 색인 조회 경로를 재지 못한다 (CodeRabbit #194). `returned` 칸으로 확인
     ("semantic+filter", {"q": "remove deprecated api", "source": "HUMAN"}),
-    ("semantic+filter", {"q": "thread safety lock", "repo": "django/django"}),
-    ("semantic+filter", {"q": "timeout handling", "year_from": 2022, "grade": "EXPLICIT"}),
-    ("semantic+filter", {"q": "security fix", "reason": "SEC", "offset": 20}),
+    ("semantic+filter", {"q": "thread safety lock", "repo": "psf/requests"}),
+    ("semantic+filter", {"q": "timeout handling", "year_from": 2022, "grade": "INFERRED"}),
+    ("semantic+filter", {"q": "remove unused helper", "reason": "DEAD", "offset": 20}),
 ]
 
 
@@ -93,6 +95,16 @@ def percentile(values: Sequence[float], p: float) -> float:
     low = int(rank)
     high = min(low + 1, len(ordered) - 1)
     return ordered[low] + (ordered[high] - ordered[low]) * (rank - low)
+
+
+def remote_semantic_info(base_url: str) -> dict[str, Any] | None:
+    """원격 서버가 쓰는 임베딩 - /api/search/meta 의 semantic 칸. 로컬 manifest 로 채우지 않는다."""
+    url = f"{base_url.rstrip('/')}/api/search/meta"
+    with urllib.request.urlopen(url, timeout=30) as response:  # noqa: S310 - 사용자가 준 주소
+        info = json.loads(response.read()).get("semantic")
+    if info is None:
+        return None
+    return {"folder": f"{base_url.rstrip('/')} (원격)", **info}
 
 
 def make_caller(base_url: str | None) -> Callable[[dict[str, Any]], dict[str, Any]]:
@@ -139,8 +151,9 @@ def measure(
         rows.append(
             {
                 "type": kind,
-                "params": base,
+                "params": params,  # 실제로 보낸 값 (mode 포함) - 그대로 다시 보내면 같은 측정
                 "total": body["total"],
+                "returned": len(body["results"]),
                 "total_capped": body["total_capped"],
                 "first_ms": round(first_ms, 1),
                 "median_ms": round(statistics.median(samples), 1),
@@ -191,9 +204,9 @@ def write_markdown(path: Path, report: dict[str, Any]) -> None:
     ]
     if semantic:
         m = report["semantic"]
+        size = f" ({m['bytes'] / 1e9:.2f} GB)" if m.get("bytes") else ""
         lines += [
-            f"- 임베딩: `{m['folder']}` - {m['model']} {m['dim']}차원 {m['count']:,}건 "
-            f"({m['bytes'] / 1e9:.2f} GB)",
+            f"- 임베딩: `{m['folder']}` - {m['model']} {m['dim']}차원 {m['count']:,}건{size}",
             "- 서버 시작 때 모델·벡터 읽기(첫 요청): "
             + (
                 f"**{report['cold_start_ms'] / 1000:.1f}초** - p50·p95 에 넣지 않았다"
@@ -216,17 +229,18 @@ def write_markdown(path: Path, report: dict[str, Any]) -> None:
             f"| {name} | {g['n']} | {g['p50_ms']:.0f}ms | {g['p95_ms']:.0f}ms "
             f"| {g['max_ms']:.0f}ms | {ok} |"
         )
-    lines += ["", "## 질의별", "", "| 유형 | 파라미터 | 건수 | 첫 호출 | 중앙값 | 최대 |"]
-    lines.append("|---|---|---:|---:|---:|---:|")
+    lines += ["", "## 질의별", "", "| 유형 | 파라미터 | 건수 | 받은 행 | 첫 호출 | 중앙값 | 최대 |"]
+    lines.append("|---|---|---:|---:|---:|---:|---:|")
     for row in report["queries"]:
         params = ", ".join(f"{k}={v}" for k, v in row["params"].items()).replace("\n", "⏎")
         total = f"{row['total']:,}{'+' if row['total_capped'] else ''}"
         lines.append(
-            f"| {row['type']} | `{params}` | {total} | {row['first_ms']:.0f}ms "
+            f"| {row['type']} | `{params}` | {total} | {row.get('returned', '')} "
+            f"| {row['first_ms']:.0f}ms "
             f"| {row['median_ms']:.0f}ms | {row['max_ms']:.0f}ms |"
         )
     lines += ["", "## 해석", "", report.get("notes") or "(없음)", ""]
-    path.write_text("\n".join(lines), encoding="utf-8")
+    path.write_text("\n".join(lines), encoding="utf-8", newline="\n")
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -251,17 +265,19 @@ def main(argv: Sequence[str] | None = None) -> int:
     cold_ms = None
     semantic_info = None
     if semantic:
-        manifest = api.semantic_manifest()
-        if manifest is None:
-            print(
-                f"오류: {api.semantic_path()} 가 없다. python -m search.embed 먼저", file=sys.stderr
-            )
+        if args.base_url:
+            semantic_info = remote_semantic_info(args.base_url)
+            where = f"{args.base_url} 서버에 임베딩이"
+        else:
+            manifest = api.semantic_manifest()
+            semantic_info = manifest and {
+                "folder": api.semantic_path().as_posix(),
+                **{k: manifest[k] for k in ("model", "dim", "count", "max_tokens", "bytes")},
+            }
+            where = f"{api.semantic_path()} 가"
+        if semantic_info is None:
+            print(f"오류: {where} 없다. python -m search.embed 먼저", file=sys.stderr)
             return 1
-        folder = api.semantic_path()
-        semantic_info = {
-            "folder": folder.as_posix(),
-            **{k: manifest[k] for k in ("model", "dim", "count", "max_tokens", "bytes")},
-        }
         extra = {"mode": "semantic"}
         if not args.base_url:
             started = time.perf_counter()
@@ -286,7 +302,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         "notes": args.notes,
     }
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    out.write_text(
+        json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n"
+    )
     write_markdown(out.with_suffix(".md"), report)
     s = report["summary"]["all"]
     if cold_ms is not None:
@@ -294,6 +312,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     print(f"전체 p50 {s['p50_ms']:.0f}ms · p95 {s['p95_ms']:.0f}ms → {out}")
     for row in report["over_target"]:
         print(f"  1초 초과: {row['type']} {row['params']} 중앙값 {row['median_ms']:.0f}ms")
+    for row in rows:
+        if row["returned"] == 0:
+            print(f"  결과 0건 (조회 경로를 재지 못함): {row['type']} {row['params']}")
     return 0
 
 

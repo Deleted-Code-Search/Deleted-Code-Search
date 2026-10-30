@@ -8,6 +8,7 @@ import numpy as np
 import pytest
 from fastapi.testclient import TestClient
 
+from eval.search_relevance import QUERIES as QUERY_KEYWORDS
 from search import api, embed, index
 from search.semantic import SemanticIndex, SemanticUnavailable
 from tests.test_search import RECORDS_A, RECORDS_B, _record, _write_gz
@@ -304,38 +305,136 @@ def test_api_loads_model_once(client, monkeypatch):
     assert meta["semantic"]["count"] == 4
 
 
-def test_relevance_export_leaves_judgement_blank_and_scores(tmp_path):
+def test_api_starts_even_if_semantic_load_crashes(client, monkeypatch):
+    def broken(manifest):
+        raise RuntimeError("모델 내려받기 실패")
+
+    monkeypatch.setattr(api, "encoder_factory", broken)
+    api._semantic.clear()
+    with TestClient(api.app) as started:  # lifespan 이 예외를 삼키고 뜬다
+        assert started.get("/api/search", params={"q": "retry"}).status_code == 200
+        assert started.get("/api/health").status_code == 200
+
+
+def _fake_relevance_search(params):
+    # 키워드는 3건, 의미는 10건. 의미 0·1번은 키워드 0·1번과 같은 레코드(두 모드에 나옴)
+    if params["mode"] == "keyword":
+        ids = [f"{params['q']}-k{i}" for i in range(3)]
+    else:
+        kw = dict(QUERY_KEYWORDS)[params["q"]]
+        ids = [f"{kw}-k0", f"{kw}-k1"] + [f"{kw}-s{i}" for i in range(8)]
+    first = '=HYPERLINK("http://x")'  # 커밋 메시지가 수식으로 시작하는 경우
+    return {
+        "results": [
+            {"id": rid, "repo": "o/a", "file_path": "-p.py", "function_name": "@f",
+             "commit_first_line": first}
+            for rid in ids
+        ]
+    }  # fmt: skip
+
+
+def _fill(rows, judge, good):
+    for row in rows:
+        row[f"relevant_{judge}"] = "1" if good(row["record_id"]) else "0"
+
+
+def test_relevance_export_is_blind_and_deduplicated(tmp_path):
     from eval import search_relevance as rel
 
-    def fake_search(params):
-        n = 3 if params["mode"] == "keyword" else 10
-        return {
-            "results": [
-                {"id": f"{params['mode']}{i}", "repo": "o/a", "function_name": "f",
-                 "commit_first_line": "c"}
-                for i in range(n)
-            ]
-        }  # fmt: skip
+    rows, key = rel.export(_fake_relevance_search)
+    # 질의마다 키워드 3 + 의미 10 - 겹치는 2 = 11 행, 모드·순위 칸 없음, 판정 칸은 비움
+    assert len(rows) == len(rel.QUERIES) * 11
+    assert "mode" not in rel.COLUMNS and "rank" not in rel.COLUMNS
+    assert all(row[c] == "" for row in rows for c in rel.JUDGE_COLUMNS)
+    assert len({(r["query_id"], r["record_id"]) for r in rows}) == len(rows)
+    # 섞였다 - 의미 1위가 늘 첫 행이 아니다, 같은 시드면 같은 순서
+    q01 = [r["record_id"] for r in rows if r["query_id"] == "q01"]
+    assert q01 != key["queries"][0]["ranked"]["semantic"][: len(q01)]
+    assert [r["record_id"] for r in rel.export(_fake_relevance_search)[0]] == [
+        r["record_id"] for r in rows
+    ]
+    # 키에는 모드별 순위
+    assert key["queries"][0]["ranked"]["keyword"] == ["retry backoff-k0", "retry backoff-k1",
+                                                      "retry backoff-k2"]  # fmt: skip
+    # load_config(시연 예시)는 평가 질의에서 뺐다
+    assert not any("load_config" in q for q, _ in rel.QUERIES)
 
-    rows = rel.export_rows(fake_search)
-    assert len(rows) == len(rel.QUERIES) * 13
-    assert all(row["relevant"] == "" for row in rows)
-    # 키워드 쪽에는 낱말을, 의미 쪽에는 문장을 넣는다
+
+def test_relevance_sheet_neutralizes_formulas(tmp_path):
+    import csv
+
+    from eval import search_relevance as rel
+
+    rows, _ = rel.export(_fake_relevance_search)
     sheet = tmp_path / "sheet.csv"
     rel.write_sheet(sheet, rows)
-    with pytest.raises(rel.RelevanceError):
-        rel.score(sheet)  # 빈칸이 있으면 멈춘다
-    for row in rows:
-        # 의미: 1위와 3위만 관련, 키워드: 2위만
-        good = {"semantic": {1, 3}, "keyword": {2}}[row["mode"]]
-        row["relevant"] = "1" if row["rank"] in good else "0"
+    with sheet.open(encoding="utf-8-sig", newline="") as handle:
+        first = next(csv.DictReader(handle))
+    assert first["commit_first_line"].startswith("'=")
+    assert first["file_path"] == "'-p.py" and first["function_name"] == "'@f"
+    assert first["record_id"] == rows[0]["record_id"]  # uuid 는 그대로
+
+
+def test_relevance_score_two_judges_and_agreement(tmp_path):
+    from eval import search_relevance as rel
+
+    rows, key = rel.export(_fake_relevance_search)
+    sheet, key_path = tmp_path / "sheet.csv", tmp_path / "key.json"
+    rel.write_key(key_path, key)
     rel.write_sheet(sheet, rows)
-    result = rel.score(sheet)
-    assert result["modes"]["semantic"]["p_at_k"] == 0.2
-    assert result["modes"]["semantic"]["mrr"] == 1.0
+    with pytest.raises(rel.RelevanceError, match="판정이 하나도"):
+        rel.score(sheet, key_path)
+    # 성제: 키워드 1위(k0)와 의미 3·5위(s0, s2)만 관련
+    _fill(rows, "sj", lambda rid: rid.endswith(("-k0", "-s0", "-s2")))
+    rows[0]["relevant_sj"] = ""
+    rel.write_sheet(sheet, rows)
+    with pytest.raises(rel.RelevanceError, match="빈칸이 1개"):
+        rel.score(sheet, key_path)  # 일부만 채움
+    _fill(rows, "sj", lambda rid: rid.endswith(("-k0", "-s0", "-s2")))
+    rel.write_sheet(sheet, rows)
+    one = rel.score(sheet, key_path)
+    assert list(one["judges"]) == ["sj"] and "agreement" not in one
+    sem = one["by_judge"]["sj"]["semantic"]
+    # 의미 순위: k0, k1, s0, s1, s2 ... → 관련 1·3·5위
+    assert sem["p_at_k"] == 0.3 and sem["mrr"] == 1.0
     # 결과가 3개뿐이어도 분모는 10
-    assert result["modes"]["keyword"]["p_at_k"] == 0.1
-    assert result["modes"]["keyword"]["mrr"] == 0.5
+    assert one["by_judge"]["sj"]["keyword"]["p_at_k"] == 0.1
+    # 희수: k0 만 관련 → 키워드는 같고 의미는 1위만
+    _fill(rows, "hs", lambda rid: rid.endswith("-k0"))
+    rel.write_sheet(sheet, rows)
+    both = rel.score(sheet, key_path)
+    assert both["by_judge"]["hs"]["semantic"]["p_at_k"] == 0.1
+    assert both["mean"]["semantic"]["p_at_k"] == 0.2
+    # 질의당 11행 중 s0·s2 두 행만 다르다
+    assert both["agreement"]["items"] == len(rows)
+    assert both["agreement"]["percent"] == round(9 / 11, 3)
+    assert 0 < both["agreement"]["cohen_kappa"] < 1
+
+
+def test_relevance_score_refuses_missing_query(tmp_path):
+    from eval import search_relevance as rel
+
+    rows, key = rel.export(_fake_relevance_search)
+    _fill(rows, "sj", lambda rid: False)
+    sheet, key_path = tmp_path / "sheet.csv", tmp_path / "key.json"
+    rel.write_sheet(sheet, rows)
+    key["queries"] = key["queries"][:-1]  # 질의 하나가 빠진 키
+    rel.write_key(key_path, key)
+    with pytest.raises(rel.RelevanceError, match="q10"):
+        rel.score(sheet, key_path)
+    rel.write_key(key_path, rel.export(_fake_relevance_search)[1])
+    rel.write_sheet(sheet, [r for r in rows if r["query_id"] != "q03"])  # 시트에서 질의가 빠짐
+    with pytest.raises(rel.RelevanceError, match="시트에 키의 레코드"):
+        rel.score(sheet, key_path)
+
+
+def test_agreement_kappa():
+    from eval.search_relevance import agreement
+
+    assert agreement([(True, True), (False, False)]) == {
+        "items": 2, "percent": 1.0, "cohen_kappa": 1.0
+    }  # fmt: skip
+    assert agreement([(True, False), (False, True)])["cohen_kappa"] == -1.0
 
 
 def test_mmap_and_in_memory_give_same_hits(data, tmp_path):

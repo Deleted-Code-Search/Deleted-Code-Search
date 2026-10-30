@@ -9,7 +9,7 @@
     "max_tokens": 256,
     "bytes": 6974706
   },
-  "cold_start_ms": 548.4,
+  "cold_start_ms": 831.6,
   "target_ms": 1000.0,
   "index": "data/search/dataset-v0.9.sqlite",
   "index_bytes": 7002320896,
@@ -19,33 +19,33 @@
   "summary": {
     "semantic": {
       "n": 25,
-      "p50_ms": 11.1,
-      "p95_ms": 11.6,
-      "max_ms": 11.8
+      "p50_ms": 14.5,
+      "p95_ms": 17.6,
+      "max_ms": 18.0
     },
     "all": {
       "n": 60,
-      "p50_ms": 11.1,
-      "p95_ms": 12.5,
-      "max_ms": 13.0
+      "p50_ms": 15.6,
+      "p95_ms": 18.5,
+      "max_ms": 20.2
     },
     "semantic-code": {
       "n": 15,
-      "p50_ms": 12.2,
-      "p95_ms": 12.7,
-      "max_ms": 13.0
+      "p50_ms": 15.9,
+      "p95_ms": 18.4,
+      "max_ms": 18.5
     },
     "semantic+filter": {
       "n": 20,
-      "p50_ms": 9.7,
-      "p95_ms": 11.2,
-      "max_ms": 11.3
+      "p50_ms": 16.1,
+      "p95_ms": 19.9,
+      "max_ms": 20.2
     },
     "first_call": {
       "n": 12,
-      "p50_ms": 16.6,
-      "p95_ms": 18.3,
-      "max_ms": 19.0
+      "p50_ms": 16.9,
+      "p95_ms": 22.6,
+      "max_ms": 24.4
     }
   },
   "over_target": [],
@@ -53,183 +53,203 @@
     {
       "type": "semantic",
       "params": {
-        "q": "wait longer between retries after a failed request"
+        "q": "wait longer between retries after a failed request",
+        "mode": "semantic"
       },
       "total": 6719,
-      "total_capped": false,
-      "first_ms": 12.0,
-      "median_ms": 10.9,
-      "max_ms": 11.7,
-      "samples_ms": [
-        10.8,
-        10.9,
-        11.7,
-        11.2,
-        10.4
-      ]
-    },
-    {
-      "type": "semantic",
-      "params": {
-        "q": "cache downloaded files on disk and reuse them"
-      },
-      "total": 6719,
-      "total_capped": false,
-      "first_ms": 16.3,
-      "median_ms": 11.0,
-      "max_ms": 11.8,
-      "samples_ms": [
-        10.8,
-        10.9,
-        11.0,
-        11.3,
-        11.8
-      ]
-    },
-    {
-      "type": "semantic",
-      "params": {
-        "q": "parse command line arguments"
-      },
-      "total": 6719,
-      "total_capped": false,
-      "first_ms": 19.0,
-      "median_ms": 11.1,
-      "max_ms": 11.3,
-      "samples_ms": [
-        11.1,
-        11.2,
-        10.7,
-        11.3,
-        10.9
-      ]
-    },
-    {
-      "type": "semantic",
-      "params": {
-        "q": "compatibility shim for python 2"
-      },
-      "total": 6719,
+      "returned": 20,
       "total_capped": false,
       "first_ms": 16.9,
-      "median_ms": 10.9,
-      "max_ms": 11.3,
+      "median_ms": 15.9,
+      "max_ms": 17.4,
       "samples_ms": [
-        11.3,
-        11.2,
-        10.7,
-        10.0,
-        10.9
+        16.0,
+        14.2,
+        15.0,
+        15.9,
+        17.4
       ]
     },
     {
       "type": "semantic",
       "params": {
-        "q": "close database connection when done"
+        "q": "cache downloaded files on disk and reuse them",
+        "mode": "semantic"
       },
       "total": 6719,
+      "returned": 20,
       "total_capped": false,
       "first_ms": 17.0,
-      "median_ms": 11.1,
-      "max_ms": 11.4,
+      "median_ms": 14.0,
+      "max_ms": 18.0,
       "samples_ms": [
-        11.1,
-        11.3,
-        11.4,
-        11.1,
-        10.6
+        12.7,
+        14.5,
+        18.0,
+        14.0,
+        12.7
       ]
     },
     {
-      "type": "semantic-code",
+      "type": "semantic",
       "params": {
-        "q": "def load_config(path):\n    with open(path) as f:\n        return yaml.safe_load(f)"
+        "q": "parse command line arguments",
+        "mode": "semantic"
       },
       "total": 6719,
+      "returned": 20,
       "total_capped": false,
-      "first_ms": 13.0,
-      "median_ms": 12.2,
-      "max_ms": 13.0,
+      "first_ms": 14.0,
+      "median_ms": 15.9,
+      "max_ms": 17.7,
       "samples_ms": [
-        12.5,
-        12.2,
-        13.0,
-        12.0,
-        12.1
+        16.0,
+        14.1,
+        17.7,
+        15.9,
+        14.3
+      ]
+    },
+    {
+      "type": "semantic",
+      "params": {
+        "q": "compatibility shim for python 2",
+        "mode": "semantic"
+      },
+      "total": 6719,
+      "returned": 20,
+      "total_capped": false,
+      "first_ms": 15.8,
+      "median_ms": 15.6,
+      "max_ms": 16.4,
+      "samples_ms": [
+        16.1,
+        16.4,
+        15.6,
+        15.0,
+        13.4
+      ]
+    },
+    {
+      "type": "semantic",
+      "params": {
+        "q": "close database connection when done",
+        "mode": "semantic"
+      },
+      "total": 6719,
+      "returned": 20,
+      "total_capped": false,
+      "first_ms": 16.4,
+      "median_ms": 13.8,
+      "max_ms": 13.9,
+      "samples_ms": [
+        13.9,
+        13.2,
+        13.9,
+        13.8,
+        13.7
       ]
     },
     {
       "type": "semantic-code",
       "params": {
-        "q": "for i in range(len(xs)):\n    total += xs[i]"
+        "q": "def load_config(path):\n    with open(path) as f:\n        return yaml.safe_load(f)",
+        "mode": "semantic"
       },
       "total": 6719,
+      "returned": 20,
+      "total_capped": false,
+      "first_ms": 24.4,
+      "median_ms": 17.0,
+      "max_ms": 18.5,
+      "samples_ms": [
+        17.8,
+        17.0,
+        15.6,
+        14.9,
+        18.5
+      ]
+    },
+    {
+      "type": "semantic-code",
+      "params": {
+        "q": "for i in range(len(xs)):\n    total += xs[i]",
+        "mode": "semantic"
+      },
+      "total": 6719,
+      "returned": 20,
+      "total_capped": false,
+      "first_ms": 21.2,
+      "median_ms": 14.7,
+      "max_ms": 16.5,
+      "samples_ms": [
+        14.7,
+        16.5,
+        15.9,
+        13.3,
+        14.2
+      ]
+    },
+    {
+      "type": "semantic-code",
+      "params": {
+        "q": "async def fetch(session, url):\n    async with session.get(url) as r:",
+        "mode": "semantic"
+      },
+      "total": 6719,
+      "returned": 20,
       "total_capped": false,
       "first_ms": 17.2,
-      "median_ms": 12.2,
-      "max_ms": 12.6,
+      "median_ms": 16.0,
+      "max_ms": 18.4,
       "samples_ms": [
-        12.2,
-        12.6,
-        12.2,
-        12.0,
-        11.7
-      ]
-    },
-    {
-      "type": "semantic-code",
-      "params": {
-        "q": "async def fetch(session, url):\n    async with session.get(url) as r:"
-      },
-      "total": 6719,
-      "total_capped": false,
-      "first_ms": 17.7,
-      "median_ms": 12.4,
-      "max_ms": 12.5,
-      "samples_ms": [
-        12.5,
-        12.4,
-        12.5,
-        12.1,
-        11.7
+        16.0,
+        18.4,
+        15.5,
+        17.3,
+        15.9
       ]
     },
     {
       "type": "semantic+filter",
       "params": {
         "q": "remove deprecated api",
-        "source": "HUMAN"
+        "source": "HUMAN",
+        "mode": "semantic"
       },
       "total": 50,
+      "returned": 20,
       "total_capped": false,
       "first_ms": 17.0,
-      "median_ms": 11.2,
-      "max_ms": 11.3,
+      "median_ms": 16.0,
+      "max_ms": 19.3,
       "samples_ms": [
-        11.2,
-        11.2,
-        11.3,
-        10.8,
-        11.2
+        13.3,
+        16.1,
+        19.3,
+        15.3,
+        16.0
       ]
     },
     {
       "type": "semantic+filter",
       "params": {
         "q": "thread safety lock",
-        "repo": "django/django"
+        "repo": "psf/requests",
+        "mode": "semantic"
       },
-      "total": 0,
+      "total": 2085,
+      "returned": 20,
       "total_capped": false,
-      "first_ms": 10.5,
-      "median_ms": 9.7,
-      "max_ms": 10.0,
+      "first_ms": 14.7,
+      "median_ms": 17.2,
+      "max_ms": 20.2,
       "samples_ms": [
-        10.0,
-        9.7,
-        9.7,
-        9.5,
-        9.8
+        20.2,
+        17.3,
+        14.7,
+        17.2,
+        14.9
       ]
     },
     {
@@ -237,41 +257,45 @@
       "params": {
         "q": "timeout handling",
         "year_from": 2022,
-        "grade": "EXPLICIT"
+        "grade": "INFERRED",
+        "mode": "semantic"
       },
-      "total": 6,
+      "total": 2072,
+      "returned": 20,
       "total_capped": false,
-      "first_ms": 12.4,
-      "median_ms": 9.6,
-      "max_ms": 9.9,
+      "first_ms": 16.3,
+      "median_ms": 14.6,
+      "max_ms": 19.9,
       "samples_ms": [
-        9.6,
-        9.9,
-        9.6,
-        9.9,
-        9.5
+        16.5,
+        19.9,
+        13.9,
+        13.4,
+        14.6
       ]
     },
     {
       "type": "semantic+filter",
       "params": {
-        "q": "security fix",
-        "reason": "SEC",
-        "offset": 20
+        "q": "remove unused helper",
+        "reason": "DEAD",
+        "offset": 20,
+        "mode": "semantic"
       },
-      "total": 1,
+      "total": 268,
+      "returned": 20,
       "total_capped": false,
-      "first_ms": 9.3,
-      "median_ms": 9.6,
-      "max_ms": 9.7,
+      "first_ms": 19.3,
+      "median_ms": 16.1,
+      "max_ms": 16.8,
       "samples_ms": [
-        9.4,
-        9.6,
-        9.7,
-        9.6,
-        9.5
+        14.8,
+        16.1,
+        16.8,
+        15.6,
+        16.5
       ]
     }
   ],
-  "notes": "표본 임베딩(저장소 3개, 6,719건)으로 잰 값이다. 전체 723,087건에서는 내적이 108배 커진다 - 합성 벡터 723,087 × 384 float32 메모리 내적+상위 K 는 약 0.04초, float16 메모리맵 청크 변환은 약 0.45초였다. 실데이터 측정은 전체 임베딩 후 갱신."
+  "notes": "표본 임베딩(저장소 3개, 6,719건)으로 잰 값이다. 전체 723,087건에서는 내적이 108배 커진다 - 합성 벡터 723,087 × 384 float32 메모리 내적+상위 K 는 약 0.04초, float16 메모리맵 청크 변환은 약 0.45초였다. 필터 질의 4개는 표본·전체 모두 결과가 나오는 값이다(받은 행 칸). 실데이터 측정은 전체 임베딩 후 갱신."
 }

@@ -17,6 +17,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 import sqlite3
 import threading
@@ -73,11 +74,15 @@ SEMANTIC_KIND = "FULL_FUNCTION"
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
-    """서버 시작 때 모델·벡터를 한 번 읽는다. 파일이 없어도 서버는 뜬다 (semantic 만 503)."""
+    """서버 시작 때 모델·벡터를 한 번 읽는다. 파일이 없어도 서버는 뜬다 (semantic 만 503).
+    깨진 manifest·벡터, 모델 내려받기 실패 등 어떤 오류여도 로그만 남기고 뜬다 - 키워드 검색과
+    대시보드까지 막지 않게. 실패는 캐시하지 않으므로 의미 검색 요청 때 다시 시도한다."""
     try:
         semantic_index()
     except HTTPException:
         pass
+    except Exception:  # noqa: BLE001
+        logging.getLogger(__name__).exception("의미 검색 색인을 읽지 못했다 - 키워드만 쓴다")
     yield
 
 
