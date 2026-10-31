@@ -1,0 +1,301 @@
+{
+  "schema": "search_latency/2",
+  "search_mode": "semantic",
+  "semantic": {
+    "folder": "data/search/semantic",
+    "model": "BAAI/bge-small-en-v1.5",
+    "dim": 384,
+    "count": 723087,
+    "max_tokens": 256,
+    "bytes": 750564690
+  },
+  "cold_start_ms": 1256.0,
+  "target_ms": 1000.0,
+  "index": "data/search/dataset-v0.9.sqlite",
+  "index_bytes": 7002320896,
+  "environment": "Windows 11, Python 3.12.10, SQLite 3.49.1",
+  "mode": "TestClient (같은 프로세스)",
+  "repeat": 5,
+  "summary": {
+    "semantic": {
+      "n": 25,
+      "p50_ms": 46.0,
+      "p95_ms": 49.3,
+      "max_ms": 50.2
+    },
+    "all": {
+      "n": 60,
+      "p50_ms": 45.5,
+      "p95_ms": 49.5,
+      "max_ms": 51.8
+    },
+    "semantic-code": {
+      "n": 15,
+      "p50_ms": 47.9,
+      "p95_ms": 51.1,
+      "max_ms": 51.8
+    },
+    "semantic+filter": {
+      "n": 20,
+      "p50_ms": 43.1,
+      "p95_ms": 44.6,
+      "max_ms": 44.9
+    },
+    "first_call": {
+      "n": 12,
+      "p50_ms": 46.0,
+      "p95_ms": 48.9,
+      "max_ms": 49.7
+    }
+  },
+  "over_target": [],
+  "queries": [
+    {
+      "type": "semantic",
+      "params": {
+        "q": "wait longer between retries after a failed request",
+        "mode": "semantic"
+      },
+      "total": 723087,
+      "returned": 20,
+      "total_capped": false,
+      "first_ms": 46.2,
+      "median_ms": 46.1,
+      "max_ms": 50.2,
+      "samples_ms": [
+        46.1,
+        46.2,
+        45.6,
+        46.1,
+        50.2
+      ]
+    },
+    {
+      "type": "semantic",
+      "params": {
+        "q": "cache downloaded files on disk and reuse them",
+        "mode": "semantic"
+      },
+      "total": 723087,
+      "returned": 20,
+      "total_capped": false,
+      "first_ms": 48.3,
+      "median_ms": 46.5,
+      "max_ms": 49.5,
+      "samples_ms": [
+        46.5,
+        46.8,
+        49.5,
+        45.5,
+        43.9
+      ]
+    },
+    {
+      "type": "semantic",
+      "params": {
+        "q": "parse command line arguments",
+        "mode": "semantic"
+      },
+      "total": 723087,
+      "returned": 20,
+      "total_capped": false,
+      "first_ms": 46.7,
+      "median_ms": 47.1,
+      "max_ms": 47.6,
+      "samples_ms": [
+        45.6,
+        47.2,
+        47.6,
+        47.1,
+        46.0
+      ]
+    },
+    {
+      "type": "semantic",
+      "params": {
+        "q": "compatibility shim for python 2",
+        "mode": "semantic"
+      },
+      "total": 723087,
+      "returned": 20,
+      "total_capped": false,
+      "first_ms": 45.9,
+      "median_ms": 44.7,
+      "max_ms": 45.7,
+      "samples_ms": [
+        45.7,
+        44.7,
+        43.9,
+        43.9,
+        45.1
+      ]
+    },
+    {
+      "type": "semantic",
+      "params": {
+        "q": "close database connection when done",
+        "mode": "semantic"
+      },
+      "total": 723087,
+      "returned": 20,
+      "total_capped": false,
+      "first_ms": 44.5,
+      "median_ms": 45.4,
+      "max_ms": 48.6,
+      "samples_ms": [
+        43.6,
+        45.3,
+        46.2,
+        45.4,
+        48.6
+      ]
+    },
+    {
+      "type": "semantic-code",
+      "params": {
+        "q": "def load_config(path):\n    with open(path) as f:\n        return yaml.safe_load(f)",
+        "mode": "semantic"
+      },
+      "total": 723087,
+      "returned": 20,
+      "total_capped": false,
+      "first_ms": 49.7,
+      "median_ms": 49.3,
+      "max_ms": 50.8,
+      "samples_ms": [
+        49.4,
+        48.6,
+        49.3,
+        50.8,
+        47.4
+      ]
+    },
+    {
+      "type": "semantic-code",
+      "params": {
+        "q": "for i in range(len(xs)):\n    total += xs[i]",
+        "mode": "semantic"
+      },
+      "total": 723087,
+      "returned": 20,
+      "total_capped": false,
+      "first_ms": 47.5,
+      "median_ms": 46.1,
+      "max_ms": 51.8,
+      "samples_ms": [
+        51.8,
+        46.1,
+        47.2,
+        45.1,
+        45.2
+      ]
+    },
+    {
+      "type": "semantic-code",
+      "params": {
+        "q": "async def fetch(session, url):\n    async with session.get(url) as r:",
+        "mode": "semantic"
+      },
+      "total": 723087,
+      "returned": 20,
+      "total_capped": false,
+      "first_ms": 45.9,
+      "median_ms": 47.9,
+      "max_ms": 48.1,
+      "samples_ms": [
+        46.8,
+        47.8,
+        48.0,
+        48.1,
+        47.9
+      ]
+    },
+    {
+      "type": "semantic+filter",
+      "params": {
+        "q": "remove deprecated api",
+        "source": "HUMAN",
+        "mode": "semantic"
+      },
+      "total": 500,
+      "returned": 20,
+      "total_capped": false,
+      "first_ms": 44.4,
+      "median_ms": 43.6,
+      "max_ms": 44.6,
+      "samples_ms": [
+        43.6,
+        43.3,
+        43.6,
+        44.6,
+        41.6
+      ]
+    },
+    {
+      "type": "semantic+filter",
+      "params": {
+        "q": "thread safety lock",
+        "repo": "psf/requests",
+        "mode": "semantic"
+      },
+      "total": 2085,
+      "returned": 20,
+      "total_capped": false,
+      "first_ms": 43.1,
+      "median_ms": 42.6,
+      "max_ms": 43.3,
+      "samples_ms": [
+        43.3,
+        42.6,
+        41.7,
+        40.9,
+        43.0
+      ]
+    },
+    {
+      "type": "semantic+filter",
+      "params": {
+        "q": "timeout handling",
+        "year_from": 2022,
+        "grade": "INFERRED",
+        "mode": "semantic"
+      },
+      "total": 96410,
+      "returned": 20,
+      "total_capped": false,
+      "first_ms": 46.1,
+      "median_ms": 43.2,
+      "max_ms": 44.9,
+      "samples_ms": [
+        42.8,
+        42.5,
+        44.9,
+        43.2,
+        43.7
+      ]
+    },
+    {
+      "type": "semantic+filter",
+      "params": {
+        "q": "remove unused helper",
+        "reason": "DEAD",
+        "offset": 20,
+        "mode": "semantic"
+      },
+      "total": 8155,
+      "returned": 20,
+      "total_capped": false,
+      "first_ms": 42.2,
+      "median_ms": 43.0,
+      "max_ms": 43.6,
+      "samples_ms": [
+        43.6,
+        43.0,
+        42.1,
+        41.9,
+        43.4
+      ]
+    }
+  ],
+  "notes": "전체 임베딩(dataset-v0.9 FULL_FUNCTION 723,087건, bge-small-en-v1.5 384차원, 0.75 GB, 생성 324.6분)으로 잰 값이다. 서버 시작 때 모델·벡터를 한 번 읽어 float32 로 메모리에 둔다(첫 요청 칸, p50·p95 에 넣지 않음). 그 뒤 요청은 질의 임베딩 + 723,087 × 384 전수 내적 + 상위 K + 키워드 색인에서 목록 칸 조회다. 필터는 마스크만 바꿔 전수 내적 비용은 그대로라 필터 유무로 차이가 거의 없다. 표본(6,719건) p50 16ms → 전체 약 46ms. CHARTER §10.5 ≤ 1초 충족."
+}

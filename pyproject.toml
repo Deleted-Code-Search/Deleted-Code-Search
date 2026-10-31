@@ -31,6 +31,11 @@ web = [
   "uvicorn>=0.30",
   "httpx>=0.27",
 ]
+# 검색 2단계 임베딩·의미 검색 (#193, ADR-023). ONNX Runtime 으로 돈다 - torch 는 쓰지 않는다.
+embed = [
+  "fastembed>=0.9,<0.10",
+  "numpy>=2,<3",
+]
 
 [tool.setuptools.packages.find]
 include = ["pipeline*", "classify*", "search*", "eval*", "tools*"]

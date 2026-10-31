@@ -1,0 +1,2119 @@
+﻿item,query_id,query,record_id,repo,file_path,function_name,commit_first_line,code,source_url,relevant_sj,relevant_hs
+1,q01,retry a failed call with exponential backoff,dd6ae943-2b1e-5b5d-ac9d-cc9a55a5ee64,celery/celery,t/unit/tasks/test_tasks.py,autoretry_backoff_task,fixed a small float value of retry_backoff (#8295),"        @self.app.task(bind=True, autoretry_for=(HTTPError,),
+                       retry_backoff=True, shared=False)
+        def autoretry_backoff_task(self, url):
+            self.iterations += 1
+            if ""error"" in url:
+                fp = tempfile.TemporaryFile()
+                raise HTTPError(url, '500', 'Error', '', fp)
+            return url",https://github.com/celery/celery/commit/fc1c38a7ed376e21b97b6ac57cbc7ac7050efebc,,
+2,q01,retry a failed call with exponential backoff,c721781d-7d82-5791-bea0-5862590d4fe5,huggingface/datasets,src/datasets/utils/file_utils.py,_retry,Fix shard retry mechanism in `push_to_hub` (#6461),"def _retry(
+    func,
+    func_args: Optional[tuple] = None,
+    func_kwargs: Optional[dict] = None,
+    exceptions: Type[requests.exceptions.RequestException] = requests.exceptions.RequestException,
+    status_codes: Optional[List[int]] = None,
+    max_retries: int = 0,
+    base_wait_time: float = 0.5,
+    max_wait_time: float = 2,
+):
+    func_args = func_args or ()
+    func_kwargs = func_kwargs or {}
+    retry = 0
+    while True:
+        try:
+            return func(*func_args, **func_kwargs)
+        except exceptions as err:
+            if retry >= max_retries or (status_codes and err.response.status_code not in status_codes):
+                raise err
+            else:
+                sleep_time = min(max_wait_time, base_wait_time * 2**retry)  # Exponential backoff
+                logger.info(f""{func} timed out, retrying in {sleep_time}s... [{retry/max_retries}]"")
+                time.sleep(sleep_time)
+                retry += 1",https://github.com/huggingface/datasets/commit/76020180407d7ea9a0b535758d8d1b241fd19d8c,,
+3,q01,retry a failed call with exponential backoff,cbeb5745-f920-5cb8-b418-d735c2913ddb,ray-project/ray,release/e2e.py,exponential_backoff_retry,[ci/release] Remove old OSS release test infrastructure (#23134),"def exponential_backoff_retry(f, retry_exceptions, initial_retry_delay_s, max_retries):
+    retry_cnt = 0
+    retry_delay_s = initial_retry_delay_s
+    while True:
+        try:
+            return f()
+        except retry_exceptions as e:
+            retry_cnt += 1
+            if retry_cnt > max_retries:
+                raise
+            logger.info(
+                f""Retry function call failed due to {e} ""
+                f""in {retry_delay_s} seconds...""
+            )
+            time.sleep(retry_delay_s)
+            retry_delay_s *= RETRY_MULTIPLIER",https://github.com/ray-project/ray/commit/8608b64885999719f32e2864146226b80251903c,,
+4,q01,retry a failed call with exponential backoff,5410f878-6a2c-5502-b650-d5ad9d2cf52e,celery/celery,t/unit/tasks/test_tasks.py,test_autoretry_backoff_jitter,fixed a small float value of retry_backoff (#8295),"    def test_autoretry_backoff_jitter(self, randrange):
+        task = self.autoretry_backoff_jitter_task
+        task.max_retries = 3
+            call_[1]['countdown'] for call_ in fake_retry.call_args_list
+        assert retry_call_countdowns == [0, 1, 3, 7]",https://github.com/celery/celery/commit/fc1c38a7ed376e21b97b6ac57cbc7ac7050efebc,,
+5,q01,retry a failed call with exponential backoff,516ddfb6-199e-5814-a1b0-acc2aa79eec1,home-assistant/core,homeassistant/components/withings/api.py,_do_retry,Use aiowithings (#101819),"    async def _do_retry(self, func: Callable[[], Awaitable[Any]], attempts=3) -> Any:
+        """"""Retry a function call.
+
+        Withings' API occasionally and incorrectly throws errors.
+        Retrying the call tends to work.
+        """"""
+        exception = None
+        for attempt in range(1, attempts + 1):
+            LOGGER.debug(""Attempt %s of %s"", attempt, attempts)
+            try:
+                return await func()
+            except Exception as exception1:  # pylint: disable=broad-except
+                LOGGER.debug(
+                    ""Failed attempt %s of %s (%s)"", attempt, attempts, exception1
+                )
+                # Make each backoff pause a little bit longer
+                await asyncio.sleep(_RETRY_COEFFICIENT * attempt)
+                exception = exception1
+                continue
+
+        if exception:
+            raise exception",https://github.com/home-assistant/core/commit/8a4fe5add1655e6bb0f47cb5a9c7d19b693a5459,,
+6,q01,retry a failed call with exponential backoff,41f763f8-aff1-5dc0-8dcb-082788b67036,run-llama/llama_index,llama-index-legacy/llama_index/legacy/utils.py,retry_on_exceptions_with_backoff,[chore]: delete llama-index-legacy (#16974),"def retry_on_exceptions_with_backoff(
+    lambda_fn: Callable,
+    errors_to_retry: List[ErrorToRetry],
+    max_tries: int = 10,
+    min_backoff_secs: float = 0.5,
+    max_backoff_secs: float = 60.0,
+) -> Any:
+    """"""Execute lambda function with retries and exponential backoff.
+
+    Args:
+        lambda_fn (Callable): Function to be called and output we want.
+        errors_to_retry (List[ErrorToRetry]): List of errors to retry.
+            At least one needs to be provided.
+        max_tries (int): Maximum number of tries, including the first. Defaults to 10.
+        min_backoff_secs (float): Minimum amount of backoff time between attempts.
+            Defaults to 0.5.
+        max_backoff_secs (float): Maximum amount of backoff time between attempts.
+            Defaults to 60.
+
+    """"""
+    if not errors_to_retry:
+        raise ValueError(""At least one error to retry needs to be provided"")
+
+    error_checks = {
+        error_to_retry.exception_cls: error_to_retry.check_fn
+        for error_to_retry in errors_to_retry
+    }
+    exception_class_tuples = tuple(error_checks.keys())
+
+    backoff_secs = min_backoff_secs
+    tries = 0
+
+    while True:
+        try:
+            return lambda_fn()
+        except exception_class_tuples as e:
+            traceback.print_exc()
+            tries += 1
+            if tries >= max_tries:
+                raise
+… (앞부분만, 전체 45줄)",https://github.com/run-llama/llama_index/commit/293709e725718e70f1976870dd2462fd83d7a727,,
+7,q01,retry a failed call with exponential backoff,cdb7a7ac-bbc8-5995-a77c-a20f83ad485c,PrefectHQ/prefect,tests/concurrency/test_wait_for_successful_response.py,test_retries_failed_call_exponential_backoff_max_seconds,Serialize concurrency requests (#10545),"async def test_retries_failed_call_exponential_backoff_max_seconds():
+    responses = [
+        HTTPStatusError(
+            ""Too many requests"", request=Request(""get"", ""/""), response=Response(429)
+        ),
+        HTTPStatusError(
+            ""Too many requests"", request=Request(""get"", ""/""), response=Response(429)
+        ),
+        Response(200),
+    ]
+
+    requester = AsyncMock()
+    requester.side_effect = responses
+
+    with mock.patch(
+        ""prefect.concurrency.asyncio.clamped_poisson_interval""
+    ) as clamped_poisson_interval:
+        with mock.patch(""prefect.concurrency.asyncio.asyncio.sleep""):
+            clamped_poisson_interval.side_effect = [2, 4]
+
+            result = await wait_for_successful_response(requester, max_retry_seconds=3)
+            assert result == responses[2]
+
+            # `clamped_poisson_interval` is called during each retry with the
+            # number of retries squared as the argument, unless it's over
+            # `max_retry_seconds`, and then it's just called with
+            # `max_retry_seconds`.
+            clamped_poisson_interval.assert_has_calls([mock.call(2), mock.call(3)])",https://github.com/PrefectHQ/prefect/commit/203e0916ac709a5a466eac795b9777b47aed86ea,,
+8,q01,retry a failed call with exponential backoff,2227dd35-e670-5b8a-b5ed-544b0f6139af,confident-ai/deepeval,deepeval/chat_completion/retry.py,retry_with_exponential_backoff,feat: added tenacity retrying with exponential backoff,"def retry_with_exponential_backoff(
+    func,
+    initial_delay: float = 1,
+    exponential_base: float = 2,
+    jitter: bool = True,
+    max_retries: int = 10,
+    # errors: tuple = (openai.RateLimitError,),
+):
+    """"""Retry a function with exponential backoff.""""""
+
+    def wrapper(*args, **kwargs):
+        # Initialize variables
+        num_retries = 0
+        delay = initial_delay
+        # Loop until a successful response or max_retries is hit or an exception is raised
+        while True:
+            try:
+                return func(*args, **kwargs)
+
+            # Retry on specified errors
+            # except error as e:
+            except Exception as e:
+                logger.warning(e)
+                # Increment retries
+                num_retries += 1
+
+                # Check if max retries has been reached
+                if num_retries > max_retries:
+                    raise Exception(
+                        f""Maximum number of retries ({max_retries}) exceeded.""
+                    )
+
+                # Increment the delay
+                delay *= exponential_base * (1 + jitter * random.random())
+
+                # Sleep for the delay
+                time.sleep(delay)
+
+    return wrapper",https://github.com/confident-ai/deepeval/commit/3583df731bcd311e38db3a46d8f437eaa82f361a,,
+9,q01,retry a failed call with exponential backoff,7c179e8b-e3ec-5d40-82b3-2e935d8ed1a7,Lightning-AI/pytorch-lightning,src/lightning/app/utilities/network.py,_retry_wrapper,Replace LightningClient with import from lightning_cloud (#18544),"def _retry_wrapper(self, func: Callable, max_tries: Optional[int] = None) -> Callable:
+    """"""Returns the function decorated by a wrapper that retries the call several times if a connection error occurs.
+
+    The retries follow an exponential backoff.
+
+    """"""
+
+    @wraps(func)
+    def wrapped(*args: Any, **kwargs: Any) -> Any:
+        consecutive_errors = 0
+
+        while True:
+            try:
+                return func(self, *args, **kwargs)
+            except (lightning_cloud.openapi.rest.ApiException, urllib3.exceptions.HTTPError) as ex:
+                # retry if the backend fails with all errors except 4xx but not 408 - (Request Timeout)
+                if (
+                    isinstance(ex, urllib3.exceptions.HTTPError)
+                    or ex.status in (408, 409)
+                    or not str(ex.status).startswith(""4"")
+                ):
+                    consecutive_errors += 1
+                    backoff_time = _get_next_backoff_time(consecutive_errors)
+
+                    msg = (
+                        f""error: {str(ex)}""
+                        if isinstance(ex, urllib3.exceptions.HTTPError)
+                        else f""response: {ex.status}""
+                    )
+                    logger.debug(
+                        f""The {func.__name__} request failed to reach the server, {msg}.""
+                        f"" Retrying after {backoff_time} seconds.""
+                    )
+
+                    if max_tries is not None and consecutive_errors == max_tries:
+                        raise Exception(f""The {func.__name__} request failed to reach the server, {msg}."")
+
+                    time.sleep(backoff_time)
+                else:
+                    raise ex
+… (앞부분만, 전체 42줄)",https://github.com/Lightning-AI/pytorch-lightning/commit/1cee84ca2d8f23ed86fbd9b0a7be8b766d39ea95,,
+10,q01,retry a failed call with exponential backoff,d7fd7ee6-1943-5a01-ac06-bf277982bc73,confident-ai/deepeval,deepeval/chat_completion/retry.py,retry_with_exponential_backoff,fix retry error handling,"    errors: tuple = (openai.RateLimitError,),
+            except errors as e:
+            # Raise exceptions for any errors not specified
+            except Exception as e:
+                raise e
+",https://github.com/confident-ai/deepeval/commit/d0e769ab844472788b0743918b5477368e418e2e,,
+11,q01,retry a failed call with exponential backoff,9d136a13-4572-5306-a628-7273f7a86f51,PrefectHQ/prefect,tests/concurrency/test_wait_for_successful_response.py,test_retries_failed_call_exponential_backoff,Serialize concurrency requests (#10545),"async def test_retries_failed_call_exponential_backoff():
+    responses = [
+        HTTPStatusError(
+            ""Too many requests"", request=Request(""get"", ""/""), response=Response(429)
+        ),
+        HTTPStatusError(
+            ""Too many requests"", request=Request(""get"", ""/""), response=Response(429)
+        ),
+        Response(200),
+    ]
+    expected_args = (1, 2, 3)
+    expected_kwargs = {""a"": 1, ""b"": 2, ""c"": 3}
+
+    requester = AsyncMock()
+    requester.side_effect = responses
+
+    with mock.patch(
+        ""prefect.concurrency.asyncio.clamped_poisson_interval""
+    ) as clamped_poisson_interval:
+        with mock.patch(""prefect.concurrency.asyncio.asyncio.sleep"") as sleep:
+            clamped_poisson_interval.side_effect = [2, 4]
+
+            result = await wait_for_successful_response(
+                requester, *expected_args, **expected_kwargs
+            )
+            assert result == responses[2]
+
+            # `clamped_poisson_interval` is called during each retry with the
+            # number of retries squared as the argument. So we assert that it's
+            # called with 2 and 4, respectively. Then above it's mocked out to
+            # return 2 and 4, respectively, which are then passed to `sleep`.
+            clamped_poisson_interval.assert_has_calls([mock.call(2), mock.call(4)])
+            sleep.assert_has_calls([mock.call(2), mock.call(4)])",https://github.com/PrefectHQ/prefect/commit/203e0916ac709a5a466eac795b9777b47aed86ea,,
+12,q01,retry a failed call with exponential backoff,33c213c9-d227-591e-8a31-e989e12ee43c,openai/openai-agents-python,tests/test_trace_processor.py,test_backend_span_exporter_deadline_stops_during_5xx_retry_backoff,fix: #3354 interrupt tracing retry backoff on shutdown (#3355),"def test_backend_span_exporter_deadline_stops_during_5xx_retry_backoff(
+    mock_client,
+    patched_time_sleep,
+):
+    exporter._export_with_deadline([get_span(mock_processor())], deadline=time.monotonic() + 0.01)
+    patched_time_sleep.assert_called_once()
+    assert patched_time_sleep.call_args.args[0] <= 0.1",https://github.com/openai/openai-agents-python/commit/4a95659892eccf52013038de625c45090f825c3c,,
+13,q01,retry a failed call with exponential backoff,0e4e10a7-71c3-5927-b6d7-026e6a9436e2,deepset-ai/haystack,test/others/test_utils.py,test_exponential_backoff,Remove retry_with_exponential_backoff in favor of tenacity (#4460),"def test_exponential_backoff():
+    # Test that the exponential backoff works as expected
+    # should raise exception, check the exception contains the correct message
+    with pytest.raises(Exception, match=""retries \(2\)""):
+
+        @retry_with_exponential_backoff(backoff_in_seconds=1, max_retries=2)
+        def greet(name: str):
+            if random() < 1.1:
+                raise OpenAIRateLimitError(""Too many requests"")
+            return f""Hello {name}""
+
+        greet(""John"")
+
+    # this should not raise exception and should print ""Hello John""
+    @retry_with_exponential_backoff(backoff_in_seconds=1, max_retries=1)
+    def greet2(name: str):
+        return f""Hello {name}""
+
+    assert greet2(""John"") == ""Hello John""",https://github.com/deepset-ai/haystack/commit/b70715a74d2b8679751f2a81216803222cc746c7,,
+14,q01,retry a failed call with exponential backoff,6e559022-3b17-560d-af44-72f4f7c9304a,celery/celery,t/unit/tasks/test_tasks.py,autoretry_backoff_jitter_task,fixed a small float value of retry_backoff (#8295),"        @self.app.task(bind=True, autoretry_for=(HTTPError,),
+                       retry_backoff=True, retry_jitter=True, shared=False)
+        def autoretry_backoff_jitter_task(self, url):
+            self.iterations += 1
+            if ""error"" in url:
+                fp = tempfile.TemporaryFile()
+                raise HTTPError(url, '500', 'Error', '', fp)
+            return url",https://github.com/celery/celery/commit/fc1c38a7ed376e21b97b6ac57cbc7ac7050efebc,,
+15,q01,retry a failed call with exponential backoff,14a118dc-5aa3-55d2-8ad8-12b9df99f36f,deepset-ai/haystack,haystack/utils/reflection.py,retry_with_exponential_backoff,Remove retry_with_exponential_backoff in favor of tenacity (#4460),"def retry_with_exponential_backoff(
+    backoff_in_seconds: float = 1, max_retries: int = 10, errors: tuple = (OpenAIRateLimitError,)
+):
+    """"""
+    Decorator to retry a function with exponential backoff.
+    :param backoff_in_seconds: The initial backoff in seconds.
+    :param max_retries: The maximum number of retries.
+    :param errors: The errors to catch retry on.
+    """"""
+
+    def decorator(function):
+        def wrapper(*args, **kwargs):
+            # Initialize variables
+            num_retries = 0
+
+            # Loop until a successful response or max_retries is hit or an exception is raised
+            while True:
+                try:
+                    return function(*args, **kwargs)
+
+                # Retry on specified errors
+                except errors as e:
+                    # Check if max retries has been reached
+                    if num_retries > max_retries:
+                        raise Exception(f""Maximum number of retries ({max_retries}) exceeded."")
+
+                    # Increment the delay
+                    sleep_time = backoff_in_seconds * 2**num_retries + random()
+
+                    # Sleep for the delay
+                    logger.warning(
+                        ""%s - %s, retry %s in %s seconds..."",
+                        e.__class__.__name__,
+                        e,
+                        function.__name__,
+                        ""{0:.2f}"".format(sleep_time),
+                    )
+                    time.sleep(sleep_time)
+
+                    # Increment retries
+… (앞부분만, 전체 49줄)",https://github.com/deepset-ai/haystack/commit/b70715a74d2b8679751f2a81216803222cc746c7,,
+16,q01,retry a failed call with exponential backoff,adf8e2fb-b2e3-5b98-9536-08a690bd1b81,celery/celery,celery/app/base.py,_task_from_fun,Task class definitions can have retry attributes (#5869),"            autoretry_for = tuple(options.get('autoretry_for', ()))
+            retry_kwargs = options.get('retry_kwargs', {})
+            retry_backoff = int(options.get('retry_backoff', False))
+            retry_backoff_max = int(options.get('retry_backoff_max', 600))
+            retry_jitter = options.get('retry_jitter', True)",https://github.com/celery/celery/commit/a7c74d7d91ebab9b386760df1d4230c27127decc,,
+17,q01,retry a failed call with exponential backoff,5ab40361-f27f-5512-b64c-2f713ab80c90,celery/celery,t/unit/tasks/test_tasks.py,test_autoretry_backoff,fixed a small float value of retry_backoff (#8295),"    @patch('random.randrange', side_effect=lambda i: i - 1)
+    def test_autoretry_backoff(self, randrange):
+        task = self.autoretry_backoff_task
+        task.max_retries = 3
+            task.apply((""http://httpbin.org/error"",))
+            call_[1]['countdown'] for call_ in fake_retry.call_args_list
+        assert retry_call_countdowns == [1, 2, 4, 8]",https://github.com/celery/celery/commit/fc1c38a7ed376e21b97b6ac57cbc7ac7050efebc,,
+18,q01,retry a failed call with exponential backoff,74cf446a-5120-571c-8f2d-07cecab7405b,run-llama/llama_index,llama-index-legacy/tests/test_utils.py,test_retry_on_exceptions_with_backoff,[chore]: delete llama-index-legacy (#16974),"def test_retry_on_exceptions_with_backoff() -> None:
+    """"""Make sure retry function has accurate number of attempts.""""""
+    global call_count
+    assert fn_with_exception(None)
+
+    call_count = 0
+    with pytest.raises(ValueError):
+        fn_with_exception(ValueError)
+    assert call_count == 1
+
+    call_count = 0
+    with pytest.raises(ValueError):
+        retry_on_exceptions_with_backoff(
+            lambda: fn_with_exception(ValueError),
+            [ErrorToRetry(ValueError)],
+            max_tries=3,
+            min_backoff_secs=0.0,
+        )
+    assert call_count == 3
+
+    # different exception will not get retried
+    call_count = 0
+    with pytest.raises(TypeError):
+        retry_on_exceptions_with_backoff(
+            lambda: fn_with_exception(TypeError),
+            [ErrorToRetry(ValueError)],
+            max_tries=3,
+        )
+    assert call_count == 1",https://github.com/run-llama/llama_index/commit/293709e725718e70f1976870dd2462fd83d7a727,,
+19,q02,compatibility shim for python 2,693132ad-7214-554f-80b8-fb7332833c14,unslothai/unsloth,studio/backend/tests/test_tool_sandbox_wiring.py,test_the_environment_the_shim_depends_on_survives,"Revert ""Studio: minimal OS sandbox for Python and Terminal tools on Linux and macOS (#10526)""",(라이선스로 코드 미제공 - source_url 에서 확인),https://github.com/unslothai/unsloth/commit/be34438527e0f6e456e864228eea9ee315e68fd3,,
+20,q02,compatibility shim for python 2,efee2ed9-72b6-58aa-907e-a195672f1dc6,jax-ml/jax,jax/_src/interpreters/pxla.py,__init__,Remove several deprecated APIs,"    def __init__(self):
+      raise RuntimeError(""ShardedDeviceArray is a backward compatibility shim ""
+                         ""and cannot be instantiated."")",https://github.com/jax-ml/jax/commit/21f6736005d71c47391ab88e824e70b09f3bd553,,
+21,q02,compatibility shim for python 2,fdf7814c-9549-593f-9230-e80415b8f313,django/django,tests/defaultfilters/tests.py,test_floatformat_py2_fail,Fixed #16028 -- Moved defaultfilters tests into template_tests.,"    def test_floatformat_py2_fail(self):
+        self.assertEqual(floatformat(1.00000000000000015, 16), '1.0000000000000002')",https://github.com/django/django/commit/f91d7366e066dc5e1edd90c6bde438fae9fe67fb,,
+22,q02,compatibility shim for python 2,3a4a06df-2f3d-5d3a-9c7c-5b74ed375aa9,scrapy/scrapy,tests/test_link.py,test_non_str_url_py2,Remove six.PY2 and six.PY3 conditionals.,"        if six.PY2:
+            with warnings.catch_warnings(record=True) as w:
+                link = Link(u""http://www.example.com/\xa3"")
+                self.assertIsInstance(link.url, str)
+                self.assertEqual(link.url, b'http://www.example.com/\xc2\xa3')
+            assert len(w) == 1, ""warning not issued""
+        else:
+            with self.assertRaises(TypeError):
+                Link(b""http://www.example.com/\xc2\xa3"")",https://github.com/scrapy/scrapy/commit/bbd9f4be90e734df5c290aeb399e8e512f834224,,
+23,q02,compatibility shim for python 2,bf9cad96-b74d-58d1-a3e4-288b24917405,pandas-dev/pandas,pandas/compat/__init__.py,itervalues,CLN: Remove PY2/PY3 flags from pandas.compat (#26047),"    def itervalues(obj, **kw):
+        return iter(obj.values(**kw))",https://github.com/pandas-dev/pandas/commit/190a69e3d6bc3f106ef635ae18ff0fb8fdfe85c0,,
+24,q02,compatibility shim for python 2,d8e07084-e700-5528-b7e1-e8e1399f6e12,unslothai/unsloth,studio/backend/tests/test_sandbox_macos.py,test_runtime_read_paths_cover_the_interpreter_and_the_site_shim,"Revert ""Studio: minimal OS sandbox for Python and Terminal tools on Linux and macOS (#10526)""",(라이선스로 코드 미제공 - source_url 에서 확인),https://github.com/unslothai/unsloth/commit/be34438527e0f6e456e864228eea9ee315e68fd3,,
+25,q02,compatibility shim for python 2,8b7bd30c-5929-5cf0-a827-afcaceb5959a,ray-project/ray,rllib/tests/backward_compat/test_backward_compat.py,test_shim,"Revert ""[RLlib] @deprecate(error=True|False) escalation. (#28733)"" (#28795)","    def test_shim(self):
+        pass",https://github.com/ray-project/ray/commit/e50165492587556dac318418a0121e72bf93baa7,,
+26,q02,compatibility shim for python 2,61e77e89-fe6c-50cf-ab17-e7c5aaecf5de,pandas-dev/pandas,pandas/compat/__init__.py,iteritems,CLN: Remove PY2/PY3 flags from pandas.compat (#26047),"    def iteritems(obj, **kw):
+        return obj.iteritems(**kw)",https://github.com/pandas-dev/pandas/commit/190a69e3d6bc3f106ef635ae18ff0fb8fdfe85c0,,
+27,q02,compatibility shim for python 2,09d838d8-902b-5366-9990-7c52827e7aff,jax-ml/jax,jax/_src/interpreters/xla.py,__init__,Remove some dead code (followup to #16159),"    def __init__(self):
+      raise RuntimeError(""DeviceArray is a backward compatibility shim ""
+                         ""and cannot be instantiated."")",https://github.com/jax-ml/jax/commit/96e18d5f19cb7041386c430bc9f388fef45fbf84,,
+28,q02,compatibility shim for python 2,21f65ad1-b282-51d1-b190-3ace4864c704,pandas-dev/pandas,pandas/compat/__init__.py,set_function_name,CLN: Remove PY2/PY3 flags from pandas.compat (#26047),"    def set_function_name(f, name, cls):
+        """""" Bind the name attributes of the function """"""
+        f.__name__ = name
+        return f",https://github.com/pandas-dev/pandas/commit/190a69e3d6bc3f106ef635ae18ff0fb8fdfe85c0,,
+29,q02,compatibility shim for python 2,38320ea0-d8f4-5df7-b3c4-cfa86653d3b5,pandas-dev/pandas,pandas/compat/__init__.py,itervalues,CLN: Remove PY2/PY3 flags from pandas.compat (#26047),"    def itervalues(obj, **kw):
+        return obj.itervalues(**kw)",https://github.com/pandas-dev/pandas/commit/190a69e3d6bc3f106ef635ae18ff0fb8fdfe85c0,,
+30,q02,compatibility shim for python 2,7285ac52-5ab5-54e1-9814-4c0c300c5077,django/django,tests/utils_tests/test_simplelazyobject.py,test_pickle_py2_regression,Refs #23919 -- Removed six.PY2/PY3 usage,"
+        if six.PY2:
+            import cPickle
+
+            # This would fail with ""TypeError: expected string or Unicode object, NoneType found"".
+            cPickle.dumps(x)",https://github.com/django/django/commit/c716fe87821df00f9f03ecc761c914d1682591a2,,
+31,q02,compatibility shim for python 2,d547f0b5-96f5-5ab0-8b0d-66491f749a5a,mkdocs/mkdocs,mkdocs/legacy.py,pages_compat_shim,Remove support for deprecated pages config.,"def pages_compat_shim(original_pages):
+    """"""
+    Support legacy pages configuration
+
+    Re-write the pages config fron MkDocs <=0.12 to match the
+    new nested structure added in 0.13.
+
+    Given a pages configuration in the old style of:
+
+        pages:
+        - ['index.md', 'Home']
+        - ['user-guide/writing-your-docs.md', 'User Guide']
+        - ['user-guide/styling-your-docs.md', 'User Guide']
+        - ['about/license.md', 'About', 'License']
+        - ['about/release-notes.md', 'About']
+        - ['help/contributing.md', 'Help', 'Contributing']
+        - ['support.md']
+        - ['cli.md', 'CLI Guide']
+
+    Rewrite it to look like:
+
+        pages:
+        - Home: index.md
+        - User Guide:
+            - user-guide/writing-your-docs.md
+            - user-guide/styling-your-docs.md
+        - About:
+            - License: about/license.md
+            - about/release-notes.md
+        - Help:
+            - Contributing: about/contributing.md
+        - support.md
+        - CLI Guide: cli.md
+
+    TODO: Remove in 1.0
+    """"""
+
+    log.warning(""The pages config in the mkdocs.yml uses the deprecated ""
+                ""structure. This will be removed in the next release of ""
+                ""MkDocs. See for details on updating: ""
+… (앞부분만, 전체 116줄)",https://github.com/mkdocs/mkdocs/commit/db56c737955b42059f46ca273405241fc99f9029,,
+32,q02,compatibility shim for python 2,86d313bd-3529-5ea3-9072-4affd724d8a5,pandas-dev/pandas,pandas/compat/__init__.py,iterkeys,CLN: Remove PY2/PY3 flags from pandas.compat (#26047),"    def iterkeys(obj, **kw):
+        return obj.iterkeys(**kw)",https://github.com/pandas-dev/pandas/commit/190a69e3d6bc3f106ef635ae18ff0fb8fdfe85c0,,
+33,q02,compatibility shim for python 2,bf79c782-9a0d-5cba-99da-c9ae6e7354f2,scrapy/scrapy,tests/test_link.py,test_non_str_url_py2,Remove six.PY2 and six.PY3 conditionals.,"        if six.PY2:
+            with warnings.catch_warnings(record=True) as w:
+                link = Link(u""http://www.example.com/\xa3"")
+                self.assertIsInstance(link.url, str)
+                self.assertEqual(link.url, b'http://www.example.com/\xc2\xa3')
+            assert len(w) == 1, ""warning not issued""
+        else:
+            with self.assertRaises(TypeError):
+                Link(b""http://www.example.com/\xc2\xa3"")",https://github.com/scrapy/scrapy/commit/1d7c8cb0b1d3aa225fd396f263938fd2f171fb73,,
+34,q02,compatibility shim for python 2,9a1197f6-e747-5976-b689-7a1909aa11d0,pandas-dev/pandas,pandas/compat/__init__.py,to_str,CLN: Remove PY2/PY3 flags from pandas.compat (#26047),"    def to_str(s):
+        """"""
+        Convert unicode and non-string into Python 2 str
+        """"""
+        if not isinstance(s, basestring):
+            s = str(s)
+        return s",https://github.com/pandas-dev/pandas/commit/190a69e3d6bc3f106ef635ae18ff0fb8fdfe85c0,,
+35,q02,compatibility shim for python 2,41948c3d-c6f5-5e43-843c-e0b0b51792fc,streamlit/streamlit,lib/streamlit/compatibility.py,setup_2_3_shims,"Py2k Decimation: first pass, removing compatibility.py (#1127)","def setup_2_3_shims(caller_globals):
+    """"""
+    Meant to be called as follows:
+
+    setup_2_3_shims(globals())
+
+    And sets up a bunch of compatibility aliases to make python 2 more like
+    python 3.
+    """"""
+    if is_running_py3():
+        caller_globals[""dict_types""] = (type({}),)
+        caller_globals[""string_types""] = (type(""""),)
+        caller_globals[""native_dict""] = _dict
+    else:
+        # Override basic types.
+        native_dict = _dict
+        from builtins import range, map, str, dict, object, zip, int
+
+        # These are the symbols we will export to the calling package.
+        export_symbols = [
+            ""range"",
+            ""map"",
+            ""str"",
+            ""dict"",
+            ""object"",
+            ""zip"",
+            ""int"",
+            ""native_dict"",
+        ]
+
+        # Oerride the open function.
+        from io import open
+
+        export_symbols += [""open""]
+
+        from six import string_types
+
+        export_symbols += [""string_types""]
+
+        # Export these symbols to the calling function's symbol table.
+… (앞부분만, 전체 63줄)",https://github.com/streamlit/streamlit/commit/71e40a99c0d52dd581f6b9a16d724d9a08b61f96,,
+36,q02,compatibility shim for python 2,c6ac3bba-f1d2-59cf-b111-e4266b50f7a1,apache/airflow,airflow/models/xcom.py,_shim,airflow.models.xcom deprecations removed (#41803),"    @wraps(old_serializer)
+    def _shim(**kwargs):
+        kwargs = {k: kwargs.get(k) for k in params}
+        warnings.warn(
+            f""Method `serialize_value` in XCom backend {XCom.__name__} is using outdated signature and""
+            f""must be updated to accept all params in `BaseXCom.set` except `session`. Support will be ""
+            f""removed in a future release."",
+            RemovedInAirflow3Warning,
+            stacklevel=1,
+        )
+        return old_serializer(**kwargs)",https://github.com/apache/airflow/commit/04217f1d9b64b85d1d49acf97421e7a38ad61b50,,
+37,q02,compatibility shim for python 2,67c447b9-d1e9-5a6b-ac9c-d2bf7f3d8a8c,ray-project/ray,rllib/tests/backward_compat/test_backward_compat.py,test_shim,[RLlib] Algorithm/Policy checkpoint overhaul and Policy Model export (in native formats). (#28166),"    def test_shim(self):
+        pass",https://github.com/ray-project/ray/commit/23b3a599b9df8100558c477e94b0b19b1a38ac27,,
+38,q02,compatibility shim for python 2,342fa06b-0790-5f3d-bfde-95f6d5fb1fbe,jax-ml/jax,jax/lib/xla_bridge.py,computation_builder_shim,Update JAX to avoid XLA:Python API names deprecated in jaxlib 0.1.46. (#3046),"def computation_builder_shim(b):
+  return b if version > (0, 1, 45) else ComputationBuilderShim(b)",https://github.com/jax-ml/jax/commit/d55ea510e29540f6e3ba79141bf5f6cceefc20d4,,
+39,q03,remove a deprecated function kept for backward compatibility,50c5beab-4f32-5adb-80d0-4c16578b3771,ray-project/ray,python/ray/_private/utils.py,deprecated,[core] Move some utils to `ray._common.utils` to replace `ray._private.utils` usage in libraries (#53287),"def deprecated(
+    instructions: Optional[str] = None,
+    removal_release: Optional[str] = None,
+    removal_date: Optional[str] = None,
+    warn_once: bool = True,
+    stacklevel=2,
+):
+    """"""
+    Creates a decorator for marking functions as deprecated. The decorator
+    will log a deprecation warning on the first (or all, see `warn_once` arg)
+    invocations, and will otherwise leave the wrapped function unchanged.
+
+    Args:
+        instructions: Instructions for the caller to update their code.
+        removal_release: The release in which this deprecated function
+            will be removed. Only one of removal_release and removal_date
+            should be specified. If neither is specfieid, we'll warning that
+            the function will be removed ""in a future release"".
+        removal_date: The date on which this deprecated function will be
+            removed. Only one of removal_release and removal_date should be
+            specified. If neither is specfieid, we'll warning that
+            the function will be removed ""in a future release"".
+        warn_once: If true, the deprecation warning will only be logged
+            on the first invocation. Otherwise, the deprecation warning will
+            be logged on every invocation. Defaults to True.
+        stacklevel: adjust the warnings stacklevel to trace the source call
+
+    Returns:
+        A decorator to be used for wrapping deprecated functions.
+    """"""
+    if removal_release is not None and removal_date is not None:
+        raise ValueError(
+            ""Only one of removal_release and removal_date should be specified.""
+        )
+
+    def deprecated_wrapper(func):
+        @functools.wraps(func)
+        def new_func(*args, **kwargs):
+            global _PRINTED_WARNING
+            if func not in _PRINTED_WARNING:
+… (앞부분만, 전체 62줄)",https://github.com/ray-project/ray/commit/c8a1e5b96db17d6a849576b688be7677dc9f8d8e,,
+40,q03,remove a deprecated function kept for backward compatibility,8815cfc0-30cc-5db7-806a-77bae3c4bfad,exo-explore/exo,main_static.py,main,remove deprecated main_static,(라이선스로 코드 미제공 - source_url 에서 확인),https://github.com/exo-explore/exo/commit/5e8bfc8a9013d2528590114261590548e07b54f1,,
+41,q03,remove a deprecated function kept for backward compatibility,f33be537-7859-54a4-9027-ca389de7c7e5,langchain-ai/langgraph,libs/langgraph/langgraph/_api/deprecation.py,deprecated,Remove unused deprecation decorator/warning (#4917),"def deprecated(
+    since: str, alternative: str, *, removal: str = """", example: str = """"
+) -> Callable[[F], F]:
+    def decorator(obj: Union[F, C]) -> Union[F, C]:
+        removal_str = removal if removal else ""a future version""
+        message = (
+            f""{obj.__name__} is deprecated as of version {since} and will be""
+            f"" removed in {removal_str}. Use {alternative} instead.{example}""
+        )
+        if isinstance(obj, type):
+            original_init = obj.__init__  # type: ignore[misc]
+
+            @functools.wraps(original_init)
+            def new_init(self, *args: Any, **kwargs: Any) -> None:  # type: ignore[no-untyped-def]
+                warnings.warn(message, LangGraphDeprecationWarning, stacklevel=2)
+                original_init(self, *args, **kwargs)
+
+            obj.__init__ = new_init  # type: ignore[misc]
+
+            docstring = (
+                f""**Deprecated**: This class is deprecated as of version {since}. ""
+                f""Use `{alternative}` instead.""
+            )
+            if obj.__doc__:
+                docstring = docstring + f""\n\n{obj.__doc__}""
+            obj.__doc__ = docstring
+
+            return cast(C, obj)
+        elif callable(obj):
+
+            @functools.wraps(obj)
+            def wrapper(*args: Any, **kwargs: Any) -> Any:
+                warnings.warn(message, LangGraphDeprecationWarning, stacklevel=2)
+                return obj(*args, **kwargs)
+
+            docstring = (
+                f""**Deprecated**: This function is deprecated as of version {since}. ""
+                f""Use `{alternative}` instead.""
+            )
+            if obj.__doc__:
+… (앞부분만, 전체 50줄)",https://github.com/langchain-ai/langgraph/commit/2563301f39541007527c050161ae73ff39c9b23e,,
+42,q03,remove a deprecated function kept for backward compatibility,272ea0b2-565e-5b43-9cad-0f90dc423e92,huggingface/datasets,src/datasets/exceptions.py,__init__,Remove deprecated code (#6996),"    def __init__(self, *args, **kwargs):
+        DatasetsError.__init__(self, *args, **kwargs)",https://github.com/huggingface/datasets/commit/c3aaf2108e3fd77f92aed3b1dce0fd551daf9a0a,,
+43,q03,remove a deprecated function kept for backward compatibility,1ba7682b-f098-51f0-a0d8-5fa20eb6536e,huggingface/datasets,tests/test_exceptions.py,test_error_deprecated,Remove deprecated code (#6996),"'@pytest.mark.parametrize(
+    ""error"",
+    [
+        ChecksumVerificationException,
+        UnexpectedDownloadedFile,
+        ExpectedMoreDownloadedFiles,
+        SplitsVerificationException,
+        UnexpectedSplits,
+        ExpectedMoreSplits,
+    ],
+)
+def test_error_deprecated(error, monkeypatch):
+    monkeypatch.setattr(datasets.utils.deprecation_utils, ""_emitted_deprecation_warnings"", set())
+    with pytest.deprecated_call():
+        error()",https://github.com/huggingface/datasets/commit/c3aaf2108e3fd77f92aed3b1dce0fd551daf9a0a,,
+44,q03,remove a deprecated function kept for backward compatibility,43b4ba9f-f10d-5350-8c60-bbdc1373bd57,exo-explore/exo,main_static.py,shutdown,remove deprecated main_static,(라이선스로 코드 미제공 - source_url 에서 확인),https://github.com/exo-explore/exo/commit/5e8bfc8a9013d2528590114261590548e07b54f1,,
+45,q03,remove a deprecated function kept for backward compatibility,7e91d15d-9049-5113-89aa-e0f9a1cc25a8,huggingface/datasets,src/datasets/fingerprint.py,hash_default,Remove deprecated code (#6996),"    @classmethod
+    @deprecated(""Use `Hasher.hash` instead."")
+    def hash_default(cls, value: Any) -> str:
+        return cls.hash(value)",https://github.com/huggingface/datasets/commit/c3aaf2108e3fd77f92aed3b1dce0fd551daf9a0a,,
+46,q03,remove a deprecated function kept for backward compatibility,239a5b8a-9da5-55f8-aaf7-ab08395ba2ce,huggingface/datasets,src/datasets/utils/readme.py,__str__,Remove deprecated code (#6996),"    def __str__(self):
+        """"""Returns the string of dictionary representation of the ReadMe.""""""
+        return str(self.to_dict())",https://github.com/huggingface/datasets/commit/c3aaf2108e3fd77f92aed3b1dce0fd551daf9a0a,,
+47,q03,remove a deprecated function kept for backward compatibility,0986c626-8415-5195-bfb7-0cdce5bba9ce,spotify/luigi,luigi/deprecate_kwarg.py,new_function,flake8: Unbreak travis build,"        def new_function(*args, **kwargs):
+            value = kw_value
+            if old_name in kwargs:
+                warnings.warn('Keyword argument {0} is deprecated, use {1}'
+                              .format(old_name, new_name))
+                value = kwargs[old_name]
+            if new_name in kwargs:
+                value = kwargs[new_name]
+                del kwargs[new_name]
+            kwargs[old_name] = value
+            return function(*args, **kwargs)",https://github.com/spotify/luigi/commit/b5e21ca4579626fe5758dd4e2b2d6c1afa459c75,,
+48,q03,remove a deprecated function kept for backward compatibility,182702f9-dfb6-5909-b8da-925af7538974,huggingface/datasets,src/datasets/arrow_dataset.py,generator,Remove deprecated code (#6996),"        def generator():
+            for ex in self:
+                yield serialize_example(ex)",https://github.com/huggingface/datasets/commit/c3aaf2108e3fd77f92aed3b1dce0fd551daf9a0a,,
+49,q03,remove a deprecated function kept for backward compatibility,214f4395-ccde-53b7-a700-e9e4938ae778,huggingface/datasets,src/datasets/download/download_manager.py,url_to_downloaded_path,Remove deprecated code (#6996),"        def url_to_downloaded_path(url):
+            return os.path.join(cache_dir, hash_url_to_filename(url))",https://github.com/huggingface/datasets/commit/c3aaf2108e3fd77f92aed3b1dce0fd551daf9a0a,,
+50,q03,remove a deprecated function kept for backward compatibility,44330c58-49b5-5e45-b301-3c1e3c2b410a,huggingface/datasets,src/datasets/download/download_manager.py,help_message,Remove deprecated code (#6996),"    @property
+    def help_message(self):
+        return ""Use 'DownloadMode' instead.""",https://github.com/huggingface/datasets/commit/c3aaf2108e3fd77f92aed3b1dce0fd551daf9a0a,,
+51,q03,remove a deprecated function kept for backward compatibility,282203ad-6a70-5b42-9a1e-837f2fe2a545,huggingface/datasets,src/datasets/fingerprint.py,proxy,Remove deprecated code (#6996),"    def proxy(func):
+        for t in types:
+            Hasher.dispatch[t] = func
+        return func",https://github.com/huggingface/datasets/commit/c3aaf2108e3fd77f92aed3b1dce0fd551daf9a0a,,
+52,q03,remove a deprecated function kept for backward compatibility,0d95d521-8480-5cda-8c84-1791cacd1726,exo-explore/exo,main_static.py,handle_exit,remove deprecated main_static,(라이선스로 코드 미제공 - source_url 에서 확인),https://github.com/exo-explore/exo/commit/5e8bfc8a9013d2528590114261590548e07b54f1,,
+53,q03,remove a deprecated function kept for backward compatibility,22588535-4c24-5810-8953-d694910c86a1,NVIDIA-NeMo/Speech,nemo/core/callbacks.py,action,"add a reference to Actions into TrainingState, remove deprecated function",(라이선스로 코드 미제공 - source_url 에서 확인),https://github.com/NVIDIA-NeMo/Speech/commit/ddbf472c56818537d3d3af9be4ab032372a0296c,,
+54,q03,remove a deprecated function kept for backward compatibility,b694ebc9-36cc-55be-8274-0791277f70ae,Lightning-AI/pytorch-lightning,tests/deprecated_api/test_remove_1-5.py,test_v1_5_0_legacy_profiler_argument,removing legacy profiler arg (#9178),"def test_v1_5_0_legacy_profiler_argument():
+    with pytest.deprecated_call(match=""renamed to `record_functions` in v1.3""):
+        PyTorchProfiler(profiled_functions=[])",https://github.com/Lightning-AI/pytorch-lightning/commit/f79993a705e4d2f187739751c00a677aedbfabfd,,
+55,q03,remove a deprecated function kept for backward compatibility,d4e37697-f4cc-5e44-9993-fb6bafb0c9dc,huggingface/datasets,src/datasets/download/mock_download_manager.py,download_custom,Remove deprecated code (#6996),"    def download_custom(self, data_url, custom_download):
+        return self.download_and_extract(data_url)",https://github.com/huggingface/datasets/commit/c3aaf2108e3fd77f92aed3b1dce0fd551daf9a0a,,
+56,q03,remove a deprecated function kept for backward compatibility,4fe49f94-ab2f-5839-a6b3-c550b7c320ec,huggingface/datasets,src/datasets/exceptions.py,__init__,Remove deprecated code (#6996),"    def __init__(self, *args, **kwargs):
+        DatasetsError.__init__(self, *args, **kwargs)",https://github.com/huggingface/datasets/commit/c3aaf2108e3fd77f92aed3b1dce0fd551daf9a0a,,
+57,q03,remove a deprecated function kept for backward compatibility,4d21d37e-e14e-5439-a9d1-1c8d146c7499,home-assistant/core,homeassistant/components/rflink/__init__.py,remove_deprecated,Remove deprecated rflink configs (#29972),"def remove_deprecated(config):
+    """"""Remove deprecated config options from device config.""""""
+    for index, deprecated_option in enumerate(DEPRECATED_CONFIG_OPTIONS):
+        if deprecated_option in config:
+            replacement_option = REPLACEMENT_CONFIG_OPTIONS[index]
+            # generate deprecation warning
+            get_deprecated(config, replacement_option, deprecated_option)
+            # remove old config value replacing new one
+            config[replacement_option] = config.pop(deprecated_option)",https://github.com/home-assistant/core/commit/d6f317c0a988a6fdc492fbcec55c59b479533ecc,,
+58,q03,remove a deprecated function kept for backward compatibility,7090d4dc-b775-5b5b-b81e-275c1115e3ce,NVIDIA-NeMo/Speech,nemo/core/callbacks.py,action,"add a reference to Actions into TrainingState, remove deprecated function",(라이선스로 코드 미제공 - source_url 에서 확인),https://github.com/NVIDIA-NeMo/Speech/commit/ddbf472c56818537d3d3af9be4ab032372a0296c,,
+59,q04,parse command line arguments,c18e3398-874a-59d7-878a-0acfbec6d4c8,modelscope/FunASR,egs/aishell/paraformerbert/utils/print_args.py,get_commandline_args,update repo,"def get_commandline_args(no_executable=True):
+    extra_chars = [
+        "" "",
+        "";"",
+        ""&"",
+        ""|"",
+        ""<"",
+        "">"",
+        ""?"",
+        ""*"",
+        ""~"",
+        ""`"",
+        '""',
+        ""'"",
+        ""\\"",
+        ""{"",
+        ""}"",
+        ""("",
+        "")"",
+    ]
+
+    # Escape the extra characters for shell
+    argv = [
+        arg.replace(""'"", ""'\\''"")
+        if all(char not in arg for char in extra_chars)
+        else ""'"" + arg.replace(""'"", ""'\\''"") + ""'""
+        for arg in sys.argv
+    ]
+
+    if no_executable:
+        return "" "".join(argv[1:])
+    else:
+        return sys.executable + "" "" + "" "".join(argv)",https://github.com/modelscope/FunASR/commit/454cc544fdce67db0851eb9fd983fc76bb581430,,
+60,q04,parse command line arguments,6fe8b6ac-1453-55b3-b81b-b88615b0054c,modelscope/FunASR,funasr/utils/cli_utils.py,get_commandline_args,funasr2,"def get_commandline_args():
+    extra_chars = [
+        "" "",
+        "";"",
+        ""&"",
+        ""("",
+        "")"",
+        ""|"",
+        ""^"",
+        ""<"",
+        "">"",
+        ""?"",
+        ""*"",
+        ""["",
+        ""]"",
+        ""$"",
+        ""`"",
+        '""',
+        ""\\"",
+        ""!"",
+        ""{"",
+        ""}"",
+    ]
+
+    # Escape the extra characters for shell
+    argv = [
+        arg.replace(""'"", ""'\\''"")
+        if all(char not in arg for char in extra_chars)
+        else ""'"" + arg.replace(""'"", ""'\\''"") + ""'""
+        for arg in sys.argv
+    ]
+
+    return sys.executable + "" "" + "" "".join(argv)",https://github.com/modelscope/FunASR/commit/0e622e694e6cb4459955f1e5942a7c53349ce640,,
+61,q04,parse command line arguments,b36fdd46-d52e-5f9a-9071-e90b81475d90,Lightning-AI/pytorch-lightning,pytorch_lightning/trainer/trainer.py,from_argparse_args,ref: trainer argparse 1/n (#3421),"    @classmethod
+    def from_argparse_args(cls, args: Union[Namespace, ArgumentParser], **kwargs) -> 'Trainer':
+        """"""
+        Create an instance from CLI arguments.
+
+        Args:
+            args: The parser or namespace to take arguments from. Only known arguments will be
+                parsed and passed to the :class:`Trainer`.
+            **kwargs: Additional keyword arguments that may override ones in the parser or namespace.
+                These must be valid Trainer arguments.
+
+        Example:
+            >>> parser = ArgumentParser(add_help=False)
+            >>> parser = Trainer.add_argparse_args(parser)
+            >>> parser.add_argument('--my_custom_arg', default='something')  # doctest: +SKIP
+            >>> args = Trainer.parse_argparser(parser.parse_args(""""))
+            >>> trainer = Trainer.from_argparse_args(args, logger=False)
+        """"""
+        if isinstance(args, ArgumentParser):
+            args = cls.parse_argparser(args)
+        params = vars(args)
+
+        # we only want to pass in valid Trainer args, the rest may be user specific
+        valid_kwargs = inspect.signature(cls.__init__).parameters
+        trainer_kwargs = dict((name, params[name]) for name in valid_kwargs if name in params)
+        trainer_kwargs.update(**kwargs)
+
+        return cls(**trainer_kwargs)",https://github.com/Lightning-AI/pytorch-lightning/commit/b36c5e86d014671b0fa922d750b27420bc73b6f9,,
+62,q04,parse command line arguments,720a9a39-6e9d-582d-8712-6c2d365595b3,spotDL/spotify-downloader,spotdl/command_line/arguments.py,parse_args,Restructuring Spotdl (#812),"    def parse_args(self, args=None):
+        configured_args = super().parse_args(args=args)
+        config_file = configured_args.config
+        if config_file and os.path.isfile(config_file):
+            config = spotdl.config.read_config(config_file)
+            self.set_defaults(**config[""spotify-downloader""])
+            configured_args = super().parse_args(args=args)
+        logging_level = _LOG_LEVELS[configured_args.log_level]
+        spotdl.util.install_logger(logging_level)
+        del configured_args.config
+        return configured_args",https://github.com/spotDL/spotify-downloader/commit/f7e9d4b5b632c32a0896abf4401735d202a5fd2b,,
+63,q04,parse command line arguments,84e68606-62d1-52d3-a34e-5380e2751378,Lightning-AI/pytorch-lightning,tests/tests_pytorch/utilities/test_argparse.py,test_from_argparse_args,Remove argparse utils (#16708),"def test_from_argparse_args():
+    args = Namespace(a=1, b=""test"", c=True, d=""not valid"")
+    my_instance = from_argparse_args(ArgparseExample, args)
+    assert my_instance.a == 1
+    assert my_instance.b == ""test""
+    assert my_instance.c
+
+    parser = ArgumentParser()
+    mock_trainer = MagicMock()
+    _ = from_argparse_args(mock_trainer, parser)
+    mock_trainer.parse_argparser.assert_called_once_with(parser)",https://github.com/Lightning-AI/pytorch-lightning/commit/99cb2cd056e71b516eabff30acef73bd83943d09,,
+64,q04,parse command line arguments,6846e524-b8a7-5c05-b1f1-a027a21edd54,Lightning-AI/pytorch-lightning,tests/utilities/test_argparse.py,test_add_argparse_args_invalid,Drop Python 3.6 support (#11117),"def test_add_argparse_args_invalid():
+    """"""Test that `add_argparse_args` doesn't raise `TypeError` when a class has args typed as `typing.Generic` in
+    Python 3.6.""""""
+    add_argparse_args(AddArgparseArgsExampleClassGeneric, ArgumentParser())",https://github.com/Lightning-AI/pytorch-lightning/commit/3692eba80744b5f4472d667fbb4a2c169c6e0f99,,
+65,q04,parse command line arguments,f5846e33-a77c-5554-a19a-1e399938811a,modelscope/FunASR,egs/aishell2/transformer/utils/print_args.py,get_commandline_args,update repo,"def get_commandline_args(no_executable=True):
+    extra_chars = [
+        "" "",
+        "";"",
+        ""&"",
+        ""|"",
+        ""<"",
+        "">"",
+        ""?"",
+        ""*"",
+        ""~"",
+        ""`"",
+        '""',
+        ""'"",
+        ""\\"",
+        ""{"",
+        ""}"",
+        ""("",
+        "")"",
+    ]
+
+    # Escape the extra characters for shell
+    argv = [
+        arg.replace(""'"", ""'\\''"")
+        if all(char not in arg for char in extra_chars)
+        else ""'"" + arg.replace(""'"", ""'\\''"") + ""'""
+        for arg in sys.argv
+    ]
+
+    if no_executable:
+        return "" "".join(argv[1:])
+    else:
+        return sys.executable + "" "" + "" "".join(argv)",https://github.com/modelscope/FunASR/commit/b4f4ff886b2af6c3b3b4f3b864ca0f29d76fe353,,
+66,q04,parse command line arguments,e23e2c8a-ae9d-56de-b22e-0d67a51eda07,Lightning-AI/pytorch-lightning,src/lightning/pytorch/trainer/trainer.py,from_argparse_args,Remove argparse utils (#16708),"    @classmethod
+    def from_argparse_args(cls: Any, args: Union[Namespace, ArgumentParser], **kwargs: Any) -> Any:
+        return from_argparse_args(cls, args, **kwargs)",https://github.com/Lightning-AI/pytorch-lightning/commit/99cb2cd056e71b516eabff30acef73bd83943d09,,
+67,q04,parse command line arguments,46181dd4-e305-59a8-bb36-e84873301773,browser-use/browser-use,browser_use/main.py,parse_arguments,use textual and rich for cli,"def parse_arguments():
+	""""""Parse command-line arguments.""""""
+	parser = argparse.ArgumentParser(description='Browser-Use Interactive CLI')
+	parser.add_argument('--model', type=str, help='Model to use (e.g., gpt-4o, claude-3-opus-20240229, gemini-pro)')
+	parser.add_argument('--headless', action='store_true', help='Run browser in headless mode', default=None)
+	parser.add_argument('--no-headless', dest='headless', action='store_false', help='Run browser in visible mode')
+	parser.add_argument('--window-width', type=int, help='Browser window width')
+	parser.add_argument('--window-height', type=int, help='Browser window height')
+
+	return parser.parse_args()",https://github.com/browser-use/browser-use/commit/61f5e2ee6d3b85ba3aa8feef0b7646ab524a7ec8,,
+68,q04,parse command line arguments,b22d542c-5a50-5c93-8069-cb4dc32aa76f,huggingface/trl,examples/scripts/openenv/echo.py,parse_args,Add `environment_factory` to `GRPOTrainer` (#5093),"def parse_args():
+    parser = argparse.ArgumentParser(description=""Run GRPO training with Echo environment and vLLM."")
+
+    parser.add_argument(""--env-host"", type=str, default=""0.0.0.0"", help=""Host for the Echo environment."")
+    parser.add_argument(""--env-port"", type=int, default=8001, help=""Port for the Echo environment."")
+    parser.add_argument(
+        ""--env-mode"",
+        choices=[""local"", ""docker-local"", ""docker-image"", ""docker-hub"", ""space""],
+        default=""docker-image"",
+        help=""Where to run the Echo environment: 'local' to launch it, 'docker-local' if already running locally, 'docker-image' to run from a Docker image, 'docker-hub' to run from Docker Hub, or 'space' to use a remote Space URL."",
+    )
+    parser.add_argument(
+        ""--model"",
+        type=str,
+        default=""Qwen/Qwen2.5-0.5B-Instruct"",
+        help=""Model to use for training."",
+    )
+    parser.add_argument(
+        ""--dataset"",
+        type=str,
+        default=""trl-lib/ultrafeedback-prompt"",
+        help=""Dataset to use for training."",
+    )
+    parser.add_argument(
+        ""--env-image"", type=str, default=""echo-env:latest"", help=""Docker image for the Echo environment.""
+    )
+    parser.add_argument(
+        ""--vllm-mode"",
+        choices=[""colocate"", ""server""],
+        default=""colocate"",
+        help=""vLLM execution mode: 'colocate' or 'server'."",
+    )
+    parser.add_argument(
+        ""--vllm-server-url"",
+        type=str,
+        default=""http://localhost:8000"",
+        help=""URL for the vLLM server (only used when --vllm-mode=server)."",
+    )
+
+    return parser.parse_args()",https://github.com/huggingface/trl/commit/8067ea7558ed4477afce710bbf2f8a1a79973ba7,,
+69,q04,parse command line arguments,0dcb51f6-c8f4-54bb-a448-10d3df1e4bdb,Lightning-AI/pytorch-lightning,src/lightning/pytorch/trainer/trainer.py,add_argparse_args,Remove argparse utils (#16708),"    @classmethod
+    def add_argparse_args(cls, parent_parser: ArgumentParser, **kwargs: Any) -> Union[_ArgumentGroup, ArgumentParser]:
+        return add_argparse_args(cls, parent_parser, **kwargs)",https://github.com/Lightning-AI/pytorch-lightning/commit/99cb2cd056e71b516eabff30acef73bd83943d09,,
+70,q04,parse command line arguments,359c6ecb-6302-5837-a4d3-5255be8119e0,modelscope/FunASR,egs_modelscope/speechio/paraformer/utils/print_args.py,get_commandline_args,update repo,"def get_commandline_args(no_executable=True):
+    extra_chars = [
+        "" "",
+        "";"",
+        ""&"",
+        ""|"",
+        ""<"",
+        "">"",
+        ""?"",
+        ""*"",
+        ""~"",
+        ""`"",
+        '""',
+        ""'"",
+        ""\\"",
+        ""{"",
+        ""}"",
+        ""("",
+        "")"",
+    ]
+
+    # Escape the extra characters for shell
+    argv = [
+        arg.replace(""'"", ""'\\''"")
+        if all(char not in arg for char in extra_chars)
+        else ""'"" + arg.replace(""'"", ""'\\''"") + ""'""
+        for arg in sys.argv
+    ]
+
+    if no_executable:
+        return "" "".join(argv[1:])
+    else:
+        return sys.executable + "" "" + "" "".join(argv)",https://github.com/modelscope/FunASR/commit/454cc544fdce67db0851eb9fd983fc76bb581430,,
+71,q04,parse command line arguments,e9078c6f-e52d-5094-860e-2642abbe621d,Lightning-AI/pytorch-lightning,pytorch_lightning/utilities/cli.py,parse_arguments,Restructure parsing flow in the `LightningCLI` (#8721),"    def parse_arguments(self) -> None:
+        """"""Parses command line arguments and stores it in self.config""""""
+        self.config = self.parser.parse_args()",https://github.com/Lightning-AI/pytorch-lightning/commit/f1cc6e3470456fd0950ed575522de3ff519ebc95,,
+72,q04,parse command line arguments,6966aae6-bc32-5ece-8e27-0ef995a33dc9,modelscope/FunASR,egs/aishell2/transformer/utils/print_args.py,get_commandline_args,update repo,"def get_commandline_args(no_executable=True):
+    extra_chars = [
+        "" "",
+        "";"",
+        ""&"",
+        ""|"",
+        ""<"",
+        "">"",
+        ""?"",
+        ""*"",
+        ""~"",
+        ""`"",
+        '""',
+        ""'"",
+        ""\\"",
+        ""{"",
+        ""}"",
+        ""("",
+        "")"",
+    ]
+
+    # Escape the extra characters for shell
+    argv = [
+        arg.replace(""'"", ""'\\''"")
+        if all(char not in arg for char in extra_chars)
+        else ""'"" + arg.replace(""'"", ""'\\''"") + ""'""
+        for arg in sys.argv
+    ]
+
+    if no_executable:
+        return "" "".join(argv[1:])
+    else:
+        return sys.executable + "" "" + "" "".join(argv)",https://github.com/modelscope/FunASR/commit/7c03c20e8982a5de7771c0d61ce27b3a39526a66,,
+73,q04,parse command line arguments,d22ea415-7ce4-57e2-b7a2-0f3516892592,Lightning-AI/pytorch-lightning,tests/tests_pytorch/core/test_datamodules.py,test_dm_init_from_argparse_args,Remove argparse utils (#16708),"def test_dm_init_from_argparse_args(tmpdir):
+    parser = ArgumentParser()
+    parser = DataDirDataModule.add_argparse_args(parser)
+    args = parser.parse_args([""--data_dir"", str(tmpdir)])
+    dm = DataDirDataModule.from_argparse_args(args)
+    dm.prepare_data()
+    dm.setup(""fit"")
+    assert dm.data_dir == args.data_dir == str(tmpdir)",https://github.com/Lightning-AI/pytorch-lightning/commit/99cb2cd056e71b516eabff30acef73bd83943d09,,
+74,q04,parse command line arguments,372c3c62-ea84-5b8f-8f24-a881fe1bd01c,Lightning-AI/pytorch-lightning,src/lightning/pytorch/core/datamodule.py,add_argparse_args,Remove argparse utils (#16708),"    @classmethod
+    def add_argparse_args(cls, parent_parser: ArgumentParser, **kwargs: Any) -> _ADD_ARGPARSE_RETURN:
+        """"""Extends existing argparse by default `LightningDataModule` attributes.
+
+        Example::
+
+            parser = ArgumentParser(add_help=False)
+            parser = LightningDataModule.add_argparse_args(parser)
+        """"""
+        return add_argparse_args(cls, parent_parser, **kwargs)",https://github.com/Lightning-AI/pytorch-lightning/commit/99cb2cd056e71b516eabff30acef73bd83943d09,,
+75,q04,parse command line arguments,ffdedae3-f370-52a7-9ed1-14274dc8028a,Lightning-AI/pytorch-lightning,tests/tests_pytorch/core/test_datamodules.py,test_dm_add_argparse_args,Remove argparse utils (#16708),"def test_dm_add_argparse_args(tmpdir):
+    parser = ArgumentParser()
+    parser = DataDirDataModule.add_argparse_args(parser)
+    args = parser.parse_args([""--data_dir"", str(tmpdir)])
+    assert args.data_dir == str(tmpdir)",https://github.com/Lightning-AI/pytorch-lightning/commit/99cb2cd056e71b516eabff30acef73bd83943d09,,
+76,q04,parse command line arguments,37c95c83-3f9f-5e58-921c-b992666b3ff2,spotDL/spotify-downloader,spotdl/__main__.py,parse_arguments,restructured project; various bugfixes and improvements (#1339),"def parse_arguments():
+    parser = argparse.ArgumentParser(
+        prog=""spotdl"",
+        description=help_notice,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    parser.add_argument(
+        ""query"", type=str, nargs=""+"", help=""URL/String for a song/album/playlist/artist""
+    )
+    parser.add_argument(""--debug-termination"", action=""store_true"")
+    parser.add_argument(""-o"", ""--output"", help=""Output directory path"", dest=""path"")
+    parser.add_argument(
+        ""-of"",
+        ""--output-format"",
+        help=""Output format"",
+        dest=""format"",
+        choices={""mp3"", ""m4a"", ""flac"", ""ogg"", ""opus""},
+        default=""mp3"",
+    )
+    parser.add_argument(
+        ""--user-auth"",
+        help=""Use User Authentication"",
+        action=""store_true"",
+        dest=""userAuth"",
+    )
+    parser.add_argument(""-f"", ""--ffmpeg"", help=""Path to ffmpeg"", dest=""ffmpeg"")
+    parser.add_argument(
+        ""--ignore-ffmpeg-version"", help=""Ignore ffmpeg version"", action=""store_true""
+    )
+    parser.add_argument(
+        ""-v"",
+        ""--version"",
+        help=""Show spotDL's version and exit"",
+        action=""store_true"",
+    )
+
+    return parser.parse_args()",https://github.com/spotDL/spotify-downloader/commit/2dafc5335cd25741ef72aeff2c15a9a75ad444d4,,
+77,q04,parse command line arguments,3aa2070b-d5eb-5607-b79e-9679b5f9babf,Lightning-AI/pytorch-lightning,tests/tests_pytorch/utilities/test_argparse.py,test_negative_add_argparse_args,Remove argparse utils (#16708),"def test_negative_add_argparse_args():
+    with pytest.raises(RuntimeError, match=""Please only pass an `ArgumentParser` instance.""):
+        parser = ArgumentParser()
+        add_argparse_args(AddArgparseArgsExampleClass, parser.add_argument_group(""bad workflow""))",https://github.com/Lightning-AI/pytorch-lightning/commit/99cb2cd056e71b516eabff30acef73bd83943d09,,
+78,q04,parse command line arguments,5f7643a1-52ad-5187-b753-340844cdbfe0,Lightning-AI/pytorch-lightning,pytorch_lightning/utilities/argparse.py,add_argparse_args,Fix mypy in utilities.argparse (#8124),"def add_argparse_args(cls, parent_parser: ArgumentParser, *, use_argument_group=True) -> ArgumentParser:
+        parser = parent_parser.add_argument_group(group_name)
+        arg_types = [at for at in allowed_types if at in arg_types]
+        arg_kwargs = {}
+                use_type = str_to_bool",https://github.com/Lightning-AI/pytorch-lightning/commit/1f01db8b303e647b102f48c36e91ddb17784414f,,
+79,q05,cache results in memory to avoid recomputing them,a53a60b1-8d53-566c-bb73-2519e91f201f,streamlit/streamlit,lib/tests/streamlit/runtime/caching/memo_test.py,as_cached_result,"'@st.cache_data, @st.cache_resource decorators (#5948)","def as_cached_result(value: Any) -> MultiCacheResults:
+    return _as_cached_result(value, CacheType.MEMO)",https://github.com/streamlit/streamlit/commit/9800da0ab727de87f7872845548b357a82bd4375,,
+80,q05,cache results in memory to avoid recomputing them,097f1e93-7de2-5d35-a795-189c4cccef4f,huggingface/transformers,src/transformers/generation_utils.py,_use_cache,[Generate] Facilitate PyTorch generate using `ModelOutputs` (#6735),"    def _use_cache(self, outputs, use_cache):
+        """"""During generation, decide whether to pass the `past` variable to the next forward pass.""""""
+        if len(outputs) <= 1 or use_cache is False:
+            return False
+        if hasattr(self.config, ""mem_len"") and self.config.mem_len == 0:
+            return False
+        return True",https://github.com/huggingface/transformers/commit/afc4ece462ad83a090af620ff4da099a0272e171,,
+81,q05,cache results in memory to avoid recomputing them,eccdfef0-0945-5ac9-90c9-354d6fff206f,sgl-project/sglang,test/registered/unit/mem_cache/test_unified_radix_cache_bench.py,test_bench_cache_finished,[mem_cache] Replace `cache_finished_req` with `insert_req`; `release_kv_cache` frees and unpins (#41281),"    def test_bench_cache_finished(self):
+        self._run(bench_cache_finished)",https://github.com/sgl-project/sglang/commit/37556c1b91494db583b01791720d49f275cae3bb,,
+82,q05,cache results in memory to avoid recomputing them,5df1320b-cb23-5f23-b5ab-7709ff7b2e48,streamlit/streamlit,lib/tests/streamlit/runtime/caching/singleton_test.py,as_cached_result,"'@st.cache_data, @st.cache_resource decorators (#5948)","def as_cached_result(value: Any) -> MultiCacheResults:
+    return _as_cached_result(value, CacheType.MEMO)",https://github.com/streamlit/streamlit/commit/9800da0ab727de87f7872845548b357a82bd4375,,
+83,q05,cache results in memory to avoid recomputing them,fb6793e8-67e1-5d76-9454-c085a897a5a7,sgl-project/sglang,python/sglang/srt/mem_cache/unified_radix_cache.py,is_chunk_cache,[mem_cache] Replace `is_chunk_cache` / `is_tree_cache` with `supports_prefix_sharing` (#42362),"    def is_chunk_cache(self) -> bool:
+        return self.disable",https://github.com/sgl-project/sglang/commit/122b59152cb136dfcd240504cfe9abc374e4fc5a,,
+84,q05,cache results in memory to avoid recomputing them,51e70dcf-7db9-5884-89ab-bb0aacde4b81,zulip/zulip,zerver/tests/test_decorators.py,clear_cache,"decorator: Type cache_info, cache_clear for ignore_unhashable_lru_cache.","        def clear_cache() -> None:
+            getattr(f, ""cache_clear"")()",https://github.com/zulip/zulip/commit/53231aa9d9dfb73ef7372422a7afe6045fe5bf69,,
+85,q05,cache results in memory to avoid recomputing them,2c0c329d-ba1c-5b2a-8e6d-762ba2509267,langflow-ai/langflow,src/backend/langflow/cache/base.py,get,refactor(cache): move cache functionality to a separate class,"def get(name: str):
+    return CACHE.get(name, {}).get(""obj"", None)",https://github.com/langflow-ai/langflow/commit/3da30cc5bffd0681d9ebb29e424287e45cad6798,,
+86,q05,cache results in memory to avoid recomputing them,5603d31c-a7a0-54ff-b0f9-063b01ddbe18,sgl-project/sglang,python/sglang/srt/mem_cache/base_prefix_cache.py,is_tree_cache,[mem_cache] Replace `is_chunk_cache` / `is_tree_cache` with `supports_prefix_sharing` (#42362),"    def is_tree_cache(self) -> bool:
+        return not self.is_chunk_cache()",https://github.com/sgl-project/sglang/commit/122b59152cb136dfcd240504cfe9abc374e4fc5a,,
+87,q05,cache results in memory to avoid recomputing them,8c97d845-3218-5bd7-9888-3ee4d23dc0db,streamlit/streamlit,lib/streamlit/runtime/caching/legacy_cache_api.py,cache,[chore] Remove deprecated st.cache API (#15787),"'@gather_metrics(""cache"")
+def cache(
+    func: F | None = None,
+    persist: bool = False,
+    allow_output_mutation: bool = False,
+    show_spinner: bool = True,
+    suppress_st_warning: bool = False,  # noqa: ARG001
+    hash_funcs: HashFuncsDict | None = None,
+    max_entries: int | None = None,
+    ttl: float | None = None,
+) -> F:
+    """"""Legacy caching decorator (deprecated).
+
+    Legacy caching with ``st.cache`` has been removed from Streamlit. This is
+    now an alias for ``st.cache_data`` and ``st.cache_resource``.
+
+    Parameters
+    ----------
+    func : callable
+        The function to cache. Streamlit hashes the function's source code.
+
+    persist : bool
+        Whether to persist the cache on disk.
+
+    allow_output_mutation : bool
+        Whether to use ``st.cache_data`` or ``st.cache_resource``. If this is
+        ``False`` (default), the arguments are passed to ``st.cache_data``. If
+        this is ``True``, the arguments are passed to ``st.cache_resource``.
+
+    show_spinner : bool
+        Enable the spinner. Default is ``True`` to show a spinner when there is
+        a ""cache miss"" and the cached data is being created.
+
+    suppress_st_warning : bool
+        This is not used.
+
+    hash_funcs : dict or None
+        Mapping of types or fully qualified names to hash functions. This is used to
+        override the behavior of the hasher inside Streamlit's caching mechanism: when
+        the hasher encounters an object, it will first check to see if its type matches
+… (앞부분만, 전체 137줄)",https://github.com/streamlit/streamlit/commit/6cdd526c59981a1ce75837fd99ed9447c7170d05,,
+88,q05,cache results in memory to avoid recomputing them,f44c36b6-50ab-53b1-b641-f955dfedc274,PrefectHQ/fastmcp,tests/tasks/client/test_task_result_caching.py,test_cache_persists_across_mixed_access_patterns,"Add SEP-2663 client half: transparent call_tool, ResultClaim, Task handle","async def test_cache_persists_across_mixed_access_patterns():
+    """"""Cache works correctly when mixing result() and await.""""""
+    mcp = FastMCP(""test"")
+
+    @mcp.tool(task=True)
+    async def mixed_tool() -> str:
+        return ""mixed""
+
+    async with Client(mcp, mode=""legacy"") as client:
+        task = await client.call_tool(""mixed_tool"", task=True)
+
+        # Access in various orders
+        result1 = await task
+        result2 = await task.result()
+        result3 = await task
+        result4 = await task.result()
+
+        # All should be the same cached object
+        assert result1 is result2 is result3 is result4",https://github.com/PrefectHQ/fastmcp/commit/74e01d5e08cc3c4d63642a82fb54e8061b31e0cb,,
+89,q05,cache results in memory to avoid recomputing them,0053b2b8-d853-5b09-9eaf-4f3dbbb3fddb,sgl-project/sglang,test/registered/unit/mem_cache/test_radix_force_miss.py,is_chunk_cache,[mem_cache] Replace `is_chunk_cache` / `is_tree_cache` with `supports_prefix_sharing` (#42362),"            def is_chunk_cache(self) -> bool:
+                return True",https://github.com/sgl-project/sglang/commit/122b59152cb136dfcd240504cfe9abc374e4fc5a,,
+90,q05,cache results in memory to avoid recomputing them,07ff9dc9-c2b5-5e14-ba57-045ef4de846d,sgl-project/sglang,python/sglang/srt/mem_cache/chunk_cache.py,is_chunk_cache,[mem_cache] Replace `is_chunk_cache` / `is_tree_cache` with `supports_prefix_sharing` (#42362),"    def is_chunk_cache(self) -> bool:
+        return True",https://github.com/sgl-project/sglang/commit/122b59152cb136dfcd240504cfe9abc374e4fc5a,,
+91,q05,cache results in memory to avoid recomputing them,96cd3b1e-37ba-5627-a36e-39b2337ed91e,exo-explore/exo,src/exo/master/utils/placement_utils.py,filter_cycles_by_memory,big refactor,(라이선스로 코드 미제공 - source_url 에서 확인),https://github.com/exo-explore/exo/commit/38ff949bf4cdba30d0ca58f93534f55dab5f6583,,
+92,q05,cache results in memory to avoid recomputing them,ff2975a5-1ccc-5d86-9e9d-818f959bd6af,sgl-project/sglang,python/sglang/srt/mem_cache/base_prefix_cache.py,is_chunk_cache,[mem_cache] Replace `is_chunk_cache` / `is_tree_cache` with `supports_prefix_sharing` (#42362),"    def is_chunk_cache(self) -> bool:
+        return False",https://github.com/sgl-project/sglang/commit/122b59152cb136dfcd240504cfe9abc374e4fc5a,,
+93,q05,cache results in memory to avoid recomputing them,ad3cdd59-b160-5392-a1a1-095c896d6a5d,streamlit/streamlit,lib/streamlit/runtime/legacy_caching/caching.py,cache,Remove legacy caching logic (#8737),"def cache(
+    func: F | None = None,
+    persist: bool = False,
+    allow_output_mutation: bool = False,
+    show_spinner: bool = True,
+    suppress_st_warning: bool = False,
+    hash_funcs: HashFuncsDict | None = None,
+    max_entries: int | None = None,
+    ttl: float | None = None,
+) -> Callable[[F], F] | F:
+    """"""Function decorator to memoize function executions.
+
+    Parameters
+    ----------
+    func : callable
+        The function to cache. Streamlit hashes the function and dependent code.
+
+    persist : bool
+        Whether to persist the cache on disk.
+
+    allow_output_mutation : bool
+        Streamlit shows a warning when return values are mutated, as that
+        can have unintended consequences. This is done by hashing the return value internally.
+
+        If you know what you're doing and would like to override this warning, set this to True.
+
+    show_spinner : bool
+        Enable the spinner. Default is True to show a spinner when there is
+        a cache miss.
+
+    suppress_st_warning : bool
+        Suppress warnings about calling Streamlit commands from within
+        the cached function.
+
+    hash_funcs : dict or None
+        Mapping of types or fully qualified names to hash functions. This is used to override
+        the behavior of the hasher inside Streamlit's caching mechanism: when the hasher
+        encounters an object, it will first check to see if its type matches a key in this
+        dict and, if so, will use the provided function to generate a hash for it. See below
+        for an example of how this can be used.
+… (앞부분만, 전체 238줄)",https://github.com/streamlit/streamlit/commit/3904769f48eb0d11b52fd7122449a4a5086c119d,,
+94,q05,cache results in memory to avoid recomputing them,069e1e36-9ea2-5046-9516-49002920e8a3,huggingface/transformers,pytorch_pretrained_bert/modeling_xlm.py,cache_mem,[LARGE] updating all tests and API,"    def cache_mem(self, curr_out, prev_mem):
+        """"""cache hidden states into memory.""""""
+        if self.mem_len is None or self.mem_len == 0:
+            return None
+        else:
+            if self.reuse_len is not None and self.reuse_len > 0:
+                curr_out = curr_out[:self.reuse_len]
+
+            if prev_mem is None:
+                new_mem = curr_out[-self.mem_len:]
+            else:
+                new_mem = torch.cat([prev_mem, curr_out], dim=0)[-self.mem_len:]
+
+        return new_mem.detach()",https://github.com/huggingface/transformers/commit/1484d67de9f4c8301874d62d821bbfbd3d6ce99b,,
+95,q05,cache results in memory to avoid recomputing them,1c0b4aec-f508-52aa-953a-6fe989a72f1d,sgl-project/sglang,python/sglang/srt/mem_cache/base_prefix_cache.py,cache_unfinished_req,[mem_cache] Rename `cache_unfinished_req` to `checkpoint_req` and count cache hits only when a request finishes (#41520),"    @abstractmethod
+    def cache_unfinished_req(self, req: Req, **kwargs):
+        pass",https://github.com/sgl-project/sglang/commit/50be533d09bde329bface6f1ac0631af93b528bf,,
+96,q05,cache results in memory to avoid recomputing them,fdf145bf-63af-5245-ad27-b532835bc920,topoteretes/cognee,cognee/tests/unit/infrastructure/databases/test_closing_lru_cache.py,test_get_items_wraps_memory_aware_entries,Remove the memory manager functionality,"def test_get_items_wraps_memory_aware_entries():
+    cache = ClosingLRUCache(maxsize=4)
+    obj = cache.get_or_create(""a"", lambda: _MemoryAwareCloseable(""a"", memory=42, last_accessed=5.0))
+
+    items = cache.get_items()
+
+    assert len(items) == 1
+    assert items[0].memory_used() == 42
+    assert items[0].last_accessed_ts() >= 5.0
+    items[0].clean()
+    assert obj.closed is True
+    assert cache.cache_info()[""size""] == 0",https://github.com/topoteretes/cognee/commit/25c6c93b0d07e31836145810667ff2a1afba7cfa,,
+97,q05,cache results in memory to avoid recomputing them,ead404c1-52ca-5f8d-ab3c-c1f4dca712bb,sgl-project/sglang,test/registered/unit/mem_cache/test_dllm_fdfo_kv_reuse.py,is_chunk_cache,[mem_cache] Replace `is_chunk_cache` / `is_tree_cache` with `supports_prefix_sharing` (#42362),"    def is_chunk_cache(self):
+        return True",https://github.com/sgl-project/sglang/commit/122b59152cb136dfcd240504cfe9abc374e4fc5a,,
+98,q05,cache results in memory to avoid recomputing them,3b979dd1-282b-53f8-9b9c-ede7e6854ba2,streamlit/streamlit,lib/tests/streamlit/runtime/caching/memo_test.py,as_cached_result,Cached widget replay (#5298),"def as_cached_result(value):
+    return CachedResult(value, [], st._main.id, st.sidebar.id)",https://github.com/streamlit/streamlit/commit/93c48f07016d2b424c6d05765b49f723393b0bab,,
+99,q06,validate user input and raise an error when it is invalid,0d6586ae-71c4-591a-9a16-d8f467311b5d,pandas-dev/pandas,pandas/core/arrays/interval.py,_validate_insert_value,REF: de-duplicate _validate_insert_value with _validate_scalar (#37640),"    def _validate_insert_value(self, value):
+        return self._validate_scalar(value)",https://github.com/pandas-dev/pandas/commit/8b05fe3bd20965ba64477f6c96dbf674d9f155ff,,
+100,q06,validate user input and raise an error when it is invalid,ee529146-eef1-590f-8eae-8a41467b8357,roboflow/supervision,tests/test_validate_deprecations.py,test_validate_public_shims_warn,chore(deprecation)!: remove validate_keypoint_confidence and validate_keypoints_fields,"        (lambda: validate_keypoint_confidence(np.array([[0.5]]), 1, 1), ""0.27.0""),
+        (
+            lambda: validate_keypoints_fields(np.array([[[0, 0]]]), None, None, {}),
+            ""0.27.0"",
+        ),",https://github.com/roboflow/supervision/commit/7f48edd300da0298bed47597f65d3674dc22e480,,
+101,q06,validate user input and raise an error when it is invalid,b2bf01b9-6a21-5997-a279-740c3b3dcb77,pydantic/pydantic,tests/test_decorator.py,test_validate_all,`validate_call` to replace `validate_arguments` (#5342),"'@pytest.mark.xfail(reason='validate_all')
+def test_validate_all():
+    # TODO remove or rename, validate_all doesn't exist anymore
+    @validate_arguments(config=dict(validate_all=True))
+    def foo(dt: datetime = Field(default_factory=lambda: 946684800)):
+        return dt
+
+    assert foo() == datetime(2000, 1, 1, tzinfo=timezone.utc)
+    assert foo(0) == datetime(1970, 1, 1, tzinfo=timezone.utc)",https://github.com/pydantic/pydantic/commit/a95b93cb8a39fa2c27187a556aba23996e8573e9,,
+102,q06,validate user input and raise an error when it is invalid,0c1a8702-f224-5a0e-8495-a53bb37b1ff3,home-assistant/core,homeassistant/components/viam/config_flow.py,__handle_auth_input,"Revert ""Add Viam image processing integration"" (#117477)","    async def __handle_auth_input(
+        self, user_input: dict[str, Any] | None = None
+    ) -> dict[str, str] | None:
+        """"""Validate user input for the common authentication logic.
+
+        Returns:
+            A dictionary with any handled errors if any occurred, or None
+
+        """"""
+        errors: dict[str, str] | None = None
+        if user_input is not None:
+            try:
+                self._data.update(user_input)
+                (title, client) = await validate_input(self._data)
+                self._title = title
+                self._client = client
+            except CannotConnect:
+                errors = {""base"": ""cannot_connect""}
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception(""Unexpected exception"")
+                errors = {""base"": ""unknown""}
+        else:
+            errors = {}
+
+        return errors",https://github.com/home-assistant/core/commit/e6296ae502483e4d04662db699bcbf3d5511ca43,,
+103,q06,validate user input and raise an error when it is invalid,5acdf062-f1e0-5a7a-9186-d29db46bea04,deepset-ai/haystack,haystack/pipelines/config.py,_validate_user_input,Pipeline's YAML: syntax validation (#2226),"def _validate_user_input(input: str):
+    if isinstance(input, str) and not VALID_CODE_GEN_INPUT_REGEX.match(input):
+        raise ValueError(f""'{input}' is not a valid config variable name. Use word characters only."")",https://github.com/deepset-ai/haystack/commit/11cf94a9652a577732941f27ad59eb7c8bc5063e,,
+104,q06,validate user input and raise an error when it is invalid,e97db99c-4bf4-5772-9675-579150cebbfa,home-assistant/core,homeassistant/components/ecowitt/config_flow.py,validate_input,Migrate Ecowitt to webhooks (#77610),"async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, str]:
+    """"""Validate user input.""""""
+    # Check if the port is in use
+    try:
+        listener = EcoWittListener(port=data[CONF_PORT])
+        await listener.start()
+        await listener.stop()
+    except OSError:
+        raise InvalidPort from None
+
+    return {""title"": f""Ecowitt on port {data[CONF_PORT]}""}",https://github.com/home-assistant/core/commit/708e61482373dc9cb406cf39b203c12cafaef70a,,
+105,q06,validate user input and raise an error when it is invalid,a8916ffc-2712-59a7-8394-a519fac48dcd,home-assistant/core,homeassistant/components/glances/config_flow.py,validate_input,Handle authorization error in glances config flow (#100866),"async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
+    """"""Validate the user input allows us to connect.""""""
+    api = get_api(hass, data)
+    try:
+        await api.get_ha_sensor_data()
+    except GlancesApiError as err:
+        raise CannotConnect from err",https://github.com/home-assistant/core/commit/31e9ca009991bdde292971356a194a1fe54f536a,,
+106,q06,validate user input and raise an error when it is invalid,0db6fa4c-5346-52dd-8c96-9b78031ce035,plotly/plotly.py,packages/python/plotly/plotly/_validate.py,__init__,Remove global go.validate object and replace with Figure-level validate property,"    def __init__(self, should_validate):
+        self._old = validate._should_validate
+        validate._should_validate = should_validate",https://github.com/plotly/plotly.py/commit/33b13cd02bb350b0fcfe4ae479b36a21906039f1,,
+107,q06,validate user input and raise an error when it is invalid,bb950d56-deb1-5efd-b6a7-f2dbf216500e,plotly/plotly.py,packages/python/plotly/plotly/tests/test_core/test_graph_objs/test_validate.py,test_validate_false,Remove global go.validate object and replace with Figure-level validate property,"    should_validate = go.validate._should_validate
+        with go.validate(False):
+            fig = build_invalid_fig()
+            assert json.loads(fig.to_json()) == expected_invalid_dict
+        with go.validate(True):
+            with pytest.raises(ValueError):
+                build_invalid_fig()
+
+        # Use validate as callable
+        go.validate(False)
+        fig = build_invalid_fig()
+        go.validate(True)
+            build_invalid_fig()
+        go.validate(should_validate)",https://github.com/plotly/plotly.py/commit/33b13cd02bb350b0fcfe4ae479b36a21906039f1,,
+108,q06,validate user input and raise an error when it is invalid,4744597c-c33e-55c6-85a3-ddb5edb63c69,pandas-dev/pandas,pandas/core/arrays/categorical.py,_validate_where_value,CLN: de-duplicate _validate_where_value with _validate_setitem_value (#37595),"    def _validate_where_value(self, value):
+        if is_scalar(value):
+            return self._validate_fill_value(value)
+        return self._validate_listlike(value)",https://github.com/pandas-dev/pandas/commit/06251dd06ff7a36a3a2da8568fbd3237846f559c,,
+109,q06,validate user input and raise an error when it is invalid,8e5cc09a-a602-573c-a123-b30cd7eda2db,jax-ml/jax,jax/_src/checkify.py,raise_error,Rewrite Checkify to support tracking different error types.,"def raise_error(error):
+  err = error.get()
+  if err:
+    raise ValueError(err)",https://github.com/jax-ml/jax/commit/e4757e8410a6e40bc081085e2a1bef2ee6423d9c,,
+110,q06,validate user input and raise an error when it is invalid,9d3a172a-970e-5802-8046-e9a2d0b2f47c,saleor/saleor,saleor/checkout/steps.py,validate,Simplify checkout structure,"    def validate(self):
+        raise InvalidData()",https://github.com/saleor/saleor/commit/af28ebf47def8c2ff442cba2829c400e8a28cedb,,
+111,q06,validate user input and raise an error when it is invalid,b90ee26f-3e84-5866-a45f-69e6d10afcd9,pandas-dev/pandas,pandas/core/arrays/categorical.py,_validate_insert_value,REF: de-duplicate _validate_insert_value with _validate_scalar (#37640),"    def _validate_insert_value(self, value) -> int:
+        return self._validate_fill_value(value)",https://github.com/pandas-dev/pandas/commit/8b05fe3bd20965ba64477f6c96dbf674d9f155ff,,
+112,q06,validate user input and raise an error when it is invalid,21c4bb88-d200-5b68-9ec3-04777c853533,vllm-project/vllm,tests/test_inputs.py,test_invalid_input_raise_type_error,[Frontend] Use new Renderer for Completions and Tokenize API (#32863),"'@pytest.mark.parametrize(""invalid_input"", [[[1, 2], [""foo"", ""bar""]]])
+def test_invalid_input_raise_type_error(invalid_input):
+    with pytest.raises(TypeError):
+        parse_raw_prompts(invalid_input)",https://github.com/vllm-project/vllm/commit/f0a1c8453ad1c664c8a04c83fe545195fcd556eb,,
+113,q06,validate user input and raise an error when it is invalid,1d683809-73ea-56ac-a0dd-90bcb487b8c3,roboflow/supervision,src/supervision/validators/__init__.py,validate_keypoints_fields,chore(deprecation)!: remove validate_keypoint_confidence and validate_keypoints_fields,"'@deprecated(  # type: ignore[untyped-decorator]
+    target=_validate_keypoints_fields,
+    deprecated_in=""0.27.0"",
+    remove_in=""0.31.0"",
+)
+def validate_keypoints_fields(
+    xy: Any, class_id: Any, confidence: Any, data: dict[str, Any]",https://github.com/roboflow/supervision/commit/7f48edd300da0298bed47597f65d3674dc22e480,,
+114,q06,validate user input and raise an error when it is invalid,927f196e-2938-5794-b63d-d482fee3913a,deepset-ai/haystack,haystack/pipelines/base.py,_validate_user_input,Refactor Pipeline peripherals (#2253),"    @classmethod
+    def _validate_user_input(cls, input: str):
+        if isinstance(input, str) and not VALID_CODE_GEN_INPUT_REGEX.match(input):
+            raise ValueError(f""'{input}' is not a valid code gen variable name. Use word characters only."")",https://github.com/deepset-ai/haystack/commit/f7a01624e0581a05800ed31ddb1bbb32b169b256,,
+115,q06,validate user input and raise an error when it is invalid,fac678a4-b9d8-5c48-b74e-75c4c431fe47,pandas-dev/pandas,pandas/core/arrays/interval.py,_validate_fill_value,REF: de-duplicate _validate_fill_value/_validate_scalar (#41790),"    def _validate_fill_value(self, value):
+        return self._validate_scalar(value)",https://github.com/pandas-dev/pandas/commit/3bbb93cffc65aa4a6234b6c397181aadb75b502e,,
+116,q06,validate user input and raise an error when it is invalid,d5296c42-c13a-5041-afec-e87807f2e335,deepset-ai/haystack,test/pipelines/test_pipeline.py,test_validate_user_input_invalid,fix: remove string validation in YAML (#3854),"'@pytest.mark.parametrize(""input"", [""\btest"", "" test"", ""#test"", ""+test"", ""\ttest"", ""\ntest"", ""test()""])
+def test_validate_user_input_invalid(input):
+    with pytest.raises(PipelineConfigError, match=""is not a valid variable name or value""):
+        validate_config_strings(input)",https://github.com/deepset-ai/haystack/commit/6f5a2fb1dabfe3bd6a93e5d5d06059793b54fa96,,
+117,q06,validate user input and raise an error when it is invalid,843db225-1276-559d-b5fa-55cb097a6a22,langflow-ai/langflow,src/backend/base/langflow/inputs/inputs.py,validate_value,feat: Add Prompt component to prompts/__init__.py,"    @field_validator(""value"")
+    @classmethod
+    def validate_value(cls, v: Any, _info):
+        value = None
+        if isinstance(v, str):
+            value = v
+        elif isinstance(v, Message):
+            value = v.text
+        elif isinstance(v, Data):
+            if v.text_key in v.data:
+                value = v.data[v.text_key]
+            else:
+                keys = "", "".join(v.data.keys())
+                input_name = _info.data[""name""]
+                raise ValueError(
+                    f""The input to '{input_name}' must contain the key '{v.text_key}'.""
+                    f""You can set `text_key` to one of the following keys: {keys} or set the value using another Component.""
+                )
+        else:
+            raise ValueError(f""Invalid input type {type(v)}"")
+        if isinstance(value, str):
+            return value
+        raise ValueError(f""Invalid value type {type(value)}"")",https://github.com/langflow-ai/langflow/commit/0d609b9376ac0ed07f95adf837a7b10d4131da99,,
+118,q06,validate user input and raise an error when it is invalid,9d48c8d7-fe70-5770-b49f-be58c9781e0a,pydantic/pydantic,pydantic/main.py,validate_model,fix for 'missing' error with validate_all or validate_always (#381),"            if config.validate_all or field.validate_always:
+                value = deepcopy(field.default)
+            else:
+                if field.required:
+                    errors.append(ErrorWrapper(MissingError(), loc=field.alias, config=config))
+                else:
+                    values[name] = deepcopy(field.default)",https://github.com/pydantic/pydantic/commit/04391da318979988fff3631ca29d869a6e9299bf,,
+119,q07,convert a timestamp to a timezone aware datetime,0c53f0bd-67eb-558a-a66d-ade354abedad,apache/airflow,providers/fab/src/airflow/providers/fab/www/extensions/init_jinja_globals.py,init_jinja_globals,AIP-38: remove `default_ui_timezone` (#49176),"    default_ui_timezone = conf.get(""webserver"", ""default_ui_timezone"")
+    if default_ui_timezone == ""system"":
+        default_ui_timezone = pendulum.local_timezone().name  # type: ignore[operator]
+    elif default_ui_timezone == ""utc"":
+        default_ui_timezone = ""UTC""
+    if not default_ui_timezone:
+        default_ui_timezone = server_timezone
+
+            ""default_ui_timezone"": default_ui_timezone,",https://github.com/apache/airflow/commit/09854ff30691168663abf32e34249aa836f0c847,,
+120,q07,convert a timestamp to a timezone aware datetime,26f250cd-0681-5ff3-960f-e9ed53ad0342,microsoft/qlib,scripts/data_collector/yahoo/collector.py,convert_datetime,Fix yahoo collector,"    def convert_datetime(self, dt: pd.Timestamp):
+        dt = pd.Timestamp(dt, tz=self._timezone).timestamp()
+        return pd.Timestamp(dt, tz=tzlocal(), unit=""s"")",https://github.com/microsoft/qlib/commit/6fc4ff0a62b32e2526cad69eab7e5556d4f24928,,
+121,q07,convert a timestamp to a timezone aware datetime,35800f33-6fc3-5c8d-8006-86aea51f66b2,django/django,tests/utils_tests/test_timezone.py,test_get_default_timezone_utc,Fixed #32365 -- Made zoneinfo the default timezone implementation.,"    def test_get_default_timezone_utc(self):
+        with override_settings(USE_TZ=True, TIME_ZONE='UTC'):
+            self.assertIs(timezone.get_default_timezone(), timezone.utc)",https://github.com/django/django/commit/306607d5b99b6eca6ae2c1e726d8eb32b9b2ca1b,,
+122,q07,convert a timestamp to a timezone aware datetime,824ae383-d680-5b30-86bd-b634e4d92f64,celery/celery,celery/utils/timeutils.py,_get_local_timezone,ETA must be converted to system timezone.  Closes #1004,"def _get_local_timezone():
+    global _local_timezone
+    if _local_timezone is None:
+        _local_timezone = LocalTimezone()
+    return _local_timezone",https://github.com/celery/celery/commit/c2037732fef6031ae164fedfbad36bce3e189b0f,,
+123,q07,convert a timestamp to a timezone aware datetime,a9e0de51-bdb7-5fc9-a28c-58735986ff09,microsoft/qlib,scripts/data_collector/yahoo/collector.py,convert_datetime,support collecting yahoo 1min data,"    def convert_datetime(self, dt: [pd.Timestamp, datetime.date, str]):
+        try:
+            dt = pd.Timestamp(dt, tz=self._timezone).timestamp()
+            dt = pd.Timestamp(dt, tz=tzlocal(), unit=""s"")
+        except ValueError as e:
+            pass
+        return dt",https://github.com/microsoft/qlib/commit/1a8f1bfc573cacd518642d6d834cd649bea69869,,
+124,q07,convert a timestamp to a timezone aware datetime,6e503dff-0f7f-5477-bdfa-ae9a7fd4c9b6,zulip/zulip,zerver/lib/timezone.py,get_timezone,timezone: Remove get_timezone wrapper.,"def get_timezone(tz: str) -> pytz.BaseTzInfo:
+    return pytz.timezone(tz)",https://github.com/zulip/zulip/commit/0b288f92c9d38d81fecf4679e997f9e4ae57abd8,,
+125,q07,convert a timestamp to a timezone aware datetime,34b1ef1a-c316-57ad-94d5-5a1d96a7d29f,PrefectHQ/prefect,tests/database/test_postgres.py,test_timezone,Remove timezone test,(라이선스로 코드 미제공 - source_url 에서 확인),https://github.com/PrefectHQ/prefect/commit/c1a28818d3becdcca5904985c267be44fbeae1cc,,
+126,q07,convert a timestamp to a timezone aware datetime,19fae6a3-a46d-59ca-9f05-e076dc8606bb,django/django,django/utils/timezone.py,_get_timezone_name,Refs #17476 -- Removed obsolete simplification of timezone names in cache key generation.,"    try:
+        # for pytz timezones
+        return timezone.zone
+    except AttributeError:
+        # for regular tzinfo objects
+        return timezone.tzname(None)",https://github.com/django/django/commit/4ff29a53e68ef44b2f4947548a224b569d4b0394,,
+127,q07,convert a timestamp to a timezone aware datetime,1ee1b77c-2c80-5699-ae52-bedf0a941bc4,home-assistant/core,tests/components/recorder/test_models.py,test_process_datetime_to_timestamp,Remove recorder history queries for database schemas < 31 (#125652),"'@pytest.mark.parametrize(
+    ""time_zone"", [""Europe/Berlin"", ""America/Chicago"", ""US/Hawaii"", ""UTC""]
+)
+async def test_process_datetime_to_timestamp(time_zone, hass: HomeAssistant) -> None:
+    """"""Test we can handle processing database datatimes to timestamps.""""""
+    await hass.config.async_set_time_zone(time_zone)
+    utc_now = dt_util.utcnow()
+    assert process_datetime_to_timestamp(utc_now) == utc_now.timestamp()
+    now = dt_util.now()
+    assert process_datetime_to_timestamp(now) == now.timestamp()",https://github.com/home-assistant/core/commit/bde92b34dd439cfcbf08108ae70d46fdb3ef82e3,,
+128,q07,convert a timestamp to a timezone aware datetime,a5898a91-fd33-520e-9978-cc2454db0e3e,zulip/zulip,zerver/lib/timestamp.py,timestamp_to_datetime,python: Consistently use from…import for datetime.,"def timestamp_to_datetime(timestamp: float) -> datetime.datetime:
+    return datetime.datetime.fromtimestamp(float(timestamp), tz=datetime.timezone.utc)",https://github.com/zulip/zulip/commit/8a7916f21aacb54b77f2dcbcd8cb930d4beb286a,,
+129,q07,convert a timestamp to a timezone aware datetime,dec1852f-f759-5258-89a5-8d5d0a18a89c,pandas-dev/pandas,pandas/core/arrays/datetimes.py,_timezone,TYP: type for get_timezone (#35096),"    @property  # NB: override with cache_readonly in immutable subclasses
+    def _timezone(self):
+        """"""
+        Comparable timezone both for pytz / dateutil
+        """"""
+        return timezones.get_timezone(self.tzinfo)",https://github.com/pandas-dev/pandas/commit/a4e19fa521221a30747bda1e0e72768e071f6d17,,
+130,q07,convert a timestamp to a timezone aware datetime,1e7f2fd3-de8e-5cba-adb5-09b982fbd65d,celery/celery,celery/app/base.py,timezone,Fixed timezone setting; Fixed uses_utc_timezone (#4519),"        tz = conf.timezone or 'UTC'
+        if not tz:
+                return timezone.get_timezone('UTC')
+                if not conf.timezone:
+                    return timezone.local
+        return timezone.get_timezone(tz)",https://github.com/celery/celery/commit/adca5cc08781ec3a1aff4e4445bb9e091c114c89,,
+131,q07,convert a timestamp to a timezone aware datetime,f5ccc54d-e5a0-5b0d-936f-660c57ebea70,pandas-dev/pandas,pandas/tests/tseries/test_timezones.py,test_convert_tz_aware_datetime_datetime,separate DatetimeIndex timezone tests (#19545),"    def test_convert_tz_aware_datetime_datetime(self):
+        # #1581
+
+        tz = self.tz('US/Eastern')
+
+        dates = [datetime(2000, 1, 1), datetime(2000, 1, 2),
+                 datetime(2000, 1, 3)]
+
+        dates_aware = [self.localize(tz, x) for x in dates]
+        result = to_datetime(dates_aware)
+        assert self.cmptz(result.tz, self.tz('US/Eastern'))
+
+        converted = to_datetime(dates_aware, utc=True)
+        ex_vals = np.array([Timestamp(x).value for x in dates_aware])
+        tm.assert_numpy_array_equal(converted.asi8, ex_vals)
+        assert converted.tz is pytz.utc",https://github.com/pandas-dev/pandas/commit/04b1f039bd63497d8e4fc483baa79dcbe6219abd,,
+132,q07,convert a timestamp to a timezone aware datetime,a8ea3438-b84f-5192-a963-a7586ec3ab36,django/django,django/utils/timezone.py,get_default_timezone,Simplified caching of get_default_timezone().,"    global _localtime
+    if _localtime is None:
+        if isinstance(settings.TIME_ZONE, six.string_types) and pytz is not None:
+            _localtime = pytz.timezone(settings.TIME_ZONE)
+        else:
+            # This relies on os.environ['TZ'] being set to settings.TIME_ZONE.
+            _localtime = LocalTimezone()
+    return _localtime",https://github.com/django/django/commit/e23240474b4c7d630a4224a558f2e47a4b957cd1,,
+133,q07,convert a timestamp to a timezone aware datetime,e865d81b-c2e7-5144-9797-8fee3a10fadb,commaai/openpilot,system/timed.py,set_timezone,remove `timezone` from `timed.py` (#32665),"def set_timezone(timezone):
+  valid_timezones = subprocess.check_output('timedatectl list-timezones', shell=True, encoding='utf8').strip().split('\n')
+  if timezone not in valid_timezones:
+    cloudlog.error(f""Timezone not supported {timezone}"")
+    return
+
+  cloudlog.debug(f""Setting timezone to {timezone}"")
+  try:
+    if AGNOS:
+      tzpath = os.path.join(""/usr/share/zoneinfo/"", timezone)
+      subprocess.check_call(f'sudo su -c ""ln -snf {tzpath} /data/etc/tmptime && \
+                              mv /data/etc/tmptime /data/etc/localtime""', shell=True)
+      subprocess.check_call(f'sudo su -c ""echo \""{timezone}\"" > /data/etc/timezone""', shell=True)
+    else:
+      subprocess.check_call(f'sudo timedatectl set-timezone {timezone}', shell=True)
+  except subprocess.CalledProcessError:
+    cloudlog.exception(f""Error setting timezone to {timezone}"")",https://github.com/commaai/openpilot/commit/8d8c2a29c961649d1bbebda06b3c57cf19c0d12a,,
+134,q07,convert a timestamp to a timezone aware datetime,1baa372d-20cc-55f0-8efc-745d8ca1f1c4,pandas-dev/pandas,pandas/core/datetools.py,to_timestamp,"ENH: Working on getting to merge ready, cleanup. See full commit message","def to_timestamp(arg, freq=None, tzinfo=None):
+    """""" Attempts to convert arg to timestamp """"""
+    if arg is None:
+        return arg
+
+    if type(arg) == float:
+        # to do, do we want to support this, ie with fractional seconds?
+        raise TypeError(""Cannot convert a float to datetime"")
+
+    if isinstance(arg, basestring):
+        try:
+            arg = parser.parse(arg)
+        except Exception:
+            pass
+
+    return lib.Timestamp(arg, offset=freq, tzinfo=tzinfo)",https://github.com/pandas-dev/pandas/commit/b50076ec3a9e6c1f326b7ab23b87c50131aa23a7,,
+135,q07,convert a timestamp to a timezone aware datetime,606aba8c-0d60-5c9a-93ca-278d57565326,home-assistant/core,homeassistant/util/dt.py,utc_to_timestamp,Cleanup deprecated dt util function (#161752),"'@deprecated_function(""datetime.timestamp"", breaks_in_ha_version=""2026.1"")
+def utc_to_timestamp(utc_dt: dt.datetime) -> float:
+    """"""Fast conversion of a datetime in UTC to a timestamp.""""""
+    # Taken from
+    # https://github.com/python/cpython/blob/3.10/Lib/zoneinfo/_zoneinfo.py#L185
+    return (
+        (utc_dt.toordinal() - EPOCHORDINAL) * 86400
+        + utc_dt.hour * 3600
+        + utc_dt.minute * 60
+        + utc_dt.second
+        + (utc_dt.microsecond / 1000000)
+    )",https://github.com/home-assistant/core/commit/2f7a895e288ba0e8a98276b6ea6900795f01b96c,,
+136,q07,convert a timestamp to a timezone aware datetime,b1206161-8aa4-5c78-b747-4fcb04dc70d8,celery/celery,celery/utils/timer2.py,to_timestamp,Moves timer to kombu.async.timer,"def to_timestamp(d, default_timezone=timezone.utc):
+    if isinstance(d, datetime):
+        if d.tzinfo is None:
+            d = d.replace(tzinfo=default_timezone)
+        return timedelta_seconds(d - EPOCH)
+    return d",https://github.com/celery/celery/commit/2a45066ddf56328476ec8df53c8f3782703c47ed,,
+137,q07,convert a timestamp to a timezone aware datetime,e3ad3f1d-113f-5543-a5eb-c0c4e7d133cc,zulip/zulip,zerver/lib/timestamp.py,datetime_to_string,Clean up timestamps.py and add a test.,"def datetime_to_string(datetime_object):
+    # type: (datetime.datetime) -> str
+    assert is_timezone_aware(datetime_object)
+    date_string = datetime_object.strftime('%Y-%m-%d %H:%M:%S%z')
+    return date_string",https://github.com/zulip/zulip/commit/4dc791f393a53ca41a7e802345da562aa12827b8,,
+138,q07,convert a timestamp to a timezone aware datetime,61b69a5d-3d8c-53a0-964b-b61bbaf252d1,zulip/zulip,zerver/lib/timestamp.py,datetime_to_UTC,Clean up timestamps.py and add a test.,"def datetime_to_UTC(datetime_object):
+    # type: (datetime.datetime) -> datetime.datetime
+    if is_timezone_aware(datetime_object):
+        return datetime_object.astimezone(timezone.utc)
+    return datetime_object.replace(tzinfo=timezone.utc)",https://github.com/zulip/zulip/commit/4dc791f393a53ca41a7e802345da562aa12827b8,,
+139,q08,close the database connection when finished,eb98f95b-79e5-5dae-a269-c32de149ba2a,home-assistant/core,homeassistant/components/recorder.py,_close_connection,Switch to SQLAlchemy for the Recorder component.  Gives the ability t… (#2377),"    def _close_connection(self):
+        """"""Close connection to the database.""""""
+        _LOGGER.info(""Closing database"")
+        atexit.unregister(self._close_connection)
+        self.conn.close()",https://github.com/home-assistant/core/commit/a2e45b8fdde315b756691b4ae573ad55f55dc002,,
+140,q08,close the database connection when finished,9b85eb38-5a44-5671-ae51-8b0e574a7228,mitmproxy/mitmproxy,test/http/http1/test_protocol.py,test_connection_close,headers: adjust everything,"    h = odict.ODictCaseless()
+    assert HTTP1Protocol.connection_close((1, 0), h)
+    assert not HTTP1Protocol.connection_close((1, 1), h)
+    h[""connection""] = [""keep-alive""]
+    assert not HTTP1Protocol.connection_close((1, 1), h)
+    h[""connection""] = [""close""]
+    assert HTTP1Protocol.connection_close((1, 1), h)",https://github.com/mitmproxy/mitmproxy/commit/66ee1f465f6c492d5a4ff5659e6f0346fb243d67,,
+141,q08,close the database connection when finished,d2efb388-148d-5c05-a62b-68192cd7c1b4,zulip/zulip,zproject/email_backends.py,close,send_email: Allow close() to work on persistent SMTP backend.,"    @override
+    def close(self) -> None:
+        # We override close to a no-op so that Django's send_messages
+        # does not close the connection after sending a batch of emails.
+        pass",https://github.com/zulip/zulip/commit/e0f5981bcfef6bffec52e877c93be98412941f9a,,
+142,q08,close the database connection when finished,7f639b9f-60ae-5815-b7e0-a4e54864fd8f,tornadoweb/tornado,tornado/httpserver.py,on_connection_close,"httpserver,http1connection: Add type annotations","    def on_connection_close(self):
+        self._chunks = None",https://github.com/tornadoweb/tornado/commit/1b51b7dea0217927dbc52339f6db3b1233d7c539,,
+143,q08,close the database connection when finished,21653434-25ac-52e0-aa34-59f8f3ded9e5,RasaHQ/rasa,rasa/core/brokers/pika.py,close_pika_connection,replace `pika` with `aio-pika`,"def close_pika_connection(connection: ""Connection"") -> None:
+    """"""Attempt to close Pika connection.""""""
+    from pika.exceptions import AMQPError
+
+    try:
+        connection.close()
+        logger.debug(""Successfully closed Pika connection with host."")
+    except AMQPError:
+        logger.exception(""Failed to close Pika connection with host."")",https://github.com/RasaHQ/rasa/commit/750fdda63f8bfeae3e929a2f6947095761ce6ab3,,
+144,q08,close the database connection when finished,b4c69f71-1109-5c12-8173-58f9a006656d,django/django,django/db/backends/postgresql_psycopg2/base.py,close,"Refactored all database backends to inherit from a common base class to remove quite a bit of duplicated code. Thanks for the patch, Brian Harring. Refs #5106","    def close(self):
+        if self.connection is not None:
+            self.connection.close()
+            self.connection = None",https://github.com/django/django/commit/7c41b19c8a11e4ce46608f25e097118ddb1b3f5e,,
+145,q08,close the database connection when finished,12910114-5514-55eb-895b-b70698030503,django/django,django/db/backends/mysql/base.py,close,"Refactored all database backends to inherit from a common base class to remove quite a bit of duplicated code. Thanks for the patch, Brian Harring. Refs #5106","    def close(self):
+        if self.connection is not None:
+            self.connection.close()
+            self.connection = None",https://github.com/django/django/commit/7c41b19c8a11e4ce46608f25e097118ddb1b3f5e,,
+146,q08,close the database connection when finished,4411050c-b3ee-5480-9d94-d385292110f5,mem0ai/mem0,mem0/memory/apache_age_memory.py,close,"feat(oss): port v3 pipeline with hybrid search, entity extraction, and additive scoring (#4805)","    def close(self):
+        """"""Close the underlying database connection.""""""
+        if self.ag:
+            self.ag.close()",https://github.com/mem0ai/mem0/commit/a488e19044e4de9322a4e82be8d49ee67a322151,,
+147,q08,close the database connection when finished,7212eb72-a1df-5be9-b1ed-d54ddea099e2,eosphoros-ai/DB-GPT,dbgpt/datasource/rdbms/conn_sqlite.py,close,refactor(v0.7.0): restructure modules and config handling (#2358),"    def close(self):
+        """"""Close the connection.""""""
+        if not self._is_closed:
+            if self._engine:
+                self._engine.dispose()
+            try:
+                if os.path.exists(self.temp_file_path):
+                    os.remove(self.temp_file_path)
+            except Exception as e:
+                logger.error(f""Error removing temporary database file: {e}"")
+            self._is_closed = True",https://github.com/eosphoros-ai/DB-GPT/commit/e4b329ee2175112d3c6982aba61622a1e7949ce7,,
+148,q08,close the database connection when finished,5dae25f7-72b0-5e3a-a250-ce527294f451,django/django,django/db/backends/mysql_old/base.py,close,"Refactored all database backends to inherit from a common base class to remove quite a bit of duplicated code. Thanks for the patch, Brian Harring. Refs #5106","    def close(self):
+        if self.connection is not None:
+            self.connection.close()
+            self.connection = None",https://github.com/django/django/commit/7c41b19c8a11e4ce46608f25e097118ddb1b3f5e,,
+149,q08,close the database connection when finished,79981602-5f02-50b0-8ead-a14d09941714,scrapy/scrapy,scrapy/pipelines/files.py,close_connection,Credentials from settings-Support custom paths-Remove close conenction,"    def close_connection(self):
+        self.ftp.quit()",https://github.com/scrapy/scrapy/commit/9b1587ed1bc736f9fcc357ce425405adf5bd6d08,,
+150,q08,close the database connection when finished,13c0bfad-855b-5a72-9da7-09c5f8ec72a4,streamlit/streamlit,lib/streamlit/proxy/ProxyConnection.py,close_client_connection,New commit for 0px,"    def close_client_connection(self):
+        """"""Close the client connection.""""""
+        self._has_client_connection = False
+        self._master_queue.close()
+        for queue in self._browser_queues:
+            queue.close()",https://github.com/streamlit/streamlit/commit/4a5b5153ec136e445e74c5a3dbcdb9d0abf5acc3,,
+151,q08,close the database connection when finished,ec0fdf58-f127-518d-9ebe-a4ce45b1289a,streamlit/streamlit,lib/streamlit/proxy/ProxyConnection.py,close_client_connection,ProxyConnection -> ClientConnection (#552),"    def close_client_connection(self):
+        """"""Close the client connection.""""""
+        self._has_client_connection = False
+        self._master_queue.close()
+        for queue in self._browser_queues:
+            queue.close()
+        self.on_client_connection_closed.send(self)",https://github.com/streamlit/streamlit/commit/f0a198c41c7899f9fadd55336469bd286af8470f,,
+152,q08,close the database connection when finished,c3aa36b2-1a13-54c6-a01d-7bcfe29f21af,django/django,django/db/backends/postgresql_psycopg2/base.py,close,Fixed #21239 -- Maintained atomicity when closing the connection.,"    def close(self):
+        self.validate_thread_sharing()
+        if self.connection is None:
+            return
+
+        try:
+            self.connection.close()
+            self.connection = None
+        except Database.Error:
+            # In some cases (database restart, network connection lost etc...)
+            # the connection to the database is lost without giving Django a
+            # notification. If we don't set self.connection to None, the error
+            # will occur a every request.
+            self.connection = None
+            logger.warning(
+                'psycopg2 error while closing the connection.',
+                exc_info=sys.exc_info()
+            )
+            raise",https://github.com/django/django/commit/25860096f981b0b3026b38329e4b69c72b1d8db9,,
+153,q08,close the database connection when finished,cdd7dbc0-6480-501b-8545-c33042d7d99f,pandas-dev/pandas,pandas/io/sql.py,close,"TST: testing, cleanup of io.sql module","    def close(self):
+        """"""
+        """"""
+        try:
+            self._con.close()
+        except Exception:
+            pass",https://github.com/pandas-dev/pandas/commit/9ddd71ac7caa20cfb92ef5ea05bcc52fad21f7c4,,
+154,q08,close the database connection when finished,a4119e96-6adb-52b8-b84a-bd1dee487372,django/django,django/db/backends/postgresql/base.py,close,"Refactored all database backends to inherit from a common base class to remove quite a bit of duplicated code. Thanks for the patch, Brian Harring. Refs #5106","    def close(self):
+        if self.connection is not None:
+            self.connection.close()
+            self.connection = None",https://github.com/django/django/commit/7c41b19c8a11e4ce46608f25e097118ddb1b3f5e,,
+155,q08,close the database connection when finished,fa21c3b5-5f7f-587b-ba2c-46f4248ca351,mitmproxy/mitmproxy,test/http/http1/test_protocol.py,test_connection_close,finish netlib.http.http1 refactor,"def test_connection_close():
+    headers = Headers()
+    assert HTTP1Protocol.connection_close((1, 0), headers)
+    assert not HTTP1Protocol.connection_close((1, 1), headers)
+
+    headers[""connection""] = ""keep-alive""
+    assert not HTTP1Protocol.connection_close((1, 1), headers)
+
+    headers[""connection""] = ""close""
+    assert HTTP1Protocol.connection_close((1, 1), headers)",https://github.com/mitmproxy/mitmproxy/commit/a077d8877d210562f703c23e9625e8467c81222d,,
+156,q08,close the database connection when finished,75d266a0-1195-510c-a901-dbe954dd1438,streamlit/streamlit,lib/streamlit/proxy/ProxyConnection.py,close_client_connection,ProxyConnection -> ClientConnection (#552),"    def close_client_connection(self):
+        """"""Close the client connection.""""""
+        self._has_client_connection = False
+        self._master_queue.close()
+        for queue in self._browser_queues:
+            queue.close()
+        self.on_client_connection_closed.send(self)",https://github.com/streamlit/streamlit/commit/0e48276cd26887168025cedb451290ac10ded712,,
+157,q08,close the database connection when finished,17514d3f-fd15-5f27-9ddd-bfaebf6b842b,getzep/graphiti,tests/driver/test_falkordb_driver.py,test_close_calls_connection_close,make falkor tests optional,"        
+        
+                attr == 'close' and obj is mock_connection
+            
+            ",https://github.com/getzep/graphiti/commit/7a8283dbacb4dd05ac6c60aa5c065adac8b2baa6,,
+158,q08,close the database connection when finished,6b6dca34-9ff9-5fd1-b5da-1d34e4154f66,django/django,django/db/backends/oracle/base.py,close,"Refactored all database backends to inherit from a common base class to remove quite a bit of duplicated code. Thanks for the patch, Brian Harring. Refs #5106","    def close(self):
+        if self.connection is not None:
+            self.connection.close()
+            self.connection = None",https://github.com/django/django/commit/7c41b19c8a11e4ce46608f25e097118ddb1b3f5e,,
+159,q09,"def chunks(items, size):
+    for i in range(0, len(items), size):
+        yield items[i:i + size]",81197454-2f5d-5bdb-b032-0d6aa355bf9e,HKUDS/LightRAG,lightrag/pipeline.py,_build_mm_chunks_from_sidecars,♻️ refactor(pipeline): skip empty analysis chunks in multimodal indexing,"                analysis = (
+                    item.get(""llm_analyze_result"")
+                    if isinstance(item.get(""llm_analyze_result""), dict)
+                    else {}
+                )",https://github.com/HKUDS/LightRAG/commit/5c59f69590b07dfc7c5cc0d0dcd786ea5aec84fe,,
+160,q09,"def chunks(items, size):
+    for i in range(0, len(items), size):
+        yield items[i:i + size]",effcbe54-0114-5cb5-8008-903ae2a95d5e,topoteretes/cognee,cognee/modules/data/processing/filter_affected_chunks.py,filter_affected_chunks,Task updates and updates to SQLAlchemy Adapter,"async def filter_affected_chunks(data_chunks: list[DocumentChunk], collection_name: str) -> list[DocumentChunk]:
+    vector_engine = get_vector_engine()
+
+    if not await vector_engine.has_collection(collection_name):
+        # If collection doesn't exist, all data_chunks are new
+        return data_chunks
+
+    existing_chunks = await vector_engine.retrieve(
+        collection_name,
+        [str(chunk.chunk_id) for chunk in data_chunks],
+    )
+
+    existing_chunks_map = {chunk.id: chunk.payload for chunk in existing_chunks}
+
+    affected_data_chunks = []
+
+    for chunk in data_chunks:
+        if chunk.chunk_id not in existing_chunks_map or \
+        chunk.text != existing_chunks_map[chunk.chunk_id][""text""]:
+            affected_data_chunks.append(chunk)
+
+    return affected_data_chunks",https://github.com/topoteretes/cognee/commit/2e367198cd32acaad1691cc108d6424db97ed673,,
+161,q09,"def chunks(items, size):
+    for i in range(0, len(items), size):
+        yield items[i:i + size]",bf02f097-cfa7-50b3-98c9-1c85a7d46b7b,commaai/openpilot,selfdrive/car/fw_versions.py,chunks,move selfdrive/car to opendbc (#32630),"def chunks(l: list[T], n: int = 128) -> Iterator[list[T]]:
+  for i in range(0, len(l), n):
+    yield l[i:i + n]",https://github.com/commaai/openpilot/commit/4f019b5f600e2b98b25d6b41f3e30ac2163bc1f5,,
+162,q09,"def chunks(items, size):
+    for i in range(0, len(items), size):
+        yield items[i:i + size]",bd9ebfd2-ded1-58d2-a1a5-9ae50520cf49,huggingface/transformers,examples/legacy/seq2seq/utils.py,chunks,Remove some custom datasets defined in codebase (#41511),"def chunks(lst, n):
+    """"""Yield successive n-sized chunks from lst.""""""
+    for i in range(0, len(lst), n):
+        yield lst[i : i + n]",https://github.com/huggingface/transformers/commit/1a0ae4bb81caf000e655cd326712377f777a7a74,,
+163,q09,"def chunks(items, size):
+    for i in range(0, len(items), size):
+        yield items[i:i + size]",6afc9fb9-9828-5dec-ac7b-bc9964d8712c,stanfordnlp/dspy,dspy/clients/embedding.py,chunk,Support async in DSPy critical paths (#8080),"        def chunk(inputs_list, size):
+            for i in range(0, len(inputs_list), size):
+                yield inputs_list[i : i + size]",https://github.com/stanfordnlp/dspy/commit/4f3b9f35c8ab5e9dbcc88190486bcf5ccdc954a1,,
+164,q09,"def chunks(items, size):
+    for i in range(0, len(items), size):
+        yield items[i:i + size]",aaada538-51f8-5d3f-a499-f5f469222643,ScrapeGraphAI/Scrapegraph-ai,scrapegraphai/utils/split_text_into_chunks.py,split_text_into_chunks,feat: ⛏️ enhanced contribution and precommit added,"def split_text_into_chunks(text: str, chunk_size: int,
+                           model: BaseChatModel, use_semchunk=True) -> List[str]:
+        chunks = chunk(text=text,
+                        chunk_size=chunk_size,
+                        token_counter=count_tokens,
+                        memoize=False)
+                chunks.append(' '.join(current_chunk))
+            chunks.append(' '.join(current_chunk))",https://github.com/ScrapeGraphAI/Scrapegraph-ai/commit/fcbfe78983c5c36fe5e4e0659ccfebc7fd9952b4,,
+165,q09,"def chunks(items, size):
+    for i in range(0, len(items), size):
+        yield items[i:i + size]",2ca1a4cc-cc23-58eb-89f9-3a1989af8a2e,huggingface/lerobot,lerobot/common/datasets/push_dataset_to_hub/_diffusion_policy_replay_buffer.py,_resolve_array_chunks,chore(scripts): remove deprecated script (#887),"    @classmethod
+    def _resolve_array_chunks(cls, chunks: dict | tuple, key, array):
+        cks = None
+        if isinstance(chunks, dict):
+            if key in chunks:
+                cks = chunks[key]
+            elif isinstance(array, zarr.Array):
+                cks = array.chunks
+        elif isinstance(chunks, tuple):
+            cks = chunks
+        else:
+            raise TypeError(f""Unsupported chunks type {type(chunks)}"")
+        # backup default
+        if cks is None:
+            cks = get_optimal_chunks(shape=array.shape, dtype=array.dtype)
+        # check
+        check_chunks_compatible(chunks=cks, shape=array.shape)
+        return cks",https://github.com/huggingface/lerobot/commit/a6015a55f930cdc51fdb035d68533d1434b1cf43,,
+166,q09,"def chunks(items, size):
+    for i in range(0, len(items), size):
+        yield items[i:i + size]",0d5bd159-1c57-50f9-8ba6-26668d6cce43,run-llama/llama_index,llama_index/text_splitter/sentence_splitter.py,_postprocess_chunks,[version] bump to 0.7.24.post1 (#7235),"    def _postprocess_chunks(self, chunks: List[str]) -> List[str]:
+        """"""Post-process chunks.""""""
+        new_chunks = []
+        for doc in chunks:
+            if doc.replace("" "", """") == """":
+                continue
+            new_chunks.append(doc)
+        return new_chunks",https://github.com/run-llama/llama_index/commit/f3959bbd93c6866a462926bf1bf3bd741a0159ca,,
+167,q09,"def chunks(items, size):
+    for i in range(0, len(items), size):
+        yield items[i:i + size]",fd2172db-05cd-55d1-9df7-041df0f943a4,langchain-ai/langchain,libs/partners/databricks/langchain_databricks/embeddings.py,_chunk,databricks: mv to partner repo (#25788),"def _chunk(texts: List[str], size: int) -> Iterator[List[str]]:
+    for i in range(0, len(texts), size):
+        yield texts[i : i + size]",https://github.com/langchain-ai/langchain/commit/1023fbc98a098182d5a23402da541699f9717a89,,
+168,q09,"def chunks(items, size):
+    for i in range(0, len(items), size):
+        yield items[i:i + size]",544aa7bf-fe77-5a84-b199-d3eb50452924,langchain-ai/langchain,libs/community/langchain_community/embeddings/mlflow.py,_chunk,community: move to separate repo (#31060),"def _chunk(texts: List[str], size: int) -> Iterator[List[str]]:
+    for i in range(0, len(texts), size):
+        yield texts[i : i + size]",https://github.com/langchain-ai/langchain/commit/9ff5b5d2824794c82f3df9032f09a31fe007eb19,,
+169,q09,"def chunks(items, size):
+    for i in range(0, len(items), size):
+        yield items[i:i + size]",f11d70a3-35b6-5c58-a34b-b270e71bfadf,topoteretes/cognee,cognee/modules/retrieval/hybrid_retriever.py,_build_legacy_chunks,Refine hybrid summary flow,"    async def _build_legacy_chunks(self, query: str) -> List[Any]:
+        bm25_chunks, vector_chunks = await asyncio.gather(
+            self._search_bm25_chunks(query),
+            self._search_collection(""DocumentChunk_text"", query, self.chunks_top_k, required=True),
+        )
+        return _merge_chunks(bm25_chunks, vector_chunks, self.chunks_top_k)",https://github.com/topoteretes/cognee/commit/4d048be52496c3525c3239f623ee62a0d22e00c0,,
+170,q09,"def chunks(items, size):
+    for i in range(0, len(items), size):
+        yield items[i:i + size]",d738b03b-bad0-55cb-b271-4a4dc4d97da7,confident-ai/deepeval,deepeval/synthesizer/chunking/context_generator.py,_get_n_random_chunks_per_doc,quality control + cleanup context,"    def _get_n_random_chunks_per_doc(
+        self, path: str, n_chunks: int
+    ) -> Tuple[List[str], List[float]]:
+        collection = self.source_files_to_collections_map[path]
+        total_chunks = collection.count()
+        assert (
+            n_chunks <= total_chunks
+        ), f""Requested {n_chunks} chunks, but the collection only contains {total_chunks} chunks.""
+        max_retries = 3
+        minimum_threshold = 0.5
+
+        # Determine the number of chunks to sample for evaluation
+        if total_chunks >= n_chunks * max_retries:
+            sample_size = n_chunks * max_retries
+        else:
+            sample_size = n_chunks
+        # Randomly sample 'sample_size' chunks
+        random_ids = [
+            str(i) for i in random.sample(range(total_chunks), sample_size)
+        ]
+        chunks = collection.get(ids=random_ids)[""documents""]
+        if total_chunks < n_chunks * max_retries:
+            return chunks, [self.evaluate_chunk(chunk) for chunk in chunks]
+        # Evaluate chunks and filter those with a score > 0.5
+        evaluated_chunks = []
+        scores = []
+        retry_count = 0
+        for chunk in chunks:
+            # Evaluate the chunk
+            score = self.evaluate_chunk(chunk)
+            if score > minimum_threshold:
+                evaluated_chunks.append(chunk)
+                scores.append(score)
+                retry_count = 0
+            else:
+                retry_count += 1
+                if retry_count == max_retries:
+                    evaluated_chunks.append(chunk)
+                    scores.append(score)
+                    retry_count = 0
+… (앞부분만, 전체 43줄)",https://github.com/confident-ai/deepeval/commit/30f66b560c68069a9f9906ad62fbd5566469f0d7,,
+171,q09,"def chunks(items, size):
+    for i in range(0, len(items), size):
+        yield items[i:i + size]",65e0ad67-de66-5fb8-9c8f-aa113af4fb45,hpcaitech/ColossalAI,colossalai/zero/gemini/gemini_hook.py,wait_chunks,[chore] refactor & sync,"    def wait_chunks(self, chunks: List[Chunk]) -> List[Chunk]:
+        non_prefetched_chunks = []
+        for chunk in chunks:
+            if chunk in self._async_works:
+                print(f""prefetched {chunk.count_id}"")
+                self._async_works[chunk].wait()
+                del self._async_works[chunk]
+            else:
+                non_prefetched_chunks.append(chunk)
+        return non_prefetched_chunks",https://github.com/hpcaitech/ColossalAI/commit/2e68eebdfe9a8f68c0cb9a260ce7f2de4e6b6e27,,
+172,q09,"def chunks(items, size):
+    for i in range(0, len(items), size):
+        yield items[i:i + size]",db7a2a38-41ec-5d3d-833e-c125d6bb0a39,confident-ai/deepeval,deepeval/synthesizer/chunking/context_generator.py,_a_get_n_random_chunks_per_doc,remove synthesizer caching,"    async def _a_get_n_random_chunks_per_doc(
+        self, path: str, n_chunks: int, p_bar: tqdm_bar
+
+        # Determine the number of chunks to sample
+        collection = self.source_files_to_collections_map[path]
+        assert (
+            n_chunks <= total_chunks
+        ), f""Requested {n_chunks} chunks, but the collection only contains {total_chunks} chunks.""
+        # Randomly sample chunks from collection
+            return chunks, [
+                self.evaluate_chunk(chunk)
+                for chunk in chunks
+                if not p_bar.update(3)
+            ]",https://github.com/confident-ai/deepeval/commit/a18639204077e433fde23dc01121163e05de16eb,,
+173,q09,"def chunks(items, size):
+    for i in range(0, len(items), size):
+        yield items[i:i + size]",d7229893-85bc-538f-97db-ecab4a8a6051,hpcaitech/ColossalAI,examples/language/gpt/tools/download/utils.py,chunks,[example] simplify the GPT2 huggingface example (#1826),"def chunks(l, n, s=0):
+    """"""Yield successive n-sized chunks from l, skipping the first s chunks.""""""
+    if isinstance(l, collections.Iterable):
+        chnk = []
+        for i, elem in enumerate(l):
+            if i < s:
+                continue
+
+            chnk.append(elem)
+            if len(chnk) == n:
+                yield chnk
+                chnk = []
+        if len(chnk) != 0:
+            yield chnk
+
+    else:
+        for i in range(s, len(l), n):
+            yield l[i:i + n]",https://github.com/hpcaitech/ColossalAI/commit/b1263d32bafb13a97823c317573a079da3b7d0cf,,
+174,q09,"def chunks(items, size):
+    for i in range(0, len(items), size):
+        yield items[i:i + size]",3ee84253-3ded-5d39-8119-e06625a4d971,vllm-project/vllm,vllm/utils/__init__.py,chunk_list,[Chore] Separate out `vllm.utils.collections` (#26990),"def chunk_list(lst: list[T], chunk_size: int):
+    """"""Yield successive chunk_size chunks from lst.""""""
+    for i in range(0, len(lst), chunk_size):
+        yield lst[i : i + chunk_size]",https://github.com/vllm-project/vllm/commit/d2740fafbf2527f4026863854bf1aeaa383c1a8e,,
+175,q09,"def chunks(items, size):
+    for i in range(0, len(items), size):
+        yield items[i:i + size]",7c8bada2-f93a-5172-acbe-042910c00281,topoteretes/cognee,cognee/tests/integration/retrieval/test_chunks_retriever.py,test_chunks_retriever_context_multiple_chunks,test: rework integration tests with new search refactor. Also refactor Entity Completion retriever,"async def test_chunks_retriever_context_multiple_chunks(setup_test_environment_with_chunks_simple):
+    context = await retriever.get_context(""Steve"")
+    assert isinstance(context, list), ""Context should be a list""
+    assert len(context) > 0, ""Context should not be empty""
+    assert any(chunk[""text""] == ""Steve Rodger"" for chunk in context), (",https://github.com/topoteretes/cognee/commit/271b71bdce8e4479444f4ea130357dd5d983402e,,
+176,q09,"def chunks(items, size):
+    for i in range(0, len(items), size):
+        yield items[i:i + size]",f147f241-a486-5ccf-a376-459a017ace1a,langchain-ai/langchain,libs/community/langchain_community/embeddings/databricks.py,_chunk,community: move to separate repo (#31060),"def _chunk(texts: List[str], size: int) -> Iterator[List[str]]:
+    for i in range(0, len(texts), size):
+        yield texts[i : i + size]",https://github.com/langchain-ai/langchain/commit/9ff5b5d2824794c82f3df9032f09a31fe007eb19,,
+177,q09,"def chunks(items, size):
+    for i in range(0, len(items), size):
+        yield items[i:i + size]",0f11b4ab-58fc-5f9b-932a-ffd7004db434,commaai/openpilot,selfdrive/car/fw_versions.py,chunks,root commit,"def chunks(l, n=128):
+  for i in range(0, len(l), n):
+    yield l[i:i + n]",https://github.com/commaai/openpilot/commit/81dd5a50cfd825deaf5de44c1b10e3798e462a1b,,
+178,q09,"def chunks(items, size):
+    for i in range(0, len(items), size):
+        yield items[i:i + size]",d22c37c0-59e4-5648-aaf8-226ed3506c4d,langchain-ai/langchain,libs/community/langchain_community/embeddings/mlflow_gateway.py,_chunk,community: move to separate repo (#31060),"def _chunk(texts: List[str], size: int) -> Iterator[List[str]]:
+    for i in range(0, len(texts), size):
+        yield texts[i : i + size]",https://github.com/langchain-ai/langchain/commit/9ff5b5d2824794c82f3df9032f09a31fe007eb19,,
+179,q10,"async def fetch(session, url):
+    async with session.get(url) as r:
+        return await r.json()",de6945fa-606b-5335-89ff-055503a05ee3,home-assistant/core,homeassistant/components/usage_prediction/common_control.py,_fetch_with_session,Stream usage prediction events instead of loading them into memory (#181770),"def _fetch_with_session(
+    hass: HomeAssistant,
+    fetch_func: Callable[
+        [Session], Sequence[Row[tuple[bytes | None, float | None, str | None]]]
+    ],
+    *args: object,
+) -> Sequence[Row[tuple[bytes | None, float | None, str | None]]]:
+    """"""Execute a fetch function with a database session.""""""
+        return fetch_func(session, *args)",https://github.com/home-assistant/core/commit/432ebadc17c4961dec6ee2c97a9a684c5c9bb40a,,
+180,q10,"async def fetch(session, url):
+    async with session.get(url) as r:
+        return await r.json()",1e23ced1-d620-59d3-82b3-4250b06f8c82,sanic-org/sanic,examples/aiohttp_example.py,fetch,"Clean up of examples. Removes non-core examples, optimizes and restyles remaining to strictly follow PEP 8 styling guidelines. Non-Core examples will be moved to Wiki.","async def fetch(session, url):
+    """"""
+    Use session object to perform 'get' request on url
+    """"""
+    async with session.get(url) as result:
+        return await result.json()",https://github.com/sanic-org/sanic/commit/4b5320a8f0e3f9baece2b202ae41e4ea182cb94e,,
+181,q10,"async def fetch(session, url):
+    async with session.get(url) as r:
+        return await r.json()",cdd96d82-13c4-5533-a1bf-9982135919a9,RasaHQ/rasa,tests/core/test_processor.py,test_fetch_tracker_and_update_session,Add `model_id` to events in the processor. (#9917),"    assert list(tracker.events) == [
+        ActionExecuted(ACTION_SESSION_START_NAME),
+        SessionStarted(),
+        ActionExecuted(ACTION_LISTEN_NAME),
+    ]",https://github.com/RasaHQ/rasa/commit/db7cda2ada9f12cdc27b2a0da6f94479fc01ccd3,,
+182,q10,"async def fetch(session, url):
+    async with session.get(url) as r:
+        return await r.json()",f6ecfd35-e043-51e2-872c-af1129d9a60f,RasaHQ/rasa,tests/core/test_processor.py,test_fetch_tracker_with_initial_session,improve tests,"    ""initial_events,final_events"",
+        # tracker is initially not empty, and just contains these four events
+        # when fetched
+    final_events: List[Type[Event]],
+    assert len(tracker.events) == len(final_events)
+        for tracker_event, expected_event_type in zip(tracker.events, final_events)",https://github.com/RasaHQ/rasa/commit/4fe2c076dbc540c7349128cf529d20fb0c68b0dd,,
+183,q10,"async def fetch(session, url):
+    async with session.get(url) as r:
+        return await r.json()",fa7b9d80-438d-5d01-b012-f0d179c3f22a,PrefectHQ/prefect,src/prefect/orion/services/telemetry.py,_fetch_or_set_telemetry_session,Remove unnecessary SQL transactions (#6714),"        session = await db.session()
+        async with session:
+            async with session.begin():
+                telemetry_session = await configuration.read_configuration(
+                    session, ""TELEMETRY_SESSION""
+                if telemetry_session is None:
+                    self.logger.debug(""No telemetry session found, setting"")
+                    session_id = str(uuid4())
+                    session_start_timestamp = pendulum.now().to_iso8601_string()
+
+                    telemetry_session = Configuration(
+                        key=""TELEMETRY_SESSION"",
+                        value={
+                            ""session_id"": session_id,
+                            ""session_start_timestamp"": session_start_timestamp,
+                        },
+                    )
+
+                    await configuration.write_configuration(session, telemetry_session)
+
+                    self.session_id = session_id
+                    self.session_start_timestamp = session_start_timestamp
+                else:
+                    self.logger.debug(""Session information retrieved from database"")
+                    self.session_id = telemetry_session.value[""session_id""]
+                    self.session_start_timestamp = telemetry_session.value[
+                        ""session_start_timestamp""
+                    ]",https://github.com/PrefectHQ/prefect/commit/bdc7a19153a7551e32535ec0dd0b5231a33c0ae6,,
+184,q10,"async def fetch(session, url):
+    async with session.get(url) as r:
+        return await r.json()",6dd42568-dd1c-5f0e-8eed-e033c64dd031,langchain-ai/langchain,libs/community/langchain_community/document_loaders/web_base.py,_fetch,community: move to separate repo (#31060),"    async def _fetch(
+        self, url: str, retries: int = 3, cooldown: int = 2, backoff: float = 1.5
+    ) -> str:
+        async with aiohttp.ClientSession(trust_env=self.trust_env) as session:
+            for i in range(retries):
+                try:
+                    kwargs: Dict = dict(
+                        headers=self.session.headers,
+                        cookies=self.session.cookies.get_dict(),
+                    )
+                    if not self.session.verify:
+                        kwargs[""ssl""] = False
+
+                    async with session.get(
+                        url, **(self.requests_kwargs | kwargs)
+                    ) as response:
+                        if self.raise_for_status:
+                            response.raise_for_status()
+                        return await response.text()
+                except aiohttp.ClientConnectionError as e:
+                    if i == retries - 1:
+                        raise
+                    else:
+                        logger.warning(
+                            f""Error fetching {url} with attempt ""
+                            f""{i + 1}/{retries}: {e}. Retrying...""
+                        )
+                        await asyncio.sleep(cooldown * backoff**i)
+        raise ValueError(""retry count exceeded"")",https://github.com/langchain-ai/langchain/commit/9ff5b5d2824794c82f3df9032f09a31fe007eb19,,
+185,q10,"async def fetch(session, url):
+    async with session.get(url) as r:
+        return await r.json()",165c5fae-4844-5190-b250-72ae7f231b6e,hummingbot/hummingbot,test/connector/exchange/latoken/test_latoken_api_order_book_data_source.py,run_session_for_fetch_snaphot,(feat) remove exchanges out of quorum,"        async def run_session_for_fetch_snaphot():
+            # async with aiohttp.ClientSession() as client:
+            result = await self.data_source.get_snapshot(""BTC-USDT"")  # verify the default set to 100
+            assert len(result[""bid""]) == CONSTANTS.SNAPSHOT_LIMIT_SIZE
+            assert len(result[""ask""]) == CONSTANTS.SNAPSHOT_LIMIT_SIZE
+
+            # 25 is default fetch value, that is very small for use in production
+            assert len(result[""bid""]) > 25
+            assert len(result[""ask""]) > 25",https://github.com/hummingbot/hummingbot/commit/50b4713c81219cb92456a81d06b3781eec9b0aa9,,
+186,q10,"async def fetch(session, url):
+    async with session.get(url) as r:
+        return await r.json()",fbf26cd8-4f3f-5714-8423-e223bc5eff76,browser-use/browser-use,browser_use/skill_cli/python_session.py,_goto_async,remove old CLI,"'	async def _goto_async(self, url: str) -> None:
+		await self._actions.navigate(url)",https://github.com/browser-use/browser-use/commit/bfaad696bf0bf42d62226de61269f3ec17ebca0a,,
+187,q10,"async def fetch(session, url):
+    async with session.get(url) as r:
+        return await r.json()",cae529cf-27b5-5955-aea7-b9150ab08cb2,ray-project/ray,dashboard/modules/test/test_utils.py,http_get,"Revert ""[Dashboard] Start the new dashboard (#9860)"" (#10116)","async def http_get(http_session, url, timeout_seconds=60):
+    with async_timeout.timeout(timeout_seconds):
+        async with http_session.get(url) as response:
+            return await response.json()",https://github.com/ray-project/ray/commit/36e626e95d7cb905708bb997fc102ad1d91eb0be,,
+188,q10,"async def fetch(session, url):
+    async with session.get(url) as r:
+        return await r.json()",a7d54f2b-391e-52af-857f-e3dc74d9d703,PaddlePaddle/PaddleOCR,paddleocr/_api_client/async_client.py,_fetch_jsonl,refactor(skills): simplify skills to use PaddleOCR CLI directly (#18090),"    async def _fetch_jsonl(self, url: str) -> list:
+        async with self._request_scope():
+            timeout = aiohttp.ClientTimeout(total=self._request_timeout)
+            async with aiohttp.ClientSession(timeout=timeout) as bare_session:
+                async with bare_session.get(url) as resp:
+                    await self._raise_for_response(resp)
+                    text = await resp.text()
+                    try:
+                        lines = text.strip().split(""\n"")
+                        return [json.loads(line) for line in lines if line.strip()]
+                    except json.JSONDecodeError as e:
+                        raise ResultParseError(
+                            f""Malformed JSONL result payload: {e}""
+                        ) from e",https://github.com/PaddlePaddle/PaddleOCR/commit/9f704bc6abf7a09f22593d597f633d62668b2984,,
+189,q10,"async def fetch(session, url):
+    async with session.get(url) as r:
+        return await r.json()",dfdea5c9-20f6-54d1-96f2-90801ff43a08,langchain-ai/langchain,libs/community/langchain_community/utilities/you.py,fetch,"community: Add you.com tool, add async to retriever, add async testing, add You tool doc (#18032)","        async def fetch() -> str:
+            params = {
+                ""query"": query,
+                ""num_web_results"": num_web_results,
+                ""safesearch"": safesearch,
+                ""country"": country,
+            }
+            async with aiohttp.ClientSession() as session:
+                async with session.post(f""{YOU_API_URL}/search"", json=params) as res:
+                    if res.status == 200:
+                        data = await res.text()
+                        return data
+                    else:
+                        raise Exception(f""Error {res.status}: {res.reason}"")",https://github.com/langchain-ai/langchain/commit/b051bba1a9f3f2c6020d7c8dbcc792d14b3cbe17,,
+190,q10,"async def fetch(session, url):
+    async with session.get(url) as r:
+        return await r.json()",c1ff9d14-8fcf-5e12-afe2-3a4736c7adf7,ray-project/ray,doc/source/ray-overview/examples/e2e-xgboost/dist_xgboost/serve.py,fetch,[templates] removing outdated templates that are now being synced to ray docs at build time (#63971),"    async def fetch(session, url, data):
+        async with session.post(url, json=data) as response:
+            return await response.json()",https://github.com/ray-project/ray/commit/70eade0bd3ae7e612ce29d5ad28024db97b401ce,,
+191,q10,"async def fetch(session, url):
+    async with session.get(url) as r:
+        return await r.json()",094516aa-709b-5d85-b99f-8c8b331280e8,langchain-ai/langchain,libs/community/langchain_community/document_loaders/async_html.py,_fetch,community: move to separate repo (#31060),"    async def _fetch(
+        self, url: str, retries: int = 3, cooldown: int = 2, backoff: float = 1.5
+    ) -> str:
+        async with aiohttp.ClientSession(trust_env=self.trust_env) as session:
+            for i in range(retries):
+                try:
+                    kwargs: Dict = dict(
+                        headers=self.session.headers,
+                        cookies=self.session.cookies.get_dict(),
+                        **self.requests_kwargs,
+                    )
+                    if not self.session.verify:
+                        kwargs[""ssl""] = False
+                    async with session.get(
+                        url,
+                        **kwargs,
+                    ) as response:
+                        try:
+                            text = await response.text()
+                        except UnicodeDecodeError:
+                            logger.error(f""Failed to decode content from {url}"")
+                            text = """"
+                        return text
+                except (aiohttp.ClientConnectionError, TimeoutError) as e:
+                    if i == retries - 1 and self.ignore_load_errors:
+                        logger.warning(f""Error fetching {url} after {retries} retries."")
+                        return """"
+                    elif i == retries - 1:
+                        raise
+                    else:
+                        logger.warning(
+                            f""Error fetching {url} with attempt ""
+                            f""{i + 1}/{retries}: {e}. Retrying...""
+                        )
+                        await asyncio.sleep(cooldown * backoff**i)
+        raise ValueError(""retry count exceeded"")",https://github.com/langchain-ai/langchain/commit/9ff5b5d2824794c82f3df9032f09a31fe007eb19,,
+192,q10,"async def fetch(session, url):
+    async with session.get(url) as r:
+        return await r.json()",b7dc420a-cfb5-5da1-8e2d-6e7152a74235,apache/airflow,airflow-core/tests/unit/models/test_deadline_callback_adversarial.py,session,"Revert ""Fetch deadline callback context via Execution API at runtime (#66608)"" (#68909)","'@pytest.fixture
+def session():
+    from airflow.utils.session import create_session
+
+    with create_session() as session:
+        yield session",https://github.com/apache/airflow/commit/609656f7d353b47858bd567efe02065234f62d10,,
+193,q10,"async def fetch(session, url):
+    async with session.get(url) as r:
+        return await r.json()",c73f1622-3a2e-5768-8953-856f6c240bdf,hummingbot/hummingbot,test/connector/exchange/bitfinex/test_bitfinex_api_order_book_data_source.py,run_session_for_fetch_snaphot,(feat) remove exchange integration test,"        async def run_session_for_fetch_snaphot():
+            async with aiohttp.ClientSession() as client:
+                result = await self.data_source.get_snapshot(client, ""BTC-USD"")
+                assert len(result[""bids""]) == self.data_source.SNAPSHOT_LIMIT_SIZE
+                assert len(result[""asks""]) == self.data_source.SNAPSHOT_LIMIT_SIZE
+
+                # 25 is default fetch value, that is very small for use in production
+                assert len(result[""bids""]) > 25
+                assert len(result[""asks""]) > 25",https://github.com/hummingbot/hummingbot/commit/3d1505672bc3bfe24c554e7e0a24e20f3cfa9d13,,
+194,q10,"async def fetch(session, url):
+    async with session.get(url) as r:
+        return await r.json()",980d8d0c-7064-5d31-9755-e809a45385c0,spotify/luigi,luigi/rpc.py,_async_fetch,Use urllib as http client of the rpc,"    def _async_fetch(self, full_url, body):
+        return self._client.fetch(
+            full_url,
+            method=""POST"",
+            body=body,
+            connect_timeout=self._connect_timeout,
+        )",https://github.com/spotify/luigi/commit/0bc0097eda5a9f467b4e1667b134ebe4b97d4426,,
+195,q10,"async def fetch(session, url):
+    async with session.get(url) as r:
+        return await r.json()",984e52d5-b136-54cf-ab6a-ba33f0c7eacb,RasaHQ/rasa,tests/core/test_exporter.py,test_fetch_events_within_time_range_with_session_events,Export events continuously rather than loading all events in memory first (#11623),"async def test_fetch_events_within_time_range_with_session_events(tmp_path: Path):
+    conversation_id = ""test_fetch_events_within_time_range_with_sessions""
+
+    events = [
+        random_user_uttered_event(1),
+        SessionStarted(2),
+        ActionExecuted(timestamp=3, action_name=ACTION_SESSION_START_NAME),
+        random_user_uttered_event(4),
+    ]
+    tracker = DialogueStateTracker.from_events(conversation_id, evts=events)
+    await tracker_store.save(tracker)
+    fetched_events = await exporter._fetch_events_within_time_range()
+    assert len(fetched_events) == len(events)",https://github.com/RasaHQ/rasa/commit/f5397037e12e4c6f9332138f5b23bffe8245b629,,
+196,q10,"async def fetch(session, url):
+    async with session.get(url) as r:
+        return await r.json()",0b2afd54-43b1-58ad-bcad-a40eb33c7ebb,home-assistant/core,homeassistant/components/usage_prediction/common_control.py,_fetch_with_session,Stream usage prediction events instead of loading them into memory (#181770),"def _fetch_with_session(
+    hass: HomeAssistant,
+    fetch_func: Callable[
+        [Session], Sequence[Row[tuple[bytes | None, float | None, str | None]]]
+    ],
+    *args: object,
+) -> Sequence[Row[tuple[bytes | None, float | None, str | None]]]:
+    """"""Execute a fetch function with a database session.""""""
+        return fetch_func(session, *args)",https://github.com/home-assistant/core/commit/753deee48c80663fe9e498c47b079abf2d9110fa,,
+197,q10,"async def fetch(session, url):
+    async with session.get(url) as r:
+        return await r.json()",fe5fd603-a6fd-5a83-8f1f-3ed83fd2e456,ray-project/ray,release/serve_tests/workloads/serve_protocol_benchmark.py,fetch,[Serve] Remove old gRPC release test (#39970),"    async def fetch(session):
+        async with session.get(""http://localhost:8000/"", json={""a"": data}) as response:
+            return await response.text()",https://github.com/ray-project/ray/commit/b41de0de97f65140fcbfcdcd1436f3a6288386e7,,
+198,q10,"async def fetch(session, url):
+    async with session.get(url) as r:
+        return await r.json()",4544a639-d282-5bf1-aa24-19bb64843ec1,PrefectHQ/prefect,src/prefect/server/services/telemetry.py,_fetch_or_set_telemetry_session,feat: convert telemetry service to docket perpetual function (#19754),"    @db_injector
+    async def _fetch_or_set_telemetry_session(self, db: PrefectDBInterface):
+        """"""
+        This method looks for a telemetry session in the configuration table. If there
+        isn't one, it sets one. It then sets `self.session_id` and
+        `self.session_start_timestamp`.
+
+        Telemetry sessions last until the database is reset.
+        """"""
+        async with db.session_context(begin_transaction=True) as session:
+            telemetry_session = await configuration.read_configuration(
+                session, ""TELEMETRY_SESSION""
+
+            if telemetry_session is None:
+                self.logger.debug(""No telemetry session found, setting"")
+                session_id = str(uuid4())
+                session_start_timestamp = now(""UTC"").isoformat()
+
+                telemetry_session = Configuration(
+                    key=""TELEMETRY_SESSION"",
+                    value={
+                        ""session_id"": session_id,
+                        ""session_start_timestamp"": session_start_timestamp,
+                    },
+                )
+
+                await configuration.write_configuration(session, telemetry_session)
+
+                self.session_id = session_id
+                self.session_start_timestamp = session_start_timestamp
+            else:
+                self.logger.debug(""Session information retrieved from database"")
+                self.session_id: str = telemetry_session.value[""session_id""]
+                self.session_start_timestamp: str = telemetry_session.value[
+                    ""session_start_timestamp""
+                ]
+        self.logger.debug(
+            f""Telemetry Session: {self.session_id}, {self.session_start_timestamp}""
+        return (self.session_start_timestamp, self.session_id)",https://github.com/PrefectHQ/prefect/commit/500a3d732e65f9a51f71458a87e974dfc7590bc4,,

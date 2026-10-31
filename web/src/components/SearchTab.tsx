@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { getJson } from "../api";
 import { KIND_LABEL, REASON_LABEL, SOURCE_BADGE, num } from "../format";
-import type { SearchMeta, SearchResponse } from "../types";
+import type { SearchMeta, SearchMode, SearchResponse } from "../types";
 import { Highlight } from "./Highlight";
 import { ReasonBadges } from "./ReasonBadges";
 import { RecordDetail } from "./RecordDetail";
@@ -29,22 +29,42 @@ const NO_FILTERS: Filters = {
 };
 
 // 시연용 예시 (#191). 실제 색인(dataset-v0.9)에서 결과가 잘 나오는 것을 골랐다 - PR 본문 참고.
-const EXAMPLES: { label: string; q: string; filters?: Partial<Filters> }[] = [
+interface Example {
+  label: string;
+  q: string;
+  filters?: Partial<Filters>;
+}
+
+const EXAMPLES: Example[] = [
   { label: "retry backoff", q: "retry backoff" },
   { label: "unused · 사람 확정", q: "unused", filters: { source: "HUMAN" } },
   { label: "replace · 사람 확정 · EXPLICIT", q: "replace", filters: { source: "HUMAN", grade: "EXPLICIT" } },
   { label: "py2 호환 코드", q: "py2" },
 ];
 
+// 의미 검색 시연용 예시 (#193). 자연어 2개 + 코드 조각 1개 - 결과가 잘 나오는 것을 골랐다 (PR 본문).
+const SEMANTIC_EXAMPLES: Example[] = [
+  { label: "재시도 대기 (자연어)", q: "wait longer between retries after a failed request" },
+  { label: "리다이렉트 인증 헤더 (자연어)", q: "strip authorization header when redirected to another host" },
+  {
+    label: "코드 조각",
+    q: "def load_config(path):\n    with open(path) as f:\n        return yaml.safe_load(f)",
+  },
+];
+
 interface Request {
   q: string;
+  mode: SearchMode;
   filters: Filters;
   offset: number;
 }
 
-function toParams({ q, filters, offset }: Request): URLSearchParams {
+function toParams({ q, mode, filters, offset }: Request): URLSearchParams {
   const params = new URLSearchParams();
-  if (q.trim()) params.set("q", q.trim());
+  // 키워드는 앞뒤 공백을 지운다. 의미 검색은 코드 들여쓰기를 지키려고 그대로 보낸다
+  if (q.trim()) params.set("q", mode === "semantic" ? q : q.trim());
+  // 기본값(keyword)은 주소에 넣지 않는다 - 1단계 링크가 그대로 동작한다
+  if (mode === "semantic") params.set("mode", mode);
   for (const [key, value] of Object.entries(filters)) if (value) params.set(key, value);
   if (offset) params.set("offset", String(offset));
   return params;
@@ -59,8 +79,14 @@ function fromHash(): { request: Request | null; id: string | null } {
   const params = new URLSearchParams(hash.slice("#search?".length));
   const filters = { ...NO_FILTERS };
   for (const key of Object.keys(filters) as (keyof Filters)[]) filters[key] = params.get(key) ?? "";
+  const mode: SearchMode = params.get("mode") === "semantic" ? "semantic" : "keyword";
   return {
-    request: { q: params.get("q") ?? "", filters, offset: Number(params.get("offset") ?? 0) || 0 },
+    request: {
+      q: params.get("q") ?? "",
+      mode,
+      filters,
+      offset: Number(params.get("offset") ?? 0) || 0,
+    },
     id: params.get("id"),
   };
 }
@@ -69,6 +95,7 @@ export function SearchTab() {
   const [initial] = useState(fromHash);
   const [meta, setMeta] = useState<SearchMeta | null>(null);
   const [input, setInput] = useState(initial.request?.q ?? "");
+  const [mode, setMode] = useState<SearchMode>(initial.request?.mode ?? "keyword");
   const [request, setRequest] = useState<Request | null>(initial.request);
   const [filters, setFilters] = useState<Filters>(initial.request?.filters ?? NO_FILTERS);
   const [result, setResult] = useState<SearchResponse | null>(null);
@@ -85,6 +112,7 @@ export function SearchTab() {
       const next = fromHash();
       byUser.current = false;
       setInput(next.request?.q ?? "");
+      setMode(next.request?.mode ?? "keyword");
       setFilters(next.request?.filters ?? NO_FILTERS);
       setRequest(next.request);
       setSelected(next.id);
@@ -105,6 +133,12 @@ export function SearchTab() {
 
   useEffect(() => {
     if (!request) return;
+    // 의미 검색은 질의가 있어야 한다 (API 422) - 필터만으로는 찾지 않는다
+    if (request.mode === "semantic" && !request.q.trim()) {
+      setResult(null);
+      setError(null);
+      return;
+    }
     const controller = new AbortController();
     setLoading(true);
     const params = toParams(request);
@@ -140,9 +174,9 @@ export function SearchTab() {
     setSelected(id);
   };
 
-  const run = (q: string, next: Filters, offset = 0) => {
+  const run = (q: string, next: Filters, offset = 0, nextMode: SearchMode = mode) => {
     byUser.current = true;
-    setRequest({ q, filters: next, offset });
+    setRequest({ q, mode: nextMode, filters: next, offset });
     if (offset === 0) setSelected(null);
   };
 
@@ -152,11 +186,19 @@ export function SearchTab() {
     run(input, next);
   };
 
-  const example = (ex: (typeof EXAMPLES)[number]) => {
+  const example = (ex: Example) => {
     const next = { ...NO_FILTERS, ...ex.filters };
     setInput(ex.q);
     setFilters(next);
     run(ex.q, next);
+  };
+
+  // 모드를 바꾸면 같은 검색어·필터로 다시 찾는다. 이미 요청이 있으면(필터만 검색 포함) 검색어가
+  // 비어도 다시 보낸다 - 화면·요청·주소의 모드가 어긋나지 않게 (CodeRabbit #194)
+  const switchMode = (next: SearchMode) => {
+    if (next === mode) return;
+    setMode(next);
+    if (input.trim() || request) run(input, filters, 0, next);
   };
 
   const years: number[] = [];
@@ -165,29 +207,74 @@ export function SearchTab() {
   }
   const offset = request?.offset ?? 0;
   const total = result?.total ?? 0;
+  const semantic = mode === "semantic";
+  const semanticMissing = semantic && meta !== null && meta.semantic === null;
 
   return (
     <div className="search">
+      {/* 토글 버튼 묶음 - radio 역할은 화살표 키 이동까지 요구해 aria-pressed 로 (CodeRabbit #194) */}
+      <div className="mode-switch" role="group" aria-label="검색 방식">
+        {(["keyword", "semantic"] as const).map((value) => (
+          <button
+            key={value}
+            type="button"
+            aria-pressed={mode === value}
+            className={mode === value ? "active" : ""}
+            onClick={() => switchMode(value)}
+          >
+            {value === "keyword" ? "키워드" : "의미"}
+          </button>
+        ))}
+        <span className="muted">
+          {semantic
+            ? meta?.semantic
+              ? `자연어 설명이나 코드 조각과 뜻이 가까운 삭제 함수 (FULL_FUNCTION ${num(meta.semantic.count)}건 임베딩)`
+              : "자연어 설명이나 코드 조각과 뜻이 가까운 삭제 함수"
+            : "낱말이 들어간 삭제 (함수 이름·경로·커밋·PR·이슈·코드)"}
+        </span>
+      </div>
+
       <form
-        className="search-bar"
+        className={semantic ? "search-bar semantic" : "search-bar"}
         onSubmit={(event) => {
           event.preventDefault();
           run(input, filters);
         }}
       >
-        <input
-          type="search"
-          value={input}
-          onChange={(event) => setInput(event.target.value)}
-          placeholder="함수 이름, 경로, 커밋 메시지, PR·이슈 제목, 지워진 코드에서 찾기 (예: retry backoff)"
-          aria-label="검색어"
-        />
+        {semantic ? (
+          <textarea
+            value={input}
+            rows={4}
+            onChange={(event) => setInput(event.target.value)}
+            onKeyDown={(event) => {
+              // Enter 는 줄바꿈 (코드 붙여넣기), Ctrl/Cmd+Enter 로 검색
+              if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
+                event.preventDefault();
+                run(input, filters);
+              }
+            }}
+            placeholder={
+              "하는 일을 자연어로 적거나 코드 조각을 붙여넣는다 (Ctrl+Enter 로 검색)\n" +
+              "예: wait longer between retries after a failed request"
+            }
+            aria-label="의미 검색 질의"
+            spellCheck={false}
+          />
+        ) : (
+          <input
+            type="search"
+            value={input}
+            onChange={(event) => setInput(event.target.value)}
+            placeholder="함수 이름, 경로, 커밋 메시지, PR·이슈 제목, 지워진 코드에서 찾기 (예: retry backoff)"
+            aria-label="검색어"
+          />
+        )}
         <button type="submit">검색</button>
       </form>
 
       <div className="examples">
         <span className="muted">예시:</span>
-        {EXAMPLES.map((ex) => (
+        {(semantic ? SEMANTIC_EXAMPLES : EXAMPLES).map((ex) => (
           <button key={ex.label} type="button" className="chip" onClick={() => example(ex)}>
             {ex.label}
           </button>
@@ -282,7 +369,17 @@ export function SearchTab() {
         </label>
       </div>
 
+      {semanticMissing && (
+        <div className="error">
+          의미 검색 임베딩이 아직 없다 — <code>python -m search.embed</code> 를 먼저 돌린다. 키워드 검색은
+          그대로 된다.
+        </div>
+      )}
       {error && <div className="error">검색하지 못했다: {error}</div>}
+
+      {semantic && request && !request.q.trim() && !error && (
+        <p className="empty">의미 검색은 질의가 있어야 한다. 필터만으로 찾으려면 키워드 모드를 쓴다.</p>
+      )}
 
       {!request && !error && (
         <p className="empty">
@@ -291,13 +388,17 @@ export function SearchTab() {
         </p>
       )}
 
-      {request && result && (
+      {request && result && !(request.mode === "semantic" && !request.q.trim()) && (
         <div className={selected ? "results-layout with-detail" : "results-layout"}>
           <div className="results">
             <p className="result-count muted">
               {num(total)}
               {result.total_capped ? "건 이상" : "건"} · {result.elapsed_ms.toFixed(0)}ms
-              {result.match ? "" : " · 검색어 없음, 필터만 (색인 순)"}
+              {result.mode === "semantic"
+                ? " · 유사도 순 (FULL_FUNCTION 만)"
+                : result.match
+                  ? ""
+                  : " · 검색어 없음, 필터만 (색인 순)"}
               {loading && " · 불러오는 중…"}
             </p>
             {result.results.length === 0 && <p className="empty">결과가 없다.</p>}
@@ -315,6 +416,11 @@ export function SearchTab() {
                         {" "}
                         {hit.repo} · {hit.year ?? "?"}
                       </span>
+                      {hit.score != null && (
+                        <span className="score" title="질의와의 코사인 유사도">
+                          유사도 {hit.score.toFixed(3)}
+                        </span>
+                      )}
                     </span>
                     <span className="hit-path">
                       <code>{hit.file_path}</code>

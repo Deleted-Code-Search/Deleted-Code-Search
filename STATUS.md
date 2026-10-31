@@ -1,6 +1,6 @@
 # STATUS (갱신: 2026-10-29, 7주차)
 
-> 주차는 CHARTER §9 표 기준이다 (5주차 = 10/12~). `docs/weekly/`의 파일 번호는 킥오프 주(W1 = 9/09~9/13)부터 세어 한 칸 앞서 있다 — 이번 주 로그는 `docs/weekly/W8.md`다 (아직 쓰지 않았다). 2026-10-28·10-29 갱신은 #184(필터 `v0.9`, `NOISE_GENERATED` 사후 필터) 항목만이다. 2026-10-30 갱신은 #93(통계 대시보드)·#191(검색 1단계) 항목만이다. 2026-10-15 갱신은 게이트 2 판정(#92)과 머지 완료 항목 정리다. 2026-10-13 갱신은 #171 항목만이다. 나머지 내용은 2026-10-10 기준 그대로다.
+> 주차는 CHARTER §9 표 기준이다 (5주차 = 10/12~). `docs/weekly/`의 파일 번호는 킥오프 주(W1 = 9/09~9/13)부터 세어 한 칸 앞서 있다 — 이번 주 로그는 `docs/weekly/W8.md`다 (아직 쓰지 않았다). 2026-10-28·10-29 갱신은 #184(필터 `v0.9`, `NOISE_GENERATED` 사후 필터) 항목만이다. 2026-10-30 갱신은 #93(통계 대시보드)·#191(검색 1단계)·#8·#193(임베딩 모델·검색 2단계) 항목과 문서 버전 줄만이다. 2026-10-15 갱신은 게이트 2 판정(#92)과 머지 완료 항목 정리다. 2026-10-13 갱신은 #171 항목만이다. 나머지 내용은 2026-10-10 기준 그대로다.
 
 ## 지금 단계
 **게이트 2 판정: 미달** (2026-10-15, #92, `docs/meetings/gate-2.md`). 테스트 100건에서 우리 방식 60.0% — 기준 ① min(80%, H 80.8%) = 80.0% 미충족, 기준 ② max(A 33.0%, B 38.0%) + 10%p = 48.0% 충족. ADR-016 결정 3(둘 다 충족해야 통과)에 따라 미달이다. 사전 등록한 미달 시 대응(`docs/evaluation.md`)과 CHARTER §9 버퍼 규정을 따른다.
@@ -15,7 +15,7 @@
 - **데이터셋** — dataset-v0.9 내보내기 구현·로컬 생성 (#83, PR 전). Release 업로드 전 (PR merge 후). 34,391행 `LINK_ONLY`. DB 적재는 #8 때 별도 이슈
 
 - 역할: §6.1 배정 유지 (성제 = 프로덕트·평가·조장 / 재헌 = 파이프라인 / 희수 = 분류·검색)
-- 문서·규칙 버전: CHARTER **v1.21** / 가이드 `GUIDE_VERSION` **v3** / 필터 `FILTER_RULE_VERSION` **v0.9**
+- 문서·규칙 버전: CHARTER **v1.22** / 가이드 `GUIDE_VERSION` **v3** / 필터 `FILTER_RULE_VERSION` **v0.9**
 
 ## 완료된 것
 
@@ -57,6 +57,8 @@
 - **[대시보드] #93 통계 대시보드 (PR 진행 중, 2026-10-30).** 성제. `search/stats.py`(Release `dataset-v0.9` jsonl.gz 를 표준 라이브러리로 한 줄씩 집계 → `docs/reports/dashboard_stats.json`, 집계값만) + `search/api.py`(FastAPI `GET /api/stats`·`/api/health`) + `web/`(React·Vite·recharts, 대시보드 탭만. 검색 탭은 "준비 중", #8). 패널 8개 — 헤드라인 숫자·라벨 출처·이유 분포·근거 등급 분포(확정 500건 / LLM 표본 2,891건 나란히, **MODEL_ONLY 는 이유 분포에 넣지 않는다**)·저장소별 표·연도별 추이·모델·필터 성능(docs/reports json 에서 읽음)·시스템 평가(실행 기록 100/100). 헤드라인 숫자는 summary.json·repos.csv 와 일치(`checks.ok`). API 는 `docker compose up api` 가 기본이다(노트북 스마트 앱 컨트롤이 pydantic_core DLL 을 막을 수 있음) — **compose `api` 서비스는 이 노트북에 Docker 가 없어 실행 검증 전**이고, API 는 로컬 uvicorn·TestClient 로 확인했다
 
 - **[검색] #191 검색 1단계 — SQLite FTS5 키워드 검색 + 검색 탭 (PR 진행 중, 2026-10-30).** 성제. CHARTER §4.2 ⑤ 의 1단계, ADR-022. `search/index.py`(Release `dataset-v0.9` jsonl.gz 100개를 표준 라이브러리로 한 줄씩 → `data/search/dataset-v0.9.sqlite`, gitignore) + `search/api.py`(`GET /api/search`·`/api/search/meta`·`/api/records/{id}`, 기존 `/api/stats` 유지) + `web/` 검색 탭(검색창·필터 6종·결과 강조·상세 패널·예시 검색어). FTS 대상은 함수 이름·경로·커밋 메시지·PR 제목·이슈 제목·지워진 코드(`LINK_ONLY` 는 본문 없음). 필터는 FTS 의 `facets` 토큰으로 푼다. 색인 4.0분 · 7.00 GB, 응답 시간 p50 28ms · p95 388ms (질의 20개, `docs/reports/search_latency.md`, §10.5 ≤ 1초). **임베딩·pgvector(ADR-009)·Precision@10 은 #8 이후 2단계** — ADR-009 는 그대로 둔다. CHARTER v1.21 §5 표에 ADR-022 반영 (PR 승인으로 팀 확인 갈음), §4.2 ⑤ 본문은 #8 때
+
+- **[검색] #8 임베딩 모델 결정 + #193 검색 2단계 의미 검색 (PR 진행 중, 2026-10-30, 전체 임베딩 2026-10-31).** 성제 (`search/` 는 §6.1 상 희수 영역 — PR 본문에 적음). **모델 `BAAI/bge-small-en-v1.5`, 토큰 상한 256** (ADR-023, `docs/reports/embedding_model_choice.md`): 후보 3개(jina-embeddings-v2-base-code · granite-embedding-small-english-r2 · bge-small)를 표본 50건 + 자연어 질의 10개 + 처리량 1,000건으로 비교. jina-code 는 128 토큰에서도 72만 건 9.9시간(8시간 초과)이라 버렸다. **벡터는 pgvector(ADR-009) 대신 numpy 파일** — ADR-009 는 대체됨. `search/embed.py`(FULL_FUNCTION 723,087건 → `data/search/semantic/` float16 벡터·필터 메타·manifest, 저장소 단위 조각·이어 하기) + `search/semantic.py`(전수 내적, 서버 시작 때 float32 로 메모리에) + `GET /api/search?mode=semantic`(기본 keyword 그대로, 파일 없으면 503) + 검색 탭 "키워드 / 의미" 전환. **전체 임베딩 완료**: 723,087건 · 384차원 · 0.75 GB · 324.6분(벤치 추정 5.3시간과 맞음). 실데이터 응답 p50 46ms · p95 50ms, 서버 시작 때 모델·벡터 읽기 1.3초 (`docs/reports/search_latency_semantic.md`). 시연 예시 3개 실데이터 확인(그대로). 남은 것: 블라인드 판정 시트(`docs/reports/search_relevance.md`, Precision@10 은 성제·희수 두 명이 판정, 시트 `docs/reports/search_relevance_sheet.csv` 198행 생성, #193 은 판정까지 열어 둔다). CHARTER v1.22 §4.2 ⑤·§5·§7·§17 (PR 승인으로 팀 확인 갈음)
 
 ```
 #86 분류기 학습·평가 (희수) — 완료
