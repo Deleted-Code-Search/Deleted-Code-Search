@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DEAD|커밋 메시지가 \"Deprecate V0 Neuron backend\"라 명시하고, 삭제된 테스트가 `current_platform.use_transformers_neuronx()`로 V0 백엔드(TNx) 기능을 검증하던 것이므로 검증 대상이 사라져 삭제됨"}

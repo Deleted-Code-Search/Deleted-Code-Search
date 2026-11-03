@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|커밋 메시지가 test_worker_queue_alias_reconnect와 test_explicit_routing_without_default_queue 두 테스트를 smoke 스위트로 이동시켰다고 명시하고, 이 헬퍼 함수를 쓰던 테스트들이 다른 파일로 옮겨지면서 통합 테스트 파일에 더 이상 필요 없게 되었음"}

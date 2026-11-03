@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 서빙 시그니처를 `__init__()`에서 자동 생성하도록 재구성한다고 밝히고, 커밋 메시지의 \"Obliterate lots and lots of serving sig and dummy overrides\"·\"Complete removal of dummy/serving overrides in RoBERTa\"가 이 모델의 수동 serving_output 오버라이드를 제거 대상으로 지목한다."}

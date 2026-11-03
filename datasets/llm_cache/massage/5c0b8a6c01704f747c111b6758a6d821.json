@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|커밋 메시지와 PR 본문이 `group_cell_elements` 함수를 이름으로 지목하며 \"Move nested function group_cell_elements out of _handle_tables for readability\"라고 삭제 이유를 명시함"}

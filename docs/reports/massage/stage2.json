@@ -1,0 +1,408 @@
+{
+  "prefix": "massage",
+  "not_gate2": "게이트 2 판정은 60.0% 미달 그대로다",
+  "stage1": {
+    "strict": 60,
+    "lenient": 78
+  },
+  "floor": {
+    "a": {
+      "strict": 33,
+      "lenient": 51
+    },
+    "b": {
+      "strict": 38,
+      "lenient": 54
+    },
+    "unk": {
+      "strict": 50,
+      "lenient": 67
+    }
+  },
+  "blends": [
+    {
+      "name": "massage/blend:design-b확인",
+      "unk_predicted": 59,
+      "strict": 63,
+      "lenient": 78
+    },
+    {
+      "name": "massage/blend:ours",
+      "unk_predicted": 46,
+      "strict": 60,
+      "lenient": 78
+    },
+    {
+      "name": "massage/blend:b-unk→unk",
+      "unk_predicted": 51,
+      "strict": 59,
+      "lenient": 77
+    },
+    {
+      "name": "massage/blend:unk점수<0.6→b",
+      "unk_predicted": 45,
+      "strict": 59,
+      "lenient": 77
+    },
+    {
+      "name": "massage/blend:unk→a=b",
+      "unk_predicted": 42,
+      "strict": 60,
+      "lenient": 76
+    },
+    {
+      "name": "massage/blend:점수<0.6+불일치→unk",
+      "unk_predicted": 51,
+      "strict": 60,
+      "lenient": 76
+    },
+    {
+      "name": "massage/blend:unk점수<0.7→b",
+      "unk_predicted": 43,
+      "strict": 58,
+      "lenient": 76
+    },
+    {
+      "name": "massage/blend:점수<0.9+불일치→unk",
+      "unk_predicted": 65,
+      "strict": 61,
+      "lenient": 75
+    },
+    {
+      "name": "massage/blend:점수<1.0+불일치→unk",
+      "unk_predicted": 65,
+      "strict": 61,
+      "lenient": 75
+    },
+    {
+      "name": "massage/blend:점수<0.8+불일치→unk",
+      "unk_predicted": 64,
+      "strict": 60,
+      "lenient": 74
+    },
+    {
+      "name": "massage/blend:점수<1.2+불일치→unk",
+      "unk_predicted": 66,
+      "strict": 60,
+      "lenient": 74
+    },
+    {
+      "name": "massage/blend:unk점수<0.9→b",
+      "unk_predicted": 34,
+      "strict": 59,
+      "lenient": 74
+    },
+    {
+      "name": "massage/blend:unk점수<0.8→b",
+      "unk_predicted": 38,
+      "strict": 58,
+      "lenient": 74
+    },
+    {
+      "name": "massage/blend:점수<0.6→unk",
+      "unk_predicted": 56,
+      "strict": 58,
+      "lenient": 73
+    },
+    {
+      "name": "massage/blend:다수결(ours,a,b)",
+      "unk_predicted": 47,
+      "strict": 56,
+      "lenient": 73
+    },
+    {
+      "name": "massage/blend:불일치→unk",
+      "unk_predicted": 70,
+      "strict": 58,
+      "lenient": 72
+    },
+    {
+      "name": "massage/blend:unk점수<1.0→b",
+      "unk_predicted": 32,
+      "strict": 57,
+      "lenient": 72
+    },
+    {
+      "name": "massage/blend:점수<0.7+불일치→unk",
+      "unk_predicted": 58,
+      "strict": 57,
+      "lenient": 72
+    },
+    {
+      "name": "massage/blend:점수<0.8→unk",
+      "unk_predicted": 78,
+      "strict": 57,
+      "lenient": 71
+    },
+    {
+      "name": "massage/blend:점수<0.9→unk",
+      "unk_predicted": 80,
+      "strict": 57,
+      "lenient": 71
+    },
+    {
+      "name": "massage/blend:점수<1.0→unk",
+      "unk_predicted": 84,
+      "strict": 57,
+      "lenient": 71
+    },
+    {
+      "name": "massage/blend:unk점수<1.2→b",
+      "unk_predicted": 29,
+      "strict": 55,
+      "lenient": 71
+    },
+    {
+      "name": "massage/blend:점수<1.2→unk",
+      "unk_predicted": 92,
+      "strict": 54,
+      "lenient": 70
+    },
+    {
+      "name": "massage/blend:점수<0.7→unk",
+      "unk_predicted": 68,
+      "strict": 52,
+      "lenient": 65
+    },
+    {
+      "name": "massage/blend:unk→a",
+      "unk_predicted": 31,
+      "strict": 49,
+      "lenient": 65
+    },
+    {
+      "name": "massage/blend:unk→b",
+      "unk_predicted": 16,
+      "strict": 42,
+      "lenient": 58
+    }
+  ],
+  "configs": [
+    {
+      "name": "massage/s1",
+      "config": "s1",
+      "prompt": "c4",
+      "model": "deepseek-ai/deepseek-v4.1-flash",
+      "samples": 1,
+      "unk_predicted": 50,
+      "no_llm_vote": 0,
+      "elapsed_seconds": 297.3,
+      "calls": 103,
+      "failed_calls": 3,
+      "strict": 61,
+      "lenient": 78,
+      "llm_only": {
+        "strict": 60,
+        "lenient": 78
+      }
+    },
+    {
+      "name": "massage/s2",
+      "config": "s2",
+      "prompt": "c5",
+      "model": "deepseek-ai/deepseek-v4.1-flash",
+      "samples": 1,
+      "unk_predicted": 45,
+      "no_llm_vote": 0,
+      "elapsed_seconds": 559.6,
+      "calls": 115,
+      "failed_calls": 15,
+      "strict": 60,
+      "lenient": 75,
+      "llm_only": {
+        "strict": 59,
+        "lenient": 76
+      }
+    },
+    {
+      "name": "massage/s3",
+      "config": "s3",
+      "prompt": "c4",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "samples": 1,
+      "unk_predicted": 47,
+      "no_llm_vote": 0,
+      "elapsed_seconds": 775.8,
+      "calls": 102,
+      "failed_calls": 0,
+      "strict": 65,
+      "lenient": 77,
+      "llm_only": {
+        "strict": 70,
+        "lenient": 80
+      }
+    },
+    {
+      "name": "massage/s4",
+      "config": "s4",
+      "prompt": "c4",
+      "model": "mistralai/mistral-large-4-1t-a52b",
+      "samples": 1,
+      "unk_predicted": 47,
+      "no_llm_vote": 100,
+      "elapsed_seconds": 1807.0,
+      "calls": 24,
+      "failed_calls": 24,
+      "strict": 55,
+      "lenient": 72,
+      "llm_only": {
+        "strict": 50,
+        "lenient": 67
+      }
+    },
+    {
+      "name": "massage/s5",
+      "config": "s5",
+      "prompt": "c5",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "samples": 1,
+      "unk_predicted": 44,
+      "no_llm_vote": 0,
+      "elapsed_seconds": 689.4,
+      "calls": 101,
+      "failed_calls": 0,
+      "strict": 61,
+      "lenient": 74,
+      "llm_only": {
+        "strict": 65,
+        "lenient": 74
+      }
+    },
+    {
+      "name": "massage/s6",
+      "config": "s6",
+      "prompt": "c4",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "samples": 3,
+      "unk_predicted": 49,
+      "no_llm_vote": 0,
+      "elapsed_seconds": 3064.4,
+      "calls": 517,
+      "failed_calls": 216,
+      "strict": 70,
+      "lenient": 82,
+      "llm_only": {
+        "strict": 71,
+        "lenient": 83
+      }
+    }
+  ],
+  "derived": [
+    {
+      "name": "massage/vote:s1+s3+s6",
+      "unk_predicted": 52,
+      "strict": 73,
+      "lenient": 85
+    },
+    {
+      "name": "massage/vote:s3+s5+s6",
+      "unk_predicted": 51,
+      "strict": 72,
+      "lenient": 83
+    },
+    {
+      "name": "massage/s6:llm-only",
+      "unk_predicted": 47,
+      "strict": 71,
+      "lenient": 83
+    },
+    {
+      "name": "massage/vote:s2+s3+s6",
+      "unk_predicted": 50,
+      "strict": 69,
+      "lenient": 82
+    },
+    {
+      "name": "massage/vote:s1+s2+s6",
+      "unk_predicted": 50,
+      "strict": 64,
+      "lenient": 82
+    },
+    {
+      "name": "massage/vote:s1+s5+s6",
+      "unk_predicted": 55,
+      "strict": 69,
+      "lenient": 81
+    },
+    {
+      "name": "massage/vote:s1+s2+s3",
+      "unk_predicted": 50,
+      "strict": 64,
+      "lenient": 81
+    },
+    {
+      "name": "massage/s3:llm-only",
+      "unk_predicted": 46,
+      "strict": 70,
+      "lenient": 80
+    },
+    {
+      "name": "massage/vote:s1+s2+s5",
+      "unk_predicted": 46,
+      "strict": 63,
+      "lenient": 78
+    },
+    {
+      "name": "massage/s1:llm-only",
+      "unk_predicted": 49,
+      "strict": 60,
+      "lenient": 78
+    },
+    {
+      "name": "massage/vote:s1+s3+s5",
+      "unk_predicted": 54,
+      "strict": 66,
+      "lenient": 77
+    },
+    {
+      "name": "massage/s2:llm-only",
+      "unk_predicted": 44,
+      "strict": 59,
+      "lenient": 76
+    },
+    {
+      "name": "massage/vote:s2+s5+s6",
+      "unk_predicted": 49,
+      "strict": 64,
+      "lenient": 75
+    },
+    {
+      "name": "massage/s5:llm-only",
+      "unk_predicted": 40,
+      "strict": 65,
+      "lenient": 74
+    },
+    {
+      "name": "massage/vote:s2+s3+s5",
+      "unk_predicted": 48,
+      "strict": 65,
+      "lenient": 74
+    }
+  ],
+  "tried": 46,
+  "best": {
+    "name": "massage/vote:s1+s3+s6",
+    "unk_predicted": 52,
+    "strict": 73,
+    "lenient": 85
+  },
+  "best_cost": "s1, s3, s6 실행 합계 69.0분, 호출 722회 (NVIDIA 무료 API)",
+  "best_paired": {
+    "strict": {
+      "new_only": 19,
+      "ours_only": 6,
+      "p": 0.01463329792022705
+    },
+    "lenient": {
+      "new_only": 11,
+      "ours_only": 4,
+      "p": 0.11846923828125
+    }
+  },
+  "best_confusion": {
+    "정답 UNK / 예측 UNK": 42,
+    "정답 UNK / 예측 이유": 8,
+    "정답 이유 / 예측 UNK": 10,
+    "정답 이유 / 예측 이유": 40
+  }
+}

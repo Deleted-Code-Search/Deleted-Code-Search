@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "LIB|PR 본문이 \"custom data management object\"가 `DataUpdateCoordinator`(표준 라이브러리)와 중복된다며 이를 코디네이터로 교체한다고 명시했고, 삭제된 `async_update`가 그 커스텀 객체의 업데이트 로직이었으며 추가된 코드에서 `OpenUvCoordinator`(DataUpdateCoordinator 상속)와 `async_refresh`로 대체되었음"}

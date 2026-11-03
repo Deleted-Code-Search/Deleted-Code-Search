@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|PR 설명과 커밋 메시지가 \"custom OpenUV data object\"를 `DataUpdateCoordinator` 기반 coordinators로 교체한다고 명시하며, 삭제된 `async_update`는 그 구형 객체에 속해 있어 새 아키텍처에서 더 이상 맞지 않게 되었음. 동일한 데이터 갱신 작업은 새로운 coordinator 패턴(`OpenUvCoordinator`, `CoordinatorEntity`)에서 계속됨."}

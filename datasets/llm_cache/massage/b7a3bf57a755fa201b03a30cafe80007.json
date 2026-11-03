@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "UNK|커밋 메시지가 테스트들을 t/smoke/tests/test_worker.py로 이동시켰다고 명시하고 이 헬퍼 함수가 이동된 테스트(test_worker_queue_alias_reconnect)에 속해 있어, 이 파일의 삭제는 순수 이동의 소스 측면에 불과함"}

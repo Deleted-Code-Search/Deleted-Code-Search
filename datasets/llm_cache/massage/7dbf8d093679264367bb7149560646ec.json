@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|PR #901 본문이 \"concurrency backends are not needed anymore as the core networking stuff is done with HTTPCore now\"라며 trio 백엔드의 TLS 처리를 HTTPCore로 대체했음을 밝힌다."}

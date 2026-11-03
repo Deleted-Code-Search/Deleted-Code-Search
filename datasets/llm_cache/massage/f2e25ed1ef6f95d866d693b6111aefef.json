@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR #43028 본문이 \"Removes all Selenium support\", \"Playwright is now the sole WebDriver backend\", \"Removes existing feature or API\"라며 Selenium 기반 WebDriver 기능 자체를 제거한다고 명시했고, 이 함수는 그 Selenium 경로의 타임아웃 정규화 코드다."}

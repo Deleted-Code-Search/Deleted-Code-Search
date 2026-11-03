@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|삭제된 `model_modify_json_schema` 함수가 같은 커밋에서 추가된 두 개의 새 테스트 클래스(`PokemonList`, `PokemonDict`)에 동일한 본문으로 재등장해, 테스트 구조가 새로운 밸리데이터/시리얼라이저 체계로 재구성되면서 기존 테스트 클래스가 대체됐음을 보여준다."}

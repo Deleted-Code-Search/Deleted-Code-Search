@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "LIB|커밋 메시지가 \"remove pandas/io/gbq.py and tests and replace with pandas-gbq\"라고 명시하고, 이슈 #15347이 pandas-gbq 패키지로 마이그레이션한다고 설명하며, 추가된 코드에서 `pandas_gbq`를 import해 사용하므로 내부 구현을 외부 라이브러리로 교체하면서 테스트도 함께 삭제된 것임"}

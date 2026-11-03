@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|PR 본문이 \"concurrency backends are not needed anymore as the core networking stuff is done with HTTPCore now\"라고 밝혀, 백엔드 아키텍처 변경(HTTPCore로 이관)으로 이 함수·파일·디렉터리 전체가 불필요해졌음을 명시함"}

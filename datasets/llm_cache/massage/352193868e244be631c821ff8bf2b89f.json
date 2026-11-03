@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DEAD|커밋이 PR #5615(tool calling for Llama-3, Mistral, Gemma 4 on safetensors + MLX)를 되돌려 구현 코드가 제거되었으므로, 해당 기능을 검증하던 이 테스트도 검증 대상이 없어져 함께 삭제됨"}

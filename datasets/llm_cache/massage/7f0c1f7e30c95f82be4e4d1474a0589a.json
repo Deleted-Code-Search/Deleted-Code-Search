@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "LIB|PR 본문이 \"removing all vendored dependencies from Requests\"라고 명시했고, 해당 파일이 `requests/packages/chardet/`(벤더링된 의존성)에 위치하며, 이 커밋에서 벤더링 구현을 삭제함으로써 외부 라이브러리(chardet)로 대체함을 나타낸다."}

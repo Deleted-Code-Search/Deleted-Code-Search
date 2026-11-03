@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "FEAT|PR 본문이 \"Trawling through and dropping sync support everywhere\"라며 동기 지원을 의도적으로 제거한다고 명시했고, WSGI 디스패처가 동기 인터페이스이므로 이 생성자 삭제는 기능 폐기에 해당한다."}

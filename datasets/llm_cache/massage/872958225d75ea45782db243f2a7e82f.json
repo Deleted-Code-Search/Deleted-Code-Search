@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DEAD|PR 본문이 \"transformers-cli command lines\"를 폐기(deprecate)한다고 명시했고, 삭제된 테스트가 `transformers-cli lfs-enable-largefiles`를 호출해 검증하던 대상이므로 검증 대상 소실로 인한 삭제(DEAD)다."}

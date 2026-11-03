@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|커밋 메시지 \"Integrated the admin\"와 추가된 Flask-Admin 관련 코드(Admin, BaseView, expose, sqla 임포트 및 설정)가 맞춤 라우트 방식에서 어드민 인터페이스 방식으로 구조·인터페이스를 교체했음을 보여주며, 삭제된 datasource 라우트가 그 구 구조에 속해 제거되었음"}

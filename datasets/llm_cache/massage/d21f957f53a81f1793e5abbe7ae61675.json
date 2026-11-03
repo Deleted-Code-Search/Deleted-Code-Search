@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|대체 코드가 data_format·height_axis·width_axis를 직접 써서 출력 형태를 계산하도록 완전히 다시 작성됐고, 커밋 전반이 데이터 포맷 지원과 ops 전환으로 레이어 구조·책임을 바꾼 재설계다"}

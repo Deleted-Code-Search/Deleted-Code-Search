@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "UNK|커밋 메시지와 PR 본문이 'legacy daemon CLI' 전체 제거만 말하고 이 테스트나 tunnel_manager를 이름으로 지목하지 않으며, 삭제된 테스트 본문에도 @skip·deprecated 등 이유 표지가 없고, 같은 파일에 추가된 코드나 호출자 변화도 보이지 않아 6가지 근거 중 어느 것도 화면에서 특정할 수 없다."}

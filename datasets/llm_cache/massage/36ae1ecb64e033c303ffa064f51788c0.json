@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "FEAT|PR 제목과 커밋 메시지가 \"Deprecate TF + JAX\"와 \"Delete the tests\"로 TF/JAX 지원 기능 제거와 그에 따른 테스트 삭제를 명시하고, 해당 파일이 Flax/JAX 모델 테스트 파일임"}

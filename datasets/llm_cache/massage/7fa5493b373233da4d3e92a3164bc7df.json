@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|PR 본문이 \"Replaced DoclingParseDocumentBackend with a deprecated compatibility wrapper around ThreadedDoclingParseDocumentBackend\"라며 백엔드 교체를 명시했고, 삭제된 헬퍼가 구 백엔드(DoclingParseDocumentBackend)를 쓰던 테스트 인프라였으며, 추가된 테스트가 새 백엔드(ThreadedDoclingParseDocumentBackend)를 직접 구성해 쓰므로 구조 변경에 따른 삭제다."}

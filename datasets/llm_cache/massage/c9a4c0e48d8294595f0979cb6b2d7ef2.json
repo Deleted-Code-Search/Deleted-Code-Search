@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 자리에 들어온 대체 코드 `async def __aexit__(self, *a): pass`가 동일한 정리 동작을 이어받았고, 커밋 메시지가 async 클라이언트를 공유 베이스 위의 형제로 재구성한다고 밝히고 있다."}

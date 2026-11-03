@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "BUG|PR 본문이 \"That gate never engages\", \"pending is dead code\", \"The next encode_into then overwrites it mid-flight\"라며 구체적 에러(RuntimeError, ValidationError)와 함께 버퍼 재사용 경쟁 조건을 설명하고, 이 함수가 그 깨진 게이트의 일부였음을 명시함"}

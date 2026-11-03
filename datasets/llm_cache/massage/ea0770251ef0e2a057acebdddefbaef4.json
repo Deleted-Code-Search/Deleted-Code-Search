@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|커밋 메시지와 PR 제목·본문이 \"Refactor API using SIP-35\"라며 대시보드 API 구조를 재설계함을 명시하고, 이 파일이 그 API 구현체인데 pre_load 훅이 새 구조에서 맞지 않아 삭제됨"}

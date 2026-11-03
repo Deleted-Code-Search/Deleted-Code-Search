@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|커밋 메시지 \"Complete removal of dummy/serving overrides in RoBERTa\"와 \"Obliterate lots and lots of serving sig and dummy overrides\"가 이 함수가 속한 수동 오버라이드 패턴을 명시하며, PR 본문이 `self.call` 검사로 서빙 시그니처를 자동 추론하는 새 설계로 대체함을 설명하므로 구조·책임 변경(DESIGN)이다."}

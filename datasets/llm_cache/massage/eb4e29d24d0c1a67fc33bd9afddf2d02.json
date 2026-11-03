@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "UNK|테스트 함수인데 이유 문장이 이 테스트를 이름으로 가리키지 않고, 삭제된 본문도 @skip·@xfail·단정문 없음 등 이유를 드러내지 않으며, 테스트 대상 재편만으로는 FEAT/DESIGN을 고르지 않음"}

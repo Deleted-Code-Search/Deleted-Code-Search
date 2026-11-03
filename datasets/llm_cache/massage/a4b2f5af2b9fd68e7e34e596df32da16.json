@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 \"Removed obsolete cookie test mixing bytes with str\"라며 이 테스트가 검증하던 바이트/str 혼용 동작이 Python 3에서 더 이상 유효하지 않아 검증 대상이 사라졌음을 밝힌다."}

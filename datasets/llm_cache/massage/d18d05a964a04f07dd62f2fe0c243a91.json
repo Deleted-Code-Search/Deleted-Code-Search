@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DEAD|PR 본문이 `hf_api` 모듈 제거와 이를 의존하는 `transformers-cli` 명령어들(`lfs-enable-largefiles` 포함)의 폐기를 명시하여, 이 테스트가 호출하던 대상이 이 커밋에서 삭제되었음을 나타냄"}

@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|PR 본문에서 \"We no longer have ContentStream anywhere internally\"라며 ContentStream 추상화를 완전히 제거하고 plain Iterable/AsyncIterable 타입과 새로운 스트림 클래스들(PlainByteStream, GeneratorStream 등)로 교체한다고 명시했고, 이슈 #1253에서 \"Drop can_replay() on the httpx implementations\"를 직접 지시함"}

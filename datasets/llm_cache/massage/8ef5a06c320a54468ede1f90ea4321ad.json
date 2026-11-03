@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|삭제된 `__aexit__`가 테스트 내 헬퍼 클래스의 일부로 보이나, 커밋 메시지·PR 본문 어디에도 이 테스트 헬퍼나 `__aexit__`를 이름으로 가리키며 삭제 이유를 말하는 문장이 없고, 같은 자리에 들어온 대체 코드(`async def __aexit__(self, *a): pass`)는 시그니처만 바뀐 동형 코드라 이유를 특정할 수 없다."}

@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "FEAT|PR 제목과 본문이 \"이미 deprecated 된 모델들을 V5를 위해 삭제한다\"고 명시하고, 파일 경로 `models/deprecated/deta/`가 해당 모델이 폐기 대상임을 보여주며, 이 함수가 그 모델 구현의 일부로 함께 제거되었음"}

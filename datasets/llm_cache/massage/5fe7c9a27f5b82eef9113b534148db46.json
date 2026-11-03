@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "UNK|커밋 메시지가 \"split/collect/parametrize tests\"로 전체 테스트 재구성을만 서술할 뿐 이 특정 테스트 함수를 이름으로 지목하지 않고, 대체 코드도 화면에 없으며(없음), 삭제된 본문에 @skip·@xfail 등 제거 사유 표식도 없다"}

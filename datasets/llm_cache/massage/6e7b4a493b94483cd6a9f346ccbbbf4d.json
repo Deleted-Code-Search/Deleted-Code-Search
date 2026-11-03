@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "FEAT|커밋 메시지 \"MNT Remove Imputer in preprocessing\"와 PR 제목 \"[MRG] DEP remove Imputer in preprocessing\", 본문 \"Remove Imputer from the preprocessing\"가 Imputer 클래스 전체 제거를 명시하며, 이 함수는 그 클래스의 내부 메서드이므로 사용자 기능(공개 API) 자체가 폐기된 것임"}

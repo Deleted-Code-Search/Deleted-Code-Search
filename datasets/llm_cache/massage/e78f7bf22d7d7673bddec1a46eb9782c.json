@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR #544 \"Drop sync\"가 동기 지원을 전면 제거한다고 밝히고, 이 WSGI 디스패처의 동기 클라이언트 생성자도 그 대상이라 공개 기능 자체가 사라졌다."}

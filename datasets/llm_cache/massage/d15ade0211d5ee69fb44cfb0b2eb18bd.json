@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DEAD|커밋 메시지 \"Drop unneccessary __hash__ methods\"가 이 테스트가 검증하던 `SSLConfig.__hash__` 메서드 제거를 명시하므로 테스트 대상이 사라져 삭제된 경우(DEAD)에 해당한다."}

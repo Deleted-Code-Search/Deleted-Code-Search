@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "UNK|커밋 메시지가 일반적인 한 줄 서술뿐이고(“Test all methods”, “Resolve some bugs” 등), 삭제된 엔드포인트 `get_task_status`를 이름으로 지목하며 이유를 설명하는 문장이 없으며, 대체 코드·호출자 변화·공개 표면 변경 기록 등 6종 근거도 화면에 보이지 않음"}

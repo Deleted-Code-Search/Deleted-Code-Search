@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "UNK|커밋 메시지가 'remove everything', 'Squashed pyextra changes' 등 대량 삭제 사실만 서술하고 이 테스트 함수나 대상 모듈(jsonrpc)을 이름으로 지목하지 않으며, 대체 코드·호출자 변화·공개 표면 변화 등 6종 근거가 화면에 없고 동형 삭제 패턴(전체 서브트리 제거)에만 해당해 함수 이름을 바꿔도 같은 설명이 성립한다"}

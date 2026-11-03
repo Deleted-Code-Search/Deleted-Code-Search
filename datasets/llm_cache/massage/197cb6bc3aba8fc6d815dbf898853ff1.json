@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|커밋 메시지 \"Use attributes in wilight\"와 추가된 코드 `self._attr_name = item_name`이 Home Assistant 엔티티 표준 속성 패턴으로 전환하면서 name 프로퍼티를 _attr_name 속성으로 대체했음을 보여준다."}

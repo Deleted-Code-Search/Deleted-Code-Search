@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "LIB|PR 본문이 \"hf_api 모듈을 Transformers에서 제거하고 huggingface_hub의 것을 사용한다\"고 명시하며, 삭제된 테스트가 해당 모듈과 폐기되는 transformers-cli 명령을 검증하던 것이므로 외부 라이브러리로 대체되면서 테스트도 함께 제거됨"}

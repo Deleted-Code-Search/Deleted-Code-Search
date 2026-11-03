@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|PR 본문과 이슈 #1253이 ContentStream 전체를 제거하고 스트림 인터페이스를 `Union[Iterable[bytes], AsyncIterable[bytes]]` 기반으로 재설계하면서 `can_replay()` 메서드를 새 클래스들(`GeneratorStream`, `AsyncGeneratorStream` 등)의 `_is_stream_consumed` 플래그와 예외 발생 방식으로 대체한다고 명시함"}

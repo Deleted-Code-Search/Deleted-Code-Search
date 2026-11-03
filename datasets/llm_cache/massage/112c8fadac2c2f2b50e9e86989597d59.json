@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DEAD|커밋 메시지와 PR 본문이 \"obsolete cookie test mixing bytes with str\"라며 이 테스트를 이름으로 지목하고, Python 3의 SimpleCookie가 bytes를 str로 강제 변환해 해당 검증 대상이 사라졌음을 설명하므로 검증할 대상이 없어져 삭제된 DEAD로 판단."}

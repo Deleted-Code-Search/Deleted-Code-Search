@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|PR 본문이 \"Refactor chatglm loading logic to use `AutoWeightsLoader`\"라 명시해 이 함수의 로직을 내부 공용 유틸리티(AutoWeightsLoader)로 위임하도록 구조를 바꿨음을 보이고, 대체 코드가 `AutoWeightsLoader(self).load_weights(...)`로 바뀐 점이 이를 뒷받침한다."}

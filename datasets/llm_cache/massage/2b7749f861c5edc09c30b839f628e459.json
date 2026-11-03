@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|경로가 vendor/ 아래이고 PR 본문이 vendored 의존성 제거를 말하지만, 이 레코드의 함수를 이름으로 가리키는 이유 문장도 근거 6종도 화면에 없다 (vendored-path, no-replacement, no-caller-info)"}

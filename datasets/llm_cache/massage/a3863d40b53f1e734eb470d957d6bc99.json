@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|이 테스트 헬퍼가 쓰던 DoclingParseDocumentBackend가 PR #4244에서 제거·deprecated 호환 래퍼로 대체되어 검증 대상이 사라졌고, 같은 파일에 추가된 테스트는 ThreadedDoclingParseDocumentBackend와 PyPdfiumDocumentBackend를 직접 구성해 헬퍼를 대체한다."}

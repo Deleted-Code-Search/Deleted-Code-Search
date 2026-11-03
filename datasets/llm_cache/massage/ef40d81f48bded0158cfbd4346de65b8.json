@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DEAD|PR 본문이 `Config.allow_extra` 제거를 명시하고 이 테스트가 그 대상을 검증하므로 대상이 사라져 테스트가 데드 코드가 됨"}

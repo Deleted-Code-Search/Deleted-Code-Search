@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "FEAT|커밋 메시지 \"delete already deprecated models\"와 PR 본문 \"delete these already deprecated models for V5\"가 이 모델 파일 전체가 폐기·지원 종료돼 삭제됨을 명시한다."}

@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DEAD|PR 본문이 \"Remove code tagged to be removed in v.0.20\"라며 `grid_search.GridSearchCV`를 제거 대상으로 명시했고, 이 테스트가 그 클래스를 검증하므로 검증 대상이 사라져 삭제됐다."}

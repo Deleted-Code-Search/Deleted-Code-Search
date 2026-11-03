@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DEAD|커밋 메시지와 PR 본문이 \"_pairwise 속성 제거\"를 명시하고, 이 테스트가 그 속성(ovr_false._pairwise, ovr_true._pairwise)을 검증하므로 테스트 대상이 사라져 죽은 코드가 됨"}

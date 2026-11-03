@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|커밋 메시지가 pandas/io/gbq.py와 테스트를 제거하고 pandas-gbq로 교체한다고 밝히고, 추가된 코드가 pandas_gbq 패키지를 importorskip으로 불러 그 기능을 이어받는다."}

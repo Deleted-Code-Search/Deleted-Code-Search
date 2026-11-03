@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "UNK|커밋 메시지와 PR 본문이 embedchain/ 디렉토리 전체를 mem0ai/embedchain-archive 저장소로 추출·이동(pure directory move, git subtree split)한다고 명시하고, 이 파일(embedchain/embedchain/cli.py)이 이동 대상에 포함된다"}

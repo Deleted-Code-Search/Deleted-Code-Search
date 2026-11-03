@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|커밋 메시지 \"Removed support for passing raw column aliases to order_by()\"가 이 테스트가 검증하던 사용자 기능 자체의 제거를 명시하고, 같은 커밋이 경고 대신 FieldError를 기대하는 테스트로 대체함"}

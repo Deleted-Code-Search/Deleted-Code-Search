@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|PR 설명과 커밋 메시지(\"Complete removal of dummy/serving overrides in RoBERTa\", \"Obliterate lots and lots of serving sig and dummy overrides\")가 TF 서빙 시그니처를 각 모델의 수동 오버라이드에서 `self.call` 자동 검사·`__init__` 중앙화로 구조 변경함을 명시하며, 이 함수가 그 수동 오버라이드 패턴에 속해 삭제됨"}

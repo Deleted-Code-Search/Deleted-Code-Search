@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "FEAT|커밋 메시지·PR·이슈가 \"V0 Neuron backend deprecation\"과 \"TNx framework will be deprecated\"를 명시하며, 삭제된 테스트가 TNx 전용 샘플링 파라미터 업데이트를 검증하므로 사용자 기능(프레임워크) 자체가 제거돼 테스트도 함께 폐기됨"}

@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "FEAT|커밋 메시지와 PR 본문이 \"_pairwise 속성을 폐기 주기 후 제거한다\"고 명시하며, 이 테스트는 그 속성을 검증하므로 사용자 대상 기능 제거에 따른 테스트 삭제다."}

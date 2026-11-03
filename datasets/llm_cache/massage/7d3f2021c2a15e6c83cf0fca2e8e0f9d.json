@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|커밋 메시지 \"Remove boilerplate code in favour of attributes\"와 추가된 코드에서 `self._attr_device_class = SENSOR_TYPES[self.type][4]` 같은 `_attr_*` 속성 직접 할당으로 property getter 패턴을 대체한 것이 보인다."}

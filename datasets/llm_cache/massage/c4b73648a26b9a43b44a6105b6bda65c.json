@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "FEAT|커밋 메시지가 \"Reverted 'Fixed #28889 -- Prevented double submission of admin forms.'\"라고 명시하여 이중 제출 방지 기능 자체가 되돌려졌음을 밝히고, 삭제된 테스트 파일명(test_prevent_double_submission.py)과 테스트명(test_submit_and_go_back)이 그 기능을 검증하던 것임"}

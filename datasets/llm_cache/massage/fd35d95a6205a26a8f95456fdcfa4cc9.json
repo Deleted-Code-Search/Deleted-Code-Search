@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|PR 본문이 \"v3 pipeline with hybrid search, entity extraction, and additive scoring\"로 파이프라인을 전면 재설계한다고 명시하고, search() 기본값·점수 계산·rerank 등 검색 인터페이스가 변경되는 breaking changes를 나열하며, 이 함수가 사용하던 구형 코사인 유사도 검색 방식이 새로운 하이브리드 검색(시맨틱+BM25+엔티티 부스트)으로 대체됐음을 보여준다."}

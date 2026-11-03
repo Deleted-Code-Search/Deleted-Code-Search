@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "PERF|커밋 메시지가 StateProxy 제거 이유로 \"simplicity and performance\"와 attr read 24x, write 27x, list append 19x 빠른 벤치마크를 명시했고, 삭제된 __add__는 프록시 리스트 연산 오버헤드의 일부다."}

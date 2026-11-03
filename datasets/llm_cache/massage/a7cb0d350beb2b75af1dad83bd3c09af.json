@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|PR 제목·본문이 Playwright 제거·cdp-use 전환을 위한 'massive rewrite'라 밝히고, 삭제된 close()가 'Deprecated: backwards-compatibility with old method Browser().close() and playwright BrowserContext.close()' 주석으로 구 Playwright API 호환 래퍼였음이 드러나며, 같은 커밋에 BrowserStopEvent·on_BrowserStartEvent 등 이벤트 기반 새 구조가 추가돼 같은 역할(브라우저 종료)을 다른 API로 이어받음"}

@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|커밋 메시지와 PR 본문이 \"remove Selenium support, require Playwright\", \"removes the old Selenium code path entirely\"라 명시하고, 추가된 코드가 Playwright 기반 구현으로 대체됨을 보여주며, 이 함수가 Selenium 전용 타임아웃 정규화 로직으로 구조 재편 과정에서 불필요해졌음"}

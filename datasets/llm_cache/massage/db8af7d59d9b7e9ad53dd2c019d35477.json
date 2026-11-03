@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DEAD|PR 본문이 \"_pairwise attribute를 deprecation cycle 후 제거한다\"고 명시하고, 삭제된 테스트가 바로 그 `_pairwise` 속성을 검증하므로 검증 대상이 사라져 테스트가 불필요해졌다."}

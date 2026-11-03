@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "FEAT|커밋 메시지 \"delete already deprecated models\"와 PR 본문 \"delete these already deprecated models for V5\"가 이 파일 경로(src/transformers/models/deprecated/deta/)의 모델 전체를 삭제한다고 명시하므로, 공개 모델 기능 제거다."}

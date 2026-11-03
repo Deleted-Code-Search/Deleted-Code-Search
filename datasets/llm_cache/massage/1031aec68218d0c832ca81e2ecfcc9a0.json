@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|PR 본문이 \"removing all vendored dependencies\"라고 명시하고, 파일이 `requests/packages/chardet/`(벤더링된 의존성) 경로에 있어 아키텍처 변경으로 삭제됐음을 나타냄"}

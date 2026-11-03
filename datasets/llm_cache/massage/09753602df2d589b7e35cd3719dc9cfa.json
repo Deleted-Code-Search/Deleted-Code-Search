@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|커밋 메시지와 PR 본문이 0.20 디프리케이션 완료로 `sklearn.grid_search` 모듈 전체를 `sklearn.model_selection`로 재구성하면서 제거한다고 명시했고, 이 테스트는 삭제되는 구 모듈의 `GridSearchCV`를 검증하던 것이므로 같은 기능이 새 위치에서 계속됨"}

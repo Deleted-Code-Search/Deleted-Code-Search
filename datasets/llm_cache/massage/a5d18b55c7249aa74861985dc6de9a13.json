@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|같은 위치에 새로운 `__array_wrap__`가 추가되어 `self.values.__array_wrap__`(SparseArray)로 위임하도록 바뀌었고, `__array_ufunc__`도 새로 추가되어 SparseArray에 위임하는 구조로 책임·인터페이스가 재설계됨"}

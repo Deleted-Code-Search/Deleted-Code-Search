@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DEAD|커밋 메시지가 'Prevented double submission of admin forms' 기능 되돌림을 명시하고 이 테스트가 그 기능을 검증하므로 검증 대상이 사라져 삭제됐다."}

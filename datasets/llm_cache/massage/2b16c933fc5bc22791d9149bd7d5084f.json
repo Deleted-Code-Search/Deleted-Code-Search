@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "FEAT|커밋 메시지와 PR 본문이 \"remove Selenium support\", \"removes the old Selenium code path entirely\", \"Removes existing feature or API\"라 명시하며 Selenium 지원을 완전히 폐기한다고 밝혔고, 삭제된 함수가 Selenium 전용 타임아웃 키(command_executor_timeout, implicit_wait 등)를 다루는 webdriver.py 내부에 있다."}

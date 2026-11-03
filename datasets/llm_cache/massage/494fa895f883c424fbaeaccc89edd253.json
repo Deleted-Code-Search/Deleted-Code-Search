@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "UNK|커밋 메시지가 \"Delete the tests\"라고만 하고 이 특정 테스트 헬퍼 함수를 이름으로 지목하지 않으며, 삭제된 본문에도 @skip·@xfail·단정문 부재 등 삭제 이유를 드러내는 표식이 없다."}
