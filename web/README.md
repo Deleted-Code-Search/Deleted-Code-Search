@@ -30,7 +30,7 @@ python -m search.stats
 # 3. 검색 색인 → data/search/dataset-v0.9.sqlite  (표준 라이브러리만, 약 5분 · 약 7GB)
 python -m search.index
 
-# 3-1. (의미 검색) 임베딩 → data/search/semantic/  (FULL_FUNCTION 72만 건, 약 3~5시간, 이어 하기)
+# 3-1. (의미 검색) 임베딩 → data/search/semantic/  (FULL_FUNCTION 72만 건, 실측 324.6분 = 약 5.4시간, 이어 하기)
 pip install -e ".[embed]"
 python -m search.embed
 #   표본만: python -m search.embed --repos pallets/click,psf/requests --out data/search/semantic-sample
