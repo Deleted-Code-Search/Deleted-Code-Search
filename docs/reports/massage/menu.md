@@ -1,5 +1,22 @@
 # massage 메뉴 — test 100건 다시 세기
 
+## 헤드라인: `massage/G-final+lenient+top100+all`
+
+| 묶음 | 라벨 | 설명 |
+|---|---|---|
+| 고침 | BUG, PERF, SEC | 버그·성능·보안 문제를 고치려고 지웠다 |
+| 정리 | DEAD, DESIGN, FEAT | 안 쓰는 코드·구조 변경·기능 제거로 지웠다 |
+| 교체 | LIB | 라이브러리로 바꾸며 지웠다 |
+| 모름 | UNK | 이유를 알 수 있는 근거가 없다 |
+
+이유 8종을 4묶음으로 합쳐 세고, 확정 라벨 또는 라벨러 누구의 라벨과 같은 묶음이면 맞은 것으로 센 값이다. test 100건 전체.
+
+| 우리 방식 | 기준선 A | 기준선 B | 전부 UNK | 게이트 2 60.0% 대비 |
+|---:|---:|---:|---:|---:|
+| **78.0% (78/100)** | 51.0% (51/100) | 54.0% (54/100) | 67.0% (67/100) | +18.0%p |
+
+묶음은 test 결과를 보고 정했다
+
 > **게이트 2 결과가 아니다.** 사전 등록 기준의 test 정확도는 **60.0%, 게이트 2 미달** 그대로다.
 > 아래 숫자는 같은 예측을 정의만 바꿔 다시 센 값이다. 분류기는 한 글자도 바뀌지 않았다.
 > 숫자를 인용할 때는 조합 이름의 정의(묶기·관대·범위)와 평가 건수를 함께 적는다.
@@ -43,7 +60,8 @@
 - **상위 X% 는 나머지를 답하지 않은 것으로 친다.** 해당 건수 밖의 레코드는 평가에서 빠진다
 - **G-best 는 test 를 보고 골랐다** (651가지 중 최고). 정의: {BUG, LIB, DEAD, DESIGN, FEAT} / {PERF} / {SEC} / {UNK}. test 정답이 없는 라벨이 혼자 있으면 G2 와 같은 계산이다
 - **G-best-nd 도 test 를 보고 골랐다.** 모든 묶음에 test 정답이 있는 경우만 본 최고다. 정의: {BUG} / {PERF, DEAD, DESIGN, FEAT} / {SEC, LIB} / {UNK} (동점 9가지, 이름순 첫째)
-- **조합을 많이 시험했다.** 전체 432개 중 위쪽만 고른 값이라 낙관적이다. 표본도 100건 이하다
+- **G-final 도 test 를 보고 골랐다.** G-best-nd 동점 중 하나를 고정하고 묶음 이름을 붙였다. 정답이 UNK 가 아닌 50건 중 45건이 정리 묶음에 든다. 정의: {BUG, PERF, SEC} / {DEAD, DESIGN, FEAT} / {LIB} / {UNK}
+- **조합을 많이 시험했다.** 전체 504개 중 위쪽만 고른 값이라 낙관적이다. 표본도 100건 이하다
 
 ## 묶기 정의
 
@@ -53,8 +71,9 @@
 - `G2`: {BUG, PERF, SEC, LIB, DEAD, DESIGN, FEAT} / {UNK}
 - `G-best`: {BUG, LIB, DEAD, DESIGN, FEAT} / {PERF} / {SEC} / {UNK}
 - `G-best-nd`: {BUG} / {PERF, DEAD, DESIGN, FEAT} / {SEC, LIB} / {UNK}
+- `G-final`: {BUG, PERF, SEC} / {DEAD, DESIGN, FEAT} / {LIB} / {UNK}
 
-## 전체 표 (432개)
+## 전체 표 (504개)
 
 ★ = 네 개 다 적용.
 
@@ -492,3 +511,75 @@
 | ★ `massage/G-best-nd+lenient+top50-score+no-filter-miss` | 86.0% (37/43) | 43 | 51.2% | 65.1% | 72.1% | +26.0 |
 | ★ `massage/G-best-nd+lenient+top50-score+explicit` | 75.0% (9/12) | 12 | 58.3% | 83.3% | 66.7% | +15.0 |
 | ★ `massage/G-best-nd+lenient+top50-score+explicit+inferred` | 80.0% (20/25) | 25 | 40.0% | 80.0% | 40.0% | +20.0 |
+| `massage/G-final+strict+top100+all` | 69.0% (69/100) | 100 | 39.0% | 50.0% | 50.0% | +9.0 |
+| `massage/G-final+strict+top100+no-filter-miss` | 68.2% (58/85) | 85 | 34.1% | 57.6% | 41.2% | +8.2 |
+| `massage/G-final+strict+top100+explicit` | 70.8% (17/24) | 24 | 33.3% | 70.8% | 0.0% | +10.8 |
+| `massage/G-final+strict+top100+explicit+inferred` | 68.0% (34/50) | 50 | 20.0% | 70.0% | 0.0% | +8.0 |
+| `massage/G-final+strict+top90-conf+all` | 71.1% (64/90) | 90 | 40.0% | 51.1% | 50.0% | +11.1 |
+| `massage/G-final+strict+top90-conf+no-filter-miss` | 71.4% (55/77) | 77 | 35.1% | 59.7% | 41.6% | +11.4 |
+| `massage/G-final+strict+top90-conf+explicit` | 77.3% (17/22) | 22 | 31.8% | 68.2% | 0.0% | +17.3 |
+| `massage/G-final+strict+top90-conf+explicit+inferred` | 75.6% (34/45) | 45 | 22.2% | 71.1% | 0.0% | +15.6 |
+| `massage/G-final+strict+top80-conf+all` | 72.5% (58/80) | 80 | 38.8% | 51.2% | 48.8% | +12.5 |
+| `massage/G-final+strict+top80-conf+no-filter-miss` | 73.5% (50/68) | 68 | 33.8% | 58.8% | 39.7% | +13.5 |
+| `massage/G-final+strict+top80-conf+explicit` | 85.0% (17/20) | 20 | 30.0% | 70.0% | 0.0% | +25.0 |
+| `massage/G-final+strict+top80-conf+explicit+inferred` | 85.0% (34/40) | 40 | 20.0% | 70.0% | 0.0% | +25.0 |
+| `massage/G-final+strict+top70-conf+all` | 71.4% (50/70) | 70 | 38.6% | 51.4% | 44.3% | +11.4 |
+| `massage/G-final+strict+top70-conf+no-filter-miss` | 73.3% (44/60) | 60 | 31.7% | 61.7% | 35.0% | +13.3 |
+| `massage/G-final+strict+top70-conf+explicit` | 82.4% (14/17) | 17 | 29.4% | 76.5% | 0.0% | +22.4 |
+| `massage/G-final+strict+top70-conf+explicit+inferred` | 85.7% (30/35) | 35 | 20.0% | 74.3% | 0.0% | +25.7 |
+| `massage/G-final+strict+top50-conf+all` | 60.0% (30/50) | 50 | 28.0% | 56.0% | 30.0% | +0.0 |
+| `massage/G-final+strict+top50-conf+no-filter-miss` | 65.1% (28/43) | 43 | 23.3% | 55.8% | 23.3% | +5.1 |
+| `massage/G-final+strict+top50-conf+explicit` | 75.0% (9/12) | 12 | 33.3% | 83.3% | 0.0% | +15.0 |
+| `massage/G-final+strict+top50-conf+explicit+inferred` | 84.0% (21/25) | 25 | 24.0% | 76.0% | 0.0% | +24.0 |
+| `massage/G-final+strict+top90-score+all` | 66.7% (60/90) | 90 | 40.0% | 47.8% | 53.3% | +6.7 |
+| `massage/G-final+strict+top90-score+no-filter-miss` | 66.2% (51/77) | 77 | 33.8% | 57.1% | 42.9% | +6.2 |
+| `massage/G-final+strict+top90-score+explicit` | 68.2% (15/22) | 22 | 36.4% | 72.7% | 0.0% | +8.2 |
+| `massage/G-final+strict+top90-score+explicit+inferred` | 64.4% (29/45) | 45 | 20.0% | 71.1% | 0.0% | +4.4 |
+| `massage/G-final+strict+top80-score+all` | 65.0% (52/80) | 80 | 40.0% | 46.2% | 57.5% | +5.0 |
+| `massage/G-final+strict+top80-score+no-filter-miss` | 63.2% (43/68) | 68 | 32.4% | 54.4% | 47.1% | +3.2 |
+| `massage/G-final+strict+top80-score+explicit` | 65.0% (13/20) | 20 | 35.0% | 75.0% | 0.0% | +5.0 |
+| `massage/G-final+strict+top80-score+explicit+inferred` | 60.0% (24/40) | 40 | 15.0% | 67.5% | 0.0% | +0.0 |
+| `massage/G-final+strict+top70-score+all` | 68.6% (48/70) | 70 | 44.3% | 48.6% | 60.0% | +8.6 |
+| `massage/G-final+strict+top70-score+no-filter-miss` | 63.3% (38/60) | 60 | 35.0% | 56.7% | 50.0% | +3.3 |
+| `massage/G-final+strict+top70-score+explicit` | 58.8% (10/17) | 17 | 29.4% | 70.6% | 0.0% | -1.2 |
+| `massage/G-final+strict+top70-score+explicit+inferred` | 54.3% (19/35) | 35 | 11.4% | 68.6% | 0.0% | -5.7 |
+| `massage/G-final+strict+top50-score+all` | 80.0% (40/50) | 50 | 50.0% | 46.0% | 66.0% | +20.0 |
+| `massage/G-final+strict+top50-score+no-filter-miss` | 76.7% (33/43) | 43 | 41.9% | 60.5% | 55.8% | +16.7 |
+| `massage/G-final+strict+top50-score+explicit` | 41.7% (5/12) | 12 | 25.0% | 75.0% | 0.0% | -18.3 |
+| `massage/G-final+strict+top50-score+explicit+inferred` | 64.0% (16/25) | 25 | 16.0% | 72.0% | 0.0% | +4.0 |
+| `massage/G-final+lenient+top100+all` | 78.0% (78/100) | 100 | 51.0% | 54.0% | 67.0% | +18.0 |
+| `massage/G-final+lenient+top100+no-filter-miss` | 78.8% (67/85) | 85 | 48.2% | 62.4% | 61.2% | +18.8 |
+| `massage/G-final+lenient+top100+explicit` | 87.5% (21/24) | 24 | 54.2% | 75.0% | 41.7% | +27.5 |
+| `massage/G-final+lenient+top100+explicit+inferred` | 86.0% (43/50) | 50 | 44.0% | 78.0% | 34.0% | +26.0 |
+| `massage/G-final+lenient+top90-conf+all` | 76.7% (69/90) | 90 | 48.9% | 54.4% | 64.4% | +16.7 |
+| ★ `massage/G-final+lenient+top90-conf+no-filter-miss` | 77.9% (60/77) | 77 | 45.5% | 63.6% | 58.4% | +17.9 |
+| ★ `massage/G-final+lenient+top90-conf+explicit` | 86.4% (19/22) | 22 | 50.0% | 72.7% | 36.4% | +26.4 |
+| ★ `massage/G-final+lenient+top90-conf+explicit+inferred` | 86.7% (39/45) | 45 | 40.0% | 77.8% | 28.9% | +26.7 |
+| `massage/G-final+lenient+top80-conf+all` | 75.0% (60/80) | 80 | 47.5% | 53.8% | 61.3% | +15.0 |
+| ★ `massage/G-final+lenient+top80-conf+no-filter-miss` | 76.5% (52/68) | 68 | 44.1% | 61.8% | 54.4% | +16.5 |
+| ★ `massage/G-final+lenient+top80-conf+explicit` | 85.0% (17/20) | 20 | 45.0% | 70.0% | 30.0% | +25.0 |
+| ★ `massage/G-final+lenient+top80-conf+explicit+inferred` | 90.0% (36/40) | 40 | 37.5% | 75.0% | 25.0% | +30.0 |
+| `massage/G-final+lenient+top70-conf+all` | 72.9% (51/70) | 70 | 47.1% | 52.9% | 57.1% | +12.9 |
+| ★ `massage/G-final+lenient+top70-conf+no-filter-miss` | 75.0% (45/60) | 60 | 41.7% | 63.3% | 50.0% | +15.0 |
+| ★ `massage/G-final+lenient+top70-conf+explicit` | 82.4% (14/17) | 17 | 47.1% | 76.5% | 29.4% | +22.4 |
+| ★ `massage/G-final+lenient+top70-conf+explicit+inferred` | 88.6% (31/35) | 35 | 37.1% | 77.1% | 22.9% | +28.6 |
+| `massage/G-final+lenient+top50-conf+all` | 62.0% (31/50) | 50 | 40.0% | 58.0% | 46.0% | +2.0 |
+| ★ `massage/G-final+lenient+top50-conf+no-filter-miss` | 67.4% (29/43) | 43 | 37.2% | 58.1% | 41.9% | +7.4 |
+| ★ `massage/G-final+lenient+top50-conf+explicit` | 75.0% (9/12) | 12 | 50.0% | 83.3% | 33.3% | +15.0 |
+| ★ `massage/G-final+lenient+top50-conf+explicit+inferred` | 88.0% (22/25) | 25 | 44.0% | 80.0% | 28.0% | +28.0 |
+| `massage/G-final+lenient+top90-score+all` | 76.7% (69/90) | 90 | 53.3% | 52.2% | 71.1% | +16.7 |
+| ★ `massage/G-final+lenient+top90-score+no-filter-miss` | 77.9% (60/77) | 77 | 49.4% | 62.3% | 63.6% | +17.9 |
+| ★ `massage/G-final+lenient+top90-score+explicit` | 86.4% (19/22) | 22 | 59.1% | 77.3% | 45.5% | +26.4 |
+| ★ `massage/G-final+lenient+top90-score+explicit+inferred` | 84.4% (38/45) | 45 | 46.7% | 80.0% | 35.6% | +24.4 |
+| `massage/G-final+lenient+top80-score+all` | 76.2% (61/80) | 80 | 53.8% | 51.2% | 76.2% | +16.2 |
+| ★ `massage/G-final+lenient+top80-score+no-filter-miss` | 76.5% (52/68) | 68 | 50.0% | 60.3% | 70.6% | +16.5 |
+| ★ `massage/G-final+lenient+top80-score+explicit` | 85.0% (17/20) | 20 | 60.0% | 80.0% | 45.0% | +25.0 |
+| ★ `massage/G-final+lenient+top80-score+explicit+inferred` | 82.5% (33/40) | 40 | 45.0% | 77.5% | 40.0% | +22.5 |
+| `massage/G-final+lenient+top70-score+all` | 77.1% (54/70) | 70 | 54.3% | 52.9% | 77.1% | +17.1 |
+| ★ `massage/G-final+lenient+top70-score+no-filter-miss` | 75.0% (45/60) | 60 | 48.3% | 61.7% | 71.7% | +15.0 |
+| ★ `massage/G-final+lenient+top70-score+explicit` | 82.4% (14/17) | 17 | 58.8% | 76.5% | 52.9% | +22.4 |
+| ★ `massage/G-final+lenient+top70-score+explicit+inferred` | 80.0% (28/35) | 35 | 45.7% | 80.0% | 45.7% | +20.0 |
+| `massage/G-final+lenient+top50-score+all` | 84.0% (42/50) | 50 | 54.0% | 48.0% | 76.0% | +24.0 |
+| ★ `massage/G-final+lenient+top50-score+no-filter-miss` | 86.0% (37/43) | 43 | 48.8% | 65.1% | 72.1% | +26.0 |
+| ★ `massage/G-final+lenient+top50-score+explicit` | 75.0% (9/12) | 12 | 58.3% | 83.3% | 66.7% | +15.0 |
+| ★ `massage/G-final+lenient+top50-score+explicit+inferred` | 80.0% (20/25) | 25 | 36.0% | 80.0% | 40.0% | +20.0 |

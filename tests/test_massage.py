@@ -3,9 +3,12 @@ import json
 import pytest
 
 from eval.massage import (
+    DEFAULT_LABELS,
+    DEFAULT_PREDICTIONS,
     G2,
     G3,
     G4,
+    G_FINAL,
     Case,
     accuracy_counts,
     best_partition,
@@ -17,6 +20,7 @@ from eval.massage import (
     group_map,
     is_correct,
     iter_partitions,
+    load_cases,
     pick_headlines,
     select_scope,
 )
@@ -214,7 +218,7 @@ def _big_cases():
 def test_compute_names_are_unique_and_prefixed():
     result = compute(_big_cases())
     names = [row["name"] for row in result["combos"]]
-    assert len(names) == len(set(names)) == 6 * 2 * 9 * 4
+    assert len(names) == len(set(names)) == 7 * 2 * 9 * 4
     assert all(name.startswith("massage/") for name in names)
     assert combo_name("orig", False, "top100", "all") in names
 
@@ -250,8 +254,28 @@ def test_headlines_prefer_grouping_not_selected_on_test():
     assert [row["grouping"] for row in pick_headlines(rows)] == ["G2"]
 
 
+def test_g_final_on_committed_test_predictions():
+    cases = load_cases(DEFAULT_LABELS, DEFAULT_PREDICTIONS)
+    result = evaluate(cases, "G-final", G_FINAL, lenient=True)
+    assert result["name"] == "massage/G-final+lenient+top100+all"
+    assert result["n"] == 100
+    assert result["ours_correct"] == 78
+    assert result["baseline_a_correct"] == 51
+    assert result["baseline_b_correct"] == 54
+    assert result["all_unk_correct"] == 67
+    assert result["delta_pp"] == pytest.approx(18.0)
+
+
+def test_g_final_is_a_tie_of_g_best_nd_on_committed_test_predictions():
+    cases = load_cases(DEFAULT_LABELS, DEFAULT_PREDICTIONS)
+    _, correct, _ = best_partition(cases, nondegenerate=True)
+    assert accuracy_counts(cases, "ours", group_map(G_FINAL), lenient=False) == correct
+
+
 def test_menu_says_it_is_not_the_gate_result():
     menu = format_menu(compute(_big_cases()))
+    assert menu.index("## 헤드라인") < menu.index("추천 헤드라인")
+    assert "묶음은 test 결과를 보고 정했다" in menu
     assert "게이트 2 결과가 아니다" in menu
     assert "★" in menu
     assert "추천 헤드라인" in menu

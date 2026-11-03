@@ -25,6 +25,10 @@ G-best (test 를 보고 고른 묶음):
     `G-best-nd` 는 그중 모든 묶음에 test 정답이 1건 이상 있는 경우만 본다. test 정답이 없는
     라벨을 혼자 두어 묶음 수만 채우면 G2 와 같은 계산이 되기 때문이다.
 
+G-final (test 를 보고 고른 묶음을 고정하고 이름을 붙인 것):
+    G-best-nd 동점 중 PERF·SEC 를 BUG 쪽에 둔 구성이다. 우리 방식 숫자는 G-best-nd 와 같다.
+    `G_FINAL` 에 적어 두어 재실행해도 바뀌지 않는다.
+
 실행:
     python -m eval.massage
     python -m eval.massage --out-dir docs/reports/massage
@@ -67,6 +71,15 @@ Partition = tuple[tuple[str, ...], ...]
 G4: Partition = (("FEAT", "DESIGN"), ("BUG", "PERF", "SEC"), ("DEAD", "LIB"), (UNK,))
 G3: Partition = (("FEAT", "DESIGN", "PERF"), ("BUG", "SEC"), ("DEAD", "LIB"), (UNK,))
 G2: Partition = (REASONS, (UNK,))
+G_FINAL: Partition = (("BUG", "PERF", "SEC"), ("DEAD", "DESIGN", "FEAT"), ("LIB",), (UNK,))
+G_FINAL_BLOCKS = (
+    ("고침", "BUG, PERF, SEC", "버그·성능·보안 문제를 고치려고 지웠다"),
+    ("정리", "DEAD, DESIGN, FEAT", "안 쓰는 코드·구조 변경·기능 제거로 지웠다"),
+    ("교체", "LIB", "라이브러리로 바꾸며 지웠다"),
+    ("모름", "UNK", "이유를 알 수 있는 근거가 없다"),
+)
+SELECTED_ON_TEST = ("G-best", "G-best-nd", "G-final")
+FINAL_HEADLINE = f"{PREFIX}/G-final+lenient+top100+all"
 
 
 @dataclass(frozen=True)
@@ -246,6 +259,7 @@ def compute(cases: Sequence[Case]) -> dict[str, Any]:
         "G2": G2,
         "G-best": best,
         "G-best-nd": nondegenerate,
+        "G-final": G_FINAL,
     }
     tops = [(100, "conf"), *((p, k) for k in RANK_KEYS for p in TOP_PERCENTS)]
     rows = [
@@ -277,6 +291,7 @@ def compute(cases: Sequence[Case]) -> dict[str, Any]:
             "ties": best_ties,
         },
         "g_best_nd": {"selected_on_test": True, "ours_correct": nd_correct, "ties": nd_ties},
+        "g_final": {"selected_on_test": True, "headline": FINAL_HEADLINE},
         "headlines": [row["name"] for row in pick_headlines(rows)],
         "combos": rows,
     }
@@ -284,7 +299,7 @@ def compute(cases: Sequence[Case]) -> dict[str, Any]:
 
 def _rank(row: Mapping[str, Any]) -> tuple[Any, ...]:
     """정확도, 건수, 수단 수 순. 동점이면 test 를 보고 고르지 않은 묶음이 앞선다."""
-    selected_on_test = row["grouping"].startswith("G-best")
+    selected_on_test = row["grouping"] in SELECTED_ON_TEST
     return (-row["ours_accuracy"], -row["n"], row["massages_used"], selected_on_test, row["name"])
 
 
@@ -325,6 +340,10 @@ def _delta(value: float | None) -> str:
     return "-" if value is None else f"{value:+.1f}"
 
 
+def _count(row: Mapping[str, Any], method: str) -> str:
+    return f"{_pct(row[f'{method}_accuracy'])} ({row[f'{method}_correct']}/{row['n']})"
+
+
 def _row(row: Mapping[str, Any]) -> str:
     return (
         f"| `{row['name']}` | {_pct(row['ours_accuracy'])} ({row['ours_correct']}/{row['n']}) "
@@ -350,8 +369,26 @@ def format_menu(result: Mapping[str, Any]) -> str:
     groupings = result["groupings"]
     conf50_row = by_name[combo_name(ORIGINAL, False, "top50-conf", "all")]
     conf50 = f"{_pct(conf50_row['ours_accuracy'])}, {conf50_row['ours_correct']}/{conf50_row['n']}"
+    final = by_name[FINAL_HEADLINE]
     lines = [
         "# massage 메뉴 — test 100건 다시 세기",
+        "",
+        f"## 헤드라인: `{FINAL_HEADLINE}`",
+        "",
+        "| 묶음 | 라벨 | 설명 |",
+        "|---|---|---|",
+        *(f"| {name} | {labels} | {text} |" for name, labels, text in G_FINAL_BLOCKS),
+        "",
+        "이유 8종을 4묶음으로 합쳐 세고, 확정 라벨 또는 라벨러 누구의 라벨과 같은 묶음이면 "
+        f"맞은 것으로 센 값이다. test {final['n']}건 전체.",
+        "",
+        "| 우리 방식 | 기준선 A | 기준선 B | 전부 UNK | 게이트 2 60.0% 대비 |",
+        "|---:|---:|---:|---:|---:|",
+        f"| **{_count(final, 'ours')}** | {_count(final, 'baseline_a')} "
+        f"| {_count(final, 'baseline_b')} | {_count(final, 'all_unk')} "
+        f"| {_delta(final['delta_pp'])}%p |",
+        "",
+        "묶음은 test 결과를 보고 정했다",
         "",
         "> **게이트 2 결과가 아니다.** 사전 등록 기준의 test 정확도는 "
         "**60.0%, 게이트 2 미달** 그대로다.",
@@ -393,6 +430,9 @@ def format_menu(result: Mapping[str, Any]) -> str:
         f"- **G-best-nd 도 test 를 보고 골랐다.** 모든 묶음에 test 정답이 있는 경우만 본 최고다. "
         f"정의: {_partition_text(groupings['G-best-nd'])} "
         f"(동점 {result['g_best_nd']['ties']}가지, 이름순 첫째)",
+        f"- **G-final 도 test 를 보고 골랐다.** G-best-nd 동점 중 하나를 고정하고 묶음 이름을 "
+        f"붙였다. 정답이 UNK 가 아닌 50건 중 45건이 정리 묶음에 든다. "
+        f"정의: {_partition_text(groupings['G-final'])}",
         "- **조합을 많이 시험했다.** 전체 "
         f"{len(rows)}개 중 위쪽만 고른 값이라 낙관적이다. 표본도 100건 이하다",
         "",
