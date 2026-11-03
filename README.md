@@ -114,7 +114,7 @@ cd web; npm install; npm run dev
 | `docs/` | ADR·회의록·주간 로그·보고서 | 성제 |
 | `tests/` | pytest | 전원 |
 
-테스트와 린트는 `pip install -e ".[dev,web]"` 뒤 `pytest`, `ruff check .`, `ruff format --check .`입니다. 브랜치·커밋·PR 규칙은 [CHARTER §8](CHARTER.md#8-저장소-구조와-개발-규칙)에 있고, Claude Code는 [CLAUDE.md](CLAUDE.md)를 자동으로 읽습니다.
+라벨링 화면은 `python -m tools.label_cli --labeler sj`(본인 이니셜 `sj`/`jh`/`hs`)로 엽니다. 테스트와 린트는 `pip install -e ".[dev,web]"` 뒤 `pytest`, `ruff check .`, `ruff format --check .`입니다. 브랜치·커밋·PR 규칙은 [CHARTER §8](CHARTER.md#8-저장소-구조와-개발-규칙)에 있고, Claude Code는 [CLAUDE.md](CLAUDE.md)를 자동으로 읽습니다.
 
 </details>
 
