@@ -228,4 +228,4 @@ gh release create dataset-v0.9 data/export/dataset-v0.9/* --title "dataset-v0.9"
 - **라이선스 때문에 34,391행은 코드 없이 링크만 있다** (확정 500건 중 19건 포함, 라벨·split 은 그대로, §4). 판정 근거는 `docs/repo_final100.md` §3.1 — 자동 수집한 원문으로 1차 판정했고 "확인 필요"·"불확실" 항목은 원문을 수동 검토했다. 현재 루트 라이선스 파일 경로의 이력과 현재 트리의 하위 라이선스 파일만 봤다 — 파일 머리 라이선스 주석·지워진 디렉터리의 라이선스는 보지 않았다. 이력 경계는 `author_date` 날짜로 갈라 몇 건은 어긋날 수 있다. 벤더링 경로는 v0.9 `NOISE_GENERATED` 가 경로로 명백한 것만 뺐다
 - **PostgreSQL 적재는 이번 범위가 아니다.** #83 본문에는 DB 적재가 있지만 이번 PR 은 파일 내보내기까지만 한다. DB 적재는 검색 UI(#8) 때 별도 이슈로 한다
 - 리뷰 코멘트·PR·이슈 본문은 GitHub 사용자가 쓴 글이다. 코드 라이선스와 별개다
-- `recent_only` 저장소 5개(django·scikit-learn·pandas·celery·requests)는 2015년 이후만 채굴했다 (`docs/repo_final100.md`)
+- `recent_only` 저장소 19개는 2015년 이후만 채굴했다 (목록은 `docs/repo_final100.csv` 의 `recent_only` 열, 설명은 `docs/repo_final100.md`)
