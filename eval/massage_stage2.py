@@ -572,6 +572,8 @@ def fill_cache(
             answer = runner.ask(prompt)
             if not answer.strip():
                 failures["빈 응답"] += 1
+                with stats.lock:
+                    stats.failed_calls += 1
                 return job
             return None
         except StallError:

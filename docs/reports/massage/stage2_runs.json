@@ -46,7 +46,7 @@
     "temperature": 0.0,
     "elapsed_seconds": 775.8,
     "calls": 102,
-    "failed_calls": 0,
+    "failed_calls": 2,
     "attempts": [
       {
         "elapsed_seconds": 775.8,
@@ -86,7 +86,7 @@
     "temperature": 0.0,
     "elapsed_seconds": 689.4,
     "calls": 101,
-    "failed_calls": 0,
+    "failed_calls": 1,
     "attempts": [
       {
         "elapsed_seconds": 689.4,
@@ -106,7 +106,7 @@
     "temperature": 0.7,
     "elapsed_seconds": 3064.4,
     "calls": 517,
-    "failed_calls": 216,
+    "failed_calls": 217,
     "attempts": [
       {
         "elapsed_seconds": 2713.1,

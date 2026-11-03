@@ -339,6 +339,19 @@ def test_fill_cache_retries_and_resumes_from_cache(tmp_path):
     assert attempts == []
 
 
+def test_fill_cache_counts_empty_answers_as_failed_calls():
+    answers = iter(["", "UNK|근거"])
+
+    def empty_once(_s, _p, _m):
+        return next(answers)
+
+    runner = LlmBaseline(empty_once, model=FLASH)
+    stats = CallStats()
+    failures = fill_cache([runner], ["p"], stats, workers=1)
+    assert failures == {"빈 응답": 1, "미응답": 0}
+    assert stats.failed_calls == 1
+
+
 def test_fill_cache_reports_unanswered_after_rounds():
     def down(_s, _p, _m):
         raise OSError("down")

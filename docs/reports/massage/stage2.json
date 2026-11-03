@@ -224,7 +224,7 @@
       "no_llm_vote": 0,
       "elapsed_seconds": 775.8,
       "calls": 102,
-      "failed_calls": 0,
+      "failed_calls": 2,
       "strict": 65,
       "lenient": 77,
       "llm_only": {
@@ -260,7 +260,7 @@
       "no_llm_vote": 0,
       "elapsed_seconds": 689.4,
       "calls": 101,
-      "failed_calls": 0,
+      "failed_calls": 1,
       "strict": 61,
       "lenient": 74,
       "llm_only": {
@@ -278,7 +278,7 @@
       "no_llm_vote": 0,
       "elapsed_seconds": 3064.4,
       "calls": 517,
-      "failed_calls": 216,
+      "failed_calls": 217,
       "strict": 70,
       "lenient": 82,
       "llm_only": {
