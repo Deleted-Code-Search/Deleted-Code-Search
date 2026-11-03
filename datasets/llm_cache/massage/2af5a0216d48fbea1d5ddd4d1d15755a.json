@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DEAD|커밋 메시지와 PR 제목·본문이 \"Revert 'Add update integration'\"라며 업데이트 통합 기능 전체를 되돌린다고 명시했고, 이 테스트는 `tests/components/update/test_init.py`에서 그 통합 기능을 검증하던 대상이므로 검증 대상이 사라져 함께 삭제됨"}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|`device_class` 프로퍼티가 `self._attr_device_class = SENSOR_TYPES[self.type][4]` 속성 대입으로 대체되어, 같은 값이 속성 방식으로 계속 제공된다."}

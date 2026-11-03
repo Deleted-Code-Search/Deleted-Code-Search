@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지 \"Drop unneccessary __hash__ methods\"가 __hash__ 메서드 제거를 명시하고, 이 테스트는 제거된 __hash__ 동작(SSLConfig 해시 캐시)을 검증하던 것이라 검증 대상이 사라져 삭제됨"}

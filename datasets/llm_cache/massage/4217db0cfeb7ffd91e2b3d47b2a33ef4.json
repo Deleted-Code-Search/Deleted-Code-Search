@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "UNK|커밋 메시지와 PR이 'vendored dependencies 전체 제거'라는 큰 작업만 설명하고 이 함수·파일별 대체 코드·호출자 변화·공개 표면 변화 등 6종 근거가 화면에 없으며, 경로에 packages/가 있어 벤더 코드임을 나타냄"}

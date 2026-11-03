@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|삭제된 close()는 \"Deprecated: Provides backwards-compatibility with old method Browser().close()\"라는 독스트링을 가진 공개 호환 API였고, PR #2573이 Playwright를 전면 제거하는 재작성이라 이 하위호환 메서드 자체가 사라졌다."}

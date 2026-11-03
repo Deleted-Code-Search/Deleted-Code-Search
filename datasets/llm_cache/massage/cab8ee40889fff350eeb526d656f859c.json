@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "PERF|커밋 메시지가 \"simplicity and performance\"를 이유로 `StateProxy`/`LockedListProxy` 계층 전체를 제거했다고 명시하고, attr read 24x·attr write 27x·list append 19x 빨라졌다는 벤치마크를 제시하며, 삭제된 `__add__`는 그 `LockedListProxy`의 리스트 결합 연산 구현이었다."}

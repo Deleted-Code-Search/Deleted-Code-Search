@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|커밋 메시지 \"Integrated the admin\"와 함께 Flask-Admin 관련 임포트·뷰·폼 클래스가 대량 추가되면서, 기존 Blueprint 라우트(`/datasource/<name>/`)가 Flask-Admin 뷰 구조로 이관된 구조 재설계로 삭제됨"}

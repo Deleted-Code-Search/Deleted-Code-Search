@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #1295가 `ContentStream`을 완전히 제거하고 스트림 인터페이스를 `Union[Iterable[bytes], AsyncIterable[bytes]]`로 바꾸면서, 이슈 #1253의 \"Drop `can_replay()` on the httpx implementations\" 결정에 따라 `can_replay` 메서드가 새 구조에서 맞지 않게 됐다."}

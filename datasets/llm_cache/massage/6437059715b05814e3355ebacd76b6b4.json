@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "FEAT|PR 제목·본문이 \"Drop sync\", \"dropping sync support everywhere\", \"have any sync support come in a 2.0 version\"이라며 동기 클라이언트·디스패처 공개 API 전체를 의도적으로 제거한다고 명시하므로 사용자 기능 폐기(FEAT)에 해당한다."}

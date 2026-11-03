@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|커밋 메시지가 \"AST source parsing을 runtime metadata와 explicit decorator로 대체한다\", \"obsolete introspection and serializer code를 제거한다\"고 명시하며, 삭제된 visit_Compare가 그 AST 파싱 로직의 일부였고 새 FlowDefinition 모델로 설계가 바뀌었음"}

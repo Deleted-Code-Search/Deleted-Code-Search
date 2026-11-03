@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|커밋 메시지 \"Use generator fixtures\"가 pytest finalizer 패턴(fin 함수)을 generator fixture 패턴(reset_cache_backend_state)으로 교체함을 명시하고, 삭제된 fin의 본문 로직이 추가된 제너레이터 픽스처의 yield 이후 부분으로 거의 그대로 이동함"}

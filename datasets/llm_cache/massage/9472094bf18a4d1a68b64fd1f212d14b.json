@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "UNK|경로가 requests/packages/urllib3/ 로 vendored 서드파티 코드이고 커밋 메시지가 \"Update urllib3 to ...\" 로 라이브러리 업데이트임을 나타내므로 판단 재료가 없다 (vendor-path, library-update)"}

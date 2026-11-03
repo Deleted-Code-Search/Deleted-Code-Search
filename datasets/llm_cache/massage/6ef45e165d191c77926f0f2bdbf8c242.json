@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|경로가 requests/packages/urllib3/ 로 vendored 디렉터리이고, PR 본문은 vendored 의존성 제거를 말할 뿐 이 함수의 대체나 호출자 변화를 화면에서 짚을 수 없다 (vendored-path, no-replacement, no-caller-info)"}

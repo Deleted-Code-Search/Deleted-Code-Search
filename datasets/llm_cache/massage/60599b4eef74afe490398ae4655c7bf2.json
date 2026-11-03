@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|커밋이 data_format 지원을 추가하고 height_axis/width_axis를 도입하며 compute_output_shape를 self.layer 위임에서 직접 계산 방식으로 재구현해 레이어 책임·구조가 바뀌었다"}

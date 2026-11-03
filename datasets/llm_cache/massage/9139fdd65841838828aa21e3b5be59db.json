@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|경로가 requests/packages/idna/ 로 vendored 디렉터리이고, PR 본문이 vendored 의존성 제거를 말할 뿐 이 함수를 이름으로 가리키는 이유 문장이나 근거 6종이 화면에 없다 (vendored-path, vague-message, no-replacement, no-caller-info)"}

@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|PR 본문이 Playwright 완전 제거와 이벤트 기반 아키텍처로의 전면 재설계를 설명하고, 삭제된 close()가 Playwright BrowserContext.close()와의 호환용으로 deprecated 표시돼 있어, 인터페이스·책임 변경으로 더 이상 맞지 않게 된 코드임을 보여줌"}

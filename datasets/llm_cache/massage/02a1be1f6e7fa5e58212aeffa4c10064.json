@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|경로에 packages/가 있고 PR 본문이 vendored 의존성 제거를 말하지만, 이 파일이 옮겨진 대상 저장소를 밝히지 않아 U1에 해당한다."}

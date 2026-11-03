@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DEAD|커밋 메시지가 \"Removed Meta.index_together per deprecation timeline\"이라 명시해 이 테스트가 검증하던 index_together 기능이 이 커밋에서 제거됐음을 밝히고, 삭제된 테스트 본문이 index_together와 AlterIndexTogether를 직접 사용하고 있어 검증 대상이 사라진 데드 코드가 됐음"}

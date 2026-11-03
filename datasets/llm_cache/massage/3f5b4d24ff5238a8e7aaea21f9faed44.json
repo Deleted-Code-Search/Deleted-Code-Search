@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|PR 본문이 \"Drop ContentStream completely\", \"We no longer have ContentStream anywhere internally\"라며 스트리밍 추상화를 `ContentStream`에서 `Union[Iterable[bytes], AsyncIterable[bytes]]`와 새 스트림 클래스들로 교체하는 인터페이스 재설계임을 명시했고, 이슈 #1253도 \"Drop can_replay() on the httpx implementations\"를 구조 변경 과제로 제시했기 때문."}

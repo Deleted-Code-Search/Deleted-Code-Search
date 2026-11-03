@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DEAD|PR 본문이 `Config.allow_extra` 가 더 이상 인식되지 않는다(제거됨)고 명시했고, 삭제된 테스트가 바로 이 제거된 대상을 검증하고 있어 테스트 대상이 사라진 데드 코드가 되었음"}

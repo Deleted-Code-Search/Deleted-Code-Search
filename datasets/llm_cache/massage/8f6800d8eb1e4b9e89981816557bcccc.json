@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "FEAT|커밋 메시지 \"remove eval from main repo\"와 PR 본문 \"Removed the entire eval directory... This deletes all evaluation scripts, utilities, and tests\"가 평가 기능 전체를 저장소에서 삭제한다고 명시하며, 이 함수가 그 디렉터리(eval/server.py)에 속해 있다."}

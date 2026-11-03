@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "LIB|커밋 메시지가 \"remove pandas/io/gbq.py and tests and replace with pandas-gbq\"라고 명시하고, 추가된 코드가 `pandas_gbq = pytest.importorskip('pandas_gbq')`로 외부 라이브러리를 가져와 `pandas_gbq.gbq._Dataset`, `pd.read_gbq` 등을 사용하도록 테스트를 대체했기 때문이다."}

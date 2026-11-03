@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|커밋 메시지 \"Integrated the admin\"와 추가된 Flask-Admin 설정 코드(Admin, BaseView, Datasource 모델, QueryForm)가 커스텀 라우트였던 삭제 함수의 역할을 대체하는 구조적 재설계를 보여준다"}

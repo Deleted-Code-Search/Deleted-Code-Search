@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지가 \"Reformatting the codebase with black\"이라는 포맷팅 사실만 말하고, 삭제된 테스트를 이름으로 가리키는 이유 문장도 근거 6종도 화면에 없다 (vague-message, no-replacement, no-caller-info)"}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지가 \"Test all methods\", \"Resolve some bugs\" 등 한 줄 사실 서술뿐이고, 삭제된 get_task_status를 이름으로 가리키는 이유 문장도, 대체 코드·호출자 변화·공개 표면 변화 등 근거 6종 중 어느 것도 화면에서 짚을 수 없다."}

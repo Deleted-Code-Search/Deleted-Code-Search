@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "UNK|PR 본문이 연구 프로젝트를 별도 저장소(https://github.com/huggingface/transformers-research-projects/)로 옮겼다고 명시했고, 이 파일이 그 이동 대상 경로(`examples/research_projects/`)에 있으므로 순수 이동·분리에 해당해 판단 재료가 없다."}

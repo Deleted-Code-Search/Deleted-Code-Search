@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "LIB|PR 본문이 \"core networking stuff is done with HTTPCore now\"라고 밝혀 trio 백엔드의 start_tls 구현이 외부 라이브러리 HTTPCore 호출로 대체되어 삭제되었음을 설명함"}

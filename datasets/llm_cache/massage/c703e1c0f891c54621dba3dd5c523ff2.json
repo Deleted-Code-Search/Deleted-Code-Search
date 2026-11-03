@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "BUG|커밋 메시지가 \"Prevented double submission\" 변경을 되돌린다고 명시하고, PR 본문이 그 변경이 회귀(regression)를 일으켰다고 밝히며, 이 테스트는 되돌려진 동작(뒤로 가서 재제출)을 검증하던 테스트다."}

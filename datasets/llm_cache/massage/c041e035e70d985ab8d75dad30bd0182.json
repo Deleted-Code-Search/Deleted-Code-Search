@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DEAD|커밋 메시지와 PR 제목이 `eval_type_backport()` 지원을 제거한다고 명시하고, 삭제된 함수명이 `is_backport_fixable_error`로 백포트 전용 에러 처리 함수임이 드러나며, 리뷰 코멘트에서 백포트를 벤더드 `typing._eval_type`로 대체한다고 확인되므로 이 내부 헬퍼가 호출자를 잃고 죽은 코드가 됨"}

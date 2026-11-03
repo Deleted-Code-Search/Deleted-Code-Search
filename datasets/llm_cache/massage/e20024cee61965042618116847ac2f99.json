@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "FEAT|④ 공개 표면 변화 — 커밋 메시지가 \"old ... server script\" 제거를 명시하며, 이 함수가 속한 main.py가 해당 서버 스크립트(CLI 진입점)이므로 사용자 기능(구형 서버 실행) 자체가 폐기됨"}

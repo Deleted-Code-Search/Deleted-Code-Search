@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "FEAT|커밋 메시지 \"Remove Imputer in preprocessing\", PR 제목 \"[MRG] DEP remove Imputer in preprocessing\", PR 본문 \"Remove Imputer from the preprocessing\"가 공개 API인 Imputer 클래스(및 그 메서드 _dense_fit) 전체를 제거함을 명시하므로, 사용자 기능 폐기(FEAT)다."}

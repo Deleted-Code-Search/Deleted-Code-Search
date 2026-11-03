@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 제목과 본문에서 V0 Neuron 백엔드 지원 중단이 명시되고, 이 테스트가 검증하던 V0 Neuron 모델 러너의 샘플링 파라미터 갱신 기능 자체가 제거됨"}

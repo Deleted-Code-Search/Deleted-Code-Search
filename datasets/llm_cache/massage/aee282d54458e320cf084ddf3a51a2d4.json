@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|커밋이 DoclingParseDocumentBackend를 ThreadedDoclingParseDocumentBackend로 교체하는 백엔드 구조 변경을 수행했고, 삭제된 테스트 헬퍼 함수가 구 백엔드를 사용해 더 이상 새 구조에 맞지 않게 되었음"}

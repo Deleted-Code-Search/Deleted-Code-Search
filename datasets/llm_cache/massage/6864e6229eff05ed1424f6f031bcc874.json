@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|PR 본문이 \"removing all vendored dependencies from Requests\"라고 명시하고, 파일 경로 `requests/packages/urllib3/`가 벤더링된 의존성임을 보여주며, 이 커밋이 패키지 디렉터리 전체를 삭제해 외부 의존성으로 전환하는 구조 변경을 수행함"}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|같은 자리에 들어온 대체 코드가 내부 `_data` 순회 대신 `_dict_getitem`/`_dict_setitem` 기반으로 재작성되었고, 커밋 메시지가 urllib3 외부 패키지 업데이트를 명시한다."}

@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|클래스가 dict를 상속받아 내부 저장 방식을 _data 속성에서 dict 자체로 바꾸면서 copy 메서드가 새 구조에 맞게 재작성됨"}

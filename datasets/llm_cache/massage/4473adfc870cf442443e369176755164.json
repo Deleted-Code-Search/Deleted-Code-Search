@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "LIB|PR 본문이 \"removing all vendored dependencies from Requests\"라고 명시했고, 이 파일이 `requests/packages/urllib3/packages/` 경로의 벤더링된 ordered_dict 구현체로 표준 라이브러리 `collections.OrderedDict` 로 대체하기 위해 삭제됨"}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "LIB|PR 본문이 \"Refactor chatglm loading logic to use `AutoWeightsLoader`\"라고 밝히고, 삭제된 load_weights의 수동 병합·매핑 로직을 같은 파일에 추가된 `AutoWeightsLoader(self).load_weights(weights, mapper=self.hf_to_vllm_mapper)` 호출이 이어받았다."}

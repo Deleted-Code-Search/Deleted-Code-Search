@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|커밋 메시지 \"Complete removal of dummy/serving overrides in RoBERTa\"와 \"Obliterate lots and lots of serving sig and dummy overrides\"가 이 모델의 serving_output 오버라이드 삭제를 명시하며, PR이 수동 오버라이드 대신 call 검사 기반 자동 서명 추론으로 구조를 바꿨음을 설명한다."}

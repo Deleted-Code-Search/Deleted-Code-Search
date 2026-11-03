@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "LIB|커밋 메시지·PR·이슈가 \"Stop vendoring sphinx-gallery\"라 명시하며, 이 함수가 속한 vendored sphinx_gallery 디렉터리 전체를 외부 라이브러리 의존성으로 대체함"}

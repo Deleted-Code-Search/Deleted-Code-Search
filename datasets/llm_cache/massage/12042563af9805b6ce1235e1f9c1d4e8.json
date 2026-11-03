@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DEAD|PR 본문이 `sql_lab_utils.py` 파일 전체가 제거되었음을 명시하고 있으며, 이 테스트는 해당 모듈의 `_apply_limit` 함수를 검증하던 것이므로 검증 대상이 이 커밋에서 사라져 함께 삭제됨"}

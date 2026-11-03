@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR #2573이 Playwright 기반 BrowserSession을 cdp-use/bubus로 전면 재작성하며 deprecated된 close() 호환 메서드를 제거했고, PR 본문이 \"transition\" 가이드를 언급하는 공개 API 변경이다."}

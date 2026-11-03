@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "FEAT|PR 본문이 \"eval 디렉터리 전체를 제거해 메인 저장소를 정리한다\"며 \"모든 평가 스크립트, 유틸리티, 테스트를 삭제한다\"고 명시했고, 이 함수가 eval/server.py에 속해 해당 제거 대상에 포함되기 때문"}

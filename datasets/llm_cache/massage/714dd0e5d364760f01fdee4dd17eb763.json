@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|커밋 메시지 \"Drop unneccessary __hash__ methods\"와 PR 제목 \"Adapter refactoring\"이 인터페이스 변경을 나타내며, 삭제된 테스트는 SSLConfig의 __hash__ 동작을 검증하던 것으로 해당 메서드 제거에 따라 더 이상 유효하지 않게 되었음"}

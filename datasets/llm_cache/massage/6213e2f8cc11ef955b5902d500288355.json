@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|커밋 메시지 \"Refactor CLI to use Click instead of our custom argparse based framework (#5718)\"가 CLI 프레임워크 교체라는 구조 변경을 명시하고, 삭제된 테스트가 구 프레임워크의 Command._format_epilog를 검증하던 것이므로 같은 기능(CLI)이 다른 구현(Click)으로 이어지는 설계 변경에 해당한다."}

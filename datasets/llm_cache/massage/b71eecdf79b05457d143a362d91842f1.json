@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DEAD|커밋 메시지가 \"Remove tokenizer group in vLLM\"라 명시하고, 이 테스트가 호출하는 `get_lora_tokenizer`가 속한 tokenizer group 모듈 자체가 이 커밋에서 제거되므로 테스트 대상이 사라져 죽은 코드가 됐다."}

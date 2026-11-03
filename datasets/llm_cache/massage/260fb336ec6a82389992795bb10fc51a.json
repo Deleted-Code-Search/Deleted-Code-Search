@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지 \"Removed Meta.index_together per deprecation timeline\"으로 index_together 자체가 제거되어 이 테스트가 검증할 대상이 없어졌다."}

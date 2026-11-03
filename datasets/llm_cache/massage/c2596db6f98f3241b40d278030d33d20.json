@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DEAD|커밋 메시지와 PR 제목이 \"Removed unused __str__() methods in tests models\"라며 이 메서드들이 미사용(unused)임을 명시하므로, 호출자가 없어 죽은 코드(DEAD)로 삭제된 것이다."}

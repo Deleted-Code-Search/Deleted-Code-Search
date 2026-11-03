@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 커스텀 데이터 관리 객체를 coordinator로 교체한다고 밝혔고, 추가된 코드에서 OpenUvCoordinator와 async_refresh 호출이 async_update의 갱신 역할을 이어받았다."}

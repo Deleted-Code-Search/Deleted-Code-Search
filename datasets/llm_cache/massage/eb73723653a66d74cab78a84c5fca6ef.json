@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "UNK|파일이 `requests/packages/urllib3/`(벤더링 디렉터리)에 있고 커밋 메시지가 'delete packages' 한 줄뿐이며 PR 설명도 전체 작업만 말할 뿐 이 함수·파일을 이름으로 지목하지 않고, 대체 코드·호출자 변화·공개 표면 변화 등 6종 근거가 화면에 전혀 보이지 않음"}

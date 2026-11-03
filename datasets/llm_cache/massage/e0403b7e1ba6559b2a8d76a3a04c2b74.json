@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR #9315가 SIP-35 기반으로 Dashboard API를 리팩터링한다고 명시하고, 삭제된 pre_load의 slug 정규화·owners 초기화 로직이 같은 커밋의 다른 자리(스키마/DAO 계층)로 옮겨졌음을 시사한다."}

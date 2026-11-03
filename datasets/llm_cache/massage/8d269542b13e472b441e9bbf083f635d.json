@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|커밋 메시지가 `__hash__` 메서드를 제거했다고 밝혔고, 이 테스트는 `SSLConfig`의 해시 동작을 검증하던 것으로 검증 대상이 사라져 지웠다."}

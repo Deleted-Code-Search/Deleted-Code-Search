@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|커밋 메시지와 PR 본문이 docling-parse 백엔드를 재구성해 DoclingParseDocumentBackend를 ThreadedDoclingParseDocumentBackend로 대체했다고 명시하며, 삭제된 함수는 구 백엔드를 사용하던 테스트 헬퍼라 새 구조에서 불필요해졌다."}

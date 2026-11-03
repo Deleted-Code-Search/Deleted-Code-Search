@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "UNK|커밋 메시지가 'Refactored', 'Updated... reduced legacy parameters' 등 일반적인 리팩터링 사실만 서술할 뿐 이 함수 이름을 가리키며 삭제 이유를 말하지 않고, 이 파일에 대체 코드·호출자 변화·공개 표면 변화 등 6종 근거도 전혀 보이지 않음"}

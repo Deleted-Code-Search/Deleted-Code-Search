@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DEAD|커밋 메시지가 \"Revert \"Studio (#4237)\"\"라며 해당 기능을 되돌린다고 명시했고, 이 테스트가 검증하던 SSE 진행 기능이 그 되돌림 대상에 포함되어 테스트가 더 이상 필요 없게 되었음"}

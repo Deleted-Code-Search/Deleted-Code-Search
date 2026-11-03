@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|PR 설명이 \"custom data management object\"를 `DataUpdateCoordinator`로 교체한다고 명시하고, 삭제된 `async_update`가 그 커스텀 객체에 속했으며 추가된 코드에서 coordinator 패턴으로 책임이 이전됐음을 보여줌"}

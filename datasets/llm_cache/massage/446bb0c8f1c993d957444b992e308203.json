@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "BUG|삭제된 테스트가 모델 미지정 요청 시 응답의 model 필드가 실제 모델 ID(MODEL_NAME)와 같음을 검증했으나, 이 커밋이 --served-model-name 값을 반환하도록 버그를 수정(#15845)하면서 해당 단정이 깨지므로 테스트를 제거함"}

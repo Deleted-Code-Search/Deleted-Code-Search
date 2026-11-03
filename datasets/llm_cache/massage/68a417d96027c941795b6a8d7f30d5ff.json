@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 자리에 들어온 대체 코드가 `def error(self, message, *args, **kwargs): pass`로, 에러를 `self.errors`에 기록하던 동작이 사라지고 스텁으로 바뀌어 인터페이스/책임이 재편된 것으로 보인다."}

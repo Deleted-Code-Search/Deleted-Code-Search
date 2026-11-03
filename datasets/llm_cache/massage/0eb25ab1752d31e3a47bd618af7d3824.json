@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 \"This replaces AST source parsing for router return values, crew references, and state schema with runtime metadata plus explicit @router(paths=...) or Literal/Enum return hints\"라며 AST 파싱을 런타임 메타데이터로 대체한다고 밝히고, 삭제된 visit_Compare는 바로 그 AST 기반 state 속성값 추출 코드다."}

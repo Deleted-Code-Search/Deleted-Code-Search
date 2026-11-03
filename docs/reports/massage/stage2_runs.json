@@ -1,0 +1,141 @@
+{
+  "s1": {
+    "prompt": "c4",
+    "model": "deepseek-ai/deepseek-v4.1-flash",
+    "samples": 1,
+    "temperature": 0.0,
+    "elapsed_seconds": 297.3,
+    "calls": 103,
+    "failed_calls": 3,
+    "attempts": [
+      {
+        "elapsed_seconds": 297.3,
+        "calls": 103,
+        "failures": {
+          "HTTP 500": 3,
+          "미응답": 0
+        },
+        "stalled": false
+      }
+    ]
+  },
+  "s2": {
+    "prompt": "c5",
+    "model": "deepseek-ai/deepseek-v4.1-flash",
+    "samples": 1,
+    "temperature": 0.0,
+    "elapsed_seconds": 559.6,
+    "calls": 115,
+    "failed_calls": 15,
+    "attempts": [
+      {
+        "elapsed_seconds": 559.6,
+        "calls": 115,
+        "failures": {
+          "HTTP 500": 15,
+          "미응답": 0
+        },
+        "stalled": false
+      }
+    ]
+  },
+  "s3": {
+    "prompt": "c4",
+    "model": "nvidia/nemotron-3-ultra-550b-a55b",
+    "samples": 1,
+    "temperature": 0.0,
+    "elapsed_seconds": 775.8,
+    "calls": 102,
+    "failed_calls": 0,
+    "attempts": [
+      {
+        "elapsed_seconds": 775.8,
+        "calls": 102,
+        "failures": {
+          "빈 응답": 2,
+          "미응답": 0
+        },
+        "stalled": false
+      }
+    ]
+  },
+  "s4": {
+    "prompt": "c4",
+    "model": "mistralai/mistral-large-4-1t-a52b",
+    "samples": 1,
+    "temperature": 0.0,
+    "elapsed_seconds": 1807.0,
+    "calls": 24,
+    "failed_calls": 24,
+    "attempts": [
+      {
+        "elapsed_seconds": 1807.0,
+        "calls": 24,
+        "failures": {
+          "TimeoutError": 24,
+          "미응답": 100
+        },
+        "stalled": true
+      }
+    ]
+  },
+  "s5": {
+    "prompt": "c5",
+    "model": "nvidia/nemotron-3-ultra-550b-a55b",
+    "samples": 1,
+    "temperature": 0.0,
+    "elapsed_seconds": 689.4,
+    "calls": 101,
+    "failed_calls": 0,
+    "attempts": [
+      {
+        "elapsed_seconds": 689.4,
+        "calls": 101,
+        "failures": {
+          "빈 응답": 1,
+          "미응답": 0
+        },
+        "stalled": false
+      }
+    ]
+  },
+  "s6": {
+    "prompt": "c4",
+    "model": "nvidia/nemotron-3-ultra-550b-a55b",
+    "samples": 3,
+    "temperature": 0.7,
+    "elapsed_seconds": 3064.4,
+    "calls": 517,
+    "failed_calls": 216,
+    "attempts": [
+      {
+        "elapsed_seconds": 2713.1,
+        "calls": 464,
+        "failures": {
+          "HTTP 502": 1,
+          "HTTP 429": 190,
+          "빈 응답": 1,
+          "미응답": 28
+        },
+        "stalled": false
+      },
+      {
+        "elapsed_seconds": 327.9,
+        "calls": 51,
+        "failures": {
+          "HTTP 429": 25,
+          "미응답": 2
+        },
+        "stalled": false
+      },
+      {
+        "elapsed_seconds": 23.4,
+        "calls": 2,
+        "failures": {
+          "미응답": 0
+        },
+        "stalled": false
+      }
+    ]
+  }
+}

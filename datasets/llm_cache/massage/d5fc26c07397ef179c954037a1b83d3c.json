@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|커밋 메시지 \"Use generator fixtures\"와 추가된 코드에서 `fin()`의 본문이 `reset_cache_backend_state` 제너레이터 픽스처로 이동하고 메인 픽스처가 `yield` 방식으로 전환된 점으로 보아, 픽스처 구조를 제너레이터 방식으로 리팩터링하면서 기존 파이널라이저 함수가 불필요해졌음"}

@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "LIB|커밋 메시지 'Refactor CLI to use Click instead of our custom argparse based framework'가 커스텀 argparse 구현을 외부 라이브러리 Click으로 교체했음을 명시하며, 삭제된 함수가 해당 프레임워크의 Command._format_epilog를 검증하므로 외부 라이브러리 대체(LIB)에 해당한다."}

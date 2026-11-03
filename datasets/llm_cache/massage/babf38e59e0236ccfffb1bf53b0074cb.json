@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지가 Docker 배포·API 서버 추가와 async_dispatcher.py 포맷 정리만 말할 뿐 이 __init__ 삭제의 왜를 이름으로 가리키지 않고, 대체 코드·호출자 변화·공개 표면 변화 등 근거 6종도 화면에 없다."}

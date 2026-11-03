@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|커밋 메시지가 \"refactor(service-client): make async client a sibling over a shared base, not a copy\"라며 대규모 구조 재편(공통 베이스 클래스 도입, 동기 클라이언트 내 비동기 엔진 제거, 테스트 23개 이관)을 설명하고, 이 테스트 파일의 `__aexit__` 시그니처가 새 비동기 클라이언트 구조에 맞춰 `*a`/`pass`로 단순화된 채 같은 자리에 대체됐다."}

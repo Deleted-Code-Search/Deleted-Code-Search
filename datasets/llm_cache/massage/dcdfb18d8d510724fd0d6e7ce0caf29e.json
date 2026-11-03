@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|PR 본문이 \"Refactor chatglm loading logic to use `AutoWeightsLoader`\"라 밝혔고, 삭제된 커스텀 load_weights가 동일 파일 내 새로운 load_weights(AutoWeightsLoader 위임)로 대체돼 책임·구조가 공통 유틸로 이동했음"}

@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "FEAT|PR 본문이 \"Drop our custom `TRACE` level logging\"과 \"Drop our custom auto-logging setup, previously enabled via `HTTPX_LOG_LEVEL`\"라고 명시해 사용자 설정 옵션(HTTPX_LOG_LEVEL=trace)과 맞물린 추적 로깅 기능 자체를 폐기함을 보인다."}

@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "FEAT|커밋 메시지가 \"Removed support for passing raw column aliases to order_by()\"라고 명시하고, 대체 테스트가 FieldError를 기대하도록 바뀌어 사용자 기능 자체가 제거됐음을 보여준다"}

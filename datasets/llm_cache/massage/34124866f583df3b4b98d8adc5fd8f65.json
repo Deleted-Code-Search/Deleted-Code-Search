@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "LIB|커밋 메시지 \"MAINT Unvendor joblib\"와 PR 본문 \"This unvendors joblib\"가 vendored joblib 구현을 외부 joblib 라이브러리 의존성으로 교체함을 명시하며, 이 함수가 속한 sklearn/externals/joblib/externals/loky/ 경로가 바로 제거되는 vendored 구현체임"}

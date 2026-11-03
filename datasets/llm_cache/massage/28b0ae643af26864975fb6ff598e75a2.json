@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 커밋이 이 파일에 추가한 코드에서 `__array_wrap__`이 `self.values.__array_wrap__`에 위임하고 결과를 `self._constructor`로 감싸는 형태로 다시 구현되어, ndarray 서브클래스에서 ExtensionArray 합성 구조로 바뀌면서 이 코드가 맞지 않게 됐다."}

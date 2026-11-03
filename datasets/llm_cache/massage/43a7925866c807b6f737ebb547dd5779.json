@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DEAD|커밋 메시지와 PR 본문이 \"obsolete cookie test mixing bytes with str\"라며 이 테스트가 검증하던 Python 3에서 더 이상 유효하지 않은 bytes/str 혼용 쿠키 동작이 사라졌음을 명시하므로, 테스트의 검증 대상이 없어져 삭제된 경우에 해당한다."}

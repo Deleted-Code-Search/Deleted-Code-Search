@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|PR 본문이 DoclingParseDocumentBackend를 ThreadedDoclingParseDocumentBackend로 교체하는 구조 변경을 설명하고, 추가된 테스트가 새 백엔드를 직접 사용하며 기존 헬퍼 함수가 쓰던 구 백엔드를 더 이상 쓰지 않기 때문"}

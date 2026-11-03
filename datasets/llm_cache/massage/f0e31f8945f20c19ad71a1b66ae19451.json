@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|커밋 메시지와 PR 본문에서 \"Moved `hasnans` and related properties to base `Index`\"라며 내부 구조 재편을 명시했고, 삭제된 `_nan_idxs`가 같은 자리에서 `_can_hold_na` 검사를 추가한 새 버전으로 대체돼 설계 변경에 맞춰 수정된 것임"}

@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "BUG|PR 본문이 \"That gate never engages. ... the tracker is always done and `pending` is dead code\"라며 이 메커니즘이 버그(버퍼 중복 덮어쓰기)로 이어짐을 설명하고, 커밋 제목이 \"[Bugfix]\"로 이 함수 삭제가 버그 수정의 일부임을 명시한다."}

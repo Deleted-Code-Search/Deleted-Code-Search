@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|추가된 코드에서 `self._attr_device_class = SENSOR_TYPES[self.type][4]` 로 속성 기반 패턴을 쓰게 바뀌면서 property getter 가 불필요해졌고, 같은 역할(디바이스 클래스 제공)을 프레임워크의 속성 규약으로 계속 수행한다"}

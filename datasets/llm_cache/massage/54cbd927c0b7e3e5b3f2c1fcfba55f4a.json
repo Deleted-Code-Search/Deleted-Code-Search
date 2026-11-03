@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|커밋 메시지와 PR 본문이 `__ne__` 메서드를 이름으로 가리키며 \"Python 3에서 이미 `__eq__`의 반대로 정의되어 있고 `__eq__`가 NotImplemented를 반환하면 기본적으로 True를 반환한다\"는 이유로 삭제한다고 명시함"}

@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|커밋이 data_format 지원과 ops 전환을 위해 레이어 구조를 재설계하면서(새 __init__, 축 계산, call 구현 변경) 기존 위임형 compute_output_shape를 직접 계산형으로 교체했다"}

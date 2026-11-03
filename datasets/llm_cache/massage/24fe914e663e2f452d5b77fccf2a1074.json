@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|커밋 메시지 \"Use generator fixtures\"와 추가된 `reset_cache_backend_state` 제너레이터 픽스처가 삭제된 `fin()`의 정리 로직을 그대로 이어받아 구조적 패턴을 교체함"}

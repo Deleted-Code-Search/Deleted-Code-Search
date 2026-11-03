@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "BUG|PR 본문이 \"Simplify the parsing of tables with just text (no rich cells) and remove the addition and deletion of text items\"라며 성능 회귀 이슈(#2509)를 부분 해결한다고 명시했고, 삭제된 함수가 정확히 텍스트 아이템의 추가·삭제(그룹 생성·자식 이동)를 수행하므로 느린 테이블 파싱 버그를 고치려고 지운 것이다."}

@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DEAD|커밋 메시지가 \"Removed obsolete cookie test mixing bytes with str\"라 명시하고 Python 3 SimpleCookie가 바이트를 문자열로 강제 변환해 해당 테스트 시나리오가 더 이상 유효하지 않음(검증 대상 소멸)을 설명하므로, 테스트 코드 삭제 사유가 DEAD(검증할 대상 없어짐)에 부합한다."}

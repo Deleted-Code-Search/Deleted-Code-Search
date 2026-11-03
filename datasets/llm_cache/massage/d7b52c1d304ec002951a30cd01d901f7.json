@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "FEAT|커밋 메시지 \"remove eval from main repo\"와 PR 본문 \"Removed the entire eval directory... This deletes all evaluation scripts\"가 이 함수가 속한 eval 디렉터리 전체와 평가 기능을 메인 저장소에서 제거함을 명시한다."}

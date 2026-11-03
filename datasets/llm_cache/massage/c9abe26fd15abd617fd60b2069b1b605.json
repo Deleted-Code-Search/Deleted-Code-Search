@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|커밋 메시지가 동기 클라이언트 내부의 비동기 엔진을 제거하고 테스트를 네이티브 AsyncDoclingServiceClient로 이관하는 대규모 재구조화(refactor/service-client, Step 5)를 설명하며, 이 테스트 헬퍼의 `__aexit__`가 기존 엔진 모의용이었으나 새 구조에서 단순화된 시그니처(`*a`, `pass`)로 교체돼 같은 역할을 다른 방식으로 이어받음"}

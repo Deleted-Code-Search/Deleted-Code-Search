@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "UNK|커밋 메시지와 PR 본문이 langchain-community 패키지 전체를 별도 저장소(https://github.com/langchain-ai/langchain-community)로 이동한다고 명시하며, 이 파일이 이동 대상에 포함되므로 순수 이동·분리 작업으로 판단 근거가 없다"}

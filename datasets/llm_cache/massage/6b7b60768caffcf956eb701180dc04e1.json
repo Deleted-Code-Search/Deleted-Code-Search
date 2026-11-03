@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "FEAT|PR 본문과 커밋 메시지가 \"Remove Aladdin Connect integration\", \"Aladdin Connect has been removed\"라고 명시해 사용자 기능인 Aladdin Connect 통합 전체를 폐기했음을 보여준다."}

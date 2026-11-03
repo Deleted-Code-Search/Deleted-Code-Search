@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 자리에 들어온 대체 copy()가 type(self)()와 _dict_getitem/_dict_setitem로 내부 구조를 바꾼 새 dict 기반 표현에 맞춰 복제 로직을 재작성했으므로, 구조 변경에 따라 이 코드가 맞지 않게 됐다."}

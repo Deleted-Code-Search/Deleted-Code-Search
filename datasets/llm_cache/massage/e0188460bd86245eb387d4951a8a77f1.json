@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "BUG|PR 본문이 \"the tracker is always done and `pending` is dead code\"라 설명하며, 페이로드 버퍼가 전송 중인데도 재사용돼 RuntimeError·ValidationError를 유발하던 버그를 고치려고 이 추적 로직을 삭제했다."}
