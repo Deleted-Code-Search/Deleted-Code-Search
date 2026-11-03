@@ -28,7 +28,7 @@ services:
     container_name: deleted-code-search-api
     working_dir: /app
     # 설치 뒤 command 를 실행한다 - `docker compose run --rm api pytest` 도 설치부터 한다
-    entrypoint: ["sh", "-c", "pip install -q -e '.[dev,web]' && exec \"$$@\"", "--"]
+    entrypoint: ["sh", "-c", "pip install -q -e '.[dev,web,embed]' && exec \"$$@\"", "--"]
     command: ["uvicorn", "search.api:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
     ports:
       - "${API_PORT:-8000}:8000"

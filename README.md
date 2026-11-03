@@ -28,7 +28,7 @@
 숫자를 읽을 때 알아 둘 점입니다.
 
 - **73.0%·85.0%는 게이트 결과가 아닙니다.** 사전 등록한 1회 측정은 [60.0%로 게이트 2 미달](docs/meetings/gate-2.md)이고, 이 판정은 그대로입니다. 개선 숫자는 같은 test 100건을 보며 설정을 고른 값이라 새 데이터에서는 더 낮을 수 있습니다. 데이터셋 라벨에는 개선 분류기를 적용하지 않았습니다.
-- **필터 정밀도는 76.0%로 목표 90%에 못 미칩니다.** 135만 건 안에 의미 없는 삭제도 섞여 있습니다.
+- **필터 정밀도는 76.0% (v0.8 기준, v0.9 는 새 표본 재측정 전)로 목표 90%에 못 미칩니다.** 135만 건 안에 의미 없는 삭제도 섞여 있습니다.
 - P@10은 질의 10개, 판정자 2명의 평균입니다.
 
 ## 어떻게 동작하나
@@ -57,28 +57,29 @@ flowchart LR
 
 ## 바로 써보기
 
-**데이터셋 받기** — [Release `dataset-v0.9`](https://github.com/Deleted-Code-Search/Deleted-Code-Search/releases/tag/dataset-v0.9)에서 받습니다. 사람이 확정한 라벨 500건은 [`datasets/dataset-v0.9/main500.jsonl`](datasets/dataset-v0.9/main500.jsonl)에도 있습니다. 필드와 주의점은 [데이터셋 문서](datasets/dataset-v0.9/README.md)를 보세요.
-
-```powershell
-# jsonl.gz 전체, 약 700MB
-gh release download dataset-v0.9 -p "*.jsonl.gz" -D data/export/dataset-v0.9
-```
-
-**대시보드·검색 실행 (Windows PowerShell)** — Python 3.12와 Node.js 20 이상이 필요합니다. 대시보드 숫자는 저장소에 들어 있어 데이터 없이 바로 뜹니다.
+**저장소와 데이터셋 받기** — 데이터셋은 [Release `dataset-v0.9`](https://github.com/Deleted-Code-Search/Deleted-Code-Search/releases/tag/dataset-v0.9)에 있습니다. 사람이 확정한 라벨 500건은 [`datasets/dataset-v0.9/main500.jsonl`](datasets/dataset-v0.9/main500.jsonl)에도 있습니다. 필드와 주의점은 [데이터셋 문서](datasets/dataset-v0.9/README.md)를 보세요.
 
 ```powershell
 git clone https://github.com/Deleted-Code-Search/Deleted-Code-Search.git
 cd Deleted-Code-Search
+
+# jsonl.gz 전체, 약 700MB
+gh release download dataset-v0.9 -p "*.jsonl.gz" -D data/export/dataset-v0.9
+```
+
+**대시보드·검색 실행 (Windows PowerShell)** — Python 3.12와 Node.js 20 이상이 필요합니다. 대시보드 숫자는 저장소에 들어 있어 데이터 없이 바로 뜹니다. 아래 명령은 저장소 폴더에서 실행합니다.
+
+```powershell
 python -m venv .venv; .venv\Scripts\activate
 pip install -e ".[web]"
 
-# 키워드 검색 색인 (위의 데이터셋 필요, 약 5분 · 약 7GB)
+# 키워드 검색 색인 (위에서 받은 데이터셋 필요, 약 5분 · 약 7GB)
 python -m search.index
 
 # API (http://localhost:8000). 스마트 앱 컨트롤이 막으면 Docker Desktop에서 docker compose up api
 uvicorn search.api:app --reload
 
-# 새 PowerShell 창에서 화면 (http://localhost:5173)
+# 새 PowerShell 창을 열고 저장소 폴더에서 화면 실행 (http://localhost:5173)
 cd web; npm install; npm run dev
 ```
 
