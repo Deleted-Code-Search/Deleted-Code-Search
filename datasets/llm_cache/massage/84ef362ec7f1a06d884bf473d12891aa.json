@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "UNK|커밋 메시지와 PR 본문은 'tokenizer group' 기능 전체 제거 이유를 설명하나 이 특정 테스트 함수를 이름으로 지목하지 않았고, 테스트 본문에도 @skip·@xfail 등 삭제 사유를 드러내는 표지가 없으며, 같은 커밋의 다른 tokenizer 그룹 테스트에도 똑같이 적용될 일반적인 이유라 구별 검사에 걸린다."}

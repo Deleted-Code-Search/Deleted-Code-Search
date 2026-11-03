@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "LIB|커밋 메시지와 PR이 \"Stop vendoring sphinx-gallery\"라고 명시하며, 이 파일이 벤더링된 sphinx-gallery 코드의 일부로 외부 라이브러리 사용으로 대체되어 삭제됨"}

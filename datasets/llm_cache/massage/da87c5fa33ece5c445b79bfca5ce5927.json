@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 StateProxy/LockedListProxy 계층을 제거하고 flow.state가 원시 상태 객체를 직접 반환하도록 바꾼다고 명시하며, 삭제된 __add__는 그 프록시 계층의 일부다."}

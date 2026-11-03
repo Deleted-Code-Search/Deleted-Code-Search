@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|PR 본문과 이슈 #1253이 `ContentStream` 추상화를 완전히 제거하고 `can_replay()`를 없애며, 대신 plain `Iterable[bytes]`/`AsyncIterable[bytes]`와 새로운 스트림 클래스들(`GeneratorStream` 등)에서 `__iter__`/`__aiter__` 재시도 시 예외를 던지는 방식으로 설계를 변경한다고 명시함"}

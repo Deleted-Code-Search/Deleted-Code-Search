@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DEAD|커밋 메시지가 \"Deprecate TF + JAX\"라며 테스트 대상(TF+JAX)을 명시하고 \"Delete the tests\"로 테스트 삭제를 선언했으므로, 이 테스트 헬퍼 함수는 검증 대상이 사라져 죽은 코드로 제거됐다."}

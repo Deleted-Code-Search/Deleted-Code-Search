@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR 본문에서 DoclingParseDocumentBackend가 ThreadedDoclingParseDocumentBackend를 감싸는 deprecated 호환 래퍼로 대체되고 레거시 백엔드 구현이 제거되었다고 밝혀, 이 헬퍼가 쓰던 백엔드가 사라져 호출 대상이 없어졌다."}

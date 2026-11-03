@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR 본문이 `sql_lab_utils.py`를 제거하고 `Database.execute()`로 대체했다고 밝혀, 이 테스트가 검증하던 `_apply_limit` 함수가 사라져 검증 대상이 없어졌다."}

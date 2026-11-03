@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지와 PR 본문이 sphinx-gallery 벤더링 중단만을 말할 뿐, 이 visit_Attribute 함수나 backreferences.py를 이름으로 가리키는 삭제 이유 문장이 없고, 대체 코드·호출자 변화·공개 표면 변화도 화면에 없다."}

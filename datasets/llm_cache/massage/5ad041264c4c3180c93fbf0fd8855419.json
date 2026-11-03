@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 \"This replaces AST source parsing for router return values, crew references, and state schema with runtime metadata plus explicit @router(paths=...) or Literal/Enum return hints\"라며 AST 파싱 기반 introspection을 런타임 메타데이터 기반 FlowDefinition으로 대체했고, 삭제된 visit_Compare는 그 AST 상태 속성 추론 코드의 일부다."}

@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "PERF|이슈 #2509가 10배 성능 저하(3.26s→36.70s)를 보고했고, PR 제목이 \"fix(docx): slow table parsing\"이며 본문에서 \"Simplify the parsing of tables with just text (no rich cells) and remove the addition and deletion of text items\"라고 명시해, 리치 셀 그룹핑 로직이던 이 함수를 단순 테이블 경로에서 제거해 비용을 줄인 것으로 판단됨."}

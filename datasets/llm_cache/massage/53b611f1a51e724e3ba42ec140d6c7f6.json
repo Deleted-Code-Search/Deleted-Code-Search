@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|커밋 메시지 \"MAINT Unvendor joblib\"와 파일 경로 `sklearn/externals/joblib/...`가 이 함수가 벤더링된 joblib의 일부임을 보여주며, 전체 벤더링 코드를 외부 의존성으로 전환하는 구조 변경(언벤더링)의 일환으로 삭제되었음을 나타낸다."}

@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DEAD|리뷰 코멘트 \"No need to test v1.0\"와 \"We don't need to test this\"가 이 테스트가 검증하던 v1.0 Apache AGE 구현이 이번 커밋의 v3 파이프라인 포트로 제거됐음을 나타내므로, 테스트 대상이 사라져 죽은 코드가 됐다."}

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|커밋 메시지가 \"Content is therefore modelled as ordered blocks — paragraphs, tables and pictures — rather than paragraphs with tables appended\"라며 본문 파싱 구조를 문단+표 부착 방식에서 순서 있는 블록 모델로 바꿨고, 삭제된 _read_iwa_document가 바로 그 문단+표 반환 구조를 만들던 함수다."}

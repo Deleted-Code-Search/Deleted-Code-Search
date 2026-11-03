@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DEAD|커밋 메시지 \"Remove old panda subtree\"가 이 테스트가 검증하던 구현체(panda 서브트리)를 이 커밋에서 제거한다고 명시하므로, 테스트 대상이 사라져 검증할 것이 없어진 데드 코드가 되었다."}

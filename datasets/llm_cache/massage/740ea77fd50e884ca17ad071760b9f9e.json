@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "LIB|커밋 메시지가 \"Update urllib3 to 29aa09bde9c42cc9a8d79aac47ee3d362b438cca\"로 벤더링된 urllib3 업데이트임을 명시하고, requests/packages/urllib3/ 경로의 HTTPHeaderDict 클래스가 dict 상속으로 재구조화되면서 copy 메서드가 새로운 내부 구조(_dict_getitem/_dict_setitem 사용)에 맞춰 재작성되었음"}

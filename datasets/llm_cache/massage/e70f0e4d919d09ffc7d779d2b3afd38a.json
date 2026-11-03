@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "LIB|커밋 메시지 \"move selfdrive/car to opendbc\"와 PR 본문의 \"opendbc PR: https://github.com/commaai/opendbc/pull/1049\"가 이 구현을 외부 라이브러리(opendbc)로 이동함을 명시하므로, 이 커밋에서 직접 구현을 외부 라이브러리 호출로 바꾼 경우에 해당한다."}

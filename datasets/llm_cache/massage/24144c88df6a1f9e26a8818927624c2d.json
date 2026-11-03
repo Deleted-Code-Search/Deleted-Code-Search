@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "UNK|커밋 메시지가 \"Update urllib3 to...\"로 벤더링 업데이트 사실만 서술하고, 경로가 requests/packages/urllib3/로 벤더 디렉터리이며, 삭제된 함수가 같은 이름·자리에 새 구현으로 대체되어 삭제 자체의 별도 이유를 화면에서 특정할 수 없다"}

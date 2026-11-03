@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 \"OpenUV currently uses a custom data management object... This PR replaces the custom object with coordinators\"라고 명시하고, 삭제된 async_update의 두 갱신 작업이 같은 커밋이 추가한 coordinators의 update_method(client.uv_index, async_update_protection_data)와 update_data 서비스 핸들러로 이어받아짐"}

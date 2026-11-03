@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "FEAT|PR 본문이 `Config.allow_extra` 가 더 이상 인식되지 않고 `Config.extra` 를 쓰라고 명시하며, 삭제된 테스트가 이 폐지된 공개 설정 옵션의 경고 동작을 검증하고 있다."}

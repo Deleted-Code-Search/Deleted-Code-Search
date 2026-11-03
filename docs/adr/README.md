@@ -1,6 +1,6 @@
 # ADR (Architecture Decision Record)
 
-설계 결정을 하나씩 파일로 기록한다. CHARTER.md §5에 요약된 ADR-001~011도 여기에 개별 파일로 옮긴다.
+설계 결정을 하나씩 파일로 기록한다. ADR-001~011은 CHARTER.md §5 표에 요약으로 있고, 개별 파일은 ADR-012부터다.
 
 - 파일명: `NNN-짧은-제목.md` (예: `001-python-first.md`)
 - 템플릿: `000-template.md`

@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 \"Move nested function `group_cell_elements` out of `_handle_tables` for readability\"라고 이 함수를 이름으로 지목하며, 같은 일이 다른 위치로 옮겨졌음을 밝힌다."}

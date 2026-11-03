@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR이 SIP-35에 따른 Dashboard API 리팩터링이라고 밝히고, 삭제된 pre_load는 스키마 로딩 훅으로 이 구조 변경에서 다른 자리로 옮겨졌을 뿐 대체 코드가 이 파일에 없으므로 구조·책임 재편에 따른 삭제로 본다."}

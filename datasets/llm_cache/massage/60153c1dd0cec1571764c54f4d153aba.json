@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "BUG|`_nan_idxs`가 `_can_hold_na`가 False인 경우(예: 정수형 Index) `self._isnan.nonzero()`에서 오류가 날 수 있는 경계 조건을 고치려고, 같은 자리에 `_can_hold_na` 분기를 추가한 대체 코드로 바꿨다."}

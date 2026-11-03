@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "UNK|커밋 메시지가 'black 포맷팅'만 언급하고 이 테스트가 RandomTranslation에서 RandomZoom으로 변경된 이유를 설명하지 않으며, 대체 코드가 다른 레이어를 테스트하는 것일 뿐 삭제된 테스트의 의도를 계승했다는 근거가 되지 못한다 (U1, U3, no-replacement-rationale)"}

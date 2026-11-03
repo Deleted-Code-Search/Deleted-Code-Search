@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|추가된 코드(7-8번째 블록)에서 `__array_wrap__`이 `self.values.__array_wrap__`로 위임하고 `__array_ufunc__`이 새로 생겨 `self.values.__array_ufunc__`로 위임하는 구조로 바뀌어, ufunc 처리 책임이 SparseSeries에서 SparseArray(ExtensionArray)로 이동한 구조 변경이다."}

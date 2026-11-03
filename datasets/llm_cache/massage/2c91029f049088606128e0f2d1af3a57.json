@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|PR 본문이 \"v3 pipeline\" 전환으로 구 파이프라인을 교체한다고 명시하고, 하이브리드 검색(semantic+BM25+entity boost)으로 기존 코사인 유사도 단일 검색을 대체한다고 설명하며, 이 함수가 구 파이프라인의 목적지 노드 검색 로직이라 새 설계에서 맞지 않게 되어 삭제됨"}

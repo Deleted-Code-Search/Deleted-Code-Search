@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|PR 설명이 \"port v3 pipeline\"이라며 파이프라인 전체를 재설계(하이브리드 검색·애디티브 스코어링 도입)했고, 이 함수가 속한 구 Kuzu 검색 로직이 새 아키텍처에서 더 이상 맞지 않게 되어 삭제됐음"}

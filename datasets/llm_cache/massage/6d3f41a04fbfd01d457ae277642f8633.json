@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "LIB|PR 본문 \"removing all vendored dependencies\"가 이 파일이 벤더링된 urllib3 의존성이며, 이를 외부 라이브러리(urllib3 패키지 또는 표준 라이브러리)로 대체하려고 삭제함을 명시함"}

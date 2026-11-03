@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 본문이 ContentStream을 완전히 제거하고 스트림 인터페이스를 plain Union[Iterable[bytes], AsyncIterable[bytes]]로 바꾼다고 밝히며, 같은 커밋이 이 파일에 PlainByteStream·GeneratorStream 등 새 스트림 클래스와 encode의 (headers, stream) 반환으로 재구성해 can_replay/get_headers 아티팩트를 없앴다."}

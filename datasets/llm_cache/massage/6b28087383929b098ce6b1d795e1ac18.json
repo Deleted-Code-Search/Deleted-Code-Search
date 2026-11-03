@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR #544 \"Drop sync\"가 동기 클라이언트 지원 자체를 제거한다고 명시하며, 이 파일 httpx/dispatch/wsgi.py의 동기 WSGI dispatcher __init__이 그 제거 대상에 속한다."}

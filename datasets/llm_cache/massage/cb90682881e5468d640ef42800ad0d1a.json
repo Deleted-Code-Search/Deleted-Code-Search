@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|대체 코드에서 `_nan_idxs`가 `_can_hold_na` 검사를 추가해 `fillna` 구현에 맞게 재작성됐고, 커밋 메시지·PR이 `Index.fillna` 기능 추가를 위한 구조 변경을 명시함"}

@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|PR 본문이 \"Removed `sql_lab_utils.py` ... replaced with direct `Database.execute()` call\"이라며 구조 변경을 명시하고, 테스트 대상 모듈 자체가 제거돼 같은 기능(리미트 적용)이 `Database.execute()`에서 계속되므로 설계 변경으로 판단."}

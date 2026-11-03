@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|커밋 메시지가 \"Updated AsyncPlaywrightCrawlerStrategy for better flexibility and reduced legacy parameters\"라고 명시해 이 클래스의 메서드인 take_screenshot이 레거시 파라미터로 제거됐음을 나타냄"}

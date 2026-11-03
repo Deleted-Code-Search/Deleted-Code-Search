@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "FEAT|커밋 메시지 \"Remove Hypothesis plugin for now\"와 PR 본문 \"Remove Hypothesis plugin\"이 이 플러그인 기능 자체를 사용자 표면에서 제거함을 명시하므로, 공개 기능 폐기로 분류한다."}

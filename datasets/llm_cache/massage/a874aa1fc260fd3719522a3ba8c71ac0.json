@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|삭제된 함수 독스트링이 \"Deprecated: Provides backwards-compatibility with old method Browser().close() and playwright BrowserContext.close()\"라고 명시하고, PR이 Playwright를 완전히 제거하고 cdp-use 기반 이벤트 드리븐 아키텍처로 재작성하면서 close() 대신 stop()을 사용하는 새 생명주기로 교체했기 때문"}

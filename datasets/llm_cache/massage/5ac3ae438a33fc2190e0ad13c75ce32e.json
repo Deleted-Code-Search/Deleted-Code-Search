@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "UNK|커밋 메시지와 PR이 selfdrive/car 코드를 opendbc 저장소로 이동(move)한다고 명시하고 있어 이 삭제는 타 저장소로의 순수 이관에 해당한다."}

@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "UNK|커밋 메시지가 'old panda subtree' 전체 제거만 언급할 뿐 이 테스트 함수나 파일을 구체적으로 지목하지 않았고, 대체 코드·호출자 변화·비활성화 마커도 없어 삭제 이유를 특정할 수 없다"}

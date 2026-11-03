@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "UNK|커밋 메시지가 'CLI를 Click으로 리팩터링' 같은 큰 작업만 기술할 뿐 이 테스트 함수나 검증 대상(`Command._format_epilog`)을 이름으로 지목하지 않고, 대체 코드·호출자 변화·본문 단서도 화면에 없어 구체적 삭제 이유를 특정할 수 없다"}

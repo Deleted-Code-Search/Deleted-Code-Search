@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|커밋 메시지와 PR 본문이 \"SparseArray is an ExtensionArray\", \"It's no longer an ndarray subclass\"라며 내부 구조 변경을 명시하고, 추가된 코드에서 `__array_wrap__`이 `self.values.__array_wrap__`(SparseArray)로 위임하는 새 구현으로 교체되어 책임이 이동했음을 보여줌"}

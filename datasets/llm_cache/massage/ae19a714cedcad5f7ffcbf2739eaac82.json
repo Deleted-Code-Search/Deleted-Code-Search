@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR #720 본문이 `Config.allow_extra`가 더 이상 인식되지 않는다고 밝혀 공개 설정 옵션 자체가 제거됐다."}

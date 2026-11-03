@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|커밋 메시지들이 iWork/Pages 파싱 전략을 '단순 단락+표 추출'에서 '문자 스타일 런·리스트·인라인 이미지·정렬된 블록(단락/표/그림)' 모델로 전면 재설계한다고 명시하며, 삭제된 `_read_iwa_document` 는 구 전략의 핵심 함수라 새 구조에 맞지 않아 제거됨"}

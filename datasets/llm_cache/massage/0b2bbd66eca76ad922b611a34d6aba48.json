@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DEAD|커밋 메시지와 PR 본문이 \"obsolete cookie test mixing bytes with str\"라 명시하고 Python 3에서 SimpleCookie가 bytes를 repr 문자열로 강제 변환하므로 이 테스트가 검증 대상을 잃었음을 설명한다."}

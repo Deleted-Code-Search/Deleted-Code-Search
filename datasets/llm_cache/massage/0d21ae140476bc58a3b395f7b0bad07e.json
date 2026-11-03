@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|PR 본문이 \"Refactor chatglm loading logic to use `AutoWeightsLoader`\"라 명시하고, 대체 코드가 직접 구현을 `AutoWeightsLoader` 위임으로 바꾸며 `WeightsMapper`로 이름 매핑을 분리해 책임·구조를 변경했음"}

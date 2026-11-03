@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|삭제된 코드의 독스트링이 \"Deprecated: Provides backwards-compatibility with old method Browser().close() and playwright BrowserContext.close()\"라고 밝혀 PR의 Playwright 제거·이벤트 주도 재설계(DESIGN)의 일환으로 호환 레이어가 사라졌음을 보여준다."}

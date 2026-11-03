@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "LIB|커밋 메시지 \"MAINT Unvendor joblib\"와 PR 본문 \"This unvendors joblib\"이 이 함수가 속한 벤더링된 joblib 코드 전체를 외부 라이브러리 joblib로 대체함을 명시하므로, 삭제된 구현이 이 커밋에서 외부 라이브러리 호출로 대체된 경우에 해당한다."}

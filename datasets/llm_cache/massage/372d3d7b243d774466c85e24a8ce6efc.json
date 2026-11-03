@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 커밋이 `_nan_idxs`를 `_can_hold_na` 분기를 추가한 형태로 같은 파일에 다시 추가해, `hasnans`·`_isnan`과 함께 base `Index`로 옮기는 구조 변경의 일부로 재작성됐다."}

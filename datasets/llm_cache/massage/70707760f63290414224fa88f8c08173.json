@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|커밋 메시지가 experimental을 외부 저장소로 migrate한다고만 말할 뿐 이 테스트를 이름으로 가리키지 않고, 대체 코드·호출자 변화·공개 표면 변화 등 근거 6종이 화면에 없다 (move 대상 저장소만 밝히고 이 파일이 그 대상 안에 있다는 표시도 없음)."}

@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|클래스가 data_format 지원과 ops 기반 구현으로 재설계되면서 compute_output_shape가 self.layer 위임에서 직접 계산 방식으로 교체되었고, 같은 함수명이 새 시그니처와 로직으로 계속 존재함"}

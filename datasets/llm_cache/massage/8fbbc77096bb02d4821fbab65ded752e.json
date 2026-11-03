@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DEAD|커밋 메시지가 \"Removed Meta.index_together per deprecation timeline\"이라 명시해 이 테스트가 검증하던 대상(index_together 기능)이 이번 커밋에서 제거되었음을 밝히고 있으며, 테스트 가이드라인에 따라 검증 대상이 사라진 테스트 삭제는 DEAD로 분류한다."}

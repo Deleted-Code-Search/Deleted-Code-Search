@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "LIB|PR 본문이 \"removing all vendored dependencies from Requests\"라고 명시하고, 파일 경로 `requests/packages/urllib3/`가 벤더링된 urllib3 복사본 위치이므로, 이 구현을 외부 라이브러리 호출로 대체하기 위해 삭제함"}

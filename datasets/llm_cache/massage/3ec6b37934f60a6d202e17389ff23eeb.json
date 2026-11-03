@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 본문이 sklearn.grid_search 모듈의 GridSearchCV 등이 model_selection으로 재편되어 제거됨을 명시하고, 이 테스트가 검증하던 grid_search.GridSearchCV의 kernel_function 오류 동작이 공개 API에서 사라졌다."}

@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|추가된 코드에 `__array_wrap__`가 `self.values.__array_wrap__`로 위임하는 새 구현으로 대체되었고, 커밋 메시지·PR이 SparseArray를 ExtensionArray로 만들며 ndarray 상속을 중단하는 구조 변경을 설명한다."}

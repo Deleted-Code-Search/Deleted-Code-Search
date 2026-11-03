@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "UNK|삭제된 함수와 동일한 본문이 같은 커밋의 추가 코드에 다른 클래스(PokemonList, PokemonDict) 안에 그대로 다시 나타나 순수 이동·재배치로 보이나, 커밋 메시지·PR·리뷰 어디에도 이 함수나 테스트를 이름으로 가리키며 삭제의 \"왜\"를 말하는 문장이 없다."}

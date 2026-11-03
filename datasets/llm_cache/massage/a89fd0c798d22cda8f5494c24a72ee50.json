@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DEAD|PR 본문이 \"grid_search.GridSearchCV\"를 제거 대상([x] grid_search.GridSearchCV)으로 명시했고, 이 테스트가 해당 모듈의 GridSearchCV를 호출하므로 검증 대상이 사라져 삭제됐다."}

@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "UNK|리뷰 코멘트가 \"이 테스트는 test_apply.py의 중복\"이라고 명시하나, 중복 테스트 제거라는 사유가 8종 분류(BUG/PERF/SEC/LIB/DEAD/DESIGN/FEAT) 중 어디에도 해당하지 않고 삭제된 테스트 본문에도 @skip·@xfail 등 분류 가능한 단서가 없기 때문"}

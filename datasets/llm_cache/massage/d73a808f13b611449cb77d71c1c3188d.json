@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "UNK|커밋 메시지와 PR이 selfdrive/car 전체를 opendbc 저장소로 이동시키는 대규모 마이그레이션임을 밝히고 있으며, 이 파일에 대체 코드나 호출자 변화 등 6가지 근거가 전혀 보이지 않아 판단 재료가 없다."}

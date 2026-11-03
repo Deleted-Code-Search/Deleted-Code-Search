@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "LIB|커밋 메시지 \"Integrated the admin\"와 추가된 코드에 Flask-Admin 라이브러리 임포트·설정 코드가 등장하며, 삭제된 커스텀 뷰 라우트(`/datasource/<name>/`)가 플라스크-어드민의 모델 뷰로 대체되는 라이브러리 전환 커밋임"}

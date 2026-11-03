@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|PR 제목과 본문이 \"Use attributes in wilight\"라고 명시하며, 삭제된 `name` 프로퍼티의 역할을 `_attr_name` 속성으로 대체해 베이스 클래스의 표준 속성 패턴으로 이관했음"}

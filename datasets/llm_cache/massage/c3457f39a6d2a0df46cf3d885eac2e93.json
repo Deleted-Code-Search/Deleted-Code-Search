@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|커밋 메시지가 \"experimental: migrate to external repo\"라고 명시하며 실험 모듈 전체를 외부 저장소로 이전하는 구조 변경을 설명하므로, 이 테스트가 속한 모듈의 책임·위치가 바뀌어 삭제됐다."}

@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|커밋 메시지가 \"Python 3에서 __ne__는 이미 __eq__의 반대 연산으로 정의된다\"고 설명하며, 이 메서드 구현이 언어 기본 동작으로 대체됐음을 명시한다."}

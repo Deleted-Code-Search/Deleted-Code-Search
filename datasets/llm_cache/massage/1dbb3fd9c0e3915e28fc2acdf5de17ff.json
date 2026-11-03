@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|커밋 메시지와 PR 제목이 `eval_type_backport()` 지원을 제거한다고 명시하고, 리뷰 코멘트에서 'backport'에서 'vendored' 구현으로 전략이 바뀌었음이 확인되며, 추가된 코드에 `typing._eval_type`와 `typing._type_convert`를 벤더링한 새 구현이 있어 같은 타입 평가 일을 다른 자리에서 계속함"}

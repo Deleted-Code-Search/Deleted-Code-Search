@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR 제목 \"Deprecate TF + JAX\"와 본문, \"Delete the tests\" 메시지가 이 파일의 JAX 테스트 제거를 가리키며, JAX 지원 자체가 폐기되어 이 테스트가 검증하던 기능이 사라졌다."}

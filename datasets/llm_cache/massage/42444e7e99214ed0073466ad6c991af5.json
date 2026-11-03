@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DEAD|커밋 메시지가 \"Removed support for passing raw column aliases to order_by()\"라고 명시해 이 테스트가 검증하던 디프리케이션 경고 동작 자체가 제거되었음을 나타내며, 같은 자리에 경고 대신 FieldError를 검증하는 새 테스트가 추가됨"}

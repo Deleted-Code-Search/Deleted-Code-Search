@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DEAD|커밋 메시지 \"Drop unneccessary __hash__ methods\"가 이 테스트가 검증하던 SSLConfig.__hash__ 기능이 제거됐음을 말하고, 테스트 본문이 dict 키로 쓰는 해시 동작만 검증하므로 대상 기능 소멸로 죽은 코드가 됐다."}

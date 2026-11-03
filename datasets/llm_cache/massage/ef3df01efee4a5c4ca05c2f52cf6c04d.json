@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "FEAT|PR #42235 제목·본문이 \"delete already deprecated models\"라며 V5를 위해 이미 폐기된 모델들을 삭제한다고 명시하고, 파일 경로가 models/deprecated/deta/modeling_deta.py로 해당 폐기 모델에 속한다."}

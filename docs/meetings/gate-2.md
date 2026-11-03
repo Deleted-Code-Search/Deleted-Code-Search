@@ -130,3 +130,5 @@
 ## §10.6 정리 시 반영할 것
 
 - §10.6 의 A 는 게이트 2 미달인 test 60.0% (`r1+m2+c3`) 이고, 100개 저장소 전체에 붙는 모델만 버전에는 test 값이 없다(val 52.0%) — P × A 를 정리할 때(#129) 어느 A 를 쓰는지 정해야 한다.
+
+게이트 2 이후 개선 정리(판정은 바뀌지 않음): [`docs/reports/classifier_improvement.md`](../reports/classifier_improvement.md)

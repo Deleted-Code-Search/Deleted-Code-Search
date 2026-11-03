@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "FEAT|공개 API 엔드포인트(`/task/{task_id}`)가 대체 엔드포인트 없이 삭제되고, 같은 커밋에서 크롤링 기능(`/strategies/...`, `crawl_urls`)로 공개 표면이 교체되어 사용자 기능이 제거됨"}

@@ -1,0 +1,4 @@
+reviews:
+  path_filters:
+    - "!datasets/llm_cache/**"
+    - "!docs/reports/massage/stage2/*.jsonl"

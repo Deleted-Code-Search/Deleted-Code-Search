@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|커밋 메시지와 PR 본문이 `StateProxy`/`LockedDictProxy`/`LockedListProxy` 계층 전체를 제거하기로 결정했다고 명시하며, `flow.state`가 이제 프록시 대신 내부 상태 객체를 직접 반환하도록 인터페이스가 변경되었으므로 이 `__add__` 메서드가 속한 `LockedListProxy`가 더 이상 필요 없게 되어 삭제됨"}

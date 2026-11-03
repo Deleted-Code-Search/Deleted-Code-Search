@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|HTTPHeaderDict 클래스가 dict를 상속받고 _data 대신 내부 딕셔너리를 직접 쓰도록 재설계되면서 기존 copy 구현이 맞지 않게 돼 새 구조(_dict_getitem/_dict_setitem)에 맞춰 다시 작성됨"}

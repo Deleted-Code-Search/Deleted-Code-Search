@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|커밋 메시지가 \"This replaces AST source parsing for router return values, crew references, and state schema with runtime metadata\"라 명시하고, 삭제된 `visit_Compare`가 AST 파싱으로 상태 속성 값을 추출하던 구 코드이며, 같은 커밋에서 `FlowDefinition` 등 런타임 메타데이터 기반 새 구조가 추가돼 같은 역할을 이어받기 때문"}

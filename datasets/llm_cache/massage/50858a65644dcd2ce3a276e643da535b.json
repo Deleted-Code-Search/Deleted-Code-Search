@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|PR 제목·본문이 \"Remove boilerplate code in favour of attributes\"라며 보일러플레이트 프로퍼티를 속성으로 대체한다고 밝히고, 같은 커밋이 `self._attr_device_class = SENSOR_TYPES[self.type][4]`를 추가해 device_class가 속성으로 이어받아짐"}

@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|커밋 메시지가 \"This replaces AST source parsing... with runtime metadata\"와 \"Move flow structure modeling into flow_definition.py\"라고 명시하며, 삭제된 visit_Compare가 수행하던 AST 기반 상태 속성 추출 기능을 FlowDefinition 런타임 메타데이터 방식으로 대체했음"}

@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|PR 본문이 \"Drop our custom `TRACE` level logging\"이라 명시하고 표준 INFO/DEBUG 레벨로 대체함을 설명하므로, 커스텀 TRACE 레벨 로깅 구조를 표준 로깅 방식으로 재설계하면서 이 함수가 불필요해진 것임"}

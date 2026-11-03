@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "BUG|PR 본문이 `send_multipart` 트래커가 항상 완료돼 `pending` 경로가 데드코드이며, 그 때문에 페이로드 버퍼가 중간에 덮어씌워져 `RuntimeError`·`msgspec.ValidationError`가 발생한다고 설명하고, 이 버그를 고치려고 `add_pending`와 관련 버퍼 보관 로직을 제거한다고 명시한다."}

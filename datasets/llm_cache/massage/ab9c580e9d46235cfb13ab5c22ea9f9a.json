@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|PR 본문이 \"Drop our custom `TRACE` level logging. Instead use `INFO` for logging requests, and `DEBUG` for logging the SSL config\"라고 명시해 커스텀 TRACE 레벨을 표준 로깅 레벨로 대체하는 구조 변경을 설명하므로, 같은 로깅 기능이 다른 레벨·방식으로 계속됨을 보여준다."}

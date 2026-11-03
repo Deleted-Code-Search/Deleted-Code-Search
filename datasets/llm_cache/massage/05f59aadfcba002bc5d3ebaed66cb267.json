@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "UNK|커밋 메시지가 'split/collect/parametrize tests'라며 대규모 테스트 재구성을 기술할 뿐 이 특정 테스트 함수를 이름으로 지목하지 않고, 추가된 코드에서 이 함수의 직접적 대체물이나 호출자 변화가 보이지 않아 삭제 이유를 특정할 수 없다"}

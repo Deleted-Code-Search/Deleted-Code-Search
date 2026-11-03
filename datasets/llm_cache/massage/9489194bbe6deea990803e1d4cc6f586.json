@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|커밋 메시지가 Pages 파싱을 'ordered blocks(문단·표·그림)' 모델로 전면 재설계한다고 명시하며, 기존 함수가 반환하던 (문단, 표) 분리 구조가 새 아키텍처와 맞지 않아 삭제됐다."}

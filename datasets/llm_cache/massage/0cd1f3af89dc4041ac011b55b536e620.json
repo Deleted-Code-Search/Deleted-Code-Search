@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|리뷰 코멘트가 \"Removing this test, it is the same as: test_apply.py#L230-L247\"라며 이 테스트가 기존 테스트와 중복됨을 명시, 검증 로직이 다른 파일(test_apply.py)에서 계속됨"}

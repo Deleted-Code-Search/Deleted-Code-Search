@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|커밋 메시지가 \"AST source parsing을 runtime metadata와 explicit decorator hints로 대체한다\"고 명시하고, \"obsolete introspection and serializer code를 제거한다\"고 하여 구조·책임·인터페이스를 바꾸면서 이 AST 방문자 코드가 맞지 않게 됐음을 밝힘"}

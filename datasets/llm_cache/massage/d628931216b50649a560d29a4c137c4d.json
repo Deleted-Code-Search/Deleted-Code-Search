@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DEAD|PR 본문이 grid_search 모듈의 클래스들이 model_selection으로 재편되었다고 밝혀, 이 테스트가 검증하던 sklearn.grid_search.GridSearchCV가 제거되어 검증 대상이 사라졌다."}

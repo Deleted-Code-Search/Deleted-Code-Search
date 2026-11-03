@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "UNK|커밋 메시지가 \"delete packages\"로 삭제 사실만 말하고, PR 설명이 전체 벤더링 제거 목표만 밝힐 뿐 이 함수·파일별 대체 코드나 호출자 변화 등 6종 근거가 화면에 없다."}

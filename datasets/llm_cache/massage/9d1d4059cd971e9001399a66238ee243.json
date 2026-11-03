@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "BUG|PR 본문이 `pending`이 dead code였고 트래커가 실제 재사용 버퍼를 덮지 못해 payload가 전송 중 덮여써져 `RuntimeError`/`ValidationError`가 발생한다고 명시하며, 이 함수가 그 잘못된 게이트 로직의 일부다."}

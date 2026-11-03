@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|커밋 메시지가 \"This replaces AST source parsing for router return values, crew references, and state schema with runtime metadata plus explicit `@router(paths=...)` or `Literal`/`Enum` return hints\"라며 AST 파싱 방식(visit_Compare 포함)을 런타임 메타데이터 기반 FlowDefinition으로 교체한다고 명시함"}

@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|PR 제목·본문이 Playwright 제거·cdp-use 전환이라는 대규모 구조 변경을 명시하고, 삭제된 close()가 'playwright BrowserContext.close()와의 호환용 deprecated 래퍼'였으며, 같은 역할(stop)이 새 이벤트 기반 API(on_BrowserStopEvent 등)로 이전됐기 때문"}

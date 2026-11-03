@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|리뷰 코멘트가 \"Removing this test, it is the same as: [test_apply.py의 동일 테스트]\"라고 명시해 테스트 구조 재편(중복 제거)으로 같은 검증이 다른 파일에서 계속됨을 보여줌"}

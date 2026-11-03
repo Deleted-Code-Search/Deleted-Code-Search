@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DEAD|PR 본문이 \"grid_search.GridSearchCV\"와 \"grid_search.RandomizedSearchCV\"를 이 커밋에서 제거 대상으로 명시([x])했고, 삭제된 테스트가 바로 그 GridSearchCV를 호출해 검증하던 테스트이므로 테스트 대상이 사라져 함께 지워진 경우다."}

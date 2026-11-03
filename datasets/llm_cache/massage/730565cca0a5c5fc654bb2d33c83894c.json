@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "DESIGN|같은 커밋이 이 파일에 추가한 __array_wrap__이 self.values.__array_wrap__에 위임하고 결과를 _constructor로 감싸는 형태로, 삭제된 본문의 ufunc 처리·fill_value 계산·재구성 역할을 이어받았다."}

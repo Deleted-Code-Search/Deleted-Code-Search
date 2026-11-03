@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|커밋 메시지가 \"Content is therefore modelled as ordered blocks — paragraphs, tables and pictures — rather than paragraphs with tables appended\"라며 문서 콘텐츠 모델을 단락+테이블 별도 리스트에서 순서 있는 블록 시퀀스로 재설계했음을 명시하고, 삭제된 함수가 구 모델(단락 리스트, 테이블 리스트 반환)을 구현하던 주 진입점이었기 때문"}

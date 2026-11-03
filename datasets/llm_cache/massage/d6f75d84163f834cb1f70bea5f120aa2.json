@@ -1,0 +1,1 @@
+{"model": "deepseek-ai/deepseek-v4.1-flash", "text": "BUG|PR 본문이 `pending` 게이트가 tracker가 항상 완료 상태라 절대 작동하지 않아 payload 버퍼가 전송 중 덮어써지는 경쟁 조건을 일으킨다고 설명하며, 이 함수가 그 죽은 게이트를 구성하는 부분이다."}

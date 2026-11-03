@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|커밋 메시지가 \"Removes the StateProxy / LockedDictProxy / LockedListProxy layer\"라며 프록시 계층 전체를 제거한다고 명시하고, \"for simplicity and performance: Simpler runtime code\"라며 구조 단순화(설계 변경)를 주이유로 제시하며, `flow.state`가 이제 프록시 대신 내부 상태 객체를 직접 반환하도록 인터페이스가 바뀌었기 때문"}

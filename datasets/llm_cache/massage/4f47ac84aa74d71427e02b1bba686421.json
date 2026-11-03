@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "FEAT|PR 본문이 \"GGUF shard controls\" 기능 전체를 제거한다고 명시하고 \"saving helpers\"를 삭제 대상에 포함시켰으며, 이 테스트가 그 shard splitting 기능을 검증하던 것이므로 기능 폐기에 따른 테스트 삭제다."}

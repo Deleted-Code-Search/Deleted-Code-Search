@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "FEAT|PR 본문이 \"Trawling through and dropping sync support everywhere\", \"have any sync support come in a 2.0 version\"이라 명시해 동기 지원 기능 자체를 폐기했음을 밝히고, 삭제된 함수가 WSGI 동기 디스패처의 생성자이므로 해당 기능 제거의 일부다."}

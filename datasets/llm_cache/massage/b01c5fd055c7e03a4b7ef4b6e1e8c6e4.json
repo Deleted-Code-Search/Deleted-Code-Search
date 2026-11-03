@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|커밋 메시지가 Pages 문서 파싱 구조를 'ordered blocks' 모델로 전면 재설계했음을 명시하며, 기존 `_read_iwa_document`가 담던 단순 텍스트·테이블 추출 방식이 더 이상 맞지 않게 됐음을 보여준다."}

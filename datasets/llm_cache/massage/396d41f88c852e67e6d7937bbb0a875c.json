@@ -1,0 +1,1 @@
+{"model": "nvidia/nemotron-3-ultra-550b-a55b", "text": "DESIGN|① 대체 코드에서 같은 이름의 함수가 시그니처(`*args, **kwargs` 추가)와 구현(위임→직접 계산, `data_format` 기반 축 결정) 모두 바뀌어 들어와 있어, 이 커밋의 \"data_format 추가·tf→ops 교체\" 구조 변경에 맞춰 책임·인터페이스가 재설계됐음을 보여준다."}
