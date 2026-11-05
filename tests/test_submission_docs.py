@@ -39,8 +39,8 @@ def test_relative_links_exist(doc):
 def test_readme_has_no_control_chars():
     # 백슬래시 경로가 이스케이프로 깨지면 명령이 조용히 틀린다 (실제로 겪었다).
     text = (ROOT / "README.md").read_text(encoding="utf-8")
-    assert not [c for c in text if ord(c) < 32 and c not in "
-	"]
+    allowed = {chr(9), chr(10), chr(13)}  # 탭·줄바꿈
+    assert not [c for c in text if ord(c) < 32 and c not in allowed]
 
 
 def test_run_ps1_has_bom():
