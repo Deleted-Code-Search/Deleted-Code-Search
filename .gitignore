@@ -48,3 +48,6 @@ datasets/labels/*.tmp
 
 # tsc -b 산출물
 *.tsbuildinfo
+
+# Vite 의존성 캐시 (run.ps1 실행 때 생긴다)
+web/.vite/
