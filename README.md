@@ -17,7 +17,7 @@
 | 포스터 PDF | (11/15 추가 예정) |
 | 시연 영상 | (11/15 추가 예정) |
 | 데이터셋 | [Release `dataset-v0.9`](https://github.com/Deleted-Code-Search/Deleted-Code-Search/releases/tag/dataset-v0.9) |
-| 실행 방법 | [`run.ps1`](run.ps1) ([바로 써보기](#바로-써보기)) |
+| 실행 방법 | [`run.cmd`](run.cmd) 더블클릭 ([바로 써보기](#바로-써보기)) |
 
 ## 🧭 심사위원용 안내
 
@@ -28,7 +28,7 @@
 | 실현 가능성 (사업화 계획) | 20 | [보고서 4장](docs/final/report.md#4-사업화-계획과-실현-가능성) |
 | 기술성·완성도 | 25 | [아키텍처](docs/final/report.md#5-시스템-설계), [평가 결과](docs/final/report.md#7-평가), 코드 [`pipeline/`](pipeline/) · [`classify/`](classify/) · [`search/`](search/) · [`web/`](web/) · [`tests/`](tests/) |
 | 팀 구성·역할 | 5 | [역할](docs/final/report.md#10-팀-구성과-역할), [협업 기록](docs/final/report.md#84-협업), [이슈](https://github.com/Deleted-Code-Search/Deleted-Code-Search/issues?q=is%3Aissue) · [PR](https://github.com/Deleted-Code-Search/Deleted-Code-Search/pulls?q=is%3Apr) |
-| 발표역량 | 5 | 현장 발표. 데모는 [`run.ps1`](run.ps1) |
+| 발표역량 | 5 | 현장 발표. 데모는 [`run.cmd`](run.cmd) |
 
 ## 소개
 
@@ -82,28 +82,32 @@ flowchart LR
 
 ## 바로 써보기
 
-**Windows는 [`run.ps1`](run.ps1) 하나면 됩니다.** Python 3.12와 Node.js 20 이상이 필요합니다. 저장소 폴더에서 실행하세요.
+**Windows는 저장소 폴더의 [`run.cmd`](run.cmd)를 더블클릭하면 됩니다.** Python 3.12와 Node.js 20 이상이 필요합니다. 실행 정책은 이 실행에만 풀리므로 따로 바꾸지 않아도 됩니다.
+
+터미널에서는 다음과 같습니다.
 
 ```powershell
 git clone https://github.com/Deleted-Code-Search/Deleted-Code-Search.git
 cd Deleted-Code-Search
-.\run.ps1
+.\run.cmd
 ```
 
-실행 정책 때문에 막히면 아래처럼 실행합니다.
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\run.ps1
-```
+`run.cmd`는 [`run.ps1`](run.ps1)을 실행합니다.
 
 | `run.ps1`이 하는 일 | 내용 |
 |---|---|
 | 파이썬 환경 | `.venv`가 없으면 만들고 `pip install -e ".[web,embed]"` |
-| 키워드 검색 색인 | 없으면 Release jsonl.gz를 받고(`gh` 로그인 상태일 때 자동, 약 700MB) `python -m search.index` (약 5분 · 약 7GB) |
+| 키워드 검색 색인 | 없으면 Release jsonl.gz를 받고(`gh` 로그인 상태일 때 자동, 약 700MB) `python -m search.index` (약 5분 · 약 7GB). 다운로드가 실패하면 색인을 건너뛰고 안내합니다 |
 | 의미 검색 임베딩 | 없으면 안내만 합니다. 키워드 검색은 동작하고, 의미 검색은 `python -m search.embed`(약 5시간) 뒤에 켜집니다 |
-| API·웹 | 새 창 두 개에 API(`http://127.0.0.1:8000`)와 웹(`http://localhost:5173`)을 띄우고 브라우저를 엽니다 |
+| API·웹 | 새 창 두 개에 API(`http://127.0.0.1:8000`)와 웹(`http://localhost:5173`)을 띄우고 브라우저를 엽니다. 제시간에 뜨지 않으면 멈추고 알립니다 |
 
-데이터가 없어도 대시보드는 바로 뜹니다. 끝낼 때는 새로 열린 창 두 개를 닫습니다.
+데이터가 없어도 대시보드는 바로 뜹니다. 끝낼 때는 API·Web 창을 닫습니다.
+
+포트 8000·5173에 우리 API·웹이 이미 떠 있으면 새 창 없이 재사용하고, 다른 프로그램이 쓰고 있으면 포트 충돌을 알리고 멈춥니다. 재사용 중인 서버는 그 API·Web 창을 닫아 끕니다. 창을 찾을 수 없으면 PowerShell에서 다음을 실행합니다.
+
+```powershell
+Get-NetTCPConnection -LocalPort 8000,5173 -State Listen | ForEach-Object { Stop-Process -Id $_.OwningProcess }
+```
 
 <details>
 <summary>직접 실행하기 (run.ps1 없이)</summary>
