@@ -3,3 +3,5 @@
 *.png binary
 *.jpg binary
 *.parquet binary
+# cmd.exe 는 LF 배치 파일을 잘못 읽을 수 있다
+*.cmd text eol=crlf

@@ -1,9 +1,9 @@
 ﻿# 지워진 코드 검색엔진 - 대시보드·검색 한 번에 띄우기 (Windows PowerShell 5.1 이상)
 #
+# 탐색기에서는 run.cmd 를 더블클릭한다 (실행 정책을 이 실행에만 풀어 준다).
+# 터미널에서는:
 #   .\run.ps1
-#
-# 실행 정책 때문에 막히면:
-#   powershell -ExecutionPolicy Bypass -File .\run.ps1
+#   powershell -ExecutionPolicy Bypass -File .\run.ps1    # 실행 정책 때문에 막히면
 #
 # 필요한 것: Python 3.12, Node.js 20 이상. 데이터 자동 받기에는 GitHub CLI(gh, 로그인 상태)가 필요하다.
 # 이 파일은 BOM 이 있는 UTF-8 이어야 한다. BOM 이 없으면 PowerShell 5.1 이 한글을 깨뜨려 읽는다.
@@ -18,6 +18,7 @@ $ApiPort = 8000
 $WebPort = 5173
 $ApiUrl = "http://127.0.0.1:$ApiPort"
 $WebUrl = "http://localhost:$WebPort"
+$WebTitle = "<title>Deleted Code Search</title>"  # web/index.html
 $DataDir = "data\export\dataset-v0.9"
 $IndexFile = "data\search\dataset-v0.9.sqlite"
 $SemanticManifest = "data\search\semantic\manifest.json"
@@ -80,10 +81,40 @@ function Start-Window([string]$Title, [string]$Command) {
 function Wait-Port([string]$HostName, [int]$Port, [int]$Seconds) {
     $deadline = (Get-Date).AddSeconds($Seconds)
     while ((Get-Date) -lt $deadline) {
-        if (Test-Port $HostName $Port) { return $true }
+        if (Test-Port -HostName $HostName -Port $Port) { return $true }
         Start-Sleep -Milliseconds 500
     }
     return $false
+}
+
+# 포트가 열려 있어도 우리 서버라는 보장이 없다. 응답 내용으로 확인한다.
+function Test-OurApi {
+    try {
+        $health = Invoke-RestMethod -Uri "$ApiUrl/api/health" -TimeoutSec 5
+        return ($health.status -eq "ok") -and ($null -ne $health.search_index)
+    } catch {
+        return $false
+    }
+}
+
+function Test-OurWeb {
+    try {
+        $page = Invoke-WebRequest -Uri $WebUrl -UseBasicParsing -TimeoutSec 5
+        return $page.Content.Contains($WebTitle)
+    } catch {
+        return $false
+    }
+}
+
+# --- 0. 포트 ------------------------------------------------------------------------------------
+# 설치·색인(약 5분)을 다 한 뒤에 충돌로 멈추지 않게 맨 앞에서 본다.
+$ApiRunning = Test-Port -HostName "127.0.0.1" -Port $ApiPort
+$WebRunning = Test-Port -HostName "localhost" -Port $WebPort
+if ($ApiRunning -and -not (Test-OurApi)) {
+    Stop-WithPause "포트 $ApiPort 을 다른 프로그램이 쓰고 있습니다 ($ApiUrl/api/health 응답이 우리 API 가 아닙니다). 그 프로그램을 끄고 다시 실행하세요."
+}
+if ($WebRunning -and -not (Test-OurWeb)) {
+    Stop-WithPause "포트 $WebPort 을 다른 프로그램이 쓰고 있습니다 ($WebUrl 응답이 우리 웹이 아닙니다). 그 프로그램을 끄고 다시 실행하세요."
 }
 
 # --- 1. 파이썬 환경 -----------------------------------------------------------------------------
@@ -112,14 +143,20 @@ if (Test-Path $IndexFile) {
     Say "키워드 색인이 있습니다 ($IndexFile)"
 } else {
     Say "키워드 색인이 없습니다 ($IndexFile)"
+    $downloadFailed = $false
     if (Get-Command gh -ErrorAction SilentlyContinue) {
         Note "Release dataset-v0.9 의 jsonl.gz 를 받습니다 (약 700MB, 받은 파일은 건너뜁니다)"
         & gh release download dataset-v0.9 -p "*.jsonl.gz" -D $DataDir --skip-existing `
             --repo Deleted-Code-Search/Deleted-Code-Search
-        if ($LASTEXITCODE -ne 0) { Note "자동으로 받지 못했습니다. gh auth login 을 확인하세요." }
+        $downloadFailed = $LASTEXITCODE -ne 0
     }
     $shards = @(Get-ChildItem -Path $DataDir -Filter "*.jsonl.gz" -ErrorAction SilentlyContinue)
-    if ($shards.Count -eq 0) {
+    if ($downloadFailed) {
+        # 일부만 받은 채 색인을 만들면, 다음 실행부터 색인이 있다고 보고 빠진 저장소를 영영 채우지 않는다.
+        Note "데이터를 다 받지 못해 색인 만들기를 건너뜁니다. 대시보드만 동작합니다."
+        Note "gh auth login 과 네트워크를 확인하고 다시 실행하세요. 받은 파일은 건너뜁니다."
+        Note $ReleaseUrl
+    } elseif ($shards.Count -eq 0) {
         Note "데이터가 없어 대시보드만 동작합니다. 검색을 쓰려면 아래에서 jsonl.gz 를 받아 $DataDir 에 넣고 다시 실행하세요."
         Note $ReleaseUrl
     } else {
@@ -137,13 +174,15 @@ if (Test-Path $SemanticManifest) {
 }
 
 # --- 3. API --------------------------------------------------------------------------------------
-if (Test-Port "127.0.0.1" $ApiPort) {
-    Say "포트 $ApiPort 이 이미 쓰이고 있어 그대로 씁니다 ($ApiUrl/api/health 로 확인)"
+if ($ApiRunning) {
+    Say "API 가 이미 떠 있어 그대로 씁니다 ($ApiUrl)"
 } else {
     Say "API 를 새 창에서 띄웁니다 ($ApiUrl)"
     $apiCommand = "& '.venv\Scripts\python.exe' -m uvicorn search.api:app --host 127.0.0.1 --port $ApiPort"
-    Start-Window "Deleted Code Search - API" $apiCommand
-    if (-not (Wait-Port "127.0.0.1" $ApiPort 90)) { Note "API 가 90초 안에 뜨지 않았습니다. API 창의 오류를 확인하세요." }
+    Start-Window -Title "Deleted Code Search - API" -Command $apiCommand
+    if (-not (Wait-Port -HostName "127.0.0.1" -Port $ApiPort -Seconds 90)) {
+        Stop-WithPause "API 가 90초 안에 뜨지 않았습니다. API 창의 오류를 확인하세요."
+    }
 }
 
 # --- 4. 웹 --------------------------------------------------------------------------------------
@@ -158,13 +197,16 @@ if (-not (Test-Path "web\node_modules")) {
     Pop-Location
     if ($npmExit -ne 0) { Stop-WithPause "npm install 이 실패했습니다. 위 오류를 확인하세요." }
 }
-if (Test-Port "localhost" $WebPort) {
-    Say "포트 $WebPort 이 이미 쓰이고 있어 그대로 씁니다"
+if ($WebRunning) {
+    Say "웹이 이미 떠 있어 그대로 씁니다 ($WebUrl)"
 } else {
     Say "웹을 새 창에서 띄웁니다 ($WebUrl)"
     # localhost 로 API 를 부르면 Windows 가 IPv6 부터 시도해 첫 연결이 늦다 (docs/reports/search_latency.md).
-    Start-Window "Deleted Code Search - Web" "`$env:VITE_API_BASE = '$ApiUrl'; Set-Location web; npm run dev"
-    if (-not (Wait-Port "localhost" $WebPort 60)) { Note "웹이 60초 안에 뜨지 않았습니다. 웹 창의 오류를 확인하세요." }
+    $webCommand = "`$env:VITE_API_BASE = '$ApiUrl'; Set-Location web; npm run dev"
+    Start-Window -Title "Deleted Code Search - Web" -Command $webCommand
+    if (-not (Wait-Port -HostName "localhost" -Port $WebPort -Seconds 60)) {
+        Stop-WithPause "웹이 60초 안에 뜨지 않았습니다. 웹 창의 오류를 확인하세요."
+    }
 }
 
 # --- 5. 브라우저 ---------------------------------------------------------------------------------
@@ -173,5 +215,5 @@ if (-not $NoBrowser) { Start-Process $WebUrl }
 Say "준비됐습니다"
 Write-Host "      화면 $WebUrl  (대시보드·검색 탭)"
 Write-Host "      API  $ApiUrl/api/health"
-Write-Host "      끝낼 때는 새로 열린 API·Web 창 두 개를 닫으세요."
+Write-Host "      끝낼 때는 API·Web 창을 닫으세요."
 try { Read-Host "`n엔터를 누르면 이 창만 닫습니다" | Out-Null } catch { }

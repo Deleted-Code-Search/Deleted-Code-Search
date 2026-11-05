@@ -48,6 +48,13 @@ def test_run_ps1_has_bom():
     assert (ROOT / "run.ps1").read_bytes().startswith(b"\xef\xbb\xbf")
 
 
+def test_run_cmd_launches_script_beside_it():
+    raw = (ROOT / "run.cmd").read_bytes()
+    assert raw.count(bytes([13, 10])) == raw.count(bytes([10]))  # cmd.exe 는 CRLF
+    text = raw.decode("ascii")
+    assert '-ExecutionPolicy Bypass -File "%~dp0run.ps1"' in text
+
+
 def test_run_ps1_binds_api_to_ipv4_loopback():
     # localhost 는 Windows 에서 IPv6 부터 시도해 첫 연결이 늦다 (docs/reports/search_latency.md).
     text = (ROOT / "run.ps1").read_text(encoding="utf-8-sig")
