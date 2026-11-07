@@ -13,7 +13,7 @@
 
 | 자료 | 링크 |
 |---|---|
-| 결과보고서 PDF | [docs/final/report.pdf](docs/final/report.pdf) ([GitHub에서 읽기](docs/final/report.md)) |
+| 결과보고서 | [결과보고서 PDF](docs/final/report.pdf) · [Word](docs/final/report.docx) · [GitHub에서 읽기](docs/final/report.md) |
 | 포스터 PDF | (11/15 추가 예정) |
 | 시연 영상 | (11/15 추가 예정) |
 | 데이터셋 | [Release `dataset-v0.9`](https://github.com/Deleted-Code-Search/Deleted-Code-Search/releases/tag/dataset-v0.9) |
@@ -23,11 +23,11 @@
 
 | 심사 항목 | 배점 | 보면 되는 곳 |
 |---|---:|---|
-| 창의성·문제해결력 | 25 | [문제 정의](docs/final/report.md#1-배경과-문제-정의), [차별점](docs/final/report.md#32-경쟁과-차별점), [버린 시도](docs/final/report.md#83-버린-시도) |
-| 시장성·수익모델 | 20 | [보고서 3장](docs/final/report.md#3-시장성과-수익모델), [1~2쪽 요약](docs/final/business.md) |
-| 실현 가능성 (사업화 계획) | 20 | [보고서 4장](docs/final/report.md#4-사업화-계획과-실현-가능성) |
-| 기술성·완성도 | 25 | [아키텍처](docs/final/report.md#5-시스템-설계), [평가 결과](docs/final/report.md#7-평가), 코드 [`pipeline/`](pipeline/) · [`classify/`](classify/) · [`search/`](search/) · [`web/`](web/) · [`tests/`](tests/) |
-| 팀 구성·역할 | 5 | [역할](docs/final/report.md#10-팀-구성과-역할), [협업 기록](docs/final/report.md#84-협업), [이슈](https://github.com/Deleted-Code-Search/Deleted-Code-Search/issues?q=is%3Aissue) · [PR](https://github.com/Deleted-Code-Search/Deleted-Code-Search/pulls?q=is%3Apr) |
+| 창의성·문제해결력 | 25 | [배경과 문제 정의](docs/final/report.md#1-배경과-문제-정의), [경쟁과 차별점](docs/final/report.md#72-경쟁과-차별점) |
+| 시장성·수익모델 | 20 | [활용과 확장 계획](docs/final/report.md#7-활용과-확장-계획) |
+| 실현 가능성 (사업화 계획) | 20 | [수익모델과 확장 단계](docs/final/report.md#73-수익모델과-확장-단계), [시스템 성능](docs/final/report.md#54-시스템-성능) |
+| 기술성·완성도 | 25 | [시스템 설계](docs/final/report.md#3-시스템-설계), [구현](docs/final/report.md#4-구현), [평가](docs/final/report.md#5-평가), 코드 [`pipeline/`](pipeline/) · [`classify/`](classify/) · [`search/`](search/) · [`web/`](web/) · [`tests/`](tests/) |
+| 팀 구성·역할 | 5 | [팀 구성과 역할](docs/final/report.md#8-팀-구성과-역할), [이슈](https://github.com/Deleted-Code-Search/Deleted-Code-Search/issues?q=is%3Aissue) · [PR](https://github.com/Deleted-Code-Search/Deleted-Code-Search/pulls?q=is%3Apr) |
 | 발표역량 | 5 | 현장 발표. 데모는 [`run.cmd`](run.cmd) |
 
 ## 소개
@@ -143,8 +143,7 @@ cd web; npm install; npm run dev
 
 | 분류 | 문서 | 내용 |
 |---|---|---|
-| 보고서 | [결과보고서](docs/final/report.md) ([PDF](docs/final/report.pdf)) | 문제·시장성·사업화·설계·구현·평가·과정·팀을 한곳에 |
-| 보고서 | [business.md](docs/final/business.md) | 시장성·수익모델·사업화 계획 요약 |
+| 보고서 | [결과보고서](docs/final/report.md) ([PDF](docs/final/report.pdf) · [Word](docs/final/report.docx)) | 배경·목표·설계·구현·평가·개발 과정·활용과 확장 계획·팀 구성을 한곳에 |
 | 설계 | [CHARTER.md](CHARTER.md) | 배경·목표·설계·일정·규칙 전체, ADR-001~011 요약 |
 | 설계 | [docs/adr/](docs/adr/README.md) | 설계 결정 기록 (ADR-012~), 버린 대안까지 |
 | 설계 | [docs/filter_rules.md](docs/filter_rules.md) | 필터 규칙 `v0.9` |
