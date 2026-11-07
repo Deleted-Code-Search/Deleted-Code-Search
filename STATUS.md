@@ -65,6 +65,7 @@
 - [검색] #193 검색 관련성 판정 결과 Precision@10 (PR #195)
 - [분류·문서] #196 게이트 2 이후 분류기 개선 정리, 문서 정리, README 재작성 (`docs/196-final-wrapup-sj`)
 - [제출] #198 캡스톤 페스티벌 제출: 결과보고서 PDF(`docs/final/`), `run.ps1`, README 제출 자료·심사 안내 (`docs/198-festival-submission-sj`). 포스터·시연 영상 링크는 11/15 추가 예정
+- [제출] #200 결과보고서 최종본 교체: 워드(`report.docx`·`report.pdf`)가 정본, `report.md` 를 docx 에서 재생성, README 심사 안내 앵커 갱신, `business.md`·`tools/build_report.py` 삭제 (`docs/200-final-report-sj`)
 
 ### 그 이전
 2026-09-24까지의 완료 항목은 `docs/weekly/W1.md`~`W3.md`에 있다.
