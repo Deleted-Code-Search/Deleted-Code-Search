@@ -1,15 +1,20 @@
-"""제출 문서 점검 (#198) - README·보고서 링크, run.ps1 인코딩, 보고서 변환 도우미."""
+"""제출 문서 점검 (#198, #200) - README·보고서 링크와 앵커, run.ps1 인코딩."""
 
 import re
 from pathlib import Path
 
 import pytest
 
-from tools.build_report import _page_text, slugify_github, to_absolute_links
-
 ROOT = Path(__file__).resolve().parent.parent
-DOCS = ["README.md", "docs/final/report.md", "docs/final/business.md"]
+DOCS = ["README.md", "docs/final/report.md"]
 LINK = re.compile(r"(?<!!)\[[^\]]*\]\(([^)\s]+)\)|!\[[^\]]*\]\(([^)\s]+)\)")
+
+
+def slugify_github(value: str, separator: str = "-") -> str:
+    """GitHub 머리글 앵커와 같은 규칙 - README 의 report.md 절 링크를 검사하는 데 쓴다."""
+    value = value.strip().lower()
+    value = re.sub(r"[^\w\- ]", "", value)
+    return value.replace(" ", separator)
 
 
 def anchors(path: Path) -> set[str]:
@@ -65,28 +70,10 @@ def test_run_ps1_binds_api_to_ipv4_loopback():
     ("title", "anchor"),
     [
         ("1. 배경과 문제 정의", "1-배경과-문제-정의"),
-        ("부록. 문서와 코드 링크", "부록-문서와-코드-링크"),
-        ("3.2 경쟁과 차별점", "32-경쟁과-차별점"),
+        ("부록. 실행 방법과 코드", "부록-실행-방법과-코드"),
+        ("7.2 경쟁과 차별점", "72-경쟁과-차별점"),
         ("📎 제출 자료", "-제출-자료"),
     ],
 )
 def test_slugify_matches_github(title, anchor):
     assert slugify_github(title) == anchor
-
-
-def test_absolute_links_keep_external_and_fragment():
-    html = (
-        '<a href="https://x.y/z">a</a> <a href="#요약">b</a> <a href="../adr/README.md#결정">c</a>'
-    )
-    out = to_absolute_links(html)
-    assert 'href="https://x.y/z"' in out
-    assert 'href="#요약"' in out
-    assert (
-        'href="https://github.com/Deleted-Code-Search/Deleted-Code-Search/blob/main/'
-        'docs/adr/README.md#결정"' in out
-    )
-
-
-def test_page_text_drops_page_number_line():
-    assert _page_text("12\n1. 배경과 문제") == "1.배경과문제"
-    assert _page_text("표지 글\n둘째 줄") == "표지글둘째줄"
