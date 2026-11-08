@@ -14,7 +14,7 @@
 | 자료 | 링크 |
 |---|---|
 | 결과보고서 | [결과보고서 PDF](docs/final/report.pdf) · [Word](docs/final/report.docx) · [GitHub에서 읽기](docs/final/report.md) |
-| 포스터 PDF | (11/15 추가 예정) |
+| 포스터 | [포스터 PDF](docs/final/poster.pdf) · [이미지](docs/final/poster.png) |
 | 시연 영상 | (11/15 추가 예정) |
 | 데이터셋 | [Release `dataset-v0.9`](https://github.com/Deleted-Code-Search/Deleted-Code-Search/releases/tag/dataset-v0.9) |
 | 실행 방법 | [`run.cmd`](run.cmd) 더블클릭 ([바로 써보기](#바로-써보기)) |
