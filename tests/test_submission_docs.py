@@ -1,4 +1,4 @@
-"""제출 문서 점검 (#198, #200) - README·보고서 링크와 앵커, run.ps1 인코딩."""
+"""제출 문서 점검 (#198, #200, #204) - README·보고서 링크와 앵커, run.ps1 인코딩."""
 
 import re
 from pathlib import Path
@@ -72,7 +72,8 @@ def test_run_ps1_binds_api_to_ipv4_loopback():
         ("1. 배경과 문제 정의", "1-배경과-문제-정의"),
         ("부록. 실행 방법과 코드", "부록-실행-방법과-코드"),
         ("7.2 경쟁과 차별점", "72-경쟁과-차별점"),
-        ("📎 제출 자료", "-제출-자료"),
+        ("9. AI 코딩 도구 활용", "9-ai-코딩-도구-활용"),
+        ("둘러보기 안내", "둘러보기-안내"),
     ],
 )
 def test_slugify_matches_github(title, anchor):

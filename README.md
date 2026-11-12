@@ -7,7 +7,7 @@
 [![Dataset: CC BY 4.0](https://img.shields.io/badge/dataset-CC%20BY%204.0-lightgrey)](datasets/dataset-v0.9/README.md)
 [![Python 3.12](https://img.shields.io/badge/python-3.12-blue)](pyproject.toml)
 
-## 📎 제출 자료
+## 제출 자료
 
 캡스톤 페스티벌 2026 · 팀 **깻잎**
 
@@ -15,20 +15,20 @@
 |---|---|
 | 결과보고서 | [결과보고서 PDF](docs/final/report.pdf) · [Word](docs/final/report.docx) · [GitHub에서 읽기](docs/final/report.md) |
 | 포스터 | [포스터 PDF](docs/final/poster.pdf) · [이미지](docs/final/poster.png) |
-| 시연 영상 | (11/15 추가 예정) |
+| 시연 영상 | [YouTube](https://youtu.be/PonQ9gDQxPg) |
 | 데이터셋 | [Release `dataset-v0.9`](https://github.com/Deleted-Code-Search/Deleted-Code-Search/releases/tag/dataset-v0.9) |
 | 실행 방법 | [`run.cmd`](run.cmd) 더블클릭 ([바로 써보기](#바로-써보기)) |
 
-## 🧭 심사위원용 안내
+## 둘러보기 안내
 
-| 심사 항목 | 배점 | 보면 되는 곳 |
-|---|---:|---|
-| 창의성·문제해결력 | 25 | [배경과 문제 정의](docs/final/report.md#1-배경과-문제-정의), [경쟁과 차별점](docs/final/report.md#72-경쟁과-차별점) |
-| 시장성·수익모델 | 20 | [활용과 확장 계획](docs/final/report.md#7-활용과-확장-계획) |
-| 실현 가능성 (사업화 계획) | 20 | [수익모델과 확장 단계](docs/final/report.md#73-수익모델과-확장-단계), [시스템 성능](docs/final/report.md#54-시스템-성능) |
-| 기술성·완성도 | 25 | [시스템 설계](docs/final/report.md#3-시스템-설계), [구현](docs/final/report.md#4-구현), [평가](docs/final/report.md#5-평가), 코드 [`pipeline/`](pipeline/) · [`classify/`](classify/) · [`search/`](search/) · [`web/`](web/) · [`tests/`](tests/) |
-| 팀 구성·역할 | 5 | [팀 구성과 역할](docs/final/report.md#8-팀-구성과-역할), [이슈](https://github.com/Deleted-Code-Search/Deleted-Code-Search/issues?q=is%3Aissue) · [PR](https://github.com/Deleted-Code-Search/Deleted-Code-Search/pulls?q=is%3Apr) |
-| 발표역량 | 5 | 현장 발표. 데모는 [`run.cmd`](run.cmd) |
+| 살펴볼 내용 | 보면 되는 곳 |
+|---|---|
+| 창의성·문제해결력 | [배경과 문제 정의](docs/final/report.md#1-배경과-문제-정의), [경쟁과 차별점](docs/final/report.md#72-경쟁과-차별점) |
+| 시장성·수익모델 | [활용과 확장 계획](docs/final/report.md#7-활용과-확장-계획) |
+| 실현 가능성 (사업화 계획) | [수익모델과 확장 단계](docs/final/report.md#73-수익모델과-확장-단계), [시스템 성능](docs/final/report.md#54-시스템-성능) |
+| 기술성·완성도 | [시스템 설계](docs/final/report.md#3-시스템-설계), [구현](docs/final/report.md#4-구현), [평가](docs/final/report.md#5-평가), 코드 [`pipeline/`](pipeline/) · [`classify/`](classify/) · [`search/`](search/) · [`web/`](web/) · [`tests/`](tests/) |
+| 팀 구성·역할 | [팀 구성과 역할](docs/final/report.md#8-팀-구성과-역할), [AI 코딩 도구 활용](docs/final/report.md#9-ai-코딩-도구-활용), [이슈](https://github.com/Deleted-Code-Search/Deleted-Code-Search/issues?q=is%3Aissue) · [PR](https://github.com/Deleted-Code-Search/Deleted-Code-Search/pulls?q=is%3Apr) |
+| 발표역량 | 현장 발표. 데모는 [`run.cmd`](run.cmd) |
 
 ## 소개
 
