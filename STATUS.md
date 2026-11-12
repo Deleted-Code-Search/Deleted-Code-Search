@@ -67,6 +67,7 @@
 - [제출] #198 캡스톤 페스티벌 제출: 결과보고서 PDF(`docs/final/`), `run.ps1`, README 제출 자료·심사 안내 (`docs/198-festival-submission-sj`). 포스터·시연 영상 링크는 11/15 추가 예정
 - [제출] #200 결과보고서 최종본 교체: 워드(`report.docx`·`report.pdf`)가 정본, `report.md` 를 docx 에서 재생성, README 심사 안내 앵커 갱신, `business.md`·`tools/build_report.py` 삭제 (`docs/200-final-report-sj`)
 - [제출] #202 제출용 포스터(90×140cm 최종본) `docs/final/poster.pdf`·`poster.png` 추가, README 제출 자료 표에 링크. 시연 영상 링크는 11/15 추가 예정 (`docs/202-poster-sj`)
+- [제출] #204 결과보고서 9장(AI 코딩 도구 활용) 반영: 사람이 교체한 `report.docx`·`report.pdf` 에 맞춰 `report.md` 에 9장 추가(부록은 그 뒤). README 이모지 제거, "둘러보기 안내" 표에서 배점 열 삭제·9장 링크 추가. **시연 영상 링크 추가 완료** ([YouTube](https://youtu.be/PonQ9gDQxPg)) (`docs/204-report-ai-video-sj`)
 
 ### 그 이전
 2026-09-24까지의 완료 항목은 `docs/weekly/W1.md`~`W3.md`에 있다.
