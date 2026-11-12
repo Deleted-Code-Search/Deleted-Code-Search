@@ -17,7 +17,7 @@
 | 포스터 | [포스터 PDF](docs/final/poster.pdf) · [이미지](docs/final/poster.png) |
 | 시연 영상 | [YouTube](https://youtu.be/PonQ9gDQxPg) |
 | 데이터셋 | [Release `dataset-v0.9`](https://github.com/Deleted-Code-Search/Deleted-Code-Search/releases/tag/dataset-v0.9) |
-| 실행 방법 | [`run.cmd`](run.cmd) 더블클릭 ([바로 써보기](#바로-써보기)) |
+| 실행 방법 | 저장소를 받은 뒤 `run.cmd` 더블클릭 — [설치·실행 안내](#바로-써보기) |
 
 ## 둘러보기 안내
 
@@ -28,7 +28,7 @@
 | 실현 가능성 (사업화 계획) | [수익모델과 확장 단계](docs/final/report.md#73-수익모델과-확장-단계), [시스템 성능](docs/final/report.md#54-시스템-성능) |
 | 기술성·완성도 | [시스템 설계](docs/final/report.md#3-시스템-설계), [구현](docs/final/report.md#4-구현), [평가](docs/final/report.md#5-평가), 코드 [`pipeline/`](pipeline/) · [`classify/`](classify/) · [`search/`](search/) · [`web/`](web/) · [`tests/`](tests/) |
 | 팀 구성·역할 | [팀 구성과 역할](docs/final/report.md#8-팀-구성과-역할), [AI 코딩 도구 활용](docs/final/report.md#9-ai-코딩-도구-활용), [이슈](https://github.com/Deleted-Code-Search/Deleted-Code-Search/issues?q=is%3Aissue) · [PR](https://github.com/Deleted-Code-Search/Deleted-Code-Search/pulls?q=is%3Apr) |
-| 발표역량 | 현장 발표. 데모는 [`run.cmd`](run.cmd) |
+| 발표역량 | 현장 발표. 데모는 [실행 안내](#바로-써보기) |
 
 ## 소개
 
